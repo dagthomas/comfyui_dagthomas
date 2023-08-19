@@ -1154,31 +1154,74 @@ class PromptGenerator:
 		]
 
 		DIGITAL_ARTFORM = [
-			"Vector Art",
-			"Digital Painting",
-			"Glitch Art",
-			"Digital Collage",
-			"Digital art",
-			"Digital illustration",
-			"Concept art",
-			"Digital water color painting",
-			"Digital drawing",
-			"digital painting",
-			"oil painting",
-			"watercolor painting",
-			"acrylic painting",
-			"pastel painting",
-			"charcoal drawing",
-			"pencil drawing",
-			"pen and ink drawing",
-			"ink drawing",
-			"sketch",
-			"line drawing",
-			"cartoon drawing",
-			"caricature drawing",
-			"portrait drawing",
-			"landscape drawing",
-			"still life drawing",
+			"Glitch Art art", 
+			"Digital Painting art ",
+			"Acrylic Paint art", 
+			"Algorithmic art", 
+			"Animation art", 
+			"Art glass art", 
+			"Assemblage art", 
+			"Augmented reality art", 
+			"Batik art", 
+			"Beadwork art", 
+			"Body painting art", 
+			"Bookbinding art", 
+			"Cast paper art", 
+			"Ceramics art", 
+			"Bronze art", 
+			"Charcoal art", 
+			"Collage art", 
+			"Collagraphy art", 
+			"Colored pencil art", 
+			"Computer-generated imagery (cgi) art", 
+			"Crochet art", 
+			"Decoupage art", 
+			"Digital sculpture art", 
+			"Foam carving art", 
+			"Found objects art", 
+			"Fresco art", 
+			"Glass art", 
+			"Gouache art", 
+			"Graffiti art", 
+			"Ice art", 
+			"Ink wash painting art", 
+			"Installation art",
+			"Interactive media art",
+			"Lenticular printing art",
+			"Light projection art",
+			"Lithography art",
+			"Marble art", 
+			"Metal art", 
+			"Metalpoint art", 
+			"Miniature painting art",
+			"Mixed media art", 
+			"Monotype printing art", 
+			"Neon art", 
+			"Oil painting art",
+			"Origami art",
+			"Papier-mache art",
+			"Pastel art", 
+			"Pen and ink art",
+			"Plastic arts", 
+			"Polymer clay art", 
+			"Printmaking art", 
+			"Puppetry art",
+			"Pyrography art", 
+			"Quilling art",
+			"Quilting art",
+			"Recycled art",
+			"Resin art", 
+			"Sand art", 
+			"Sound art", 
+			"Silverpoint art", 
+			"Spray paint art",
+			"Stone art",
+			"Tempera art",
+			"Tattoo art", 
+			"Video art", 
+			"Watercolor art", 
+			"Wax art",
+			"Wood art"
 		]
 
 		PLACE = [
@@ -1334,7 +1377,10 @@ class PromptGenerator:
 			"(soothing tones, insane details, intricate details, hyperdetailed,photorealistic,dim subdued lighting)",
 		]
 		is_photographer = random.choice([True, False])
-		prompt = f"{random.choice(INITIAL_DESCRIPTION)} of a {random.choice(EMOTIONS)} "
+		if is_photographer:
+			prompt = f"{random.choice(INITIAL_DESCRIPTION)} of a {random.choice(EMOTIONS)} "
+		else:
+			prompt = f"{random.choice(DIGITAL_ARTFORM)} of {random.choice(EMOTIONS)} "
 		selected_lighting = random.sample(LIGHTING, random.randint(2, 5))
 		comma_separated_lighting = ", ".join(selected_lighting)		
         # Use the input tag or a default tag if the input is empty
@@ -1348,7 +1394,7 @@ class PromptGenerator:
 		if is_photographer:
 			prompt += f", {random.choice(PHOTOGRAPHY_STYLES)}, {random.choice(LENS)} shot on {random.choice(DEVICE)} photo by {random.choice(PHOTOGRAPHER)}"
 		else:
-			prompt += f", {random.choice(DIGITAL_ARTFORM)} by {random.choice(ARTIST)}"
+			prompt += f" by {random.choice(ARTIST)}"
 		
 		print(f"AUTOPROMPT: {prompt}")
 		return (prompt,)
