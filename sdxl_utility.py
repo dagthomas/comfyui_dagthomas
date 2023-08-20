@@ -2,7 +2,30 @@
 import random
 import nodes
 
+class CommaSeparatedList:
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "generate_string"
+    CATEGORY = "PromptGenerator"
 
+    @classmethod
+    def IS_CHANGED(cls):
+        return float("NaN")
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "csl": ("STRING", {}),
+			},
+		}
+    
+    def generate_string(
+        self,
+		csl,
+	):	
+        print(csl)
+        return tuple(csl.split(","))
+        
 class PromptGenerator:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "generate_prompt"
@@ -46,7 +69,7 @@ class PromptGenerator:
                     ["random"] + PromptGenerator.PHOTOGRAPHY_STYLES,
                     {"default": "random"},
                 ),
-                "lens": (["random"] + PromptGenerator.LENS, {"default": "random"}),
+                # "lens": (["random"] + PromptGenerator.LENS, {"default": "random"}),
                 "device": (["random"] + PromptGenerator.DEVICE, {"default": "random"}),
                 "photographer": (
                     ["random"] + PromptGenerator.PHOTOGRAPHER,
@@ -357,6 +380,8 @@ class PromptGenerator:
     ]
 
     PHOTOGRAPHY_STYLES = [
+        "high fashion photography", 
+        "avant garde photography", 
         "fashion photography",
         "portrait photography",
         "landscape photography",
@@ -364,26 +389,67 @@ class PromptGenerator:
         "street photography",
     ]
 
-    LENS = [
-        "85mm 2.8f",
-        "35mm f/1.8",
-        "EF 70mm",
-        "50mm f/1.2",
-        "30mm f/1.4",
-        "12-40mm f/2.8",
+    DEVICE = [
+        "Canon EOS 5D Mark IV with Canon EF 24-70mm f-2.8L II",
+        "Canon EOS 90D with Canon EF-S 18-135mm f-3.5-5.6 IS USM",
+        "Canon EOS M6 Mark II with Canon EF-M 32mm f-1.4",
+        "Canon EOS R with Canon RF 28-70mm f-2L",
+        "Canon EOS-1D X Mark III with Canon EF 50mm f-1.2L",
+        "Canon PowerShot G5 X Mark II with Built-in 8.8-44mm f-1.8-2.8",
+        "DJI Mavic Air 2 with Built-in 24mm f-2.8",
+        "FujiFilm X-T4 with Fujinon XF 35mm f-2 R WR",
+        "Fujifilm GFX 100 with GF 110mm f-2 R LM WR",
+        "Fujifilm X-Pro3 with Fujinon XF 56mm f-1.2 R",
+        "Fujifilm X-S10 with Fujinon XF 10-24mm f-4 R OIS WR",
+        "Fujifilm X100V with Fujinon 23mm f-2",
+        "GoPro HERO9 with Built-in f-2.8 Ultra-Wide",
+        "Hasselblad 907X with Hasselblad XCD 30mm f-3.5",
+        "Hasselblad X1D II with Hasselblad XCD 65mm f-2.8",
+        "Kodak PIXPRO AZ901 with Built-in 4.3-258mm f-2.9-6.7",
+        "Leica CL with Leica Summilux-TL 35mm f-1.4 ASPH",
+        "Leica M10 with LEICA 35mm f-2 SUMMICRON-M ASPH",
+        "Leica Q2 with Summilux 28mm f-1.7 ASPH",
+        "Leica SL2 with Leica APO-Summicron-SL 50mm f-2 ASPH",
+        "Nikon Coolpix P950 with Built-in 24-2000mm f-2.8-6.5",
+        "Nikon D780 with Nikkor 14-24mm f-2.8G",
+        "Nikon D850 with Nikkor 50mm f-1.8",
+        "Nikon Z50 with Nikon Z DX 16-50mm f-3.5-6.3",
+        "Nikon Z6 II with Nikon Z 24-70mm f-4 S",
+        "Nikon Z7 with Nikon Z 70-200mm f-2.8 VR S",
+        "Olympus OM-D E-M1 Mark III with M.Zuiko 12-40mm f-2.8",
+        "Olympus OM-D E-M5 Mark III with M.Zuiko 40-150mm f-2.8",
+        "Olympus PEN-F with M.Zuiko 17mm f-1.8",
+        "Olympus Tough TG-6 with Built-in 4.5-18mm f-2-4.9",
+        "Panasonic Lumix G9 with Leica DG 42.5mm f-1.2",
+        "Panasonic Lumix GH5 with Leica DG 25mm f-1.4",
+        "Panasonic Lumix S5 with Lumix S PRO 70-200mm f-2.8 O.I.S",
+        "Panasonic S1R with Lumix S 50mm f-1.4",
+        "Pentax 645Z with Pentax-D FA 645 55mm f-2.8",
+        "Pentax K-1 Mark II with Pentax FA 43mm f-1.9 Limited",
+        "Pentax KP with Pentax HD DA 20-40mm f-2.8-4",
+        "Ricoh GR III with GR 18.3mm f-2.8",
+        "Sigma fp with Sigma 45mm f-2.8 DG DN",
+        "Sigma sd Quattro H with Sigma 24-70mm f-2.8 DG",
+        "Sony A1 with Sony FE 20mm f-1.8 G",
+        "Sony A6400 with Sony E 35mm f-1.8 OSS",
+        "Sony A7C with Sony FE 28-60mm f-4-5.6",
+        "Sony A7R IV with Sony FE 85mm f-1.4 GM",
+        "Sony A9 II with Sony FE 24-70mm f-2.8 GM",
+        "Sony RX100 VII with Built-in 24-200mm f-2.8-4.5"
+
     ]
 
-    DEVICE = [
-        "Hasselblad X1D-50c",
-        "Nikon Z7II",
-        "Canon EOS R3",
-        "Sony A7R III",
-        "Alexa 65",
-        "Sony A7",
-        "Fujifilm XT3",
-        "Canon EOS R3",
-        "(35mm Hasselblad 500C/M camera using Lomography colour 400 film at f/1.8)",
-    ]
+    # DEVICE = [
+    #     "Hasselblad X1D-50c",
+    #     "Nikon Z7II",
+    #     "Canon EOS R3",
+    #     "Sony A7R III",
+    #     "Alexa 65",
+    #     "Sony A7",
+    #     "Fujifilm XT3",
+    #     "Canon EOS R3",
+    #     "(35mm Hasselblad 500C/M camera using Lomography colour 400 film at f/1.8)",
+    # ]
 
     PHOTOGRAPHER = [
         "Alessio Albi",
@@ -1176,7 +1242,7 @@ class PromptGenerator:
 
     DIGITAL_ARTFORM = [
         "Glitch Art art",
-        "Digital Painting art ",
+        "Digital Painting art",
         "Acrylic Paint art",
         "Algorithmic art",
         "Animation art",
@@ -1397,7 +1463,16 @@ class PromptGenerator:
         "gritty industrial",
         "(soothing tones, insane details, intricate details, hyperdetailed,photorealistic,dim subdued lighting)",
     ]
-
+    @staticmethod
+    def get_random_choice(input_str, default_choices):
+        if ',' in input_str:
+            choices = input_str.split(',')
+            return random.choice(choices).strip()
+        elif input_str == 'random':
+            return random.choice(default_choices)
+        else:
+            return input_str
+        
     def generate_prompt(
         self,
         subject,
@@ -1409,7 +1484,6 @@ class PromptGenerator:
         hairstyles,
         additional_details,
         photography_styles,
-        lens,
         device,
         photographer,
         artist,
@@ -1425,9 +1499,9 @@ class PromptGenerator:
             is_photographer = True
 
         if is_photographer:
-            prompt = f"{random.choice(self.PHOTO_TYPE) if photo_type == 'random' else photo_type} of a {random.choice(self.EMOTIONS) if emotions == 'random' else emotions} "
+            prompt = f"{self.get_random_choice(photo_type, self.PHOTO_TYPE)} of a {self.get_random_choice(emotions, self.EMOTIONS)} "
         else:
-            prompt = f"{random.choice(self.DIGITAL_ARTFORM) if digital_artform == 'random' else digital_artform} of {random.choice(self.EMOTIONS) if emotions == 'random' else emotions} "
+            prompt = f"{self.get_random_choice(digital_artform, self.DIGITAL_ARTFORM)} of {self.get_random_choice(emotions, self.EMOTIONS)} "
 
         if lighting == "random":
             selected_lighting = random.sample(self.LIGHTING, random.randint(2, 5))
@@ -1439,15 +1513,15 @@ class PromptGenerator:
         if subject:
             prompt += f"{subject} "
         else:
-            prompt += f"{random.choice(self.DEFAULT_TAGS) if default_tags == 'random' else default_tags} "
+            prompt += f"{self.get_random_choice(default_tags, self.DEFAULT_TAGS)} "
 
-        prompt += f"{random.choice(self.ROLES) if roles == 'random' else roles} {random.choice(self.HAIRSTYLES) if hairstyles == 'random' else hairstyles} {random.choice(self.ADDITIONAL_DETAILS) if additional_details == 'random' else additional_details}, {random.choice(self.PLACE) if place == 'random' else place}, {comma_separated_lighting} "
+        prompt += f"{self.get_random_choice(roles, self.ROLES)} {self.get_random_choice(hairstyles, self.HAIRSTYLES)} {self.get_random_choice(additional_details, self.ADDITIONAL_DETAILS)}, {self.get_random_choice(place, self.PLACE)}, {comma_separated_lighting} "
 
         if is_photographer:
-            prompt += f", {random.choice(self.PHOTOGRAPHY_STYLES) if photography_styles == 'random' else photography_styles}, {random.choice(self.LENS) if lens == 'random' else lens} shot on {random.choice(self.DEVICE) if device == 'random' else device} photo by {random.choice(self.PHOTOGRAPHER) if photographer == 'random' else photographer}"
+            prompt += f", {self.get_random_choice(photography_styles, self.PHOTOGRAPHY_STYLES)}, shot on {self.get_random_choice(device, self.DEVICE)} photo by {self.get_random_choice(photographer, self.PHOTOGRAPHER)}"
         else:
             prompt += (
-                f" by {random.choice(self.ARTIST) if artist == 'random' else artist}"
+                f" by {self.get_random_choice(artist, self.ARTIST)}"
             )
 
         print(f"AUTOPROMPT: {prompt}")
@@ -1456,9 +1530,11 @@ class PromptGenerator:
 
 NODE_CLASS_MAPPINGS = {
     "PromptGenerator": PromptGenerator,
+    "CSL": CommaSeparatedList,
 }
 
 # Human readable names for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptGenerator": "SDXL Auto Prompter",
+    "CSL": "Comma Separated List"
 }
