@@ -90,6 +90,9 @@ class PromptGenerator:
 
     ARTFORM = ["photography", "art"]
     PHOTO_TYPE = [
+        "surreal portrait", 
+        "horror portrait", 
+        "action portrait", 
         "self portrait",
         "street portrait",
         "half-body portrait",
@@ -293,6 +296,7 @@ class PromptGenerator:
     ]
 
     ADDITIONAL_DETAILS = [
+        "a purple iridescent suit",
         "wearing a (necklace)",
         "wearing ((earrings))",
         "wearing a (bracelet)",
@@ -387,6 +391,8 @@ class PromptGenerator:
         "landscape photography",
         "documentary photography",
         "street photography",
+        "action photography", 
+        "vintage photography",
     ]
 
     DEVICE = [
@@ -1354,8 +1360,20 @@ class PromptGenerator:
         "in a uturistic city on a distant planet",
         "in a mystical land of eternal twilight",
         "Smoke and ash in the air",
+        "suburban america", 
+        "suburbs", 
+        "slums", 
+        "at the sea", 
+        "at the ocean",
+        "at the lake",
+        "at the river",
+        "at the waterfall",
+        "in the labyrinth",
+        "in a lab"
+        "rendered in a 2.5D isometric perspective. Soft gradients add dimension, pastel color scheme"
     ]
     LIGHTING = [
+        "popping colors, popart style",
         "bokeh",
         "dramatic",
         "golden hour",
