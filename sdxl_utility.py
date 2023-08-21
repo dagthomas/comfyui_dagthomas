@@ -48,10 +48,6 @@ class PromptGenerator:
                     ["random"] + PromptGenerator.PHOTO_TYPE,
                     {"default": "random"},
                 ),
-                "emotions": (
-                    ["random"] + PromptGenerator.EMOTIONS,
-                    {"default": "random"},
-                ),
                 "default_tags": (
                     ["random"] + PromptGenerator.DEFAULT_TAGS,
                     {"default": "random"},
@@ -118,7 +114,7 @@ class PromptGenerator:
         "self portrait",
     ]
 
-    EMOTIONS = ["beautiful", "glad", "sad", "angry", "neutral"]
+    # EMOTIONS = ["beautiful", "glad", "sad", "angry", "neutral"]
 
     DEFAULT_TAGS = [
         "man",
@@ -1481,67 +1477,59 @@ class PromptGenerator:
         "gritty industrial",
         "(soothing tones, insane details, intricate details, hyperdetailed,photorealistic,dim subdued lighting)",
     ]
-    @staticmethod
-    def get_random_choice(input_str, default_choices):
+    def split_and_choose(self, input_str):
+        choices = [choice.strip() for choice in input_str.split(',')]
+        return random.choice(choices)
+
+    def get_choice(self, input_str, default_choices):
         if ',' in input_str:
-            choices = input_str.split(',')
-            return random.choice(choices).strip()
-        elif input_str == 'random':
+            return self.split_and_choose(input_str)
+        elif input_str.lower() == 'random':
             return random.choice(default_choices)
-        else:
-            return input_str
-        
-    def generate_prompt(
-        self,
-        subject,
-        artform,
-        photo_type,
-        emotions,
-        default_tags,
-        roles,
-        hairstyles,
-        additional_details,
-        photography_styles,
-        device,
-        photographer,
-        artist,
-        digital_artform,
-        place,
-        lighting,
-    ):
-        if artform != "photography":
-            is_photographer = False
-        elif artform == "random":
-            is_photographer = random.choice([True, False])
-        else:
-            is_photographer = True
+        return input_str
+
+    def generate_prompt(self, **kwargs):
+        components = []
+        is_photographer = kwargs.get("artform", "").lower() == "photography" or (
+            kwargs.get("artform", "").lower() == "random" and random.choice([True, False])
+        )
 
         if is_photographer:
-            prompt = f"{self.get_random_choice(photo_type, self.PHOTO_TYPE)} of a {self.get_random_choice(emotions, self.EMOTIONS)} "
+            components.append(f"{self.get_choice(kwargs.get('photo_type', ''), self.PHOTO_TYPE)} of ")
         else:
-            prompt = f"{self.get_random_choice(digital_artform, self.DIGITAL_ARTFORM)} of {self.get_random_choice(emotions, self.EMOTIONS)} "
+            components.append(f"{self.get_choice(kwargs.get('digital_artform', ''), self.DIGITAL_ARTFORM)} of")
 
+        lighting = kwargs.get('lighting', "").lower()
         if lighting == "random":
-            selected_lighting = random.sample(self.LIGHTING, random.randint(2, 5))
-            comma_separated_lighting = ", ".join(selected_lighting)
+            selected_lighting = ", ".join(random.sample(self.LIGHTING, random.randint(2, 5)))
+            components.append(selected_lighting)
         else:
-            comma_separated_lighting = lighting
+            components.append(lighting)
 
-        # Use the input tag or a default tag if the input is empty
-        if subject:
-            prompt += f"{subject} "
-        else:
-            prompt += f"{self.get_random_choice(default_tags, self.DEFAULT_TAGS)} "
-
-        prompt += f"{self.get_random_choice(roles, self.ROLES)} {self.get_random_choice(hairstyles, self.HAIRSTYLES)} {self.get_random_choice(additional_details, self.ADDITIONAL_DETAILS)}, {self.get_random_choice(place, self.PLACE)}, {comma_separated_lighting} "
+        params = [
+            ('subject', 'default_tags', self.DEFAULT_TAGS),
+            ('roles', self.ROLES),
+            ('hairstyles', self.HAIRSTYLES),
+            ('additional_details', self.ADDITIONAL_DETAILS),
+            ('place', self.PLACE)
+        ]
+        components.extend([self.get_choice(kwargs.get(param[0], ''), param[1]) for param in params])
 
         if is_photographer:
-            prompt += f", {self.get_random_choice(photography_styles, self.PHOTOGRAPHY_STYLES)}, shot on {self.get_random_choice(device, self.DEVICE)} photo by {self.get_random_choice(photographer, self.PHOTOGRAPHER)}"
+            params = [
+                ('photography_styles', self.PHOTOGRAPHY_STYLES),
+                ('device', self.DEVICE),
+                ('photographer', self.PHOTOGRAPHER)
+            ]
+            components.extend([
+                self.get_choice(kwargs.get(param[0], ''), param[1]) for param in params
+            ])
+            components[-2] = f"shot on {components[-2]}"
+            components[-1] = f"photo by {components[-1]}"
         else:
-            prompt += (
-                f" by {self.get_random_choice(artist, self.ARTIST)}"
-            )
+            components.append(f"by {self.get_choice(kwargs.get('artist', ''), self.ARTIST)}")
 
+        prompt = " ".join(components)
         print(f"AUTOPROMPT: {prompt}")
         return (prompt,)
 
