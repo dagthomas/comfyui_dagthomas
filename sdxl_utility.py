@@ -1,6 +1,7 @@
 # Converting the prompt generation script into a ComfyUI plugin structure
 import random
 import nodes
+import re
 
 class CommaSeparatedList:
     RETURN_TYPES = ("STRING",)
@@ -41,44 +42,44 @@ class PromptGenerator:
             "required": {
                 "subject": ("STRING", {}),
                 "artform": (
-                    ["random"] + PromptGenerator.ARTFORM,
+                    ["disabled"] + ["random"]  + PromptGenerator.ARTFORM,
                     {"default": "random"},
                 ),
                 "photo_type": (
-                    ["random"] + PromptGenerator.PHOTO_TYPE,
+                    ["disabled"] + ["random"] + PromptGenerator.PHOTO_TYPE,
                     {"default": "random"},
                 ),
                 "default_tags": (
-                    ["random"] + PromptGenerator.DEFAULT_TAGS,
+                    ["disabled"] + ["random"] + PromptGenerator.DEFAULT_TAGS,
                     {"default": "random"},
                 ),
-                "roles": (["random"] + PromptGenerator.ROLES, {"default": "random"}),
+                "roles": (["disabled"] + ["random"] + PromptGenerator.ROLES, {"default": "random"}),
                 "hairstyles": (
-                    ["random"] + PromptGenerator.HAIRSTYLES,
+                    ["disabled"] + ["random"] + PromptGenerator.HAIRSTYLES,
                     {"default": "random"},
                 ),
                 "additional_details": (
-                    ["random"] + PromptGenerator.ADDITIONAL_DETAILS,
+                    ["disabled"] + ["random"] + PromptGenerator.ADDITIONAL_DETAILS,
                     {"default": "random"},
                 ),
                 "photography_styles": (
-                    ["random"] + PromptGenerator.PHOTOGRAPHY_STYLES,
+                    ["disabled"] + ["random"] + PromptGenerator.PHOTOGRAPHY_STYLES,
                     {"default": "random"},
                 ),
                 # "lens": (["random"] + PromptGenerator.LENS, {"default": "random"}),
-                "device": (["random"] + PromptGenerator.DEVICE, {"default": "random"}),
+                "device": (["disabled"] + ["random"] + PromptGenerator.DEVICE, {"default": "random"}),
                 "photographer": (
-                    ["random"] + PromptGenerator.PHOTOGRAPHER,
+                    ["disabled"] + ["random"] + PromptGenerator.PHOTOGRAPHER,
                     {"default": "random"},
                 ),
-                "artist": (["random"] + PromptGenerator.ARTIST, {"default": "random"}),
+                "artist": (["disabled"] + ["random"] + PromptGenerator.ARTIST, {"default": "random"}),
                 "digital_artform": (
-                    ["random"] + PromptGenerator.DIGITAL_ARTFORM,
+                    ["disabled"] + ["random"] + PromptGenerator.DIGITAL_ARTFORM,
                     {"default": "random"},
                 ),
-                "place": (["random"] + PromptGenerator.PLACE, {"default": "random"}),
+                "place": (["disabled"] + ["random"] + PromptGenerator.PLACE, {"default": "random"}),
                 "lighting": (
-                    ["random"] + PromptGenerator.LIGHTING,
+                    ["disabled"] + ["random"] + PromptGenerator.LIGHTING,
                     {"default": "random"},
                 ),
             },
@@ -1482,11 +1483,14 @@ class PromptGenerator:
         return random.choice(choices)
 
     def get_choice(self, input_str, default_choices):
-        if ',' in input_str:
+        if input_str.lower() == 'disabled':
+            return ""
+        elif ',' in input_str:
             return self.split_and_choose(input_str)
         elif input_str.lower() == 'random':
             return random.choice(default_choices)
-        return input_str
+        else:
+            return input_str
 
     def generate_prompt(self, **kwargs):
         components = []
@@ -1495,9 +1499,13 @@ class PromptGenerator:
         )
 
         if is_photographer:
-            components.append(f"{self.get_choice(kwargs.get('photo_type', ''), self.PHOTO_TYPE)} of ")
+            photo_type_choice = self.get_choice(kwargs.get('photo_type', ''), self.PHOTO_TYPE)
+            if photo_type_choice:
+                components.append(f"{photo_type_choice} of ")
         else:
-            components.append(f"{self.get_choice(kwargs.get('digital_artform', ''), self.DIGITAL_ARTFORM)} of")
+            digital_artform_choice = self.get_choice(kwargs.get('digital_artform', ''), self.DIGITAL_ARTFORM)
+            if digital_artform_choice:
+                components.append(f"{digital_artform_choice} of ")
 
         lighting = kwargs.get('lighting', "").lower()
         if lighting == "random":
@@ -1530,6 +1538,7 @@ class PromptGenerator:
             components.append(f"by {self.get_choice(kwargs.get('artist', ''), self.ARTIST)}")
 
         prompt = " ".join(components)
+        prompt = re.sub(' +', ' ', prompt) 
         print(f"AUTOPROMPT: {prompt}")
         return (prompt,)
 
