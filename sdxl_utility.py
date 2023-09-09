@@ -35,12 +35,14 @@ PHOTO_TYPE = [
     # EMOTIONS = ["beautiful", "glad", "sad", "angry", "neutral"]
 
 DEFAULT_TAGS = [
-        "man",
-        "woman",
-        "young man",
-        "young woman",
-        "middle aged man",
-        "middle aged woman",
+        "a man",
+        "a woman",
+        "a young man",
+        "a young woman",
+        "a middle aged man",
+        "a middle aged woman",
+        "an old man",
+        "an old woman"
     ]
 
 ROLES = [
@@ -1612,9 +1614,12 @@ class PromptGenerator:
             pass
         else:
             components.append(lighting)
-
+        subject = kwargs.get('subject', '')
+        if not subject:
+            subject = random.choice(DEFAULT_TAGS)
+        components.append(subject)
+        
         params = [
-            ('subject', 'default_tags', DEFAULT_TAGS),
             ('roles', ROLES),
             ('hairstyles', HAIRSTYLES),
             ('additional_details', ADDITIONAL_DETAILS),
