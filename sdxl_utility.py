@@ -2,91 +2,8 @@
 import random
 import nodes
 import re
-
-class CommaSeparatedList:
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "generate_string"
-    CATEGORY = "PromptGenerator"
-
-    @classmethod
-    def IS_CHANGED(cls):
-        return float("NaN")
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "csl": ("STRING", {}),
-			},
-		}
-    
-    def generate_string(
-        self,
-		csl,
-	):	
-        print(csl)
-        return tuple(csl.split(","))
-        
-class PromptGenerator:
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "generate_prompt"
-    CATEGORY = "PromptGenerator"
-
-    @classmethod
-    def IS_CHANGED(cls):
-        return float("NaN")
-
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "subject": ("STRING", {}),
-                "artform": (
-                    ["disabled"] + ["random"]  + PromptGenerator.ARTFORM,
-                    {"default": "random"},
-                ),
-                "photo_type": (
-                    ["disabled"] + ["random"] + PromptGenerator.PHOTO_TYPE,
-                    {"default": "random"},
-                ),
-                "default_tags": (
-                    ["disabled"] + ["random"] + PromptGenerator.DEFAULT_TAGS,
-                    {"default": "random"},
-                ),
-                "roles": (["disabled"] + ["random"] + PromptGenerator.ROLES, {"default": "random"}),
-                "hairstyles": (
-                    ["disabled"] + ["random"] + PromptGenerator.HAIRSTYLES,
-                    {"default": "random"},
-                ),
-                "additional_details": (
-                    ["disabled"] + ["random"] + PromptGenerator.ADDITIONAL_DETAILS,
-                    {"default": "random"},
-                ),
-                "photography_styles": (
-                    ["disabled"] + ["random"] + PromptGenerator.PHOTOGRAPHY_STYLES,
-                    {"default": "random"},
-                ),
-                # "lens": (["random"] + PromptGenerator.LENS, {"default": "random"}),
-                "device": (["disabled"] + ["random"] + PromptGenerator.DEVICE, {"default": "random"}),
-                "photographer": (
-                    ["disabled"] + ["random"] + PromptGenerator.PHOTOGRAPHER,
-                    {"default": "random"},
-                ),
-                "artist": (["disabled"] + ["random"] + PromptGenerator.ARTIST, {"default": "random"}),
-                "digital_artform": (
-                    ["disabled"] + ["random"] + PromptGenerator.DIGITAL_ARTFORM,
-                    {"default": "random"},
-                ),
-                "place": (["disabled"] + ["random"] + PromptGenerator.PLACE, {"default": "random"}),
-                "lighting": (
-                    ["disabled"] + ["random"] + PromptGenerator.LIGHTING,
-                    {"default": "random"},
-                ),
-            },
-        }
-
-    ARTFORM = ["photography", "art"]
-    PHOTO_TYPE = [
+ARTFORM = ["photography", "art"]
+PHOTO_TYPE = [
         "surreal portrait", 
         "horror portrait", 
         "action portrait", 
@@ -117,7 +34,7 @@ class PromptGenerator:
 
     # EMOTIONS = ["beautiful", "glad", "sad", "angry", "neutral"]
 
-    DEFAULT_TAGS = [
+DEFAULT_TAGS = [
         "man",
         "woman",
         "young man",
@@ -126,7 +43,7 @@ class PromptGenerator:
         "middle aged woman",
     ]
 
-    ROLES = [
+ROLES = [
         "as a ((cyborg))",
         "as an ((x-men character))",
         "as a ((marvel character))",
@@ -232,7 +149,7 @@ class PromptGenerator:
         "as a wall street broker yuppie",
     ]
 
-    HAIRSTYLES = [
+HAIRSTYLES = [
         "with ((long hair))",
         "with ((very curly hair))",
         "with ((curly hair))",
@@ -292,7 +209,7 @@ class PromptGenerator:
         "with ((wavy hair))",
     ]
 
-    ADDITIONAL_DETAILS = [
+ADDITIONAL_DETAILS = [
         "a purple iridescent suit",
         "wearing a (necklace)",
         "wearing ((earrings))",
@@ -380,7 +297,7 @@ class PromptGenerator:
         "as a ((gelatinous horror dripping alien creature))",
     ]
 
-    PHOTOGRAPHY_STYLES = [
+PHOTOGRAPHY_STYLES = [
         "high fashion photography", 
         "avant garde photography", 
         "fashion photography",
@@ -392,7 +309,7 @@ class PromptGenerator:
         "vintage photography",
     ]
 
-    DEVICE = [
+DEVICE = [
         "Canon EOS 5D Mark IV with Canon EF 24-70mm f-2.8L II",
         "Canon EOS 90D with Canon EF-S 18-135mm f-3.5-5.6 IS USM",
         "Canon EOS M6 Mark II with Canon EF-M 32mm f-1.4",
@@ -454,7 +371,7 @@ class PromptGenerator:
     #     "(35mm Hasselblad 500C/M camera using Lomography colour 400 film at f/1.8)",
     # ]
 
-    PHOTOGRAPHER = [
+PHOTOGRAPHER = [
         "Alessio Albi",
         "Alvin Langdon Coburn",
         "Anne Brigman",
@@ -529,7 +446,7 @@ class PromptGenerator:
         "Vanley Burke",
     ]
 
-    ARTIST = [
+ARTIST = [
         "Akihito Tsukushi",
         "Al Hirschfeld",
         "Alan Lee",
@@ -1243,7 +1160,7 @@ class PromptGenerator:
         "Zdzislaw Beksinski",
     ]
 
-    DIGITAL_ARTFORM = [
+DIGITAL_ARTFORM = [
         "Glitch Art art",
         "Digital Painting art",
         "Acrylic Paint art",
@@ -1314,7 +1231,7 @@ class PromptGenerator:
         "Wood art",
     ]
 
-    PLACE = [
+PLACE = [
         "indoor",
         "outdoor",
         "at night",
@@ -1369,7 +1286,7 @@ class PromptGenerator:
         "in a lab"
         "rendered in a 2.5D isometric perspective. Soft gradients add dimension, pastel color scheme"
     ]
-    LIGHTING = [
+LIGHTING = [
         "popping colors, popart style",
         "bokeh",
         "dramatic",
@@ -1478,6 +1395,186 @@ class PromptGenerator:
         "gritty industrial",
         "(soothing tones, insane details, intricate details, hyperdetailed,photorealistic,dim subdued lighting)",
     ]
+
+# class CommaSeparatedList:
+#     RETURN_TYPES = ("STRING",)
+#     FUNCTION = "generate_string"
+#     CATEGORY = "PromptGenerator"
+
+#     @classmethod
+#     def IS_CHANGED(cls):
+#         return float("NaN")
+
+#     @classmethod
+#     def INPUT_TYPES(cls):
+#         return {
+#             "required": {
+#                 "csl": ("STRING", {}),
+# 			},
+# 		}
+    
+#     def generate_string(
+#         self,
+# 		csl,
+# 	):	
+#         print(csl)
+#         return tuple(csl.split(","))
+# class CSVPromptGenerator:     
+#     RETURN_TYPES = ("STRING",)
+#     FUNCTION = "generate_prompt"
+#     CATEGORY = "PromptGenerator"
+
+#     @classmethod
+#     def IS_CHANGED(cls):
+#         return float("NaN")
+
+#     @classmethod
+#     def INPUT_TYPES(cls):
+#         return {
+#             "required": {
+#                 "subject": ("STRING", {}),
+#                 "artform": (
+#                     ARTFORM,
+#                     {"default": "random"},
+#                 ),
+#                 "photo_type": ("STRING", {}),
+#                 "default_tags": ("STRING", {}),
+#                 "roles": ("STRING", {}),
+#                 "hairstyles": ("STRING", {}),
+#                 "additional_details": ("STRING", {}),
+#                 "photography_styles": ("STRING", {}),
+#                 "device": ("STRING", {}),
+#                 "photographer": ("STRING", {}),
+#                 "artist": ("STRING", {}),
+#                 "digital_artform": ("STRING", {}),
+#                 "place": ("STRING", {}),
+#                 "lighting": ("STRING", {}),
+#             },
+#         }
+#     def split_and_choose(self, input_str):
+#         choices = [choice.strip() for choice in input_str.split(',')]
+#         return random.choice(choices)
+
+#     def get_choice(self, input_str, default_choices):
+#         if input_str.lower() == 'disabled':
+#             return ""
+#         elif ',' in input_str:
+#             return self.split_and_choose(input_str)
+#         elif input_str.lower() == 'random':
+#             return random.choice(default_choices)
+#         else:
+#             return input_str
+
+#     def generate_prompt(self, **kwargs):
+#         components = []
+#         is_photographer = kwargs.get("artform", "").lower() == "photography" or (
+#             kwargs.get("artform", "").lower() == "random" and random.choice([True, False])
+#         )
+
+#         if is_photographer:
+#             photo_type_choice = self.get_choice(kwargs.get('photo_type', ''), kwargs.get('photo_type', ''))
+#             if photo_type_choice:
+#                 components.append(f"{photo_type_choice} of ")
+#     # if photo_type_choice is empty, nothing gets appended
+#         else:
+#             digital_artform_choice = self.get_choice(kwargs.get('digital_artform', ''), kwargs.get('digital_artform', ''))
+#             if digital_artform_choice:  # Checks if digital_artform_choice has a value
+#                 components.append(f"{digital_artform_choice} of ")
+#     # if digital_artform_choice is empty, nothing gets appended
+
+#         lighting = kwargs.get('lighting', "").lower()
+#         components.append(lighting)
+
+#         params = [
+#             ('subject', 'default_tags', kwargs.get('subject', '')),
+#             ('roles', kwargs.get('roles', '')),
+#             ('hairstyles', kwargs.get('hairstyles', '')),
+#             ('additional_details', kwargs.get('additional_details', '')),
+#             ('place', kwargs.get('place', ''))
+#         ]
+#         components.extend([self.get_choice(kwargs.get(param[0], ''), param[1]) for param in params])
+
+#         if is_photographer:
+#             params = [
+#                 ('photography_styles', kwargs.get('photography_styles', '')),
+#                 ('device', kwargs.get('device', '')),
+#                 ('photographer', kwargs.get('photographer', ''))
+#             ]
+#             components.extend([
+#                 self.get_choice(kwargs.get(param[0], ''), param[1]) for param in params
+#             ])
+#             components[-2] = f"shot on {components[-2]}"
+#             components[-1] = f"photo by {components[-1]}"
+#         else:
+#             if kwargs.get('artists', ''):
+#                 artist_choice = self.get_choice(kwargs.get('artist', ''), kwargs.get('artists', ''))
+#                 if artist_choice:  # Checks if artist_choice has a value
+#                     components.append(f"by {artist_choice}")
+
+#         prompt = " ".join(components)
+#         prompt = re.sub(' +', ' ', prompt) 
+#         print(f"AUTOPROMPT: {prompt}")
+#         return (prompt,)
+       
+class PromptGenerator:
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "generate_prompt"
+    CATEGORY = "PromptGenerator"
+
+    @classmethod
+    def IS_CHANGED(cls):
+        return float("NaN")
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "subject": ("STRING", {}),
+                "artform": (
+                    ["disabled"] + ["random"]  + ARTFORM,
+                    {"default": "random"},
+                ),
+                "photo_type": (
+                    ["disabled"] + ["random"] + PHOTO_TYPE,
+                    {"default": "random"},
+                ),
+                "default_tags": (
+                    ["disabled"] + ["random"] + DEFAULT_TAGS,
+                    {"default": "random"},
+                ),
+                "roles": (["disabled"] + ["random"] + ROLES, {"default": "random"}),
+                "hairstyles": (
+                    ["disabled"] + ["random"] + HAIRSTYLES,
+                    {"default": "random"},
+                ),
+                "additional_details": (
+                    ["disabled"] + ["random"] + ADDITIONAL_DETAILS,
+                    {"default": "random"},
+                ),
+                "photography_styles": (
+                    ["disabled"] + ["random"] + PHOTOGRAPHY_STYLES,
+                    {"default": "random"},
+                ),
+                # "lens": (["random"] + PromptGenerator.LENS, {"default": "random"}),
+                "device": (["disabled"] + ["random"] + DEVICE, {"default": "random"}),
+                "photographer": (
+                    ["disabled"] + ["random"] + PHOTOGRAPHER,
+                    {"default": "random"},
+                ),
+                "artist": (["disabled"] + ["random"] + ARTIST, {"default": "random"}),
+                "digital_artform": (
+                    ["disabled"] + ["random"] + DIGITAL_ARTFORM,
+                    {"default": "random"},
+                ),
+                "place": (["disabled"] + ["random"] + PLACE, {"default": "random"}),
+                "lighting": (
+                    ["disabled"] + ["random"] + LIGHTING,
+                    {"default": "random"},
+                ),
+            },
+        }
+
+ 
     def split_and_choose(self, input_str):
         choices = [choice.strip() for choice in input_str.split(',')]
         return random.choice(choices)
@@ -1499,35 +1596,37 @@ class PromptGenerator:
         )
 
         if is_photographer:
-            photo_type_choice = self.get_choice(kwargs.get('photo_type', ''), self.PHOTO_TYPE)
+            photo_type_choice = self.get_choice(kwargs.get('photo_type', ''), PHOTO_TYPE)
             if photo_type_choice:
                 components.append(f"{photo_type_choice} of ")
         else:
-            digital_artform_choice = self.get_choice(kwargs.get('digital_artform', ''), self.DIGITAL_ARTFORM)
+            digital_artform_choice = self.get_choice(kwargs.get('digital_artform', ''), DIGITAL_ARTFORM)
             if digital_artform_choice:
                 components.append(f"{digital_artform_choice} of ")
 
         lighting = kwargs.get('lighting', "").lower()
         if lighting == "random":
-            selected_lighting = ", ".join(random.sample(self.LIGHTING, random.randint(2, 5)))
+            selected_lighting = ", ".join(random.sample(LIGHTING, random.randint(2, 5)))
             components.append(selected_lighting)
+        elif lighting == "disabled":
+            pass
         else:
             components.append(lighting)
 
         params = [
-            ('subject', 'default_tags', self.DEFAULT_TAGS),
-            ('roles', self.ROLES),
-            ('hairstyles', self.HAIRSTYLES),
-            ('additional_details', self.ADDITIONAL_DETAILS),
-            ('place', self.PLACE)
+            ('subject', 'default_tags', DEFAULT_TAGS),
+            ('roles', ROLES),
+            ('hairstyles', HAIRSTYLES),
+            ('additional_details', ADDITIONAL_DETAILS),
+            ('place', PLACE)
         ]
         components.extend([self.get_choice(kwargs.get(param[0], ''), param[1]) for param in params])
 
         if is_photographer:
             params = [
-                ('photography_styles', self.PHOTOGRAPHY_STYLES),
-                ('device', self.DEVICE),
-                ('photographer', self.PHOTOGRAPHER)
+                ('photography_styles', PHOTOGRAPHY_STYLES),
+                ('device', DEVICE),
+                ('photographer', PHOTOGRAPHER)
             ]
             components.extend([
                 self.get_choice(kwargs.get(param[0], ''), param[1]) for param in params
@@ -1535,7 +1634,7 @@ class PromptGenerator:
             components[-2] = f"shot on {components[-2]}"
             components[-1] = f"photo by {components[-1]}"
         else:
-            components.append(f"by {self.get_choice(kwargs.get('artist', ''), self.ARTIST)}")
+            components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
 
         prompt = " ".join(components)
         prompt = re.sub(' +', ' ', prompt) 
@@ -1545,7 +1644,8 @@ class PromptGenerator:
 
 NODE_CLASS_MAPPINGS = {
     "PromptGenerator": PromptGenerator,
-    "CSL": CommaSeparatedList,
+    # "CSVPromptGenerator": CSVPromptGenerator,
+    # "CSL": CommaSeparatedList,
 }
 
 # Human readable names for the nodes
