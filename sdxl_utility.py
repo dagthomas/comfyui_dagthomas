@@ -1615,18 +1615,18 @@ class PromptGenerator:
         else:
             components.append(lighting)
             
-
         subject = kwargs.get('subject', '')
+        default_tags = kwargs.get('default_tags', 'random')  # default to "random" if not specified
+    
         if not subject:
-            subject = kwargs.get('default_tags', "").lower()
-            if subject == "random":
-                subject = random.choice(DEFAULT_TAGS)
-                components.append(subject)
-            elif subject == "disabled":
+            if default_tags == "random":
+                selected_subject = self.get_choice(kwargs.get('default_tags', ''), DEFAULT_TAGS)
+                components.append(selected_subject)
+            elif default_tags == "disabled":
                 pass
             else:
-                components.append(subject)
-        else:
+                components.append(default_tags)    
+        else:   
             components.append(subject)
         
         
@@ -1655,8 +1655,8 @@ class PromptGenerator:
         prompt = " ".join(components)
         prompt = re.sub(' +', ' ', prompt) 
         print(f"AUTOPROMPT: {prompt}")
-        return (prompt,)
-
+        return (prompt.replace("of as", "of"),)
+ 
 
 NODE_CLASS_MAPPINGS = {
     "PromptGenerator": PromptGenerator,
