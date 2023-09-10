@@ -1614,10 +1614,21 @@ class PromptGenerator:
             pass
         else:
             components.append(lighting)
+            
+
         subject = kwargs.get('subject', '')
         if not subject:
-            subject = random.choice(DEFAULT_TAGS)
-        components.append(subject)
+            subject = kwargs.get('default_tags', "").lower()
+            if subject == "random":
+                subject = random.choice(DEFAULT_TAGS)
+                components.append(subject)
+            elif subject == "disabled":
+                pass
+            else:
+                components.append(subject)
+        else:
+            components.append(subject)
+        
         
         params = [
             ('roles', ROLES),
