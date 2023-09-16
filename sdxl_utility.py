@@ -1522,6 +1522,7 @@ class PromptGenerator:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "generate_prompt"
     CATEGORY = "PromptGenerator"
+    rng = None
 
     @classmethod
     def IS_CHANGED(cls):
@@ -1531,6 +1532,9 @@ class PromptGenerator:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "seed": (
+                    "INT", {"default": 0, "min": 0, "max": 1125899906842624},
+                ),
                 "subject": ("STRING", {}),
                 "artform": (
                     ["disabled"] + ["random"]  + ARTFORM,
@@ -1579,7 +1583,7 @@ class PromptGenerator:
  
     def split_and_choose(self, input_str):
         choices = [choice.strip() for choice in input_str.split(',')]
-        return random.choice(choices)
+        return self.rng.choice(choices)
 
     def get_choice(self, input_str, default_choices):
         if input_str.lower() == 'disabled':
@@ -1587,14 +1591,19 @@ class PromptGenerator:
         elif ',' in input_str:
             return self.split_and_choose(input_str)
         elif input_str.lower() == 'random':
-            return random.choice(default_choices)
+            return self.rng.choice(default_choices)
         else:
             return input_str
 
     def generate_prompt(self, **kwargs):
+        seed = kwargs.get('seed', 0)
+        if seed == None or seed > 0:
+            self.rng = random.Random(seed)
+        print(f'seed: {seed}')
+
         components = []
         is_photographer = kwargs.get("artform", "").lower() == "photography" or (
-            kwargs.get("artform", "").lower() == "random" and random.choice([True, False])
+            kwargs.get("artform", "").lower() == "random" and self.rng.choice([True, False])
         )
 
         if is_photographer:
@@ -1608,7 +1617,7 @@ class PromptGenerator:
 
         lighting = kwargs.get('lighting', "").lower()
         if lighting == "random":
-            selected_lighting = ", ".join(random.sample(LIGHTING, random.randint(2, 5)))
+            selected_lighting = ", ".join(self.rng.sample(LIGHTING, self.rng.randint(2, 5)))
             components.append(selected_lighting)
         elif lighting == "disabled":
             pass
