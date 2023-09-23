@@ -1523,6 +1523,9 @@ class PromptGenerator:
     FUNCTION = "generate_prompt"
     CATEGORY = "PromptGenerator"
 
+    def __init__(self, seed=None):
+        self.rng = random.Random(seed)
+        
     @classmethod
     def IS_CHANGED(cls):
         return float("NaN")
@@ -1531,6 +1534,9 @@ class PromptGenerator:
     def INPUT_TYPES(cls):
         return {
             "required": {
+                "seed": (
+                    "INT", {"default": 0, "min": 0, "max": 1125899906842624},
+                ),
                 "subject": ("STRING", {}),
                 "artform": (
                     ["disabled"] + ["random"]  + ARTFORM,
@@ -1557,7 +1563,6 @@ class PromptGenerator:
                     ["disabled"] + ["random"] + PHOTOGRAPHY_STYLES,
                     {"default": "random"},
                 ),
-                # "lens": (["random"] + PromptGenerator.LENS, {"default": "random"}),
                 "device": (["disabled"] + ["random"] + DEVICE, {"default": "random"}),
                 "photographer": (
                     ["disabled"] + ["random"] + PHOTOGRAPHER,
@@ -1579,7 +1584,7 @@ class PromptGenerator:
  
     def split_and_choose(self, input_str):
         choices = [choice.strip() for choice in input_str.split(',')]
-        return random.choice(choices)
+        return self.rng.choices(choices, k=1)[0]
 
     def get_choice(self, input_str, default_choices):
         if input_str.lower() == 'disabled':
@@ -1587,14 +1592,17 @@ class PromptGenerator:
         elif ',' in input_str:
             return self.split_and_choose(input_str)
         elif input_str.lower() == 'random':
-            return random.choice(default_choices)
+            return self.rng.choices(default_choices, k=1)[0]
         else:
             return input_str
 
     def generate_prompt(self, **kwargs):
+        seed = kwargs.get('seed', 0)
+        if seed is not None:
+            self.rng = random.Random(seed)
         components = []
         is_photographer = kwargs.get("artform", "").lower() == "photography" or (
-            kwargs.get("artform", "").lower() == "random" and random.choice([True, False])
+            kwargs.get("artform", "").lower() == "random" and self.rng.choice([True, False])
         )
 
         if is_photographer:
@@ -1608,7 +1616,7 @@ class PromptGenerator:
 
         lighting = kwargs.get('lighting', "").lower()
         if lighting == "random":
-            selected_lighting = ", ".join(random.sample(LIGHTING, random.randint(2, 5)))
+            selected_lighting = ", ".join(self.rng.sample(LIGHTING, self.rng.randint(2, 5)))  # assuming LIGHTING is a predefined list
             components.append(selected_lighting)
         elif lighting == "disabled":
             pass
@@ -1654,7 +1662,8 @@ class PromptGenerator:
 
         prompt = " ".join(components)
         prompt = re.sub(' +', ' ', prompt) 
-        print(f"AUTOPROMPT: {prompt}")
+        print(f'PromptGenerator Seed  : {seed}')
+        print(f"PromptGenerator String: {prompt}")
         return (prompt.replace("of as", "of"),)
  
 
