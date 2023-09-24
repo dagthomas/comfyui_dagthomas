@@ -1519,7 +1519,8 @@ LIGHTING = [
 #         return (prompt,)
        
 class PromptGenerator:
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("STRING","INT",)
+    RETURN_NAMES = ("prompt","seed",)
     FUNCTION = "generate_prompt"
     CATEGORY = "PromptGenerator"
 
@@ -1664,7 +1665,7 @@ class PromptGenerator:
         prompt = re.sub(' +', ' ', prompt) 
         print(f'PromptGenerator Seed  : {seed}')
         print(f"PromptGenerator String: {prompt}")
-        return (prompt.replace("of as", "of"),)
+        return (prompt.replace("of as", "of"),seed)
  
 
 NODE_CLASS_MAPPINGS = {
