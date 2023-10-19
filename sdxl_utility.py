@@ -1998,17 +1998,6 @@ class PromptGenerator:
             if digital_artform_choice:
                 components.append(f"{digital_artform_choice} of ")
 
-        lighting = kwargs.get("lighting", "").lower()
-        if lighting == "random":
-            selected_lighting = ", ".join(
-                self.rng.sample(LIGHTING, self.rng.randint(2, 5))
-            )  # assuming LIGHTING is a predefined list
-            components.append(selected_lighting)
-        elif lighting == "disabled":
-            pass
-        else:
-            components.append(lighting)
-
         subject = kwargs.get("subject", "")
         default_tags = kwargs.get(
             "default_tags", "random"
@@ -2033,10 +2022,22 @@ class PromptGenerator:
             ("additional_details", ADDITIONAL_DETAILS),
             ("place", PLACE),
         ]
-        components.extend(
-            [self.get_choice(kwargs.get(param[0], ""), param[1]) for param in params]
-        )
-
+        for param in params:
+            components.append(self.get_choice(kwargs.get(param[0], ""), param[1]))
+        for i in reversed(range(len(components))):
+            if components[i] in PLACE:
+                components[i] += ","
+                break
+        lighting = kwargs.get("lighting", "").lower()
+        if lighting == "random":
+            selected_lighting = ", ".join(
+                self.rng.sample(LIGHTING, self.rng.randint(2, 5))
+            )  # assuming LIGHTING is a predefined list
+            components.append(selected_lighting)
+        elif lighting == "disabled":
+            pass
+        else:
+            components.append(lighting)
         if is_photographer:
             params = [
                 ("photography_styles", PHOTOGRAPHY_STYLES),
