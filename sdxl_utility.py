@@ -4,33 +4,38 @@ import nodes
 import re
 
 ARTFORM = ["photography", "art"]
+PHOTO_FRAMING = [
+    "extreme close-up",
+    "close-up",
+    "medium close-up",
+    "medium shot",
+    "long shot",
+    "establishing shot",
+    "medium full shot",
+    "full shot",
+    "upper body shot",
+    "full body shot",
+]
 PHOTO_TYPE = [
-    "surreal portrait",
-    "horror portrait",
-    "action portrait",
-    "self portrait",
-    "street portrait",
-    "half-body portrait",
-    "close up portrait",
-    "face shot portrait",
-    "studio portrait",
-    "glamour close up portrait",
-    "fine art close up portrait",
-    "Traditional posed portrait",
-    "candid portrait",
-    "environmental portrait",
-    "lifestyle portrait",
-    "documentary portrait",
-    "black and white portrait",
-    "color portrait",
-    "beauty portrait",
-    "glamour portrait",
-    "fine art portrait",
-    "fashion portrait",
-    "high key portrait",
-    "low key portrait",
-    "street portrait",
-    "self portrait",
+    "front view",
+    "bilaterally symmetrical",
+    "side view",
+    "back view",
+    "from above",
+    "from below",
+    "from behind",
+    "wide angle view",
+    "fisheyes view",
+    "macro view",
+    "overhead shot",
+    "top down",
+    "bird’s eye view",
+    "high angle",
+    "slightly above",
+    "straight on",
+    "hero view",
+    "low view",
+    "selfie",
 ]
 
 # EMOTIONS = ["beautiful", "glad", "sad", "angry", "neutral"]
@@ -1730,19 +1735,6 @@ class PromptGenerator:
             and self.rng.choice([True, False])
         )
 
-        if is_photographer:
-            photo_type_choice = self.get_choice(
-                kwargs.get("photo_type", ""), PHOTO_TYPE
-            )
-            if photo_type_choice:
-                components.append(f"{photo_type_choice} of ")
-        else:
-            digital_artform_choice = self.get_choice(
-                kwargs.get("digital_artform", ""), DIGITAL_ARTFORM
-            )
-            if digital_artform_choice:
-                components.append(f"{digital_artform_choice} of ")
-
         subject = kwargs.get("subject", "")
         default_tags = kwargs.get(
             "default_tags", "random"
@@ -1784,6 +1776,20 @@ class PromptGenerator:
         else:
             components.append(lighting)
         if is_photographer:
+            photo_type_choice = self.get_choice(
+                kwargs.get("photo_type", ""), PHOTO_TYPE
+            )
+            random_type = random.choice(PHOTO_TYPE)
+            random_type_float = round(random.uniform(1, 2), 1)
+            formatted_type_value = f"({random_type}:{random_type_float})"
+
+            random_framing = random.choice(PHOTO_FRAMING)
+            random_framing_float = round(random.uniform(1, 2), 1)
+            formatted_framing_value = f"({random_framing}:{random_framing_float})"
+
+            components.append(f"{formatted_type_value} {formatted_framing_value} ")
+            if photo_type_choice:
+                components.append(f"{photo_type_choice}, BREAK ")
             params = [
                 ("photography_styles", PHOTOGRAPHY_STYLES),
                 ("device", DEVICE),
@@ -1798,6 +1804,11 @@ class PromptGenerator:
             components[-2] = f"shot on {components[-2]}"
             components[-1] = f"photo by {components[-1]}"
         else:
+            digital_artform_choice = self.get_choice(
+                kwargs.get("digital_artform", ""), DIGITAL_ARTFORM
+            )
+            if digital_artform_choice:
+                components.append(f"{digital_artform_choice}")
             components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
 
         prompt = " ".join(components)
