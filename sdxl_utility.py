@@ -1731,21 +1731,20 @@ LIGHTING = [
     "dramatic Pull from the ghost of a virtual memory",
     "gritty industrial",
     "triadic color palette",
-    "Triadic",
-    "Monochromatic",
-    "Analogous",
-    "Complementary",
-    "Split-Complementary",
-    "Double Complementary (Tetradic)",
-    "Square",
-    "Rectangular (Tetradic)",
-    "Neutral",
-    "Pastel",
-    "Warm",
-    "Cool",
-    "Earth Tone",
-    "Jewel Tone",
-    "Muted",
+    "Monochromatic color palette",
+    "Analogous color palette",
+    "Complementary color palette",
+    "Split-Complementary color palette",
+    "Double Complementary (Tetradic)  color palette",
+    "Square color palette",
+    "Rectangular (Tetradic) color palette",
+    "Neutral color palette",
+    "Pastel color palette",
+    "Warm color palette",
+    "Cool color palette",
+    "Earth Tone color palette",
+    "Jewel Tone color palette",
+    "Muted color palette",
     "High Contrast",
 ]
 
@@ -1965,6 +1964,10 @@ class PromptGenerator:
             kwargs.get("artform", "").lower() == "random"
             and self.rng.choice([True, False])
         )
+
+        if is_photographer:
+            components.append(kwargs.get("photography_styles", PHOTOGRAPHY_STYLES))
+            components.append(" of")
         custom = kwargs.get("custom", "")
         subject = kwargs.get("subject", "")
         default_tags = kwargs.get(
@@ -2027,7 +2030,7 @@ class PromptGenerator:
                 components.append(f"{formatted_type_value} {formatted_framing_value} ")
 
             params = [
-                ("photography_styles", PHOTOGRAPHY_STYLES),
+                # ("photography_styles", PHOTOGRAPHY_STYLES),
                 ("device", DEVICE),
                 ("photographer", PHOTOGRAPHER),
             ]
