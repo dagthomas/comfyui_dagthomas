@@ -2011,17 +2011,21 @@ class PromptGenerator:
             photo_type_choice = self.get_choice(
                 kwargs.get("photo_type", ""), PHOTO_TYPE
             )
-            random_type = random.choice(PHOTO_TYPE)
-            random_type_float = round(random.uniform(1, 2), 1)
-            formatted_type_value = f"({random_type}:{random_type_float})"
+            # If a specific photo_type is chosen, use it directly in the prompt
+            if photo_type_choice and photo_type_choice != "random":
+                random_value = round(self.rng.uniform(1.1, 1.5), 1)
+                components.append(f", ({photo_type_choice}:{random_value}), ")
+            else:
+                random_type = self.rng.choice(PHOTO_TYPE)
+                components.append(f"{random_type}, ")
+                random_type_float = round(random.uniform(1, 2), 1)
+                formatted_type_value = f"({random_type}:{random_type_float})"
+                random_framing = random.choice(PHOTO_FRAMING)
+                random_framing_float = round(random.uniform(1, 2), 1)
+                formatted_framing_value = f"({random_framing}:{random_framing_float})"
 
-            random_framing = random.choice(PHOTO_FRAMING)
-            random_framing_float = round(random.uniform(1, 2), 1)
-            formatted_framing_value = f"({random_framing}:{random_framing_float})"
+                components.append(f"{formatted_type_value} {formatted_framing_value} ")
 
-            components.append(f"{formatted_type_value} {formatted_framing_value} ")
-            if photo_type_choice:
-                components.append(f"{photo_type_choice}, BREAK ")
             params = [
                 ("photography_styles", PHOTOGRAPHY_STYLES),
                 ("device", DEVICE),
