@@ -1966,7 +1966,10 @@ class PromptGenerator:
         )
 
         if is_photographer:
-            components.append(kwargs.get("photography_styles", PHOTOGRAPHY_STYLES))
+            selected_photo_style = self.get_choice(
+                kwargs.get("photography_styles", ""), PHOTOGRAPHY_STYLES
+            )
+            components.append(selected_photo_style)
             components.append(" of")
         custom = kwargs.get("custom", "")
         subject = kwargs.get("subject", "")
