@@ -2057,7 +2057,7 @@ class PromptGenerator:
         prompt = re.sub(" +", " ", prompt)
         print(f"PromptGenerator Seed  : {seed}")
         print(f"PromptGenerator String: {prompt}")
-        return (prompt.replace("of as", "of"), seed)
+        return (prompt.replace("of as", "of").strip().replace(" , ", ", "), seed)
 
 
 NODE_CLASS_MAPPINGS = {
