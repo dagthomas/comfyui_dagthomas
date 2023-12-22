@@ -2056,9 +2056,14 @@ class PromptGenerator:
         prompt = " ".join(components)
         prompt = re.sub(" +", " ", prompt)
         print(f"PromptGenerator Seed  : {seed}")
-        print(f"PromptGenerator String: {prompt}")
+
+        replaced = prompt.replace("of as", "of")
+        replaced = replaced.replace(" , ", ", ")
+        replaced = replaced.replace(". ", ", ")
+        replaced = replaced.replace(";", ", ")
+        print(f"PromptGenerator String: {replaced}")
         return (
-            prompt.replace("of as", "of").replace(" , ", ", ").replace(".", ", "),
+            replaced,
             seed,
         )
 
