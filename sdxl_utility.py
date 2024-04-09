@@ -57,10 +57,6 @@ class PromptGenerator:
         self.rng = random.Random(seed)
 
     @classmethod
-    def IS_CHANGED(cls):
-        return float("NaN")
-
-    @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
