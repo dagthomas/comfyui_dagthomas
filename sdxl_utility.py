@@ -4,11 +4,6 @@ import json
 
 import os
 
-# Get the directory of the current script
-script_directory = os.path.dirname(__file__)
-# Change the working directory to the script directory
-os.chdir(script_directory)
-
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
