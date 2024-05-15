@@ -133,7 +133,10 @@ class PromptGenerator:
             return self.rng.choices(default_choices, k=1)[0]
         else:
             return input_str
-
+    def clean_consecutive_commas(self, input_string):
+        cleaned_string = re.sub(r',\s*,', ',', input_string)
+        return cleaned_string
+    
     def generate_prompt(self, **kwargs):
         seed = kwargs.get("seed", 0)
         if seed is not None:
@@ -148,8 +151,11 @@ class PromptGenerator:
             selected_photo_style = self.get_choice(
                 kwargs.get("photography_styles", ""), PHOTOGRAPHY_STYLES
             )
+            if not selected_photo_style:
+                selected_photo_style = "photography"
             components.append(selected_photo_style)
-            components.append(" of")
+            if kwargs.get("photography_style", "") != "disabled" and kwargs.get("default_tags", "") != "disabled" or kwargs.get("subject", "") != "":
+                components.append(" of")
         custom = kwargs.get("custom", "")
         subject = kwargs.get("subject", "")
         default_tags = kwargs.get(
@@ -174,11 +180,7 @@ class PromptGenerator:
             ("roles", ROLES),
             ("hairstyles", HAIRSTYLES),
             ("additional_details", ADDITIONAL_DETAILS),
-            ("place", PLACE),
-            ("clothing", CLOTHING),
-            ("composition", COMPOSITION),
-            ("pose", POSE),
-            ("background", BACKGROUND),
+            
         ]
         for param in params:
             components.append(self.get_choice(kwargs.get(param[0], ""), param[1]))
@@ -186,6 +188,63 @@ class PromptGenerator:
             if components[i] in PLACE:
                 components[i] += ","
                 break
+        if kwargs.get("clothing", "") != "disabled" and kwargs.get("clothing", "") != "random":
+            components.append(", dressed in ")
+            clothing = kwargs.get("clothing", "")
+            components.append(clothing)
+        elif kwargs.get("clothing", "") == "random":
+            components.append(", dressed in ")
+            clothing = self.get_choice(
+                    kwargs.get("clothing", ""), CLOTHING
+                )
+            components.append(clothing)
+
+        if kwargs.get("composition", "") != "disabled" and kwargs.get("composition", "") != "random":
+            components.append(",  ")
+            composition = kwargs.get("composition", "")
+            components.append(composition)
+        elif kwargs.get("composition", "") == "random": 
+            components.append(", ")
+            composition = self.get_choice(
+                    kwargs.get("composition", ""), COMPOSITION
+                )
+            components.append(composition)
+        
+        if kwargs.get("pose", "") != "disabled" and kwargs.get("pose", "") != "random":
+            components.append(",  ")
+            pose = kwargs.get("pose", "")
+            components.append(pose)
+        elif kwargs.get("pose", "") == "random":
+            components.append(", ")
+            pose = self.get_choice(
+                    kwargs.get("pose", ""), POSE
+                )
+            components.append(pose)
+        
+        if kwargs.get("background", "") != "disabled" and kwargs.get("background", "") != "random":
+            components.append(",  ")
+            background = kwargs.get("background", "")
+            components.append(background)
+        elif kwargs.get("background", "") == "random": 
+            components.append(", ")
+            background = self.get_choice(
+                    kwargs.get("background", ""), BACKGROUND
+                )
+            components.append(background)
+
+        if kwargs.get("place", "") != "disabled" and kwargs.get("place", "") != "random":
+            components.append(",  ")
+            place = kwargs.get("place", "")
+            components.append(place)
+        elif kwargs.get("place", "") == "random": 
+            components.append(", ")
+            place = self.get_choice(
+                    kwargs.get("place", ""), PLACE
+                )
+            components.append(place)
+
+
+
         lighting = kwargs.get("lighting", "").lower()
         if lighting == "random":
             selected_lighting = ", ".join(
@@ -195,25 +254,20 @@ class PromptGenerator:
         elif lighting == "disabled":
             pass
         else:
+            components.append(", ")
             components.append(lighting)
         if is_photographer:
-            photo_type_choice = self.get_choice(
-                kwargs.get("photo_type", ""), PHOTO_TYPE
-            )
-            # If a specific photo_type is chosen, use it directly in the prompt
-            if photo_type_choice and photo_type_choice != "random":
-                random_value = round(self.rng.uniform(1.1, 1.5), 1)
-                components.append(f", ({photo_type_choice}:{random_value}), ")
-            else:
-                random_type = self.rng.choice(PHOTO_TYPE)
-                components.append(f"{random_type}, ")
-                random_type_float = round(random.uniform(1, 2), 1)
-                formatted_type_value = f"({random_type}:{random_type_float})"
-                random_framing = random.choice(PHOTO_FRAMING)
-                random_framing_float = round(random.uniform(1, 2), 1)
-                formatted_framing_value = f"({random_framing}:{random_framing_float})"
-
-                components.append(f"{formatted_type_value} {formatted_framing_value} ")
+            
+           
+            if kwargs.get("photo_type", "") != "disabled":
+                print("why")
+                photo_type_choice = self.get_choice(
+                    kwargs.get("photo_type", ""), PHOTO_TYPE
+                )
+                if photo_type_choice and photo_type_choice != "random" and photo_type_choice != "disabled":
+                    random_value = round(self.rng.uniform(1.1, 1.5), 1)
+                    components.append(f", ({photo_type_choice}:{random_value}), ")
+            
 
             params = [
                 # ("photography_styles", PHOTOGRAPHY_STYLES),
@@ -226,24 +280,27 @@ class PromptGenerator:
                     for param in params
                 ]
             )
-            components[-2] = f"shot on {components[-2]}"
-            components[-1] = f"photo by {components[-1]}"
+            if kwargs.get("device", "") != "disabled":
+                components[-2] = f", shot on {components[-2]}"
+            if kwargs.get("photographer", "") != "disabled":
+                components[-1] = f", photo by {components[-1]}"
         else:
             digital_artform_choice = self.get_choice(
                 kwargs.get("digital_artform", ""), DIGITAL_ARTFORM
             )
             if digital_artform_choice:
                 components.append(f"{digital_artform_choice}")
-            components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
+            if kwargs.get("artist", "") != "disabled":
+                components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
 
         prompt = " ".join(components)
         prompt = re.sub(" +", " ", prompt)
         print(f"PromptGenerator Seed  : {seed}")
-
         replaced = prompt.replace("of as", "of")
         replaced = replaced.replace(" , ", ", ")
         replaced = replaced.replace(". ", ", ")
         replaced = replaced.replace(";", ", ")
+        replaced = self.clean_consecutive_commas(replaced)
         print(f"PromptGenerator String: {replaced}")
         return (
             replaced,
