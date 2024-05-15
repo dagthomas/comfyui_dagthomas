@@ -260,7 +260,6 @@ class PromptGenerator:
             
            
             if kwargs.get("photo_type", "") != "disabled":
-                print("why")
                 photo_type_choice = self.get_choice(
                     kwargs.get("photo_type", ""), PHOTO_TYPE
                 )
