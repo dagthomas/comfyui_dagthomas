@@ -1,0 +1,14 @@
+[project]
+name = "comfyui_dagthomas"
+description = "Easy prompting for generation of endless random art pieces and photographs!"
+version = "1.0.0"
+license = "LICENSE"
+
+[project.urls]
+Repository = "https://github.com/dagthomas/comfyui_dagthomas"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "comfyui_dagthomas"
+Icon = ""
