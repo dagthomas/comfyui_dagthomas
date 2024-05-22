@@ -9,6 +9,6 @@ Repository = "https://github.com/dagthomas/comfyui_dagthomas"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = ""
+PublisherId = "dagthomas"
 DisplayName = "comfyui_dagthomas"
 Icon = ""
