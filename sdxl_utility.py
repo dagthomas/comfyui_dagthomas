@@ -34,7 +34,7 @@ CLOTHING = load_json_file("clothing.json")
 COMPOSITION = load_json_file("composition.json")
 POSE = load_json_file("pose.json")
 BACKGROUND = load_json_file("background.json")
-
+BODY_TYPES = load_json_file("body_types.json")
 
 class PromptGenerator:
     RETURN_TYPES = (
@@ -67,6 +67,10 @@ class PromptGenerator:
                 ),
                 "photo_type": (
                     ["disabled"] + ["random"] + PHOTO_TYPE,
+                    {"default": "random"},
+                ),
+                "body_types": (
+                    ["disabled"] + ["random"] + BODY_TYPES,
                     {"default": "random"},
                 ),
                 "default_tags": (
@@ -147,6 +151,11 @@ class PromptGenerator:
             and self.rng.choice([True, False])
         )
 
+
+
+
+
+
         if is_photographer:
             selected_photo_style = self.get_choice(
                 kwargs.get("photography_styles", ""), PHOTOGRAPHY_STYLES
@@ -165,10 +174,19 @@ class PromptGenerator:
             components.append(custom)
         if not subject:
             if default_tags == "random":
-                selected_subject = self.get_choice(
-                    kwargs.get("default_tags", ""), DEFAULT_TAGS
-                )
-                components.append(selected_subject)
+                if kwargs.get("body_types", "") != "disabled" and kwargs.get("body_types", "") != "random":
+                    body_type = kwargs.get("body_types", "")
+                    selected_subject = self.get_choice(
+                        kwargs.get("default_tags", ""), DEFAULT_TAGS
+                    ).replace("a ", "").replace("an ", "")
+                    components.append("a ")
+                    components.append(body_type)
+                    components.append(selected_subject)
+                else: 
+                    selected_subject = self.get_choice(
+                        kwargs.get("default_tags", ""), DEFAULT_TAGS
+                    )
+                    components.append(selected_subject)
             elif default_tags == "disabled":
                 pass
             else:
