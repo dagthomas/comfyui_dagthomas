@@ -173,26 +173,43 @@ class PromptGenerator:
         if custom:
             components.append(custom)
         if not subject:
-            if default_tags == "random":
-                if kwargs.get("body_types", "") != "disabled" and kwargs.get("body_types", "") != "random":
+                if default_tags == "random":
+                    # Case where default_tags is "random"
                     body_type = kwargs.get("body_types", "")
-                    selected_subject = self.get_choice(
-                        kwargs.get("default_tags", ""), DEFAULT_TAGS
-                    ).replace("a ", "").replace("an ", "")
-                    components.append("a ")
-                    components.append(body_type)
-                    components.append(selected_subject)
-                else: 
-                    selected_subject = self.get_choice(
-                        kwargs.get("default_tags", ""), DEFAULT_TAGS
-                    )
-                    components.append(selected_subject)
-            elif default_tags == "disabled":
-                pass
-            else:
-                components.append(default_tags)
+
+                    # Check if body_types is neither "disabled" nor "random"
+                    if body_type != "disabled" and body_type != "random":
+                        selected_subject = self.get_choice(
+                            kwargs.get("default_tags", ""), DEFAULT_TAGS
+                        ).replace("a ", "").replace("an ", "")
+                        components.append("a ")
+                        components.append(body_type)
+                        components.append(selected_subject)
+                    elif body_type == "disabled":
+                        selected_subject = self.get_choice(
+                            kwargs.get("default_tags", ""), DEFAULT_TAGS
+                        )
+                        components.append(selected_subject)
+                    else:
+                        # When body_types is "disabled" or "random"
+                        body_type = self.get_choice(body_type, BODY_TYPES)
+                        components.append("a ")
+                        components.append(body_type)
+                        selected_subject = self.get_choice(
+                            kwargs.get("default_tags", ""), DEFAULT_TAGS
+                        ).replace("a ", "").replace("an ", "")
+                        components.append(selected_subject)
+                elif default_tags == "disabled":
+                    # Do nothing if default_tags is "disabled"
+                    pass
+                else:
+                    # Add default_tags if it's not "random" or "disabled"
+                    components.append(default_tags)
         else:
+            # If subject is provided, use it
             components.append(subject)
+
+            return components
 
         params = [
             ("roles", ROLES),
