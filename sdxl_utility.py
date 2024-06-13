@@ -148,7 +148,9 @@ class PromptGenerator:
         return cleaned_string
     
     def process_string(self, replaced, seed):
+        replaced = replaced.replace(",  ,", ",").replace(" , ", ",").replace(".,", ",").replace(",  ,", ",").replace(" , ", ",").replace(".,", ",").replace(", , ", ",").replace(", ", ",").replace(" , ", ",").replace(",,", ",").replace(",,", ",").replace(" ,", ",").replace(" ,", ",")
         original = replaced
+        
         # Find the indices for "BREAK_CLIPL"
         first_break_clipl_index = replaced.find("BREAK_CLIPL")
         second_break_clipl_index = replaced.find("BREAK_CLIPL", first_break_clipl_index + len("BREAK_CLIPL"))
@@ -288,44 +290,44 @@ class PromptGenerator:
             components.append(clothing)
 
         if kwargs.get("composition", "") != "disabled" and kwargs.get("composition", "") != "random":
-            components.append(",  ")
+            components.append(",")
             composition = kwargs.get("composition", "")
             components.append(composition)
         elif kwargs.get("composition", "") == "random": 
-            components.append(", ")
+            components.append(",")
             composition = self.get_choice(
                     kwargs.get("composition", ""), COMPOSITION
                 )
             components.append(composition)
         
         if kwargs.get("pose", "") != "disabled" and kwargs.get("pose", "") != "random":
-            components.append(",  ")
+            components.append(",")
             pose = kwargs.get("pose", "")
             components.append(pose)
         elif kwargs.get("pose", "") == "random":
-            components.append(", ")
+            components.append(",")
             pose = self.get_choice(
                     kwargs.get("pose", ""), POSE
                 )
             components.append(pose)
         components.append("BREAK_CLIPL")
         if kwargs.get("background", "") != "disabled" and kwargs.get("background", "") != "random":
-            components.append(",  ")
+            components.append(",")
             background = kwargs.get("background", "")
             components.append(background)
         elif kwargs.get("background", "") == "random": 
-            components.append(", ")
+            components.append(",")
             background = self.get_choice(
                     kwargs.get("background", ""), BACKGROUND
                 )
             components.append(background)
 
         if kwargs.get("place", "") != "disabled" and kwargs.get("place", "") != "random":
-            components.append(",  ")
+            components.append(",")
             place = kwargs.get("place", "")
             components.append(place)
         elif kwargs.get("place", "") == "random": 
-            components.append(", ")
+            components.append(",")
             place = self.get_choice(
                     kwargs.get("place", ""), PLACE
                 )
@@ -335,15 +337,16 @@ class PromptGenerator:
         components.append("BREAK_CLIPL")
         lighting = kwargs.get("lighting", "").lower()
         if lighting == "random":
+            
             selected_lighting = ", ".join(
                 self.rng.sample(LIGHTING, self.rng.randint(2, 5))
             )
+            components.append(",")
             components.append(selected_lighting)
         elif lighting == "disabled":
             pass
         else:
             components.append(", ")
-            
             components.append(lighting)
         components.append("BREAK_CLIPG")
         if is_photographer:
@@ -385,9 +388,6 @@ class PromptGenerator:
         prompt = re.sub(" +", " ", prompt)
         print(f"PromptGenerator Seed  : {seed}")
         replaced = prompt.replace("of as", "of")
-        replaced = replaced.replace(" , ", ", ")
-        replaced = replaced.replace(". ", ", ")
-        replaced = replaced.replace(";", ", ")
         replaced = self.clean_consecutive_commas(replaced)
         
 
