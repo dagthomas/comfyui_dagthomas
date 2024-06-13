@@ -40,10 +40,16 @@ class PromptGenerator:
     RETURN_TYPES = (
         "STRING",
         "INT",
+        "STRING",
+        "STRING",
+        "STRING"
     )
     RETURN_NAMES = (
         "prompt",
         "seed",
+        "clip_l",
+        "clip_g",
+        "t5xxl"
     )
     FUNCTION = "generate_prompt"
     CATEGORY = "PromptGenerator"
@@ -63,7 +69,7 @@ class PromptGenerator:
                 "subject": ("STRING", {}),
                 "artform": (
                     ["disabled"] + ["random"] + ARTFORM,
-                    {"default": "random"},
+                    {"default": "photography"},
                 ),
                 "photo_type": (
                     ["disabled"] + ["random"] + PHOTO_TYPE,
@@ -140,6 +146,36 @@ class PromptGenerator:
     def clean_consecutive_commas(self, input_string):
         cleaned_string = re.sub(r',\s*,', ',', input_string)
         return cleaned_string
+    
+    def process_string(self, replaced, seed):
+        # Find the indices for "BREAK_CLIP"
+        first_break_clip_index = replaced.find("BREAK_CLIP")
+        second_break_clip_index = replaced.find("BREAK_CLIP", first_break_clip_index + len("BREAK_CLIP"))
+        
+        # Extract the content between "BREAK_CLIP" markers
+        if first_break_clip_index != -1 and second_break_clip_index != -1:
+            clip_content = replaced[first_break_clip_index + len("BREAK_CLIP, "):second_break_clip_index].strip(", ")
+            
+            # Update the replaced string by removing the "BREAK_CLIP" content
+            replaced = replaced[:first_break_clip_index].strip(", ") + replaced[second_break_clip_index + len("BREAK_CLIP"):].strip(", ")
+            
+            # Update clip_l and clip_g with the extracted content
+            clip_l = clip_content 
+            clip_g = clip_content 
+        else:
+            clip_l = ""
+            clip_g = ""
+        
+        t5xxl = replaced 
+    
+        
+        # print(f"PromptGenerator String: {replaced}")
+        
+        print(f"clip_l / clip_g: {clip_l}")
+        
+        print(f"t5xxl: {t5xxl}")
+
+        return replaced, seed, clip_l, clip_g, t5xxl
     
     def generate_prompt(self, **kwargs):
         seed = kwargs.get("seed", 0)
@@ -255,7 +291,7 @@ class PromptGenerator:
                     kwargs.get("pose", ""), POSE
                 )
             components.append(pose)
-        
+        components.append("BREAK_CLIP ")
         if kwargs.get("background", "") != "disabled" and kwargs.get("background", "") != "random":
             components.append(",  ")
             background = kwargs.get("background", "")
@@ -279,7 +315,7 @@ class PromptGenerator:
             components.append(place)
 
 
-
+        components.append("BREAK_CLIP ")
         lighting = kwargs.get("lighting", "").lower()
         if lighting == "random":
             selected_lighting = ", ".join(
@@ -290,7 +326,9 @@ class PromptGenerator:
             pass
         else:
             components.append(", ")
+            
             components.append(lighting)
+        components.append(" BREAK ")
         if is_photographer:
             
            
@@ -326,7 +364,7 @@ class PromptGenerator:
                 components.append(f"{digital_artform_choice}")
             if kwargs.get("artist", "") != "disabled":
                 components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
-
+        
         prompt = " ".join(components)
         prompt = re.sub(" +", " ", prompt)
         print(f"PromptGenerator Seed  : {seed}")
@@ -336,20 +374,16 @@ class PromptGenerator:
         replaced = replaced.replace(";", ", ")
         replaced = self.clean_consecutive_commas(replaced)
         print(f"PromptGenerator String: {replaced}")
-        return (
-            replaced,
-            seed,
-        )
+
+
+        return self.process_string(replaced, seed)
 
 
 NODE_CLASS_MAPPINGS = {
     "PromptGenerator": PromptGenerator,
-    # "CSVPromptGenerator": CSVPromptGenerator,
-    # "CSL": CommaSeparatedList,
 }
 
 # Human readable names for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "PromptGenerator": "SDXL Auto Prompter",
-    "CSL": "Comma Separated List",
+    "PromptGenerator": "Auto Prompter",
 }
