@@ -337,7 +337,7 @@ class PromptGenerator:
                     kwargs.get("pose", ""), POSE
                 )
             components.append(pose)
-        components.append("BREAK_CLIPL")
+        components.append("BREAK_CLIPG")
         if kwargs.get("background", "") != "disabled" and kwargs.get("background", "") != "random":
             components.append(",")
             background = kwargs.get("background", "")
@@ -375,8 +375,8 @@ class PromptGenerator:
         else:
             components.append(", ")
             components.append(lighting)
-        components.append("BREAK_CLIPL")
         components.append("BREAK_CLIPG")
+        components.append("BREAK_CLIPL")
         if is_photographer:
             if kwargs.get("photo_type", "") != "disabled":
                 photo_type_choice = self.get_choice(
@@ -410,7 +410,7 @@ class PromptGenerator:
                 components.append(f"{digital_artform_choice}")
             if kwargs.get("artist", "") != "disabled":
                 components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
-        components.append("BREAK_CLIPG")
+        components.append("BREAK_CLIPL")
 
         prompt = " ".join(components)
         prompt = re.sub(" +", " ", prompt)
