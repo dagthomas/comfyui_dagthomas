@@ -47,9 +47,9 @@ class PromptGenerator:
     RETURN_NAMES = (
         "prompt",
         "seed",
+        "t5xxl",
         "clip_l",
         "clip_g",
-        "t5xxl"
     )
     FUNCTION = "generate_prompt"
     CATEGORY = "PromptGenerator"
@@ -148,34 +148,51 @@ class PromptGenerator:
         return cleaned_string
     
     def process_string(self, replaced, seed):
-        # Find the indices for "BREAK_CLIP"
-        first_break_clip_index = replaced.find("BREAK_CLIP")
-        second_break_clip_index = replaced.find("BREAK_CLIP", first_break_clip_index + len("BREAK_CLIP"))
+        original = replaced
+        # Find the indices for "BREAK_CLIPL"
+        first_break_clipl_index = replaced.find("BREAK_CLIPL")
+        second_break_clipl_index = replaced.find("BREAK_CLIPL", first_break_clipl_index + len("BREAK_CLIPL"))
         
-        # Extract the content between "BREAK_CLIP" markers
-        if first_break_clip_index != -1 and second_break_clip_index != -1:
-            clip_content = replaced[first_break_clip_index + len("BREAK_CLIP, "):second_break_clip_index].strip(", ")
+        # Extract the content between "BREAK_CLIPL" markers
+        if first_break_clipl_index != -1 and second_break_clipl_index != -1:
+            clip_content_l = replaced[first_break_clipl_index + len("BREAK_CLIPL"):second_break_clipl_index].strip(", ")
             
-            # Update the replaced string by removing the "BREAK_CLIP" content
-            replaced = replaced[:first_break_clip_index].strip(", ") + replaced[second_break_clip_index + len("BREAK_CLIP"):].strip(", ")
+            # Update the replaced string by removing the "BREAK_CLIPL" content
+            replaced = replaced[:first_break_clipl_index].strip(", ") + replaced[second_break_clipl_index + len("BREAK_CLIPL"):].strip(", ")
             
-            # Update clip_l and clip_g with the extracted content
-            clip_l = clip_content 
-            clip_g = clip_content 
+            clip_l = clip_content_l
         else:
             clip_l = ""
+        
+        # Find the indices for "BREAK_CLIPG"
+        first_break_clipg_index = replaced.find("BREAK_CLIPG")
+        second_break_clipg_index = replaced.find("BREAK_CLIPG", first_break_clipg_index + len("BREAK_CLIPG"))
+        
+        # Extract the content between "BREAK_CLIPG" markers
+        if first_break_clipg_index != -1 and second_break_clipg_index != -1:
+            clip_content_g = replaced[first_break_clipg_index + len("BREAK_CLIPG"):second_break_clipg_index].strip(", ")
+            
+            # Update the replaced string by removing the "BREAK_CLIPG" content
+            replaced = replaced[:first_break_clipg_index].strip(", ") + replaced[second_break_clipg_index + len("BREAK_CLIPG"):].strip(", ")
+            
+            clip_g = clip_content_g
+        else:
             clip_g = ""
         
-        t5xxl = replaced 
-    
+        t5xxl = replaced
         
+        original = original.replace("BREAK_CLIPL", "").replace("BREAK_CLIPG", "").replace(",  ,", ", ")
         # print(f"PromptGenerator String: {replaced}")
-        
-        print(f"clip_l / clip_g: {clip_l}")
-        
+        print(f"prompt: {original}")
+        print("")
+        print(f"clip_l: {clip_l}")
+        print("")
+        print(f"clip_g: {clip_g}")
+        print("")
         print(f"t5xxl: {t5xxl}")
+        print("")
 
-        return replaced, seed, clip_l, clip_g, t5xxl
+        return original, seed, t5xxl, clip_l, clip_g
     
     def generate_prompt(self, **kwargs):
         seed = kwargs.get("seed", 0)
@@ -291,7 +308,7 @@ class PromptGenerator:
                     kwargs.get("pose", ""), POSE
                 )
             components.append(pose)
-        components.append("BREAK_CLIP ")
+        components.append("BREAK_CLIPL")
         if kwargs.get("background", "") != "disabled" and kwargs.get("background", "") != "random":
             components.append(",  ")
             background = kwargs.get("background", "")
@@ -312,10 +329,10 @@ class PromptGenerator:
             place = self.get_choice(
                     kwargs.get("place", ""), PLACE
                 )
-            components.append(place)
+            components.append(place + ",")
 
 
-        components.append("BREAK_CLIP ")
+        components.append("BREAK_CLIPL")
         lighting = kwargs.get("lighting", "").lower()
         if lighting == "random":
             selected_lighting = ", ".join(
@@ -328,10 +345,8 @@ class PromptGenerator:
             components.append(", ")
             
             components.append(lighting)
-        components.append(" BREAK ")
+        components.append("BREAK_CLIPG")
         if is_photographer:
-            
-           
             if kwargs.get("photo_type", "") != "disabled":
                 photo_type_choice = self.get_choice(
                     kwargs.get("photo_type", ""), PHOTO_TYPE
@@ -364,7 +379,8 @@ class PromptGenerator:
                 components.append(f"{digital_artform_choice}")
             if kwargs.get("artist", "") != "disabled":
                 components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
-        
+        components.append("BREAK_CLIPG")
+
         prompt = " ".join(components)
         prompt = re.sub(" +", " ", prompt)
         print(f"PromptGenerator Seed  : {seed}")
@@ -373,7 +389,7 @@ class PromptGenerator:
         replaced = replaced.replace(". ", ", ")
         replaced = replaced.replace(";", ", ")
         replaced = self.clean_consecutive_commas(replaced)
-        print(f"PromptGenerator String: {replaced}")
+        
 
 
         return self.process_string(replaced, seed)
