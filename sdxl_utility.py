@@ -148,7 +148,8 @@ class PromptGenerator:
         return cleaned_string
     
     def process_string(self, replaced, seed):
-        replaced = replaced.replace(",  ,", ",").replace(" , ", ",").replace(".,", ",").replace(",  ,", ",").replace(" , ", ",").replace(".,", ",").replace(", , ", ",").replace(", ", ",").replace(" , ", ",").replace(",,", ",").replace(",,", ",").replace(" ,", ",").replace(" ,", ",")
+        replaced = re.sub(r'\s*,\s*', ',', replaced)
+        replaced = re.sub(r',+', ',', replaced)
         original = replaced
         
         # Find the indices for "BREAK_CLIPL"
@@ -157,7 +158,7 @@ class PromptGenerator:
         
         # Extract the content between "BREAK_CLIPL" markers
         if first_break_clipl_index != -1 and second_break_clipl_index != -1:
-            clip_content_l = replaced[first_break_clipl_index + len("BREAK_CLIPL"):second_break_clipl_index].strip(", ")
+            clip_content_l = replaced[first_break_clipl_index + len("BREAK_CLIPL"):second_break_clipl_index]
             
             # Update the replaced string by removing the "BREAK_CLIPL" content
             replaced = replaced[:first_break_clipl_index].strip(", ") + replaced[second_break_clipl_index + len("BREAK_CLIPL"):].strip(", ")
@@ -172,7 +173,7 @@ class PromptGenerator:
         
         # Extract the content between "BREAK_CLIPG" markers
         if first_break_clipg_index != -1 and second_break_clipg_index != -1:
-            clip_content_g = replaced[first_break_clipg_index + len("BREAK_CLIPG"):second_break_clipg_index].strip(", ")
+            clip_content_g = replaced[first_break_clipg_index + len("BREAK_CLIPG"):second_break_clipg_index]
             
             # Update the replaced string by removing the "BREAK_CLIPG" content
             replaced = replaced[:first_break_clipg_index].strip(", ") + replaced[second_break_clipg_index + len("BREAK_CLIPG"):].strip(", ")
@@ -183,7 +184,14 @@ class PromptGenerator:
         
         t5xxl = replaced
         
-        original = original.replace("BREAK_CLIPL", "").replace("BREAK_CLIPG", "").replace(",  ,", ", ")
+        original = original.replace("BREAK_CLIPL", "").replace("BREAK_CLIPG", "")
+        original = re.sub(r'\s*,\s*', ',', original)
+        original = re.sub(r',+', ',', original)
+        clip_l = re.sub(r'\s*,\s*', ',', clip_l)
+        clip_l = re.sub(r',+', ',', clip_l)
+        clip_g = re.sub(r'\s*,\s*', ',', clip_g)
+        clip_g = re.sub(r',+', ',', clip_g)
+
         # print(f"PromptGenerator String: {replaced}")
         print(f"prompt: {original}")
         print("")
@@ -310,7 +318,7 @@ class PromptGenerator:
                     kwargs.get("pose", ""), POSE
                 )
             components.append(pose)
-        components.append("BREAK_CLIPL")
+        components.append("BREAK_CLIPG")
         if kwargs.get("background", "") != "disabled" and kwargs.get("background", "") != "random":
             components.append(",")
             background = kwargs.get("background", "")
@@ -334,7 +342,7 @@ class PromptGenerator:
             components.append(place + ",")
 
 
-        components.append("BREAK_CLIPL")
+        components.append("BREAK_CLIPG")
         lighting = kwargs.get("lighting", "").lower()
         if lighting == "random":
             
@@ -348,7 +356,7 @@ class PromptGenerator:
         else:
             components.append(", ")
             components.append(lighting)
-        components.append("BREAK_CLIPG")
+        components.append("BREAK_CLIPL")
         if is_photographer:
             if kwargs.get("photo_type", "") != "disabled":
                 photo_type_choice = self.get_choice(
@@ -382,7 +390,7 @@ class PromptGenerator:
                 components.append(f"{digital_artform_choice}")
             if kwargs.get("artist", "") != "disabled":
                 components.append(f"by {self.get_choice(kwargs.get('artist', ''), ARTIST)}")
-        components.append("BREAK_CLIPG")
+        components.append("BREAK_CLIPL")
 
         prompt = " ".join(components)
         prompt = re.sub(" +", " ", prompt)
