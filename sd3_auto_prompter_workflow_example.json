@@ -1,6 +1,6 @@
 {
     "last_node_id": 42,
-    "last_link_id": 80,
+    "last_link_id": 81,
     "nodes": [
         {
             "id": 34,
@@ -180,65 +180,6 @@
             }
         },
         {
-            "id": 24,
-            "type": "KSampler",
-            "pos": [
-                833,
-                30
-            ],
-            "size": [
-                297.9656677246094,
-                474
-            ],
-            "flags": {},
-            "order": 5,
-            "mode": 0,
-            "inputs": [
-                {
-                    "name": "model",
-                    "type": "MODEL",
-                    "link": 78
-                },
-                {
-                    "name": "positive",
-                    "type": "CONDITIONING",
-                    "link": 70
-                },
-                {
-                    "name": "negative",
-                    "type": "CONDITIONING",
-                    "link": 75
-                },
-                {
-                    "name": "latent_image",
-                    "type": "LATENT",
-                    "link": 80
-                }
-            ],
-            "outputs": [
-                {
-                    "name": "LATENT",
-                    "type": "LATENT",
-                    "links": [
-                        53
-                    ],
-                    "slot_index": 0
-                }
-            ],
-            "properties": {
-                "Node name for S&R": "KSampler"
-            },
-            "widgets_values": [
-                1394,
-                "fixed",
-                28,
-                4.5,
-                "euler",
-                "sgm_uniform",
-                1
-            ]
-        },
-        {
             "id": 42,
             "type": "PGSD3LatentGenerator",
             "pos": [
@@ -273,6 +214,101 @@
             ]
         },
         {
+            "id": 9,
+            "type": "SaveImage",
+            "pos": [
+                1153,
+                37
+            ],
+            "size": {
+                "0": 586.4710693359375,
+                "1": 641.0353393554688
+            },
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "images",
+                    "type": "IMAGE",
+                    "link": 9
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "SaveImage"
+            },
+            "widgets_values": [
+                "ComfyUI"
+            ]
+        },
+        {
+            "id": 24,
+            "type": "KSampler",
+            "pos": [
+                833,
+                30
+            ],
+            "size": [
+                297.9656677246094,
+                474
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "model",
+                    "type": "MODEL",
+                    "link": 78
+                },
+                {
+                    "name": "positive",
+                    "type": "CONDITIONING",
+                    "link": 70
+                },
+                {
+                    "name": "negative",
+                    "type": "CONDITIONING",
+                    "link": 75
+                },
+                {
+                    "name": "latent_image",
+                    "type": "LATENT",
+                    "link": 80
+                },
+                {
+                    "name": "seed",
+                    "type": "INT",
+                    "link": 81,
+                    "widget": {
+                        "name": "seed"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "LATENT",
+                    "type": "LATENT",
+                    "links": [
+                        53
+                    ],
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "KSampler"
+            },
+            "widgets_values": [
+                541287872529951,
+                "randomize",
+                28,
+                4.5,
+                "euler",
+                "sgm_uniform",
+                1
+            ]
+        },
+        {
             "id": 41,
             "type": "PromptGenerator",
             "pos": [
@@ -299,8 +335,11 @@
                 {
                     "name": "seed",
                     "type": "INT",
-                    "links": null,
-                    "shape": 3
+                    "links": [
+                        81
+                    ],
+                    "shape": 3,
+                    "slot_index": 1
                 },
                 {
                     "name": "t5xxl",
@@ -325,7 +364,7 @@
                 "Node name for S&R": "PromptGenerator"
             },
             "widgets_values": [
-                512666609708706,
+                1046574178234548,
                 "randomize",
                 "",
                 "",
@@ -347,34 +386,6 @@
                 "disabled",
                 "random",
                 "random"
-            ]
-        },
-        {
-            "id": 9,
-            "type": "SaveImage",
-            "pos": [
-                1153,
-                37
-            ],
-            "size": {
-                "0": 586.4710693359375,
-                "1": 641.0353393554688
-            },
-            "flags": {},
-            "order": 7,
-            "mode": 0,
-            "inputs": [
-                {
-                    "name": "images",
-                    "type": "IMAGE",
-                    "link": 9
-                }
-            ],
-            "properties": {
-                "Node name for S&R": "SaveImage"
-            },
-            "widgets_values": [
-                "ComfyUI"
             ]
         }
     ],
@@ -458,16 +469,24 @@
             24,
             3,
             "LATENT"
+        ],
+        [
+            81,
+            41,
+            1,
+            24,
+            4,
+            "INT"
         ]
     ],
     "groups": [],
     "config": {},
     "extra": {
         "ds": {
-            "scale": 1.5535220464769017,
+            "scale": 1.1671841070450049,
             "offset": [
-                -348.0196483609611,
-                33.83475957294458
+                -5.628627128737477,
+                221.72845613294413
             ]
         }
     },
