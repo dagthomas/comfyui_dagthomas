@@ -242,6 +242,109 @@
             ]
         },
         {
+            "id": 43,
+            "type": "Note",
+            "pos": [
+                525,
+                -1532
+            ],
+            "size": [
+                285.4855601929379,
+                351.5701782140718
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "properties": {
+                "text": ""
+            },
+            "widgets_values": [
+                "Do not change\n"
+            ],
+            "color": "#432",
+            "bgcolor": "#653"
+        },
+        {
+            "id": 41,
+            "type": "PromptGenerator",
+            "pos": [
+                117,
+                190
+            ],
+            "size": {
+                "0": 315,
+                "1": 642
+            },
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "outputs": [
+                {
+                    "name": "prompt",
+                    "type": "STRING",
+                    "links": [
+                        79
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                },
+                {
+                    "name": "seed",
+                    "type": "INT",
+                    "links": [
+                        81
+                    ],
+                    "shape": 3,
+                    "slot_index": 1
+                },
+                {
+                    "name": "t5xxl",
+                    "type": "STRING",
+                    "links": null,
+                    "shape": 3
+                },
+                {
+                    "name": "clip_l",
+                    "type": "STRING",
+                    "links": null,
+                    "shape": 3
+                },
+                {
+                    "name": "clip_g",
+                    "type": "STRING",
+                    "links": null,
+                    "shape": 3
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "PromptGenerator"
+            },
+            "widgets_values": [
+                520961658537126,
+                "randomize",
+                "",
+                "",
+                "photography",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "random",
+                "disabled",
+                "disabled",
+                "random",
+                "random"
+            ]
+        },
+        {
             "id": 24,
             "type": "KSampler",
             "pos": [
@@ -299,117 +402,14 @@
                 "Node name for S&R": "KSampler"
             },
             "widgets_values": [
-                541287872529951,
+                355592962273217,
                 "randomize",
                 28,
-                4.5,
+                4.7,
                 "euler",
                 "sgm_uniform",
                 1
             ]
-        },
-        {
-            "id": 41,
-            "type": "PromptGenerator",
-            "pos": [
-                117,
-                190
-            ],
-            "size": {
-                "0": 315,
-                "1": 642
-            },
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "outputs": [
-                {
-                    "name": "prompt",
-                    "type": "STRING",
-                    "links": [
-                        79
-                    ],
-                    "shape": 3,
-                    "slot_index": 0
-                },
-                {
-                    "name": "seed",
-                    "type": "INT",
-                    "links": [
-                        81
-                    ],
-                    "shape": 3,
-                    "slot_index": 1
-                },
-                {
-                    "name": "t5xxl",
-                    "type": "STRING",
-                    "links": null,
-                    "shape": 3
-                },
-                {
-                    "name": "clip_l",
-                    "type": "STRING",
-                    "links": null,
-                    "shape": 3
-                },
-                {
-                    "name": "clip_g",
-                    "type": "STRING",
-                    "links": null,
-                    "shape": 3
-                }
-            ],
-            "properties": {
-                "Node name for S&R": "PromptGenerator"
-            },
-            "widgets_values": [
-                1046574178234548,
-                "randomize",
-                "",
-                "",
-                "photography",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "random",
-                "disabled",
-                "disabled",
-                "random",
-                "random"
-            ]
-        },
-        {
-            "id": 43,
-            "type": "Note",
-            "pos": [
-                525,
-                -1532
-            ],
-            "size": [
-                285.4855601929379,
-                351.5701782140718
-            ],
-            "flags": {},
-            "order": 3,
-            "mode": 0,
-            "properties": {
-                "text": ""
-            },
-            "widgets_values": [
-                "Do not change\n"
-            ],
-            "color": "#432",
-            "bgcolor": "#653"
         }
     ],
     "links": [
@@ -506,10 +506,10 @@
     "config": {},
     "extra": {
         "ds": {
-            "scale": 0.9646149645000052,
+            "scale": 1.2839025177495074,
             "offset": [
-                189.66872985156525,
-                367.60514699051066
+                -308.25926013367445,
+                106.83768577635581
             ]
         }
     },
