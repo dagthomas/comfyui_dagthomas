@@ -11,7 +11,7 @@ Updated for SD3
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/2c6e7418-51a6-465c-8573-36f36300e8a6)
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/4dd9a58b-d6ea-44c9-ab6c-aa36ceab1248)
 
-===
+## Following were generated with SD3 Medium - 06/15/2024
 
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/94c76273-0a16-450a-876c-9eb515d995d5)
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/37924320-6b46-48fb-9c5d-a24da2d3fd4c)
