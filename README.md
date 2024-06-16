@@ -4,11 +4,13 @@ Custom nodes for ComfyUI
 
 Updated for SD3
 
-#### Auto Prompter
+## Auto Prompter
 
-"subject" input field can be changed to support your style or lora, just add your subject and it will overwrite "man, woman ..." etc.
+> Easy prompting for generation of endless random art pieces and photographs!
 
-"custom" input field will add a prompt to the start of the prompt string. For loading styles
+#### "subject" input field can be changed to support your style or lora, just add your subject and it will overwrite "man, woman ..." etc.
+
+#### "custom" input field will add a prompt to the start of the prompt string. For loading styles
 
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/2c6e7418-51a6-465c-8573-36f36300e8a6)
 
@@ -34,4 +36,4 @@ Updated for SD3
 
 
 
-> Easy prompting for generation of endless random art pieces and photographs!
+
