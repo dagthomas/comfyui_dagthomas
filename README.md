@@ -8,7 +8,12 @@ Updated for SD3
 
 "subject" input field can be changed to support your style or lora, just add your subject and it will overwrite "man, woman ..." etc.
 
+"custom" input field will add a prompt to the start of the prompt string. For loading styles
+
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/2c6e7418-51a6-465c-8573-36f36300e8a6)
+
+## Latent generator
+#### Input either height or width - and the corresponding height/width will be automagically created for you.
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/4dd9a58b-d6ea-44c9-ab6c-aa36ceab1248)
 
 ## Following were generated with SD3 Medium - 06/15/2024
