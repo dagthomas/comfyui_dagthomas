@@ -2,7 +2,7 @@
 
 Custom nodes for ComfyUI
 
-Updated for SD3
+Updated for SD3, Flux
 
 ## Auto Prompter
 
@@ -17,6 +17,17 @@ Updated for SD3
 ## Latent generator
 #### Input either height or width - and the corresponding height/width will be automagically created for you.
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/4dd9a58b-d6ea-44c9-ab6c-aa36ceab1248)
+
+## GPT-4o-mini morbuto prompt generator [ADVANCED USERS]
+#### Set your openai key if you want to run this, uses GPT-4o-mini
+![image](https://github.com/user-attachments/assets/63e0ecbc-650a-4bf1-bfca-d96a4a2a5f33)
+
+#### I use florence2 and flash-attention to generate prompts from the images, then I feed those prompts to be refined in GPT-4o-mini
+#### You can find an example workflow in /examples/flux
+
+![image](https://github.com/user-attachments/assets/e8ff1d20-9b8b-4cb6-88ec-d4894e412207)
+![image](https://github.com/user-attachments/assets/74df4f7f-05fe-4d89-9edf-a2a3b7fc2c35)
+
 
 ## Following were generated with SD3 Medium - 06/15/2024
 
