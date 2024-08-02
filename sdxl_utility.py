@@ -6,7 +6,8 @@ import comfy.model_management
 import nodes
 import torch
 import os
-
+import requests
+from openai import OpenAI
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
@@ -87,7 +88,38 @@ class PGSD3LatentGenerator:
 
         latent = torch.ones([batch_size, 16, height // 8, width // 8], device=self.device) * 0.0609
         return ({"samples": latent}, )
+
+class GPT4MiniNode:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"input_text": ("STRING", {"multiline": True})}}
     
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "generate"
+    CATEGORY = "text"
+
+    def generate(self, input_text):
+        try:
+            stream = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": f"""Create a detailed visually descriptive caption of this description, which will be used as a prompt for a text to image AI system (caption only, no instructions like "create an image"). Give detailed visual descriptions of the character(s), including ethnicity, skin tone, expression etc. Imagine using keywords for a still for someone who has aphantasia. Describe the image style, e.g. any photographic or art styles / techniques utilized. Make sure to fully describe all aspects of the cinematography, with abundant technical details and visual descriptions. If there is more than one image, combine the elements and characters from all of the images creatively into a single cohesive composition with a single background, inventing an interaction between the characters. Be creative in combining the characters into a single cohesive scene. Focus on two primary characters (or one) and describe an interesting interaction between them, such as a hug, a kiss, a fight, giving an object, an emotional reaction / interaction. If there is more than one background in the images, pick the most appropriate one. Your output is only the caption itself, no comments or extra formatting. The caption is in a single long paragraph. If you feel the images are inappropriate, invent a new scene / characters inspired by these. Additionally, incorporate a specific movie director's visual style (e.g. Wes Anderson, Christopher Nolan, Quentin Tarantino) and describe the lighting setup in detail, including the type, color, and placement of light sources to create the desired mood and atmosphere. Always frame the scene as a screen grab from a 35mm film still, including details about the film grain, color grading, and any artifacts or characteristics specific to 35mm film photography.
+                            Description: {input_text}"""}],
+                stream=True,
+            )
+            
+            response_content = ""
+            for chunk in stream:
+                if chunk.choices[0].delta.content is not None:
+                    response_content += chunk.choices[0].delta.content
+            
+            return (response_content,)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return (f"Error occurred while processing the request: {str(e)}",)
+         
 class PromptGenerator:
     RETURN_TYPES = (
         "STRING",
@@ -476,12 +508,14 @@ class PromptGenerator:
 
 
 NODE_CLASS_MAPPINGS = {
+        "GPT4MiniNode": GPT4MiniNode,
     "PromptGenerator": PromptGenerator,
     "PGSD3LatentGenerator": PGSD3LatentGenerator,
 }
 
 # Human readable names for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "GPT4MiniNode": "GPT-4o-mini morbuto Generator",
     "PromptGenerator": "Auto Prompter",
     "PGSD3LatentGenerator": "PGSD3LatentGenerator"
 }
