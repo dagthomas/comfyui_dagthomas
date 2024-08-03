@@ -13,6 +13,8 @@ from openai import OpenAI
 import torch
 import numpy as np
 from PIL import Image
+from datetime import datetime
+
 # Function to load data from a JSON file
 def load_json_file(file_name):
     # Construct the absolute path to the data file
@@ -149,6 +151,8 @@ class PGSD3LatentGenerator:
 class GPT4VisionNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -174,12 +178,23 @@ class GPT4VisionNode:
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def tensor_to_pil(self, img_tensor):
-        # Convert tensor to numpy array
         i = 255. * img_tensor.cpu().numpy()
-        # Clip values to valid range and convert to uint8
         img_array = np.clip(i, 0, 255).astype(np.uint8)
-        # Convert to PIL Image
         return Image.fromarray(img_array)
+    
+    def save_prompt(self, prompt):
+        filename_text = prompt.split(',')[0].strip()
+        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        filename_text = filename_text[:30]  
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+        
+        # Save the prompt to the file
+        with open(filename, "w") as file:
+            file.write(prompt)
+        
+        print(f"Prompt saved to {filename}")
 
     def analyze_images(self, images, happy_talk, compress, compression_level, custom_base_prompt=""):
         try:
@@ -199,7 +214,7 @@ Examples of prompts to generate:
 
 3. Horror-themed (extreme close shot of eyes :1.3) of nordic woman, (war face paint:1.2), mohawk blonde haircut wit thin braids, runes tattoos, sweat, (detailed dirty skin:1.3) shiny, (epic battleground backgroun :1.2), . analog, haze, ( lens blur :1.3) , hard light, sharp focus on eyes, low saturation
 
-ALWAYS remember to out that it is a movie still and describe the film grain, color grading, and any artifacts or characteristics specific to 35mm film photography.
+ALWAYS remember to out that it is a movie still and describe the film grain, color grading, and any artifacts or characteristics specific to film photography.
 ALWAYS create the output as one scene, never transition between scenes.
 """
 
@@ -235,7 +250,7 @@ ALWAYS create the output as one scene, never transition between scenes.
                 messages=messages,
                 max_tokens=1000
             )
-            
+            self.save_prompt(response.choices[0].message.content)
             return (response.choices[0].message.content,)
         except Exception as e:
             print(f"An error occurred: {e}")
