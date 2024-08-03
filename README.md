@@ -31,6 +31,8 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
+You can find an example workflow in /examples/flux/dagthomas_gpt4o-vision_prompt_generator_combiner.json
+
 ### 3. GPT4MiniNode
 
 Generates text using OpenAI's GPT-4 model based on input text.
@@ -41,7 +43,7 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
-You can find an example workflow in /examples/flux
+You can find an example workflow in /examples/flux/dagthomas_morbuto_florence_flash_attention_prompt_combiner_flux.json
 
 ### 4. PGSD3LatentGenerator
 
