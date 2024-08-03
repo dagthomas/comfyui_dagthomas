@@ -1,12 +1,19 @@
+# ComfyUI Plugin: Advanced Prompt Generation and Image Analysis
 # comfyui_dagthomas
 
-Custom nodes for ComfyUI
+This plugin extends ComfyUI with advanced prompt generation capabilities and image analysis using GPT-4 Vision. It includes the following components:
 
-Updated for SD3, Flux
+## Classes
 
-## Auto Prompter
+### 1. PromptGenerator
 
-> Easy prompting for generation of endless random art pieces and photographs!
+A versatile prompt generator for text-to-image AI systems.
+
+Features:
+- Generates prompts based on various customizable parameters
+- Supports different art forms, photography styles, and digital art
+- Allows for random selection or specific choices for each parameter
+- Outputs separate prompts for different model components (e.g., CLIP, T5)
 
 #### "subject" input field can be changed to support your style or lora, just add your subject and it will overwrite "man, woman ..." etc.
 
@@ -14,36 +21,71 @@ Updated for SD3, Flux
 
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/2c6e7418-51a6-465c-8573-36f36300e8a6)
 
-## Latent generator
-#### Input either height or width - and the corresponding height/width will be automagically created for you.
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/4dd9a58b-d6ea-44c9-ab6c-aa36ceab1248)
+### 2. GPT4VisionNode
 
-## GPT-4o-mini morbuto prompt generator [ADVANCED USERS]
-#### Set your openai key if you want to run this, uses GPT-4o-mini
-![image](https://github.com/user-attachments/assets/63e0ecbc-650a-4bf1-bfca-d96a4a2a5f33)
+Analyzes images using OpenAI's GPT-4 Vision model.
 
-#### I use florence2 and flash-attention to generate prompts from the images, then I feed those prompts to be refined in GPT-4o-mini
-#### You can find an example workflow in /examples/flux
+Features:
+- Accepts image input and generates detailed descriptions
+- Supports custom base prompts
+- Offers options for "happy talk" (detailed descriptions) or simple outputs
+- Includes compression options to limit output length
 
-![image](https://github.com/user-attachments/assets/e8ff1d20-9b8b-4cb6-88ec-d4894e412207)
-![image](https://github.com/user-attachments/assets/74df4f7f-05fe-4d89-9edf-a2a3b7fc2c35)
+You can find an example workflow in /examples/flux/dagthomas_gpt4o-vision_prompt_generator_combiner.json
 
+### 3. GPT4MiniNode
+
+Generates text using OpenAI's GPT-4 model based on input text.
+
+Features:
+- Accepts text input and generates enhanced descriptions
+- Supports custom base prompts
+- Offers options for "happy talk" (detailed descriptions) or simple outputs
+- Includes compression options to limit output length
+
+You can find an example workflow in /examples/flux/dagthomas_morbuto_florence_flash_attention_prompt_combiner_flux.json
+
+### 4. PGSD3LatentGenerator
+
+Generates latent representations for use in Stable Diffusion 3 pipelines.
+
+Features:
+- Creates latent tensors with specified dimensions
+- Supports batch processing
+- Automatically adjusts dimensions to maintain a consistent megapixel count
+
+![image](https://github.com/user-attachments/assets/b4e0bb6e-fded-4a99-b8d4-558f21124863)
+
+
+## Usage
+
+These classes can be integrated into ComfyUI workflows to enhance prompt generation, image analysis, and latent space manipulation for advanced AI image generation pipelines.
+
+## Requirements
+
+- OpenAI API key (for GPT4VisionNode and GPT4MiniNode)
+- ComfyUI environment
+- Additional dependencies as specified in the import statements
+
+![354727214-63e0ecbc-650a-4bf1-bfca-d96a4a2a5f33](https://github.com/user-attachments/assets/45dda70b-8f1b-4615-a0c4-0b1c16ff94bc)
+
+
+## Notes
+
+- Ensure that your OpenAI API key is set in the environment variables
+- Some classes may require additional data files (JSON) for their functionality
+- Refer to the individual class documentation for specific usage instructions and input types
+
+
+## Following were generated with Flux Dev - 03/08/2024
+![ComfyUI_00005_](https://github.com/user-attachments/assets/d760bb22-797e-441e-a5b5-52e793a2b7c8)
+![ComfyUI_00007_](https://github.com/user-attachments/assets/6975521b-85e3-4e18-a061-8cefb95159e5)
+![ComfyUI_00034_](https://github.com/user-attachments/assets/470426d5-9320-40a3-816e-9d4bcfda6940)
 
 ## Following were generated with SD3 Medium - 06/15/2024
 
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/94c76273-0a16-450a-876c-9eb515d995d5)
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/37924320-6b46-48fb-9c5d-a24da2d3fd4c)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/c4c526d2-e28e-402b-850b-8819e26c18b6)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/3eec5c3c-04ba-4dc8-91cd-a62a4cebdf4f)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/ce261e77-e5c7-4e13-adbc-06395d368d92)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/d6baef86-9671-49f4-b250-9cfb494f6d62)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/cdc55ab4-3487-410e-a9d7-d1e46102eb32)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/70f19d3f-310d-42c0-b8b5-be6437717d9c)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/16a06a30-9943-4a03-a3e7-ee48c8ebbc9e)
-
-
-
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/571659ab-4c60-41af-ac62-ca087615a531)
 
 
 
