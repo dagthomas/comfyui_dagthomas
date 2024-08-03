@@ -33,6 +33,9 @@ Features:
 
 You can find an example workflow in /examples/flux/dagthomas_gpt4o-vision_prompt_generator_combiner.json
 
+![image](https://github.com/user-attachments/assets/113bf0d2-3e19-4596-ae98-2f9a116193a2)
+
+
 ### 3. GPT4MiniNode
 
 Generates text using OpenAI's GPT-4 model based on input text.
