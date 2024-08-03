@@ -65,6 +65,9 @@ These classes can be integrated into ComfyUI workflows to enhance prompt generat
 - ComfyUI environment
 - Additional dependencies as specified in the import statements
 
+![354727214-63e0ecbc-650a-4bf1-bfca-d96a4a2a5f33](https://github.com/user-attachments/assets/45dda70b-8f1b-4615-a0c4-0b1c16ff94bc)
+
+
 ## Notes
 
 - Ensure that your OpenAI API key is set in the environment variables
