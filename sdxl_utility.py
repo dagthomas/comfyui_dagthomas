@@ -5,10 +5,14 @@ import comfy.sd
 import comfy.model_management
 import nodes
 import torch
+import torchvision.transforms as transforms
 import os
-import requests
+import base64
+from io import BytesIO
 from openai import OpenAI
-
+import torch
+import numpy as np
+from PIL import Image
 # Function to load data from a JSON file
 def load_json_file(file_name):
     # Construct the absolute path to the data file
@@ -39,6 +43,59 @@ COMPOSITION = load_json_file("composition.json")
 POSE = load_json_file("pose.json")
 BACKGROUND = load_json_file("background.json")
 BODY_TYPES = load_json_file("body_types.json")
+
+@torch.no_grad()
+def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
+    denoised = x_orig - ((x_orig - uncond) + cond_scale * (cond - uncond))
+    matching_pred_signs = torch.sign(cond - uncond) == torch.sign(cond)
+    matching_diff_after = torch.sign(cond) == torch.sign(cond * cond_scale - uncond * (cond_scale - 1))
+    deviation_influence = torch.sign(denoised) == torch.sign(denoised - x_orig)
+    outer_influence = matching_pred_signs & matching_diff_after & deviation_influence
+    low_cfg_denoised_outer = x_orig - ((x_orig - uncond) + skimming_scale * (cond - uncond))
+    low_cfg_denoised_outer_difference = denoised - low_cfg_denoised_outer
+    cond[outer_influence] -= low_cfg_denoised_outer_difference[outer_influence] / cond_scale
+    
+    return cond
+
+class CFGSkimmingSingleScalePreCFGNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model": ("MODEL",),
+                "skimming_cfg": ("FLOAT", {
+                    "default": 7.0, 
+                    "min": 0.0, 
+                    "max": 7.0, 
+                    "step": 0.1, 
+                    "round": 0.01
+                }),
+                "razor_skim": ("BOOLEAN", {"default": False})
+            }
+        }
+    
+    RETURN_TYPES = ("MODEL",)
+    FUNCTION = "patch"
+    CATEGORY = "model_patches/Pre CFG"
+
+    def patch(self, model, skimming_cfg, razor_skim):
+        @torch.no_grad()
+        def pre_cfg_patch(args):
+            conds_out, cond_scale, x_orig = args["conds_out"], args["cond_scale"], args['input']
+            
+            if not torch.any(conds_out[1]):
+                return conds_out
+            
+            uncond_skimming_scale = 0 if razor_skim else skimming_cfg
+            conds_out[1] = skimmed_CFG(x_orig, conds_out[1], conds_out[0], cond_scale, uncond_skimming_scale)
+            conds_out[0] = skimmed_CFG(x_orig, conds_out[0], conds_out[1], cond_scale, skimming_cfg)
+            
+            return conds_out
+
+        new_model = model.clone()
+        new_model.set_model_sampler_pre_cfg_function(pre_cfg_patch)
+        return (new_model,)
+    
 class PGSD3LatentGenerator:
     def __init__(self):
         self.device = comfy.model_management.intermediate_device()
@@ -88,7 +145,104 @@ class PGSD3LatentGenerator:
 
         latent = torch.ones([batch_size, 16, height // 8, width // 8], device=self.device) * 0.0609
         return ({"samples": latent}, )
+    
+class GPT4VisionNode:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "happy_talk": ("BOOLEAN", {"default": True}),
+                "compress": ("BOOLEAN", {"default": False}),
+                "compression_level": (["soft", "medium", "hard"],),
+            },
+            "optional": {
+                "custom_base_prompt": ("STRING", {"multiline": True, "default": ""})
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "analyze_images"
+    CATEGORY = "vision"
+
+    def encode_image(self, image):
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+    def tensor_to_pil(self, img_tensor):
+        # Convert tensor to numpy array
+        i = 255. * img_tensor.cpu().numpy()
+        # Clip values to valid range and convert to uint8
+        img_array = np.clip(i, 0, 255).astype(np.uint8)
+        # Convert to PIL Image
+        return Image.fromarray(img_array)
+
+    def analyze_images(self, images, happy_talk, compress, compression_level, custom_base_prompt=""):
+        try:
+            default_happy_prompt = """Analyze the provided images and create a detailed visually descriptive caption that combines elements from all images into a single cohesive composition. This caption will be used as a prompt for a text-to-image AI system. Focus on:
+1. Detailed visual descriptions of characters, including ethnicity, skin tone, expressions, etc.
+2. Overall scene and background details.
+3. Image style, photographic techniques, direction of photo taken.
+4. Cinematography aspects with technical details.
+5. If multiple characters are present, describe an interesting interaction between two primary characters.
+7. Describe the lighting setup in detail, including type, color, and placement of light sources.
+
+Examples of prompts to generate: 
+
+1. Ethereal cyborg woman, bioluminescent jellyfish headdress. Steampunk goggles blend with translucent tentacles. Cracked porcelain skin meets iridescent scales. Mechanical implants and delicate tendrils intertwine. Human features with otherworldly glow. Dreamy aquatic hues contrast weathered metal. Reflective eyes capture unseen worlds. Soft bioluminescence meets harsh desert backdrop. Fusion of organic and synthetic, ancient and futuristic. Hyper-detailed textures, surreal atmosphere.
+
+2. Photo of a broken ruined cyborg girl in a landfill, robot, body is broken with scares and holes,half the face is android,laying on the ground, creating a hyperpunk scene with desaturated dark red and blue details, colorful polaroid with vibrant colors, (vacations, high resolution:1.3), (small, selective focus, european film:1.2)
+
+3. Horror-themed (extreme close shot of eyes :1.3) of nordic woman, (war face paint:1.2), mohawk blonde haircut wit thin braids, runes tattoos, sweat, (detailed dirty skin:1.3) shiny, (epic battleground backgroun :1.2), . analog, haze, ( lens blur :1.3) , hard light, sharp focus on eyes, low saturation
+
+ALWAYS remember to out that it is a movie still and describe the film grain, color grading, and any artifacts or characteristics specific to 35mm film photography.
+ALWAYS create the output as one scene, never transition between scenes.
+"""
+
+            default_simple_prompt = """Analyze the provided images and create a brief, straightforward caption that combines key elements from all images. Focus on the main subjects, overall scene, and atmosphere. Provide a clear and concise description in one or two sentences, suitable for a text-to-image AI system."""
+
+            if custom_base_prompt.strip():
+                base_prompt = custom_base_prompt
+            else:
+                base_prompt = default_happy_prompt if happy_talk else default_simple_prompt
+
+            if compress:
+                compression_chars = {
+                    "soft": 600 if happy_talk else 300,
+                    "medium": 400 if happy_talk else 200,
+                    "hard": 200 if happy_talk else 100
+                }
+                char_limit = compression_chars[compression_level]
+                base_prompt += f" Compress the output to be concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
+
+            messages = [{"role": "user", "content": [{"type": "text", "text": base_prompt}]}]
+
+            # Process each image in the batch
+            for img_tensor in images:
+                pil_image = self.tensor_to_pil(img_tensor)
+                base64_image = self.encode_image(pil_image)
+                messages[0]["content"].append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+                })
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                max_tokens=1000
+            )
+            
+            return (response.choices[0].message.content,)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            print(f"Images tensor shape: {images.shape}")
+            print(f"Images tensor type: {images.dtype}")
+            return (f"Error occurred while processing the request: {str(e)}",)
+        
 class GPT4MiniNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -543,7 +697,9 @@ class PromptGenerator:
 
 
 NODE_CLASS_MAPPINGS = {
-        "GPT4MiniNode": GPT4MiniNode,
+    "CFGSkimming": CFGSkimmingSingleScalePreCFGNode,
+    "GPT4VisionNode": GPT4VisionNode,
+    "GPT4MiniNode": GPT4MiniNode,
     "PromptGenerator": PromptGenerator,
     "PGSD3LatentGenerator": PGSD3LatentGenerator,
 }
@@ -552,5 +708,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "GPT4MiniNode": "LLM morbuto generator",
     "PromptGenerator": "Auto Prompter",
-    "PGSD3LatentGenerator": "PGSD3LatentGenerator"
+    "PGSD3LatentGenerator": "PGSD3LatentGenerator", 
+    "GPT4VisionNode": "GPT4VisionNode",
+    "CFGSkimming": "CFG Skimming",
 }
