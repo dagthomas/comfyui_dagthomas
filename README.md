@@ -32,9 +32,9 @@ Features:
 - Includes compression options to limit output length
 - Ability to create posters
 
-You can find an example workflow in /examples/flux/dagthomas_gpt4o-vision_prompt_generator_combiner.json
+Workflow in image:
+![comfyui_dagthomas_gpt4o__00014_](https://github.com/user-attachments/assets/1eff9b5f-e7d7-4b78-865d-82f9f909ec10)
 
-![image](https://github.com/user-attachments/assets/113bf0d2-3e19-4596-ae98-2f9a116193a2)
 
 There is a toggle to create movie posters (08/04/24)
 ![ComfyUI_00161_](https://github.com/user-attachments/assets/262c7d5b-9770-492f-89b1-5dc6b62c9cc3)
@@ -51,9 +51,9 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
-You can find an example workflow in /examples/flux/dagthomas_morbuto_gpt-4o-mini_florence_prompt_combiner_flux.json
+Workflow in image:
+![comfyui_dagthomas_gpt4o-mini__00007_](https://github.com/user-attachments/assets/9a739c83-d7ff-4933-b744-73c2827f229a)
 
-![image](https://github.com/user-attachments/assets/738b5588-b352-467a-8254-57fc74ecbe3a)
 
 
 ### OllamaNode
@@ -66,6 +66,7 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
+Workflow in image:
 ![image](https://github.com/user-attachments/assets/66b28922-1dc0-478c-8181-81e4292c07d4)
 
 
@@ -76,9 +77,9 @@ Features:
 
 - You can also use a pure local Florence workflow without any of the others. The prompt will have some bloat, but works fine with Flux
 
-You can find an example workflow in /examples/flux/dagthomas_florence_prompt_combiner_flux.json
+Workflow in image:
+![image](https://github.com/user-attachments/assets/0c4ca304-773a-4068-8c8c-d87ac2c81323)
 
-![image](https://raw.githubusercontent.com/dagthomas/comfyui_dagthomas/master/examples/flux/florence2/comfyui_dagthomas_florence2__00004_.png)
 
 
 
