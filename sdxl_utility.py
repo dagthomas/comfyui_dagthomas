@@ -244,6 +244,7 @@ class GPT4VisionNode:
                 "happy_talk": ("BOOLEAN", {"default": True}),
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
+                "poster": ("BOOLEAN", {"default": False}),  # New poster flag
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""})
@@ -272,13 +273,12 @@ class GPT4VisionNode:
         base_filename = f"{filename_text}_{timestamp}.txt"
         filename = os.path.join(self.prompts_dir, base_filename)
         
-        # Save the prompt to the file
         with open(filename, "w") as file:
             file.write(prompt)
         
         print(f"Prompt saved to {filename}")
 
-    def analyze_images(self, images, happy_talk, compress, compression_level, custom_base_prompt=""):
+    def analyze_images(self, images, happy_talk, compress, compression_level, poster, custom_base_prompt=""):
         try:
             default_happy_prompt = """Analyze the provided images and create a detailed visually descriptive caption that combines elements from all images into a single cohesive composition. This caption will be used as a prompt for a text-to-image AI system. Focus on:
 1. Detailed visual descriptions of characters, including ethnicity, skin tone, expressions, etc.
@@ -302,12 +302,39 @@ ALWAYS create the output as one scene, never transition between scenes.
 
             default_simple_prompt = """Analyze the provided images and create a brief, straightforward caption that combines key elements from all images. Focus on the main subjects, overall scene, and atmosphere. Provide a clear and concise description in one or two sentences, suitable for a text-to-image AI system."""
 
-            if custom_base_prompt.strip():
+            poster_prompt = """Analyze the provided images and extract key information to create a movie poster style description. Format the output as follows:
+
+Title: A catchy, intriguing title that captures the essence of the scene, place the title in "".
+Main character: Give a description of the main character.
+Background: Describe the background in detail.
+Supporting characters: Describe the supporting characters
+Branding type: Describe the branding type
+Tagline: Include a tagline that captures the essence of the movie.
+Visual style: Ensure that the visual style fits the branding type and tagline.
+
+Here is an example of a prompt: 
+Title: Display the title "Verdant Spirits" in elegant and ethereal text, placed centrally at the top of the poster.
+
+Main Character: Depict a serene and enchantingly beautiful woman with an aura of nature, her face partly adorned and encased with vibrant green foliage and delicate floral arrangements. She exudes an ethereal and mystical presence.
+
+Background: The background should feature a dreamlike enchanted forest with lush greenery, vibrant flowers, and an ethereal glow emanating from the foliage. The scene should feel magical and otherworldly, suggesting a hidden world within nature.
+
+Supporting Characters: Add an enigmatic skeletal figure entwined with glowing, bioluminescent leaves and plants, subtly blending with the dark, verdant background. This figure should evoke a sense of ancient wisdom and mysterious energy.
+
+Studio Ghibli Branding: Incorporate the Studio Ghibli logo at the bottom center of the poster to establish it as an official Ghibli film.
+
+Tagline: Include a tagline that reads: "Where Nature's Secrets Come to Life" prominently on the poster.
+
+Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s signature look   rich, detailed backgrounds, and characters imbued with a touch of whimsy and mystery. The colors should be lush and inviting, with an emphasis on the enchanting and mystical aspects of nature."""
+
+            if poster:
+                base_prompt = poster_prompt
+            elif custom_base_prompt.strip():
                 base_prompt = custom_base_prompt
             else:
                 base_prompt = default_happy_prompt if happy_talk else default_simple_prompt
 
-            if compress:
+            if compress and not poster:
                 compression_chars = {
                     "soft": 600 if happy_talk else 300,
                     "medium": 400 if happy_talk else 200,
