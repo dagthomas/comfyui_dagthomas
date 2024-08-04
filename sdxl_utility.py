@@ -59,6 +59,7 @@ def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
     cond[outer_influence] -= low_cfg_denoised_outer_difference[outer_influence] / cond_scale
     
     return cond
+
 class RandomIntegerNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -81,12 +82,14 @@ class RandomIntegerNode:
 
     RETURN_TYPES = ("INT",)
     FUNCTION = "generate_random_int"
-    CATEGORY = CUSTOM_CATEGORY
+    CATEGORY = "CustomNodes"  # Replace with your actual category
 
     def generate_random_int(self, min_value, max_value):
         if min_value > max_value:
             min_value, max_value = max_value, min_value
-        return (random.randint(min_value, max_value),)
+        result = random.randint(min_value, max_value)
+        print(f"Generating random int between {min_value} and {max_value}: {result}")
+        return (result,)
     
 class FlexibleStringMergerNode:
     @classmethod
@@ -296,7 +299,7 @@ Examples of prompts to generate:
 
 3. Horror-themed (extreme close shot of eyes :1.3) of nordic woman, (war face paint:1.2), mohawk blonde haircut wit thin braids, runes tattoos, sweat, (detailed dirty skin:1.3) shiny, (epic battleground backgroun :1.2), . analog, haze, ( lens blur :1.3) , hard light, sharp focus on eyes, low saturation
 
-ALWAYS remember to out that it is a movie still and describe the film grain, color grading, and any artifacts or characteristics specific to film photography.
+ALWAYS remember to out that it is a cinematic movie still and describe the film grain, color grading, and any artifacts or characteristics specific to film photography.
 ALWAYS create the output as one scene, never transition between scenes.
 """
 

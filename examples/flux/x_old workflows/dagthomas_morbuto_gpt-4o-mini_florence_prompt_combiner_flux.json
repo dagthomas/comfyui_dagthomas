@@ -1,0 +1,1047 @@
+{
+    "last_node_id": 94,
+    "last_link_id": 135,
+    "nodes": [
+        {
+            "id": 71,
+            "type": "easy imageScaleDownToSize",
+            "pos": [
+                -2290,
+                20
+            ],
+            "size": {
+                "0": 210,
+                "1": 82
+            },
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "images",
+                    "type": "IMAGE",
+                    "link": 101
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "IMAGE",
+                    "type": "IMAGE",
+                    "links": [
+                        103
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "easy imageScaleDownToSize"
+            },
+            "widgets_values": [
+                512,
+                true
+            ]
+        },
+        {
+            "id": 76,
+            "type": "DownloadAndLoadFlorence2Model",
+            "pos": [
+                -2394,
+                -205
+            ],
+            "size": {
+                "0": 315,
+                "1": 106
+            },
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "outputs": [
+                {
+                    "name": "florence2_model",
+                    "type": "FL2MODEL",
+                    "links": [
+                        104
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "DownloadAndLoadFlorence2Model"
+            },
+            "widgets_values": [
+                "microsoft/Florence-2-base",
+                "fp16",
+                "sdpa"
+            ]
+        },
+        {
+            "id": 75,
+            "type": "Florence2Run",
+            "pos": [
+                -2041,
+                -213
+            ],
+            "size": {
+                "0": 400,
+                "1": 304
+            },
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "link": 103,
+                    "slot_index": 0
+                },
+                {
+                    "name": "florence2_model",
+                    "type": "FL2MODEL",
+                    "link": 104
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "image",
+                    "type": "IMAGE",
+                    "links": [],
+                    "shape": 3,
+                    "slot_index": 0
+                },
+                {
+                    "name": "mask",
+                    "type": "MASK",
+                    "links": [],
+                    "shape": 3,
+                    "slot_index": 1
+                },
+                {
+                    "name": "caption",
+                    "type": "STRING",
+                    "links": [
+                        105
+                    ],
+                    "shape": 3,
+                    "slot_index": 2
+                },
+                {
+                    "name": "data",
+                    "type": "JSON",
+                    "links": null,
+                    "shape": 3
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "Florence2Run"
+            },
+            "widgets_values": [
+                "",
+                "more_detailed_caption",
+                true,
+                false,
+                1024,
+                5,
+                true,
+                ""
+            ]
+        },
+        {
+            "id": 70,
+            "type": "PreviewImage",
+            "pos": [
+                -2298,
+                147
+            ],
+            "size": {
+                "0": 667.8660888671875,
+                "1": 354.0786437988281
+            },
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "images",
+                    "type": "IMAGE",
+                    "link": 100
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "PreviewImage"
+            }
+        },
+        {
+            "id": 69,
+            "type": "LoadRandomImage",
+            "pos": [
+                -2634,
+                152
+            ],
+            "size": {
+                "0": 315,
+                "1": 178
+            },
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "n_images",
+                    "type": "INT",
+                    "link": 118,
+                    "widget": {
+                        "name": "n_images"
+                    },
+                    "slot_index": 0
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "IMAGE",
+                    "type": "IMAGE",
+                    "links": [
+                        100,
+                        101
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "LoadRandomImage"
+            },
+            "widgets_values": [
+                "x:\\ai",
+                3,
+                93707,
+                "randomize",
+                false,
+                false
+            ]
+        },
+        {
+            "id": 88,
+            "type": "CLIPTextEncode",
+            "pos": [
+                -590,
+                -330
+            ],
+            "size": {
+                "0": 224.96670532226562,
+                "1": 71.01355743408203
+            },
+            "flags": {},
+            "order": 15,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "clip",
+                    "type": "CLIP",
+                    "link": 127
+                },
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "link": 134,
+                    "widget": {
+                        "name": "text"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "CONDITIONING",
+                    "type": "CONDITIONING",
+                    "links": [
+                        124
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "CLIPTextEncode"
+            },
+            "widgets_values": [
+                ""
+            ]
+        },
+        {
+            "id": 92,
+            "type": "CLIPTextEncode",
+            "pos": [
+                -590,
+                -220
+            ],
+            "size": {
+                "0": 229.72625732421875,
+                "1": 76
+            },
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "clip",
+                    "type": "CLIP",
+                    "link": 132
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "CONDITIONING",
+                    "type": "CONDITIONING",
+                    "links": [
+                        125
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "CLIPTextEncode"
+            },
+            "widgets_values": [
+                ""
+            ]
+        },
+        {
+            "id": 55,
+            "type": "ShowText|pysssss",
+            "pos": [
+                -1070,
+                -210
+            ],
+            "size": [
+                454.2920206769486,
+                199.5910101433874
+            ],
+            "flags": {},
+            "order": 14,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "link": 77,
+                    "widget": {
+                        "name": "text"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "links": [
+                        134
+                    ],
+                    "shape": 6,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ShowText|pysssss"
+            },
+            "widgets_values": [
+                "",
+                "In a cinematic desert landscape, a Middle-Eastern man with warm brown skin and a thick beard stands resolutely, clad in intricate metallic armor layered with a sleek black cape billowing in the wind. His serious gaze is cast sideways, absorbing the sun's bright rays from the top right, creating a warm glow that highlights the armor's ornate patterns. Beside him, a hooded figure in a flowing red cloak extends their arms, embodying an ethereal energy against a stark black-and-white cityscape background punctuated with red accents. Rain begins to cascade, contrasting the warmth of the desert, merging their destinies in this surreal moment, underscored by a subtle, melancholic atmosphere reminiscent of Quentin Tarantino's stylistic depth. The film grain captures their textures beautifully, enhanced with warm tones and slight desaturation, while low-key lighting amplifies the intrigue of the scene—a perfect frame of emotional connection against the vast, dramatic backdrop."
+            ]
+        },
+        {
+            "id": 91,
+            "type": "PGSD3LatentGenerator",
+            "pos": [
+                -590,
+                -110
+            ],
+            "size": [
+                228.85255895682735,
+                106
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "outputs": [
+                {
+                    "name": "LATENT",
+                    "type": "LATENT",
+                    "links": [
+                        126
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "PGSD3LatentGenerator"
+            },
+            "widgets_values": [
+                1280,
+                0,
+                1
+            ]
+        },
+        {
+            "id": 87,
+            "type": "KSampler",
+            "pos": [
+                -330,
+                -360
+            ],
+            "size": [
+                299.55436689018984,
+                355.3188249790254
+            ],
+            "flags": {},
+            "order": 16,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "model",
+                    "type": "MODEL",
+                    "link": 123
+                },
+                {
+                    "name": "positive",
+                    "type": "CONDITIONING",
+                    "link": 124
+                },
+                {
+                    "name": "negative",
+                    "type": "CONDITIONING",
+                    "link": 125
+                },
+                {
+                    "name": "latent_image",
+                    "type": "LATENT",
+                    "link": 126,
+                    "slot_index": 3
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "LATENT",
+                    "type": "LATENT",
+                    "links": [
+                        129
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "KSampler"
+            },
+            "widgets_values": [
+                491208150168421,
+                "fixed",
+                20,
+                1.5,
+                "euler",
+                "simple",
+                1
+            ]
+        },
+        {
+            "id": 83,
+            "type": "RandomIntegerNode",
+            "pos": [
+                -2968,
+                240
+            ],
+            "size": {
+                "0": 315,
+                "1": 82
+            },
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "outputs": [
+                {
+                    "name": "INT",
+                    "type": "INT",
+                    "links": [
+                        118
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "RandomIntegerNode"
+            },
+            "widgets_values": [
+                2,
+                3
+            ]
+        },
+        {
+            "id": 44,
+            "type": "PromptGenerator",
+            "pos": [
+                -1612,
+                144
+            ],
+            "size": [
+                241.32137943406906,
+                642
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "outputs": [
+                {
+                    "name": "prompt",
+                    "type": "STRING",
+                    "links": [
+                        116
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                },
+                {
+                    "name": "seed",
+                    "type": "INT",
+                    "links": null,
+                    "shape": 3
+                },
+                {
+                    "name": "t5xxl",
+                    "type": "STRING",
+                    "links": null,
+                    "shape": 3
+                },
+                {
+                    "name": "clip_l",
+                    "type": "STRING",
+                    "links": null,
+                    "shape": 3
+                },
+                {
+                    "name": "clip_g",
+                    "type": "STRING",
+                    "links": null,
+                    "shape": 3
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "PromptGenerator"
+            },
+            "widgets_values": [
+                914815313127632,
+                "randomize",
+                "Cinematic tones. Visible film grain, subtle light leak. Color grade: enhanced warmth, slightly desaturated.",
+                "",
+                "photography",
+                "disabled",
+                "disabled",
+                "disabled",
+                "disabled",
+                "disabled",
+                "disabled",
+                "random",
+                "random",
+                "random",
+                "disabled",
+                "disabled",
+                "disabled",
+                "random",
+                "disabled",
+                "disabled",
+                "disabled",
+                "disabled"
+            ]
+        },
+        {
+            "id": 77,
+            "type": "ShowText|pysssss",
+            "pos": [
+                -1618,
+                -212
+            ],
+            "size": [
+                519.0089400055638,
+                316.9959371207061
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "text",
+                    "type": "STRING",
+                    "link": 105,
+                    "widget": {
+                        "name": "text"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "links": [
+                        115
+                    ],
+                    "shape": 6,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "ShowText|pysssss"
+            },
+            "widgets_values": [
+                "",
+                "The image shows a man standing in a desert-like environment with mountains in the background. He is wearing a futuristic suit of armor with a black cape draped over his shoulders. The suit is made up of multiple layers of metal and has intricate designs and patterns on it. The man has a beard and is looking off to the side with a serious expression on his face. The sun is shining brightly in the top right corner of the image, casting a warm glow over the scene.,The image is a digital art piece that appears to be a digital illustration of a person wearing a red cloak with a hood. The person is standing in the center of the image, with their arms stretched out to the sides and their head turned towards the viewer. The cloak is flowing in the wind, creating a sense of movement and energy. The background is black and white, with splashes of red and grey, giving the impression of a cityscape. The overall mood of the illustration is dark and ominous.,The image is a digital illustration of a young girl standing in the rain. She is wearing a blue raincoat and black boots. Her hair is blowing in the wind and she is looking down at the ground. The background is dark and rainy, with raindrops falling from the sky. There are two lampposts on either side of the girl, and a tree can be seen in the distance. The overall mood of the image is somber and melancholic."
+            ]
+        },
+        {
+            "id": 82,
+            "type": "StringMergerNode",
+            "pos": [
+                -1362,
+                147
+            ],
+            "size": [
+                261.4910860071602,
+                79.42053751188541
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "string1",
+                    "type": "STRING",
+                    "link": 115,
+                    "widget": {
+                        "name": "string1"
+                    }
+                },
+                {
+                    "name": "string2",
+                    "type": "STRING",
+                    "link": 116,
+                    "widget": {
+                        "name": "string2"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "links": [
+                        117
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "StringMergerNode"
+            },
+            "widgets_values": [
+                "",
+                ""
+            ]
+        },
+        {
+            "id": 54,
+            "type": "GPT4MiniNode",
+            "pos": [
+                -1360,
+                270
+            ],
+            "size": [
+                259.4910860071602,
+                148
+            ],
+            "flags": {},
+            "order": 13,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "input_text",
+                    "type": "STRING",
+                    "link": 117,
+                    "widget": {
+                        "name": "input_text"
+                    }
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "STRING",
+                    "type": "STRING",
+                    "links": [
+                        77
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "GPT4MiniNode"
+            },
+            "widgets_values": [
+                "",
+                true,
+                true,
+                "medium",
+                ""
+            ]
+        },
+        {
+            "id": 86,
+            "type": "CheckpointLoaderSimple",
+            "pos": [
+                -990,
+                -360
+            ],
+            "size": {
+                "0": 382.11749267578125,
+                "1": 98
+            },
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "outputs": [
+                {
+                    "name": "MODEL",
+                    "type": "MODEL",
+                    "links": [
+                        133
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                },
+                {
+                    "name": "CLIP",
+                    "type": "CLIP",
+                    "links": [
+                        127,
+                        132
+                    ],
+                    "shape": 3,
+                    "slot_index": 1
+                },
+                {
+                    "name": "VAE",
+                    "type": "VAE",
+                    "links": [
+                        130
+                    ],
+                    "shape": 3,
+                    "slot_index": 2
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "CheckpointLoaderSimple"
+            },
+            "widgets_values": [
+                "flux\\flux1-dev-fp8.safetensors"
+            ]
+        },
+        {
+            "id": 93,
+            "type": "CFGSkimming",
+            "pos": [
+                -587,
+                -452
+            ],
+            "size": {
+                "0": 221.5867462158203,
+                "1": 82
+            },
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "model",
+                    "type": "MODEL",
+                    "link": 133
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "MODEL",
+                    "type": "MODEL",
+                    "links": [
+                        123
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "CFGSkimming"
+            },
+            "widgets_values": [
+                2,
+                true
+            ]
+        },
+        {
+            "id": 89,
+            "type": "VAEDecode",
+            "pos": [
+                0,
+                -360
+            ],
+            "size": {
+                "0": 210,
+                "1": 46
+            },
+            "flags": {},
+            "order": 17,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "samples",
+                    "type": "LATENT",
+                    "link": 129
+                },
+                {
+                    "name": "vae",
+                    "type": "VAE",
+                    "link": 130
+                }
+            ],
+            "outputs": [
+                {
+                    "name": "IMAGE",
+                    "type": "IMAGE",
+                    "links": [
+                        135
+                    ],
+                    "shape": 3,
+                    "slot_index": 0
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "VAEDecode"
+            }
+        },
+        {
+            "id": 94,
+            "type": "SaveImage",
+            "pos": [
+                -1068,
+                38
+            ],
+            "size": [
+                1033.3383160716849,
+                824.4682900773506
+            ],
+            "flags": {},
+            "order": 18,
+            "mode": 0,
+            "inputs": [
+                {
+                    "name": "images",
+                    "type": "IMAGE",
+                    "link": 135
+                }
+            ],
+            "properties": {
+                "Node name for S&R": "SaveImage"
+            },
+            "widgets_values": [
+                "comfyui_dagthomas_gpt4o-mini_"
+            ]
+        }
+    ],
+    "links": [
+        [
+            77,
+            54,
+            0,
+            55,
+            0,
+            "STRING"
+        ],
+        [
+            100,
+            69,
+            0,
+            70,
+            0,
+            "IMAGE"
+        ],
+        [
+            101,
+            69,
+            0,
+            71,
+            0,
+            "IMAGE"
+        ],
+        [
+            103,
+            71,
+            0,
+            75,
+            0,
+            "IMAGE"
+        ],
+        [
+            104,
+            76,
+            0,
+            75,
+            1,
+            "FL2MODEL"
+        ],
+        [
+            105,
+            75,
+            2,
+            77,
+            0,
+            "STRING"
+        ],
+        [
+            115,
+            77,
+            0,
+            82,
+            0,
+            "STRING"
+        ],
+        [
+            116,
+            44,
+            0,
+            82,
+            1,
+            "STRING"
+        ],
+        [
+            117,
+            82,
+            0,
+            54,
+            0,
+            "STRING"
+        ],
+        [
+            118,
+            83,
+            0,
+            69,
+            0,
+            "INT"
+        ],
+        [
+            123,
+            93,
+            0,
+            87,
+            0,
+            "MODEL"
+        ],
+        [
+            124,
+            88,
+            0,
+            87,
+            1,
+            "CONDITIONING"
+        ],
+        [
+            125,
+            92,
+            0,
+            87,
+            2,
+            "CONDITIONING"
+        ],
+        [
+            126,
+            91,
+            0,
+            87,
+            3,
+            "LATENT"
+        ],
+        [
+            127,
+            86,
+            1,
+            88,
+            0,
+            "CLIP"
+        ],
+        [
+            129,
+            87,
+            0,
+            89,
+            0,
+            "LATENT"
+        ],
+        [
+            130,
+            86,
+            2,
+            89,
+            1,
+            "VAE"
+        ],
+        [
+            132,
+            86,
+            1,
+            92,
+            0,
+            "CLIP"
+        ],
+        [
+            133,
+            86,
+            0,
+            93,
+            0,
+            "MODEL"
+        ],
+        [
+            134,
+            55,
+            0,
+            88,
+            1,
+            "STRING"
+        ],
+        [
+            135,
+            89,
+            0,
+            94,
+            0,
+            "IMAGE"
+        ]
+    ],
+    "groups": [],
+    "config": {},
+    "extra": {
+        "ds": {
+            "scale": 0.8769226950000022,
+            "offset": [
+                1813.2620623812027,
+                548.0548525757556
+            ]
+        },
+        "0246.VERSION": [
+            0,
+            0,
+            4
+        ]
+    },
+    "version": 0.4
+}
