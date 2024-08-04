@@ -1,6 +1,7 @@
 # Converting the prompt generation script into a ComfyUI plugin structure
 import random
 import json
+import requests
 import comfy.sd
 import comfy.model_management
 import nodes
@@ -45,7 +46,7 @@ COMPOSITION = load_json_file("composition.json")
 POSE = load_json_file("pose.json")
 BACKGROUND = load_json_file("background.json")
 BODY_TYPES = load_json_file("body_types.json")
-
+CUSTOM_CATEGORY = "comfyui_dagthomas"
 @torch.no_grad()
 def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
     denoised = x_orig - ((x_orig - uncond) + cond_scale * (cond - uncond))
@@ -58,7 +59,89 @@ def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
     cond[outer_influence] -= low_cfg_denoised_outer_difference[outer_influence] / cond_scale
     
     return cond
+class RandomIntegerNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "min_value": ("INT", {
+                    "default": 0, 
+                    "min": -1000000000, 
+                    "max": 1000000000,
+                    "step": 1
+                }),
+                "max_value": ("INT", {
+                    "default": 10, 
+                    "min": -1000000000, 
+                    "max": 1000000000,
+                    "step": 1
+                })
+            }
+        }
 
+    RETURN_TYPES = ("INT",)
+    FUNCTION = "generate_random_int"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def generate_random_int(self, min_value, max_value):
+        if min_value > max_value:
+            min_value, max_value = max_value, min_value
+        return (random.randint(min_value, max_value),)
+    
+class FlexibleStringMergerNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "string1": ("STRING", {"default": ""}),
+            },
+            "optional": {
+                "string2": ("STRING", {"default": ""}),
+                "string3": ("STRING", {"default": ""}),
+                "string4": ("STRING", {"default": ""}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "merge_strings"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def merge_strings(self, string1, string2="", string3="", string4=""):
+        def process_input(s):
+            if isinstance(s, list):
+                return ", ".join(str(item) for item in s)
+            return str(s).strip()
+
+        strings = [process_input(s) for s in [string1, string2, string3, string4] if process_input(s)]
+        if not strings:
+            return ("")  # Return an empty string if no non-empty inputs
+        return (" AND ".join(strings),)
+
+class StringMergerNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "string1": ("STRING", {"default": ""}),
+                "string2": ("STRING", {"default": ""})
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "merge_strings"
+    CATEGORY = "string_operations"
+
+    def merge_strings(self, string1, string2):
+        def process_input(s):
+            if isinstance(s, list):
+                return ", ".join(str(item) for item in s)
+            return str(s)
+
+        processed_string1 = process_input(string1)
+        processed_string2 = process_input(string2)
+        merged = f"{processed_string1} AND {processed_string2}"
+        return (merged,)
+    
 class CFGSkimmingSingleScalePreCFGNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -78,7 +161,7 @@ class CFGSkimmingSingleScalePreCFGNode:
     
     RETURN_TYPES = ("MODEL",)
     FUNCTION = "patch"
-    CATEGORY = "model_patches/Pre CFG"
+    CATEGORY = CUSTOM_CATEGORY
 
     def patch(self, model, skimming_cfg, razor_skim):
         @torch.no_grad()
@@ -109,8 +192,7 @@ class PGSD3LatentGenerator:
                               "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})}}
     RETURN_TYPES = ("LATENT",)
     FUNCTION = "generate"
-
-    CATEGORY = "latent/sd3"
+    CATEGORY = CUSTOM_CATEGORY
 
     def generate(self, width=1024, height=1024, batch_size=1):
         def adjust_dimensions(width, height):
@@ -170,7 +252,7 @@ class GPT4VisionNode:
     
     RETURN_TYPES = ("STRING",)
     FUNCTION = "analyze_images"
-    CATEGORY = "vision"
+    CATEGORY = CUSTOM_CATEGORY
 
     def encode_image(self, image):
         buffered = BytesIO()
@@ -183,7 +265,7 @@ class GPT4VisionNode:
         return Image.fromarray(img_array)
     
     def save_prompt(self, prompt):
-        filename_text = prompt.split(',')[0].strip()
+        filename_text = "vision_" + prompt.split(',')[0].strip()
         filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
         filename_text = filename_text[:30]  
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -247,8 +329,7 @@ ALWAYS create the output as one scene, never transition between scenes.
 
             response = self.client.chat.completions.create(
                 model="gpt-4o",
-                messages=messages,
-                max_tokens=1000
+                messages=messages
             )
             self.save_prompt(response.choices[0].message.content)
             return (response.choices[0].message.content,)
@@ -258,9 +339,113 @@ ALWAYS create the output as one scene, never transition between scenes.
             print(f"Images tensor type: {images.dtype}")
             return (f"Error occurred while processing the request: {str(e)}",)
         
+class RandomIntegerNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "min_value": ("INT", {
+                    "default": 0, 
+                    "min": -1000000000, 
+                    "max": 1000000000,
+                    "step": 1
+                }),
+                "max_value": ("INT", {
+                    "default": 10, 
+                    "min": -1000000000, 
+                    "max": 1000000000,
+                    "step": 1
+                })
+            }
+        }
+
+    RETURN_TYPES = ("INT",)
+    FUNCTION = "generate_random_int"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def generate_random_int(self, min_value, max_value):
+        if min_value > max_value:
+            min_value, max_value = max_value, min_value
+        return (random.randint(min_value, max_value),)
+            
+class OllamaNode:
+    def __init__(self):
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "input_text": ("STRING", {"multiline": True}),
+                "happy_talk": ("BOOLEAN", {"default": True}),
+                "compress": ("BOOLEAN", {"default": False}),
+                "compression_level": (["soft", "medium", "hard"],),
+            },
+            "optional": {
+                "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "custom_model": ("STRING", {"default": "llama3.1:8b"}),
+                "ollama_url": ("STRING", {"default": "http://localhost:11434/api/generate"})
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "generate"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def save_prompt(self, prompt):
+        filename_text = "mini_" + prompt.split(',')[0].strip()
+        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        filename_text = filename_text[:30]  
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+        
+        with open(filename, "w") as file:
+            file.write(prompt)
+        
+        print(f"Prompt saved to {filename}")
+
+    def generate(self, input_text, happy_talk, compress, compression_level, custom_base_prompt="", custom_model="llama3.1:8b", ollama_url="http://localhost:11434/api/generate"):
+        try:
+            default_happy_prompt = """Create a detailed visually descriptive caption of this description, which will be used as a prompt for a text to image AI system (caption only, no instructions like "create an image").Remove any mention of digital artwork or artwork style. Give detailed visual descriptions of the character(s), including ethnicity, skin tone, expression etc. Imagine using keywords for a still for someone who has aphantasia. Describe the image style, e.g. any photographic or art styles / techniques utilized. Make sure to fully describe all aspects of the cinematography, with abundant technical details and visual descriptions. If there is more than one image, combine the elements and characters from all of the images creatively into a single cohesive composition with a single background, inventing an interaction between the characters. Be creative in combining the characters into a single cohesive scene. Focus on two primary characters (or one) and describe an interesting interaction between them, such as a hug, a kiss, a fight, giving an object, an emotional reaction / interaction. If there is more than one background in the images, pick the most appropriate one. Your output is only the caption itself, no comments or extra formatting. The caption is in a single long paragraph. If you feel the images are inappropriate, invent a new scene / characters inspired by these. Additionally, incorporate a specific movie director's visual style (e.g. Wes Anderson, Christopher Nolan, Quentin Tarantino) and describe the lighting setup in detail, including the type, color, and placement of light sources to create the desired mood and atmosphere. Always frame the scene as a screen grab from a 35mm film still, including details about the film grain, color grading, and any artifacts or characteristics specific to 35mm film photography."""
+
+            default_simple_prompt = """Create a brief, straightforward caption for this description, suitable for a text-to-image AI system. Focus on the main elements, key characters, and overall scene without elaborate details. Provide a clear and concise description in one or two sentences."""
+
+            base_prompt = custom_base_prompt.strip() if custom_base_prompt.strip() else (default_happy_prompt if happy_talk else default_simple_prompt)
+
+            if compress:
+                compression_chars = {
+                    "soft": 600 if happy_talk else 300,
+                    "medium": 400 if happy_talk else 200,
+                    "hard": 200 if happy_talk else 100
+                }
+                char_limit = compression_chars[compression_level]
+                base_prompt += f" Compress the output to be more concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
+
+            prompt = f"{base_prompt}\nDescription: {input_text}"
+
+            payload = {
+                "model": custom_model,
+                "prompt": prompt,
+                "stream": False
+            }
+
+            response = requests.post(ollama_url, json=payload)
+            response.raise_for_status()
+            result = response.json()['response']
+
+            self.save_prompt(result)
+            return (result,)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return (f"Error occurred while processing the request: {str(e)}",)
+                
 class GPT4MiniNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -278,7 +463,21 @@ class GPT4MiniNode:
     
     RETURN_TYPES = ("STRING",)
     FUNCTION = "generate"
-    CATEGORY = "text"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def save_prompt(self, prompt):
+        filename_text = "mini_" + prompt.split(',')[0].strip()
+        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        filename_text = filename_text[:30]  
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+        
+        # Save the prompt to the file
+        with open(filename, "w") as file:
+            file.write(prompt)
+        
+        print(f"Prompt saved to {filename}")
 
     def generate(self, input_text, happy_talk, compress, compression_level, custom_base_prompt=""):
         try:
@@ -293,33 +492,28 @@ class GPT4MiniNode:
 
             if compress and happy_talk:
                 compression_chars = {
-                    "soft": 400,
-                    "medium": 300,
+                    "soft": 600,
+                    "medium": 400,
                     "hard": 200
                 }
                 char_limit = compression_chars[compression_level]
                 base_prompt += f" Compress the output to be more concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
             elif compress and not happy_talk:
                 compression_chars = {
-                    "soft": 100,
-                    "medium": 75,
-                    "hard": 50
+                    "soft": 300,
+                    "medium": 200,
+                    "hard": 100
                 }
                 char_limit = compression_chars[compression_level]
                 base_prompt += f" Limit the response to no more than {char_limit} characters."
 
-            stream = self.client.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
                 messages=[{"role": "user", "content": f"{base_prompt}\nDescription: {input_text}"}],
-                stream=True,
             )
             
-            response_content = ""
-            for chunk in stream:
-                if chunk.choices[0].delta.content is not None:
-                    response_content += chunk.choices[0].delta.content
-            
-            return (response_content,)
+            self.save_prompt(response.choices[0].message.content)
+            return (response.choices[0].message.content,)
         except Exception as e:
             print(f"An error occurred: {e}")
             return (f"Error occurred while processing the request: {str(e)}",)
@@ -340,7 +534,7 @@ class PromptGenerator:
         "clip_g",
     )
     FUNCTION = "generate_prompt"
-    CATEGORY = "PromptGenerator"
+    CATEGORY = CUSTOM_CATEGORY
 
     def __init__(self, seed=None):
         self.rng = random.Random(seed)
@@ -712,6 +906,10 @@ class PromptGenerator:
 
 
 NODE_CLASS_MAPPINGS = {
+    "RandomIntegerNode": RandomIntegerNode,
+    "OllamaNode": OllamaNode,
+    "FlexibleStringMergerNode": FlexibleStringMergerNode,
+    "StringMergerNode": StringMergerNode,
     "CFGSkimming": CFGSkimmingSingleScalePreCFGNode,
     "GPT4VisionNode": GPT4VisionNode,
     "GPT4MiniNode": GPT4MiniNode,
@@ -721,9 +919,15 @@ NODE_CLASS_MAPPINGS = {
 
 # Human readable names for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "RandomIntegerNode": "Random Integer Generator",
     "GPT4MiniNode": "LLM morbuto generator",
     "PromptGenerator": "Auto Prompter",
     "PGSD3LatentGenerator": "PGSD3LatentGenerator", 
     "GPT4VisionNode": "GPT4VisionNode",
     "CFGSkimming": "CFG Skimming",
+    "StringMergerNode": "String Merger", 
+    "FlexibleStringMergerNode": "Flexible String Merger",
+    "OllamaNode": "OllamaNode",
 }
+
+
