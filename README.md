@@ -30,10 +30,15 @@ Features:
 - Supports custom base prompts
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
+- Ability to create posters
 
 You can find an example workflow in /examples/flux/dagthomas_gpt4o-vision_prompt_generator_combiner.json
 
 ![image](https://github.com/user-attachments/assets/113bf0d2-3e19-4596-ae98-2f9a116193a2)
+
+There is a toggle to create movie posters (08/04/24)
+![ComfyUI_00161_](https://github.com/user-attachments/assets/262c7d5b-9770-492f-89b1-5dc6b62c9cc3)
+
 
 
 ### GPT4MiniNode
