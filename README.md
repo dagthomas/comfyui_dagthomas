@@ -21,7 +21,7 @@ Features:
 
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/2c6e7418-51a6-465c-8573-36f36300e8a6)
 
-### 2. GPT4VisionNode
+### GPT4VisionNode
 
 Analyzes images using OpenAI's GPT-4 Vision model.
 
@@ -36,7 +36,7 @@ You can find an example workflow in /examples/flux/dagthomas_gpt4o-vision_prompt
 ![image](https://github.com/user-attachments/assets/113bf0d2-3e19-4596-ae98-2f9a116193a2)
 
 
-### 3. GPT4MiniNode
+### GPT4MiniNode
 
 Generates text using OpenAI's GPT-4 model based on input text.
 
@@ -46,9 +46,37 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
-You can find an example workflow in /examples/flux/dagthomas_morbuto_florence_flash_attention_prompt_combiner_flux.json
+You can find an example workflow in /examples/flux/dagthomas_morbuto_gpt-4o-mini_florence_prompt_combiner_flux.json
 
-### 4. PGSD3LatentGenerator
+![image](https://github.com/user-attachments/assets/738b5588-b352-467a-8254-57fc74ecbe3a)
+
+
+### OllamaNode
+
+Generates text using custom Ollama based on input text.
+
+Features:
+- Accepts text input and generates enhanced descriptions
+- Supports custom base prompts
+- Offers options for "happy talk" (detailed descriptions) or simple outputs
+- Includes compression options to limit output length
+
+You can find an example workflow in /examples/flux/dagthomas_morbuto_ollama_florence_prompt_combiner_flux.json
+
+![image](https://github.com/user-attachments/assets/bc0b4d00-2b1f-4989-9abf-6175ce347978)
+
+
+### Pure Florence workflow: 
+
+- You can also use a pure local Florence workflow without any of the others. The prompt will have some bloat, but works fine with Flux
+
+You can find an example workflow in /examples/flux/dagthomas_florence_prompt_combiner_flux.json
+
+![image](https://github.com/user-attachments/assets/73aaace6-da42-4416-a39d-df4e68cb6aec)
+
+
+
+### PGSD3LatentGenerator
 
 Generates latent representations for use in Stable Diffusion 3 pipelines.
 
