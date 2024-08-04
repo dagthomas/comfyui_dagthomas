@@ -77,7 +77,7 @@ You can find an example workflow in /examples/flux/dagthomas_morbuto_ollama_flor
 
 You can find an example workflow in /examples/flux/dagthomas_florence_prompt_combiner_flux.json
 
-![image](https://github.com/user-attachments/assets/73aaace6-da42-4416-a39d-df4e68cb6aec)
+![image](https://raw.githubusercontent.com/dagthomas/comfyui_dagthomas/master/examples/flux/florence2/comfyui_dagthomas_florence2__00004_.png)
 
 
 
