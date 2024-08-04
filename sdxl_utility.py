@@ -311,6 +311,7 @@ Supporting characters: Describe the supporting characters
 Branding type: Describe the branding type
 Tagline: Include a tagline that captures the essence of the movie.
 Visual style: Ensure that the visual style fits the branding type and tagline.
+You are allowed to make up film and branding names, and do them like 80's, 90's or modern movie posters.
 
 Here is an example of a prompt: 
 Title: Display the title "Verdant Spirits" in elegant and ethereal text, placed centrally at the top of the poster.
