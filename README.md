@@ -66,9 +66,10 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
-You can find an example workflow in /examples/flux/dagthomas_morbuto_ollama_florence_prompt_combiner_flux.json
+![image](https://github.com/user-attachments/assets/66b28922-1dc0-478c-8181-81e4292c07d4)
 
-![image](https://github.com/user-attachments/assets/bc0b4d00-2b1f-4989-9abf-6175ce347978)
+
+
 
 
 ### Pure Florence workflow: 
