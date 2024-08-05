@@ -391,18 +391,46 @@ class RandomIntegerNode:
                     "min": -1000000000, 
                     "max": 1000000000,
                     "step": 1
+                }),
+                "seed": ("INT", {
+                    "default": -1, 
+                    "min": -1, 
+                    "max": 2**32 - 1,
+                    "step": 1
                 })
             }
         }
-
+    
     RETURN_TYPES = ("INT",)
     FUNCTION = "generate_random_int"
     CATEGORY = CUSTOM_CATEGORY
 
-    def generate_random_int(self, min_value, max_value):
+    def generate_random_int(self, min_value, max_value, seed):
         if min_value > max_value:
             min_value, max_value = max_value, min_value
+        
+        if seed != -1:
+            random.seed(seed)
+        
         return (random.randint(min_value, max_value),)
+
+    @classmethod
+    def IS_CHANGED(cls, min_value, max_value, seed):
+        return seed != -1
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, min_value, max_value, seed):
+        if min_value > max_value:
+            return "Minimum value should be less than or equal to maximum value."
+        if seed < -1 or seed >= 2**32:
+            return "Seed should be between -1 and 2^32 - 1."
+        return True
+
+    @classmethod
+    def control_after_generate(cls, generated_value, min_value, max_value, seed):
+        if generated_value < min_value or generated_value > max_value:
+            return (max(min(generated_value, max_value), min_value),)
+        return (generated_value,)
             
 class OllamaNode:
     def __init__(self):
