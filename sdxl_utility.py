@@ -64,6 +64,51 @@ def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
     
     return cond
 
+class SentenceMixerNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "input1": ("STRING", {"multiline": True}),
+            },
+            "optional": {
+                "input2": ("STRING", {"multiline": True}),
+                "input3": ("STRING", {"multiline": True}),
+                "input4": ("STRING", {"multiline": True}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "mix_sentences"
+    CATEGORY = "text"
+
+    def mix_sentences(self, input1, input2="", input3="", input4=""):
+        def process_input(input_data):
+            if isinstance(input_data, list):
+                return " ".join(input_data)
+            return input_data
+
+        all_text = " ".join(filter(bool, [process_input(input) for input in [input1, input2, input3, input4]]))
+        
+        sentences = []
+        current_sentence = ""
+        for char in all_text:
+            current_sentence += char
+            if char in [".", ","]:
+                sentences.append(current_sentence.strip())
+                current_sentence = ""
+        if current_sentence:
+            sentences.append(current_sentence.strip())
+
+        random.shuffle(sentences)
+        
+        result = " ".join(sentences)
+        
+        return (result,)
+
+# This line is needed to register the node in ComfyUI
+NODE_CLASS_MAPPINGS = {"SentenceMixerNode": SentenceMixerNode}
+    
 class RandomIntegerNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -289,7 +334,7 @@ class GPT4VisionNode:
 
     def analyze_images(self, images, happy_talk, compress, compression_level, poster, custom_base_prompt="", custom_title="", override=""):
         try:
-            default_happy_prompt = """Analyze the provided images and create a detailed visually descriptive caption that combines elements from all images into a single cohesive composition. This caption will be used as a prompt for a text-to-image AI system. Focus on:
+            default_happy_prompt = """Analyze the provided images and create a detailed visually descriptive caption that combines elements from all images into a single cohesive composition.Imagine all images being movie stills from real movies. This caption will be used as a prompt for a text-to-image AI system. Focus on:
 1. Detailed visual descriptions of characters, including ethnicity, skin tone, expressions, etc.
 2. Overall scene and background details.
 3. Image style, photographic techniques, direction of photo taken.
@@ -1044,6 +1089,7 @@ class PromptGenerator:
 
 
 NODE_CLASS_MAPPINGS = {
+    "SentenceMixerNode": SentenceMixerNode,
     "RandomIntegerNode": RandomIntegerNode,
     "OllamaNode": OllamaNode,
     "FlexibleStringMergerNode": FlexibleStringMergerNode,
@@ -1057,6 +1103,7 @@ NODE_CLASS_MAPPINGS = {
 
 # Human readable names for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "SentenceMixerNode": "Sentence Mixer",
     "RandomIntegerNode": "Random Integer Generator",
     "GPT4MiniNode": "GPT-4o-mini generator",
     "PromptGenerator": "Auto Prompter",
