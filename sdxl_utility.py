@@ -412,6 +412,7 @@ class OllamaNode:
                 "happy_talk": ("BOOLEAN", {"default": True}),
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
+                "poster": ("BOOLEAN", {"default": False}),  # New poster flag
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -437,22 +438,54 @@ class OllamaNode:
         
         print(f"Prompt saved to {filename}")
 
-    def generate(self, input_text, happy_talk, compress, compression_level, custom_base_prompt="", custom_model="llama3.1:8b", ollama_url="http://localhost:11434/api/generate"):
+    def generate(self, input_text, happy_talk, compress, compression_level, poster, custom_base_prompt="", custom_model="llama3.1:8b", ollama_url="http://localhost:11434/api/generate"):
         try:
             default_happy_prompt = """Create a detailed visually descriptive caption of this description, which will be used as a prompt for a text to image AI system (caption only, no instructions like "create an image").Remove any mention of digital artwork or artwork style. Give detailed visual descriptions of the character(s), including ethnicity, skin tone, expression etc. Imagine using keywords for a still for someone who has aphantasia. Describe the image style, e.g. any photographic or art styles / techniques utilized. Make sure to fully describe all aspects of the cinematography, with abundant technical details and visual descriptions. If there is more than one image, combine the elements and characters from all of the images creatively into a single cohesive composition with a single background, inventing an interaction between the characters. Be creative in combining the characters into a single cohesive scene. Focus on two primary characters (or one) and describe an interesting interaction between them, such as a hug, a kiss, a fight, giving an object, an emotional reaction / interaction. If there is more than one background in the images, pick the most appropriate one. Your output is only the caption itself, no comments or extra formatting. The caption is in a single long paragraph. If you feel the images are inappropriate, invent a new scene / characters inspired by these. Additionally, incorporate a specific movie director's visual style (e.g. Wes Anderson, Christopher Nolan, Quentin Tarantino) and describe the lighting setup in detail, including the type, color, and placement of light sources to create the desired mood and atmosphere. Always frame the scene as a screen grab from a 35mm film still, including details about the film grain, color grading, and any artifacts or characteristics specific to 35mm film photography."""
 
             default_simple_prompt = """Create a brief, straightforward caption for this description, suitable for a text-to-image AI system. Focus on the main elements, key characters, and overall scene without elaborate details. Provide a clear and concise description in one or two sentences."""
 
-            base_prompt = custom_base_prompt.strip() if custom_base_prompt.strip() else (default_happy_prompt if happy_talk else default_simple_prompt)
+            poster_prompt = """Analyze the provided description and extract key information to create a movie poster style description. Format the output as follows:
 
-            if compress:
+Title: A catchy, intriguing title that captures the essence of the scene, place the title in "".
+Main character: Give a description of the main character.
+Background: Describe the background in detail.
+Supporting characters: Describe the supporting characters
+Branding type: Describe the branding type
+Tagline: Include a tagline that captures the essence of the movie.
+Visual style: Ensure that the visual style fits the branding type and tagline.
+You are allowed to make up film and branding names, and do them like 80's, 90's or modern movie posters.
+
+Never add ** in front of title, main character, etc.
+Here is an example of a prompt, make the output like a movie poster: 
+Title: Display the title "Verdant Spirits" in elegant and ethereal text, placed centrally at the top of the poster.
+
+Main Character: Depict a serene and enchantingly beautiful woman with an aura of nature, her face partly adorned and encased with vibrant green foliage and delicate floral arrangements. She exudes an ethereal and mystical presence.
+
+Background: The background should feature a dreamlike enchanted forest with lush greenery, vibrant flowers, and an ethereal glow emanating from the foliage. The scene should feel magical and otherworldly, suggesting a hidden world within nature.
+
+Supporting Characters: Add an enigmatic skeletal figure entwined with glowing, bioluminescent leaves and plants, subtly blending with the dark, verdant background. This figure should evoke a sense of ancient wisdom and mysterious energy.
+
+Studio Ghibli Branding: Incorporate the Studio Ghibli logo at the bottom center of the poster to establish it as an official Ghibli film.
+
+Tagline: Include a tagline that reads: "Where Nature's Secrets Come to Life" prominently on the poster.
+
+Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s signature look   rich, detailed backgrounds, and characters imbued with a touch of whimsy and mystery. The colors should be lush and inviting, with an emphasis on the enchanting and mystical aspects of nature."""
+
+            if poster:
+                base_prompt = poster_prompt
+            elif custom_base_prompt.strip():
+                base_prompt = custom_base_prompt
+            else:
+                base_prompt = default_happy_prompt if happy_talk else default_simple_prompt
+
+            if compress and not poster:
                 compression_chars = {
                     "soft": 600 if happy_talk else 300,
                     "medium": 400 if happy_talk else 200,
                     "hard": 200 if happy_talk else 100
                 }
                 char_limit = compression_chars[compression_level]
-                base_prompt += f" Compress the output to be more concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
+                base_prompt += f" Compress the output to be concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
 
             prompt = f"{base_prompt}\nDescription: {input_text}"
 
@@ -486,6 +519,7 @@ class GPT4MiniNode:
                 "happy_talk": ("BOOLEAN", {"default": True}),
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
+                "poster": ("BOOLEAN", {"default": False}),  # New poster flag
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""})
@@ -504,39 +538,59 @@ class GPT4MiniNode:
         base_filename = f"{filename_text}_{timestamp}.txt"
         filename = os.path.join(self.prompts_dir, base_filename)
         
-        # Save the prompt to the file
         with open(filename, "w") as file:
             file.write(prompt)
         
         print(f"Prompt saved to {filename}")
 
-    def generate(self, input_text, happy_talk, compress, compression_level, custom_base_prompt=""):
+    def generate(self, input_text, happy_talk, compress, compression_level, poster, custom_base_prompt=""):
         try:
             default_happy_prompt = """Create a detailed visually descriptive caption of this description, which will be used as a prompt for a text to image AI system (caption only, no instructions like "create an image").Remove any mention of digital artwork or artwork style. Give detailed visual descriptions of the character(s), including ethnicity, skin tone, expression etc. Imagine using keywords for a still for someone who has aphantasia. Describe the image style, e.g. any photographic or art styles / techniques utilized. Make sure to fully describe all aspects of the cinematography, with abundant technical details and visual descriptions. If there is more than one image, combine the elements and characters from all of the images creatively into a single cohesive composition with a single background, inventing an interaction between the characters. Be creative in combining the characters into a single cohesive scene. Focus on two primary characters (or one) and describe an interesting interaction between them, such as a hug, a kiss, a fight, giving an object, an emotional reaction / interaction. If there is more than one background in the images, pick the most appropriate one. Your output is only the caption itself, no comments or extra formatting. The caption is in a single long paragraph. If you feel the images are inappropriate, invent a new scene / characters inspired by these. Additionally, incorporate a specific movie director's visual style (e.g. Wes Anderson, Christopher Nolan, Quentin Tarantino) and describe the lighting setup in detail, including the type, color, and placement of light sources to create the desired mood and atmosphere. Always frame the scene as a screen grab from a 35mm film still, including details about the film grain, color grading, and any artifacts or characteristics specific to 35mm film photography."""
 
             default_simple_prompt = """Create a brief, straightforward caption for this description, suitable for a text-to-image AI system. Focus on the main elements, key characters, and overall scene without elaborate details. Provide a clear and concise description in one or two sentences."""
 
-            if custom_base_prompt.strip():
+            poster_prompt = """Analyze the provided description and extract key information to create a movie poster style description. Format the output as follows:
+
+Title: A catchy, intriguing title that captures the essence of the scene, place the title in "".
+Main character: Give a description of the main character.
+Background: Describe the background in detail.
+Supporting characters: Describe the supporting characters
+Branding type: Describe the branding type
+Tagline: Include a tagline that captures the essence of the movie.
+Visual style: Ensure that the visual style fits the branding type and tagline.
+You are allowed to make up film and branding names, and do them like 80's, 90's or modern movie posters.
+
+Never add ** in front of title, main character, etc.
+Here is an example of a prompt, make the output like a movie poster: 
+Title: Display the title "Verdant Spirits" in elegant and ethereal text, placed centrally at the top of the poster.
+
+Main Character: Depict a serene and enchantingly beautiful woman with an aura of nature, her face partly adorned and encased with vibrant green foliage and delicate floral arrangements. She exudes an ethereal and mystical presence.
+
+Background: The background should feature a dreamlike enchanted forest with lush greenery, vibrant flowers, and an ethereal glow emanating from the foliage. The scene should feel magical and otherworldly, suggesting a hidden world within nature.
+
+Supporting Characters: Add an enigmatic skeletal figure entwined with glowing, bioluminescent leaves and plants, subtly blending with the dark, verdant background. This figure should evoke a sense of ancient wisdom and mysterious energy.
+
+Studio Ghibli Branding: Incorporate the Studio Ghibli logo at the bottom center of the poster to establish it as an official Ghibli film.
+
+Tagline: Include a tagline that reads: "Where Nature's Secrets Come to Life" prominently on the poster.
+
+Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s signature look   rich, detailed backgrounds, and characters imbued with a touch of whimsy and mystery. The colors should be lush and inviting, with an emphasis on the enchanting and mystical aspects of nature."""
+
+            if poster:
+                base_prompt = poster_prompt
+            elif custom_base_prompt.strip():
                 base_prompt = custom_base_prompt
             else:
                 base_prompt = default_happy_prompt if happy_talk else default_simple_prompt
 
-            if compress and happy_talk:
+            if compress and not poster:
                 compression_chars = {
-                    "soft": 600,
-                    "medium": 400,
-                    "hard": 200
+                    "soft": 600 if happy_talk else 300,
+                    "medium": 400 if happy_talk else 200,
+                    "hard": 200 if happy_talk else 100
                 }
                 char_limit = compression_chars[compression_level]
-                base_prompt += f" Compress the output to be more concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
-            elif compress and not happy_talk:
-                compression_chars = {
-                    "soft": 300,
-                    "medium": 200,
-                    "hard": 100
-                }
-                char_limit = compression_chars[compression_level]
-                base_prompt += f" Limit the response to no more than {char_limit} characters."
+                base_prompt += f" Compress the output to be concise while retaining key visual details. MAX OUTPUT SIZE no more than {char_limit} characters."
 
             response = self.client.chat.completions.create(
                 model="gpt-4o-mini",
