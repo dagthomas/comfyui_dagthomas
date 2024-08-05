@@ -1,0 +1,1101 @@
+{
+  "last_node_id": 98,
+  "last_link_id": 147,
+  "nodes": [
+    {
+      "id": 69,
+      "type": "LoadRandomImage",
+      "pos": [
+        -2634,
+        152
+      ],
+      "size": {
+        "0": 315,
+        "1": 178
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "n_images",
+          "type": "INT",
+          "link": 119,
+          "widget": {
+            "name": "n_images"
+          },
+          "slot_index": 0
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            100,
+            101
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadRandomImage"
+      },
+      "widgets_values": [
+        "x:\\ai",
+        3,
+        11000,
+        "randomize",
+        false,
+        false
+      ]
+    },
+    {
+      "id": 55,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1120,
+        -70
+      ],
+      "size": {
+        "0": 397.5361328125,
+        "1": 232.96055603027344
+      },
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 118,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            135
+          ],
+          "shape": 6,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        [
+          "cinematic movie still high fashion photography,beach setting,ocean horizon,cloudy sky,gentle waves,soft sand,colorful,(natural skin texture,hyperrealism,soft light,sharp:1.2),mood lighting,(intricate skin detail:1.3),(wrinkles:1.2),(skin blemishes:1.1),(skin pores:1.1),(detailed face:1.3),(lips slightly parted:1.0),shot on Nikon Coolpix P950 with Built-in 24-2000mm f-2.8-6.5,photo by Alessio Albi  AND The image is a close-up of a statue of a person's face. The statue appears to be made of a dark material, possibly stone or concrete, and is covered in a thick layer of mud or mud. The person's eyes are closed and their mouth is slightly open, as if they are in a state of deep thought or contemplation. In front of the statue, there are six lit candles burning brightly. The candles are arranged in a triangular formation, with the largest candle in the center and the smaller ones on either side. The background is completely black, making the statue stand out even more. The overall mood of the image is somber and contemplative., The image is a close-up portrait of a woman's face. The woman has dark hair and is wearing dramatic makeup with dark eyeliner and mascara. Her eyes are closed and her lips are slightly parted, as if she is about to speak. Her mouth is covered in a thick layer of blood, which is dripping down her cheeks. The blood is a bright orange color and appears to be dripping down the sides of her mouth. The background is a gradient of blue and purple, giving the image a dreamy and ethereal feel. The overall mood of the image is dark and eerie."
+        ],
+        "knight on horseback, sharp teeth, ancient tree, ethereal, fantasy, knva, looking at viewer from below, japanese fantasy, fantasy art, gauntlets, male in armor standing in a battlefield, epic detailed, forest, realistic gigantic dragon, river, solo focus, no humans, medieval, swirling clouds, armor, swirling waves, retro artstyle cloudy sky, stormy environment, glowing red eyes, blush, delicate and smooth skin, 1boy, from above, majestic, halftone effect, shoulder armor, standing in a rocky landscape, realistic, helmet, 1girl, swirling smoke, AND cinematic movie still portrait photography,high-rise view,glass window,modern furniture,film photo,big depth of field,artificial lighting,biopunk,extremely intricate details,shot on Olympus OM-D E-M5 Mark III with M.Zuiko 40-150mm f-2.8,photo by Nobuyoshi Araki "
+      ]
+    },
+    {
+      "id": 86,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        -1110,
+        -210
+      ],
+      "size": {
+        "0": 382.11749267578125,
+        "1": 98
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            134
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            128,
+            133
+          ],
+          "shape": 3,
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            131
+          ],
+          "shape": 3,
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "flux\\flux1-dev-fp8.safetensors"
+      ]
+    },
+    {
+      "id": 93,
+      "type": "CFGSkimming",
+      "pos": [
+        -690,
+        -300
+      ],
+      "size": {
+        "0": 221.5867462158203,
+        "1": 82
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 134
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            124
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CFGSkimming"
+      },
+      "widgets_values": [
+        2,
+        true
+      ]
+    },
+    {
+      "id": 88,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -689,
+        -182
+      ],
+      "size": {
+        "0": 224.96670532226562,
+        "1": 71.01355743408203
+      },
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 128
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 135,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            125
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 92,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -691,
+        -70
+      ],
+      "size": {
+        "0": 229.72625732421875,
+        "1": 76
+      },
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 133
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            126
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 82,
+      "type": "StringMergerNode",
+      "pos": [
+        -1361,
+        144
+      ],
+      "size": {
+        "0": 210,
+        "1": 70.73819732666016
+      },
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string1",
+          "type": "STRING",
+          "link": 146,
+          "widget": {
+            "name": "string1"
+          }
+        },
+        {
+          "name": "string2",
+          "type": "STRING",
+          "link": 147,
+          "widget": {
+            "name": "string2"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            118
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringMergerNode"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 89,
+      "type": "VAEDecode",
+      "pos": [
+        -110,
+        -220
+      ],
+      "size": {
+        "0": 210,
+        "1": 46
+      },
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 130
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 131
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            137
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 94,
+      "type": "SaveImage",
+      "pos": [
+        -1118,
+        200
+      ],
+      "size": {
+        "0": 974.0654296875,
+        "1": 900.0164794921875
+      },
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 137
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "comfyui_dagthomas_florence2_"
+      ]
+    },
+    {
+      "id": 96,
+      "type": "DownloadAndLoadFlorence2Model",
+      "pos": [
+        -2420,
+        -250
+      ],
+      "size": {
+        "0": 315,
+        "1": 106
+      },
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lora",
+          "type": "PEFTLORA",
+          "link": 141
+        }
+      ],
+      "outputs": [
+        {
+          "name": "florence2_model",
+          "type": "FL2MODEL",
+          "links": [
+            142
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DownloadAndLoadFlorence2Model"
+      },
+      "widgets_values": [
+        "MiaoshouAI/Florence-2-base-PromptGen",
+        "fp16",
+        "sdpa"
+      ]
+    },
+    {
+      "id": 95,
+      "type": "DownloadAndLoadFlorence2Lora",
+      "pos": [
+        -2760,
+        -220
+      ],
+      "size": {
+        "0": 315,
+        "1": 58
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "lora",
+          "type": "PEFTLORA",
+          "links": [
+            141
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DownloadAndLoadFlorence2Lora"
+      },
+      "widgets_values": [
+        "NikshepShetty/Florence-2-pixelprose"
+      ]
+    },
+    {
+      "id": 71,
+      "type": "easy imageScaleDownToSize",
+      "pos": [
+        -2290,
+        20
+      ],
+      "size": {
+        "0": 210,
+        "1": 82
+      },
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 101
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            143
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "easy imageScaleDownToSize"
+      },
+      "widgets_values": [
+        512,
+        true
+      ]
+    },
+    {
+      "id": 91,
+      "type": "PGSD3LatentGenerator",
+      "pos": [
+        -690,
+        40
+      ],
+      "size": {
+        "0": 232.10621643066406,
+        "1": 106
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            127
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PGSD3LatentGenerator"
+      },
+      "widgets_values": [
+        1344,
+        0,
+        1
+      ]
+    },
+    {
+      "id": 44,
+      "type": "PromptGenerator",
+      "pos": [
+        -1612,
+        144
+      ],
+      "size": {
+        "0": 227.4687957763672,
+        "1": 642
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            147
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "t5xxl",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "clip_l",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "clip_g",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PromptGenerator"
+      },
+      "widgets_values": [
+        822949618502343,
+        "randomize",
+        "cinematic movie still",
+        "",
+        "photography",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled",
+        "random",
+        "random",
+        "random",
+        "disabled",
+        "disabled",
+        "disabled",
+        "random",
+        "disabled",
+        "random",
+        "disabled",
+        "disabled"
+      ]
+    },
+    {
+      "id": 98,
+      "type": "SentenceMixerNode",
+      "pos": [
+        -1600,
+        -260
+      ],
+      "size": {
+        "0": 396.04443359375,
+        "1": 176
+      },
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input1",
+          "type": "STRING",
+          "link": 144,
+          "widget": {
+            "name": "input1"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            145
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SentenceMixerNode"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 83,
+      "type": "RandomIntegerNode",
+      "pos": [
+        -2874,
+        205
+      ],
+      "size": {
+        "0": 210,
+        "1": 130
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            119
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomIntegerNode"
+      },
+      "widgets_values": [
+        1,
+        3,
+        250824530,
+        "randomize"
+      ]
+    },
+    {
+      "id": 77,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1598,
+        -36
+      ],
+      "size": [
+        436.2314844231664,
+        133.59760442228844
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 145,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            146
+          ],
+          "shape": 6,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        [
+          [
+            "The image is a close-up of a statue of a person's face. The statue appears to be made of a dark material, possibly stone or concrete, and is covered in a thick layer of mud or mud. The person's eyes are closed and their mouth is slightly open, as if they are in a state of deep thought or contemplation. In front of the statue, there are six lit candles burning brightly. The candles are arranged in a triangular formation, with the largest candle in the center and the smaller ones on either side. The background is completely black, making the statue stand out even more. The overall mood of the image is somber and contemplative.",
+            "The image is a close-up portrait of a woman's face. The woman has dark hair and is wearing dramatic makeup with dark eyeliner and mascara. Her eyes are closed and her lips are slightly parted, as if she is about to speak. Her mouth is covered in a thick layer of blood, which is dripping down her cheeks. The blood is a bright orange color and appears to be dripping down the sides of her mouth. The background is a gradient of blue and purple, giving the image a dreamy and ethereal feel. The overall mood of the image is dark and eerie."
+          ]
+        ],
+        "knight on horseback, sharp teeth, ancient tree, ethereal, fantasy, knva, looking at viewer from below, japanese fantasy, fantasy art, gauntlets, male in armor standing in a battlefield, epic detailed, forest, realistic gigantic dragon, river, solo focus, no humans, medieval, swirling clouds, armor, swirling waves, retro artstyle cloudy sky, stormy environment, glowing red eyes, blush, delicate and smooth skin, 1boy, from above, majestic, halftone effect, shoulder armor, standing in a rocky landscape, realistic, helmet, 1girl, swirling smoke,"
+      ]
+    },
+    {
+      "id": 87,
+      "type": "KSampler",
+      "pos": [
+        -440,
+        -220
+      ],
+      "size": {
+        "0": 300.068603515625,
+        "1": 359.654052734375
+      },
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 124
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 125
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 126
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 127,
+          "slot_index": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            130
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        491208150168421,
+        "fixed",
+        20,
+        1,
+        "ipndm",
+        "beta",
+        1
+      ]
+    },
+    {
+      "id": 97,
+      "type": "Florence2Run",
+      "pos": [
+        -2050,
+        -270
+      ],
+      "size": {
+        "0": 400,
+        "1": 352
+      },
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 143
+        },
+        {
+          "name": "florence2_model",
+          "type": "FL2MODEL",
+          "link": 142
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "caption",
+          "type": "STRING",
+          "links": [
+            144
+          ],
+          "shape": 3,
+          "slot_index": 2
+        },
+        {
+          "name": "data",
+          "type": "JSON",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Florence2Run"
+      },
+      "widgets_values": [
+        "",
+        "prompt_gen",
+        true,
+        false,
+        1024,
+        5,
+        true,
+        "",
+        3206046741,
+        "randomize"
+      ]
+    },
+    {
+      "id": 70,
+      "type": "PreviewImage",
+      "pos": [
+        -2298,
+        147
+      ],
+      "size": {
+        "0": 667.8660888671875,
+        "1": 354.0786437988281
+      },
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 100
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    }
+  ],
+  "links": [
+    [
+      100,
+      69,
+      0,
+      70,
+      0,
+      "IMAGE"
+    ],
+    [
+      101,
+      69,
+      0,
+      71,
+      0,
+      "IMAGE"
+    ],
+    [
+      118,
+      82,
+      0,
+      55,
+      0,
+      "STRING"
+    ],
+    [
+      119,
+      83,
+      0,
+      69,
+      0,
+      "INT"
+    ],
+    [
+      124,
+      93,
+      0,
+      87,
+      0,
+      "MODEL"
+    ],
+    [
+      125,
+      88,
+      0,
+      87,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      126,
+      92,
+      0,
+      87,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      127,
+      91,
+      0,
+      87,
+      3,
+      "LATENT"
+    ],
+    [
+      128,
+      86,
+      1,
+      88,
+      0,
+      "CLIP"
+    ],
+    [
+      130,
+      87,
+      0,
+      89,
+      0,
+      "LATENT"
+    ],
+    [
+      131,
+      86,
+      2,
+      89,
+      1,
+      "VAE"
+    ],
+    [
+      133,
+      86,
+      1,
+      92,
+      0,
+      "CLIP"
+    ],
+    [
+      134,
+      86,
+      0,
+      93,
+      0,
+      "MODEL"
+    ],
+    [
+      135,
+      55,
+      0,
+      88,
+      1,
+      "STRING"
+    ],
+    [
+      137,
+      89,
+      0,
+      94,
+      0,
+      "IMAGE"
+    ],
+    [
+      141,
+      95,
+      0,
+      96,
+      0,
+      "PEFTLORA"
+    ],
+    [
+      142,
+      96,
+      0,
+      97,
+      1,
+      "FL2MODEL"
+    ],
+    [
+      143,
+      71,
+      0,
+      97,
+      0,
+      "IMAGE"
+    ],
+    [
+      144,
+      97,
+      2,
+      98,
+      0,
+      "STRING"
+    ],
+    [
+      145,
+      98,
+      0,
+      77,
+      0,
+      "STRING"
+    ],
+    [
+      146,
+      77,
+      0,
+      82,
+      0,
+      "STRING"
+    ],
+    [
+      147,
+      44,
+      0,
+      82,
+      1,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9646149645000006,
+      "offset": [
+        2827.7182044591473,
+        518.1921374545593
+      ]
+    },
+    "0246.VERSION": [
+      0,
+      0,
+      4
+    ]
+  },
+  "version": 0.4
+}

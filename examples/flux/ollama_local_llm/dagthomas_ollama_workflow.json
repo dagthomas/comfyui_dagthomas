@@ -1,0 +1,1192 @@
+{
+  "last_node_id": 108,
+  "last_link_id": 156,
+  "nodes": [
+    {
+      "id": 69,
+      "type": "LoadRandomImage",
+      "pos": [
+        -2634,
+        152
+      ],
+      "size": {
+        "0": 315,
+        "1": 178
+      },
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "n_images",
+          "type": "INT",
+          "link": 147,
+          "widget": {
+            "name": "n_images"
+          },
+          "slot_index": 0
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            100,
+            131
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadRandomImage"
+      },
+      "widgets_values": [
+        "x:\\ai",
+        3,
+        5108,
+        "randomize",
+        false,
+        false
+      ]
+    },
+    {
+      "id": 92,
+      "type": "LoadImage",
+      "pos": [
+        -3410,
+        -170
+      ],
+      "size": {
+        "0": 315,
+        "1": 314
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 2,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            133
+          ],
+          "shape": 3
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "7ACE9B56C3486DECA42D9B6ADB8F69E1D5CEE20696479E5DBCEBAE78EF1B3772.jpeg",
+        "image"
+      ]
+    },
+    {
+      "id": 93,
+      "type": "LoadImage",
+      "pos": [
+        -3410,
+        190
+      ],
+      "size": {
+        "0": 315,
+        "1": 314
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 2,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            134
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "im-not-going-back-to-sdxl-1-0-v0-njaom4ut5mgd1.webp",
+        "image"
+      ]
+    },
+    {
+      "id": 91,
+      "type": "ImageBatch",
+      "pos": [
+        -3050,
+        70
+      ],
+      "size": {
+        "0": 210,
+        "1": 46
+      },
+      "flags": {},
+      "order": 7,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 133,
+          "slot_index": 0
+        },
+        {
+          "name": "image2",
+          "type": "IMAGE",
+          "link": 134,
+          "slot_index": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageBatch"
+      }
+    },
+    {
+      "id": 98,
+      "type": "VAEDecode",
+      "pos": [
+        -30,
+        -210
+      ],
+      "size": {
+        "0": 210,
+        "1": 46
+      },
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 141
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 142
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            145
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 55,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1010,
+        -60
+      ],
+      "size": {
+        "0": 376.41632080078125,
+        "1": 218.43174743652344
+      },
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 154,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            146
+          ],
+          "shape": 6,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        [
+          "A dimly lit cave backdrop features a rugged, rocky terrain with wisps of fog lingering in the distance, while a figure clad in a worn brown leather jacket and helmet emerges from the shadows, their back turned towards us as they stride purposefully to the right. The space suit, though worn and weathered, exudes an air of utilitarian practicality, its multiple pockets and straps a testament to the wearer's adventurous spirit. Beneath the suit, a large backpack bulges with an unseen weight, hinting at the burdens this traveler has shouldered in their quest for discovery.\n\nAgainst this foreboding backdrop, a forest scene unfolds like a serene oasis, its tall trees stretching towards the sky with a gentle elegance that belies the drama of the cave. The forest floor is carpeted with a soft layer of fallen leaves and twigs, punctuated by small plants that add a touch of vibrancy to this otherwise subdued palette.\n\nIn the center of this tranquil scene, a small square-shaped object made from moss or lichen emits a warm, golden light that seems almost otherworldly. This subtle glow infuses the atmosphere with an air of peacefulness, a sense of stillness that belies the tension and drama of the cave behind us.\n\nAs our gaze shifts between these two disparate worlds, we begin to notice the faintest glimmer of connection - a thread of shared experience or perhaps even fate - that binds these characters together. The figure in the cave, their face obscured by the helmet, seems to be moving purposefully towards this idyllic haven, drawn by some unseen force.\n\nThe light pouring into this sanctuary from the forest's entrance is warm and golden, tempered by a soft filter of leafy greenery that imbues it with a sense of earthiness. It casts long shadows across the cave's rugged terrain, accentuating its rugged beauty as our gaze lingers on the intersection of these two worlds.\n\nIn the midst of this cinematic convergence, the light sources dance and weave, imbuing each scene with an ethereal quality that seems almost otherworldly. The overall mood is one of heightened drama, tempered by a sense of serenity - a delicate balance that's both captivating and poignant. Shot on 35mm film using a Panasonic S1R with Lumix S 50mm f/1.4 lens, the image is characterized by visible grain and a subtle light leak, further enhancing its cinematic feel."
+        ],
+        "A young woman lies in a dimly lit bedroom with pink pillows and a chandelier above. She's relaxed, eyes closed, head on pillow, hands on bed. A mystical sorceress stands before her, back arched, hands on ethereal aura, face flushed, half-closed eyes. The atmosphere is romantic, intimate, serene, powerful."
+      ]
+    },
+    {
+      "id": 44,
+      "type": "PromptGenerator",
+      "pos": [
+        -1612,
+        144
+      ],
+      "size": {
+        "0": 260.7744140625,
+        "1": 642
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            116
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "t5xxl",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "clip_l",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "clip_g",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PromptGenerator"
+      },
+      "widgets_values": [
+        1036254102683273,
+        "randomize",
+        "Cinematic tones. Visible film grain, subtle light leak. Color grade: enhanced warmth, slightly desaturated.",
+        "",
+        "photography",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled",
+        "random",
+        "random",
+        "random",
+        "disabled",
+        "disabled",
+        "disabled",
+        "random",
+        "disabled",
+        "disabled",
+        "disabled",
+        "disabled"
+      ]
+    },
+    {
+      "id": 82,
+      "type": "StringMergerNode",
+      "pos": [
+        -1332,
+        152
+      ],
+      "size": {
+        "0": 288.669189453125,
+        "1": 78.24994659423828
+      },
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string1",
+          "type": "STRING",
+          "link": 115,
+          "widget": {
+            "name": "string1"
+          }
+        },
+        {
+          "name": "string2",
+          "type": "STRING",
+          "link": 116,
+          "widget": {
+            "name": "string2"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringMergerNode"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 95,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        -1020,
+        -200
+      ],
+      "size": {
+        "0": 382.11749267578125,
+        "1": 98
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            148
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            139,
+            143
+          ],
+          "shape": 3,
+          "slot_index": 1
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            142
+          ],
+          "shape": 3,
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple"
+      },
+      "widgets_values": [
+        "flux\\flux1-dev-fp8.safetensors"
+      ]
+    },
+    {
+      "id": 97,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -615,
+        -197
+      ],
+      "size": {
+        "0": 224.96670532226562,
+        "1": 71.01355743408203
+      },
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 139
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 146,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            136
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 100,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -612,
+        -83
+      ],
+      "size": {
+        "0": 229.72625732421875,
+        "1": 76
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 143
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            137
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 99,
+      "type": "PGSD3LatentGenerator",
+      "pos": [
+        -615,
+        37
+      ],
+      "size": {
+        "0": 232.10621643066406,
+        "1": 106
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            138
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PGSD3LatentGenerator"
+      },
+      "widgets_values": [
+        1344,
+        0,
+        1
+      ]
+    },
+    {
+      "id": 96,
+      "type": "KSampler",
+      "pos": [
+        -360,
+        -210
+      ],
+      "size": {
+        "0": 300.068603515625,
+        "1": 359.654052734375
+      },
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 148
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 136
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 137
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 138,
+          "slot_index": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            141
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        491208150168421,
+        "fixed",
+        20,
+        1,
+        "ipndm",
+        "beta",
+        1
+      ]
+    },
+    {
+      "id": 104,
+      "type": "DownloadAndLoadFlorence2Lora",
+      "pos": [
+        -2700,
+        -190
+      ],
+      "size": {
+        "0": 315,
+        "1": 58
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "lora",
+          "type": "PEFTLORA",
+          "links": [
+            149
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DownloadAndLoadFlorence2Lora"
+      },
+      "widgets_values": [
+        "NikshepShetty/Florence-2-pixelprose"
+      ]
+    },
+    {
+      "id": 105,
+      "type": "DownloadAndLoadFlorence2Model",
+      "pos": [
+        -2380,
+        -240
+      ],
+      "size": {
+        "0": 315,
+        "1": 106
+      },
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lora",
+          "type": "PEFTLORA",
+          "link": 149
+        }
+      ],
+      "outputs": [
+        {
+          "name": "florence2_model",
+          "type": "FL2MODEL",
+          "links": [
+            150
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DownloadAndLoadFlorence2Model"
+      },
+      "widgets_values": [
+        "MiaoshouAI/Florence-2-base-PromptGen",
+        "fp16",
+        "sdpa"
+      ]
+    },
+    {
+      "id": 90,
+      "type": "ImageScaleDownToSize",
+      "pos": [
+        -2307,
+        18
+      ],
+      "size": {
+        "0": 250.89402770996094,
+        "1": 82.05248260498047
+      },
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 131
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            151
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScaleDownToSize"
+      },
+      "widgets_values": [
+        512,
+        true
+      ]
+    },
+    {
+      "id": 102,
+      "type": "SaveImage",
+      "pos": [
+        -1005,
+        208
+      ],
+      "size": {
+        "0": 959.3043823242188,
+        "1": 678.628662109375
+      },
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 145
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "comfyui_dagthomas_localllm_"
+      ]
+    },
+    {
+      "id": 103,
+      "type": "RandomIntegerNode",
+      "pos": [
+        -2980,
+        245
+      ],
+      "size": {
+        "0": 315,
+        "1": 130
+      },
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            147
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomIntegerNode"
+      },
+      "widgets_values": [
+        2,
+        3,
+        4231535156,
+        "randomize"
+      ]
+    },
+    {
+      "id": 70,
+      "type": "PreviewImage",
+      "pos": [
+        -2298,
+        147
+      ],
+      "size": {
+        "0": 667.8660888671875,
+        "1": 354.0786437988281
+      },
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 100
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 106,
+      "type": "Florence2Run",
+      "pos": [
+        -2040,
+        -250
+      ],
+      "size": {
+        "0": 400,
+        "1": 352
+      },
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 151
+        },
+        {
+          "name": "florence2_model",
+          "type": "FL2MODEL",
+          "link": 150
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "caption",
+          "type": "STRING",
+          "links": [
+            152
+          ],
+          "shape": 3,
+          "slot_index": 2
+        },
+        {
+          "name": "data",
+          "type": "JSON",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Florence2Run"
+      },
+      "widgets_values": [
+        "",
+        "more_detailed_caption",
+        false,
+        false,
+        1024,
+        5,
+        true,
+        "",
+        1695625445,
+        "randomize"
+      ]
+    },
+    {
+      "id": 77,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1618,
+        -212
+      ],
+      "size": {
+        "0": 573.5288696289062,
+        "1": 325.9341125488281
+      },
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 152,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            115,
+            156
+          ],
+          "shape": 6,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        [
+          [
+            "The image shows a person wearing a full-body space suit and a helmet, standing in a cave. The person is facing towards the right side of the image, with their back towards the camera. They are wearing a brown leather jacket with multiple pockets and straps, and a large backpack on their back. The background is dark and rocky, with a hint of fog or mist visible in the distance. The overall mood of the scene is mysterious and adventurous.",
+            "The image is a photograph of a forest scene with tall trees in the background. The trees are tall and slender, with their trunks reaching up towards the sky. The ground is covered in fallen leaves and twigs, and there are a few small plants scattered around. In the center of the image, there is a small square-shaped object that appears to be made of moss or lichen. The object is lit from within, creating a warm glow that illuminates the scene. The overall mood of the photograph is peaceful and serene."
+          ]
+        ],
+        "a young woman who is lying on her side in a dimly lit bedroom, surrounded by pink pillows and a chandelier hanging from the ceiling, her eyes are closed, and she appears to be in a state of relaxation, with her head resting on a pillow and her hands resting on the bed, the overall atmosphere of the image is romantic and intimate, inviting the viewer into her intimate world,a mysterious and mystical sorceress standing in a swirling pose, with her back arched and her hands resting on ethereal aura, her face is flushed with a subtle blush, and her eyes are half-closed, giving off a sense of serenity and power, her posture is one of confidence and strength, as if she is ready to take on any challenge that comes her way, her gaze is directed at the viewer, inviting them into her world"
+      ]
+    },
+    {
+      "id": 107,
+      "type": "OllamaNode",
+      "pos": [
+        -1327,
+        279
+      ],
+      "size": {
+        "0": 280.3885803222656,
+        "1": 294
+      },
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input_text",
+          "type": "STRING",
+          "link": 156,
+          "widget": {
+            "name": "input_text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            154
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OllamaNode"
+      },
+      "widgets_values": [
+        "",
+        true,
+        true,
+        "soft",
+        "",
+        "",
+        "llama3.1:8b",
+        "http://localhost:11434/api/generate",
+        "",
+        "Only give me the answer.\nCompress this to half the size, while keeping the essence"
+      ]
+    }
+  ],
+  "links": [
+    [
+      100,
+      69,
+      0,
+      70,
+      0,
+      "IMAGE"
+    ],
+    [
+      115,
+      77,
+      0,
+      82,
+      0,
+      "STRING"
+    ],
+    [
+      116,
+      44,
+      0,
+      82,
+      1,
+      "STRING"
+    ],
+    [
+      131,
+      69,
+      0,
+      90,
+      0,
+      "IMAGE"
+    ],
+    [
+      133,
+      92,
+      0,
+      91,
+      0,
+      "IMAGE"
+    ],
+    [
+      134,
+      93,
+      0,
+      91,
+      1,
+      "IMAGE"
+    ],
+    [
+      136,
+      97,
+      0,
+      96,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      137,
+      100,
+      0,
+      96,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      138,
+      99,
+      0,
+      96,
+      3,
+      "LATENT"
+    ],
+    [
+      139,
+      95,
+      1,
+      97,
+      0,
+      "CLIP"
+    ],
+    [
+      141,
+      96,
+      0,
+      98,
+      0,
+      "LATENT"
+    ],
+    [
+      142,
+      95,
+      2,
+      98,
+      1,
+      "VAE"
+    ],
+    [
+      143,
+      95,
+      1,
+      100,
+      0,
+      "CLIP"
+    ],
+    [
+      145,
+      98,
+      0,
+      102,
+      0,
+      "IMAGE"
+    ],
+    [
+      146,
+      55,
+      0,
+      97,
+      1,
+      "STRING"
+    ],
+    [
+      147,
+      103,
+      0,
+      69,
+      0,
+      "INT"
+    ],
+    [
+      148,
+      95,
+      0,
+      96,
+      0,
+      "MODEL"
+    ],
+    [
+      149,
+      104,
+      0,
+      105,
+      0,
+      "PEFTLORA"
+    ],
+    [
+      150,
+      105,
+      0,
+      106,
+      1,
+      "FL2MODEL"
+    ],
+    [
+      151,
+      90,
+      0,
+      106,
+      0,
+      "IMAGE"
+    ],
+    [
+      152,
+      106,
+      2,
+      77,
+      0,
+      "STRING"
+    ],
+    [
+      154,
+      107,
+      0,
+      55,
+      0,
+      "STRING"
+    ],
+    [
+      156,
+      77,
+      0,
+      107,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9646149645000006,
+      "offset": [
+        2658.8276523187506,
+        473.33003615999365
+      ]
+    },
+    "0246.VERSION": [
+      0,
+      0,
+      4
+    ]
+  },
+  "version": 0.4
+}
