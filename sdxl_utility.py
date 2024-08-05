@@ -50,12 +50,16 @@ CUSTOM_CATEGORY = "comfyui_dagthomas"
 @torch.no_grad()
 def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
     denoised = x_orig - ((x_orig - uncond) + cond_scale * (cond - uncond))
-    matching_pred_signs = torch.sign(cond - uncond) == torch.sign(cond)
-    matching_diff_after = torch.sign(cond) == torch.sign(cond * cond_scale - uncond * (cond_scale - 1))
-    deviation_influence = torch.sign(denoised) == torch.sign(denoised - x_orig)
-    outer_influence = matching_pred_signs & matching_diff_after & deviation_influence
+
+    outer_influence = (
+        (torch.sign(cond - uncond) == torch.sign(cond)) &
+        (torch.sign(cond) == torch.sign(cond * cond_scale - uncond * (cond_scale - 1))) &
+        (torch.sign(denoised) == torch.sign(denoised - x_orig))
+    )
+    
     low_cfg_denoised_outer = x_orig - ((x_orig - uncond) + skimming_scale * (cond - uncond))
     low_cfg_denoised_outer_difference = denoised - low_cfg_denoised_outer
+
     cond[outer_influence] -= low_cfg_denoised_outer_difference[outer_influence] / cond_scale
     
     return cond
@@ -174,7 +178,7 @@ class CFGSkimmingSingleScalePreCFGNode:
             if not torch.any(conds_out[1]):
                 return conds_out
             
-            uncond_skimming_scale = 0 if razor_skim else skimming_cfg
+            uncond_skimming_scale = 0.0 if razor_skim else skimming_cfg
             conds_out[1] = skimmed_CFG(x_orig, conds_out[1], conds_out[0], cond_scale, uncond_skimming_scale)
             conds_out[0] = skimmed_CFG(x_orig, conds_out[0], conds_out[1], cond_scale, skimming_cfg)
             
@@ -291,8 +295,10 @@ class GPT4VisionNode:
 3. Image style, photographic techniques, direction of photo taken.
 4. Cinematography aspects with technical details.
 5. If multiple characters are present, describe an interesting interaction between two primary characters.
+6. Incorporate a specific movie director's visual style (e.g., Wes Anderson, Christopher Nolan, Quentin Tarantino).
 7. Describe the lighting setup in detail, including type, color, and placement of light sources.
 
+Always describn how characters look at each other, their expressions, and the overall mood of the scene.
 Examples of prompts to generate: 
 
 1. Ethereal cyborg woman, bioluminescent jellyfish headdress. Steampunk goggles blend with translucent tentacles. Cracked porcelain skin meets iridescent scales. Mechanical implants and delicate tendrils intertwine. Human features with otherworldly glow. Dreamy aquatic hues contrast weathered metal. Reflective eyes capture unseen worlds. Soft bioluminescence meets harsh desert backdrop. Fusion of organic and synthetic, ancient and futuristic. Hyper-detailed textures, surreal atmosphere.
