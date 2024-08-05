@@ -33,7 +33,7 @@ Features:
 - Ability to create posters
   
 ![gpt-4o vision](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt-4o-vision-workflow.png)
-[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt-4o-vision-workflow.json)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt4o_vision_workflow.json)
 
 There is a toggle to create movie posters (08/04/24)
 ![ComfyUI_00161_](https://github.com/user-attachments/assets/262c7d5b-9770-492f-89b1-5dc6b62c9cc3)
@@ -51,6 +51,7 @@ Features:
 - Includes compression options to limit output length
 
 ![gpt-4o-mini](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o-mini/dagthomas_gpt-4o-mini_workflow.png)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o-mini/dagthomas_gpt-4o-mini_workflow.json)
 
 
 
@@ -65,15 +66,15 @@ Features:
 - Includes compression options to limit output length
 
 ![Ollama](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/ollama_local_llm/comfyui_dagthomas_localllm__00044_.png)
-
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/ollama_local_llm/dagthomas_ollama_workflow.json)
 
 
 ### Pure Florence workflow: 
 
 - You can also use a pure local Florence workflow without any of the others. The prompt will have some bloat, but works fine with Flux
 
-Workflow in image:
 ![Florence2](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/florence2/dagthomas_florence2_workflow.png)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/florence2/dagthomas_florence2_workflow.json)
 
 
 
