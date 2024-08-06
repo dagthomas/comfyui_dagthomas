@@ -31,10 +31,9 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 - Ability to create posters
-
-Workflow in image:
-![comfyui_dagthomas_gpt4o__00014_](https://github.com/user-attachments/assets/1eff9b5f-e7d7-4b78-865d-82f9f909ec10)
-
+  
+![gpt-4o vision](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt-4o-vision-workflow.png)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt4o_vision_workflow.json)
 
 There is a toggle to create movie posters (08/04/24)
 ![ComfyUI_00161_](https://github.com/user-attachments/assets/262c7d5b-9770-492f-89b1-5dc6b62c9cc3)
@@ -51,8 +50,8 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
-Workflow in image:
-![comfyui_dagthomas_gpt4o-mini__00007_](https://github.com/user-attachments/assets/9a739c83-d7ff-4933-b744-73c2827f229a)
+![gpt-4o-mini](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o-mini/dagthomas_gpt-4o-mini_workflow.png)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o-mini/dagthomas_gpt-4o-mini_workflow.json)
 
 
 
@@ -66,19 +65,16 @@ Features:
 - Offers options for "happy talk" (detailed descriptions) or simple outputs
 - Includes compression options to limit output length
 
-Workflow in image:
-![image](https://github.com/user-attachments/assets/66b28922-1dc0-478c-8181-81e4292c07d4)
-
-
-
+![Ollama](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/ollama_local_llm/comfyui_dagthomas_localllm__00044_.png)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/ollama_local_llm/dagthomas_ollama_workflow.json)
 
 
 ### Pure Florence workflow: 
 
 - You can also use a pure local Florence workflow without any of the others. The prompt will have some bloat, but works fine with Flux
 
-Workflow in image:
-![image](https://github.com/user-attachments/assets/0c4ca304-773a-4068-8c8c-d87ac2c81323)
+![Florence2](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/florence2/dagthomas_florence2_workflow.png)
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/florence2/dagthomas_florence2_workflow.json)
 
 
 
