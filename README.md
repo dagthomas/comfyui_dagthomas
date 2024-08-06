@@ -256,42 +256,42 @@ A more detailed structure with additional properties:
 - `items`: (Required) Array of items that can be selected for this field.
 - `attributes`: (Optional) Object where keys are item names and values are arrays of attributes for that item.
 
-## Example: Adding a "Music Genres" Category
+## Example: Adding a "Visual Effects" Category
 
-1. Create a new folder: `data/next/music_genres/`
-2. Create a JSON file in this folder, e.g., `genres.json`:
+1. Create a new folder: `data/next/visual_effects/`
+2. Create a JSON file in this folder, e.g., `effects.json`:
 
 ```json
 {
-  "preprompt": "in the style of",
+  "preprompt": "with",
   "separator": " and ",
-  "endprompt": "music",
+  "endprompt": "visual effects",
   "items": [
-    "rock",
-    "jazz",
-    "classical",
-    "hip-hop",
-    "electronic"
+    "motion blur",
+    "lens flare",
+    "particle effects",
+    "color grading",
+    "depth of field"
   ],
   "attributes": {
-    "rock": ["energetic", "guitar-driven", "rhythmic"],
-    "jazz": ["improvised", "syncopated", "complex"],
-    "classical": ["orchestral", "structured", "refined"],
-    "hip-hop": ["rhythmic", "urban", "poetic"],
-    "electronic": ["synthesized", "beat-driven", "futuristic"]
+    "motion blur": ["dynamic", "speed-enhancing", "cinematic"],
+    "lens flare": ["bright", "atmospheric", "sci-fi-inspired"],
+    "particle effects": ["intricate", "flowing", "ethereal"],
+    "color grading": ["vibrant", "mood-setting", "stylized"],
+    "depth of field": ["focused", "bokeh-rich", "photorealistic"]
   }
 }
 ```
 
 ## Using Your New Category
 
-After adding your new category and JSON file(s), the `APNextNode` function will automatically detect and include it as an optional input. Users can then select items from your new category when using the function.
+After adding your new category and JSON file(s), the `APNextNode` function will automatically detect and include it as an optional input. Users can then select items from your new category when using the function for image generation prompts.
 
-For example, using the "Music Genres" category we just created:
+For example, using the "Visual Effects" category we just created:
 
-- If a user selects "jazz", the output might be: "in the style of jazz music"
-- If "attributes" is set to True and "jazz" is selected, the output could be: "in the style of jazz (improvised, syncopated, complex) music"
+- If a user selects "lens flare", the output might be: "with lens flare visual effects"
+- If "attributes" is set to True and "lens flare" is selected, the output could be: "with lens flare (bright, atmospheric, sci-fi-inspired) visual effects"
 
-Remember that the `APNextNode` function will handle the random selection and formatting based on the JSON structure you provide.
+Remember that the `APNextNode` function will handle the random selection and formatting based on the JSON structure you provide. This can greatly enhance the variety and specificity of prompts for AI image generation.
 
 
