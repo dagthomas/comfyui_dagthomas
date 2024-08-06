@@ -1,7 +1,7 @@
 {
     "preprompt": "Design by ",
     "separator": "and",
-    "endprompt": "",
+    "endprompt": ",",
     "items": [
         "A. Quincy Jones",
         "Aldo Rossi",

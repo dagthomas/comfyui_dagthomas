@@ -1173,10 +1173,11 @@ class APNextNode:
         inputs = {
             "required": {
                 "prompt": ("STRING", {"multiline": True, "lines": 4}),
-                "separator": ("STRING", {"default": ","})  # New separator field
+                "separator": ("STRING", {"default": ","})
             },
             "optional": {
-                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF})
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
+                "attributes": ("BOOLEAN", {"default": False})  # New attributes flag
             }
         }
         
@@ -1210,18 +1211,20 @@ class APNextNode:
                                 "items": json_data,
                                 "preprompt": "",
                                 "separator": ", ",
-                                "endprompt": ""
+                                "endprompt": "",
+                                "attributes": {}
                             }
                         else:
                             data[file[:-5]] = {
                                 "items": json_data.get("items", []),
                                 "preprompt": json_data.get("preprompt", ""),
                                 "separator": json_data.get("separator", ", "),
-                                "endprompt": json_data.get("endprompt", "")
+                                "endprompt": json_data.get("endprompt", ""),
+                                "attributes": json_data.get("attributes", {})
                             }
         return data
 
-    def process(self, prompt, separator, seed=0, **kwargs):
+    def process(self, prompt, separator, attributes=False, seed=0, **kwargs):
         random.seed(seed)
         additions = []
 
@@ -1243,7 +1246,15 @@ class APNextNode:
                 field_separator = f" {field_data['separator'].strip()} "
                 endprompt = field_data["endprompt"].strip()
                 
-                formatted_values = field_separator.join(item.strip() for item in selected_items)
+                formatted_items = []
+                for item in selected_items:
+                    if attributes and item in field_data["attributes"]:
+                        item_attributes = random.sample(field_data["attributes"][item], min(3, len(field_data["attributes"][item])))
+                        formatted_items.append(f"{item} ({', '.join(item_attributes)})")
+                    else:
+                        formatted_items.append(item)
+                
+                formatted_values = field_separator.join(formatted_items)
                 
                 formatted_addition = []
                 if preprompt:
