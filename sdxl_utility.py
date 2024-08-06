@@ -1171,7 +1171,7 @@ class PromptGenerator:
 
 class APNextNode:
     RETURN_TYPES = ("STRING", "STRING")  
-    RETURN_NAMES = ("prompt", "random_choices")  
+    RETURN_NAMES = ("prompt", "random")  
     FUNCTION = "process"
     CATEGORY = "CUSTOM_CATEGORY" 
 
@@ -1193,11 +1193,24 @@ class APNextNode:
             for file in os.listdir(category_path):
                 if file.endswith('.json'):
                     field_name = file[:-5]
-                    with open(os.path.join(category_path, file), 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        options = data.get("items", []) if isinstance(data, dict) else data
-                    inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
-        
+                    file_path = os.path.join(category_path, file)
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read().strip()
+                            if content:  # Check if file is not empty
+                                data = json.loads(content)
+                                options = data.get("items", []) if isinstance(data, dict) else data
+                                if options:  # Check if options list is not empty
+                                    inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
+                                else:
+                                    print(f"Warning: Empty options list in file {file}")
+                            else:
+                                print(f"Warning: Empty file {file}")
+                    except json.JSONDecodeError as e:
+                        print(f"Error decoding JSON in file {file}: {e}")
+                    except Exception as e:
+                        print(f"Error processing file {file}: {e}")
+
         return inputs
 
     def __init__(self):
