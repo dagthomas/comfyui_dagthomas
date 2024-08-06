@@ -266,13 +266,20 @@ class StringMergerNode:
     def merge_strings(self, string1, string2, use_and):
         def process_input(s):
             if isinstance(s, list):
-                return ", ".join(str(item) for item in s)
-            return str(s)
+                return ",".join(str(item).strip() for item in s)
+            return str(s).strip()
 
         processed_string1 = process_input(string1)
         processed_string2 = process_input(string2)
-        separator = " AND " if use_and else ", "
+        separator = " AND " if use_and else ","
         merged = f"{processed_string1}{separator}{processed_string2}"
+        
+        # Remove double commas and clean spaces around commas
+        merged = merged.replace(",,", ",").replace(" ,", ",").replace(", ", ",")
+        
+        # Clean leading and trailing spaces
+        merged = merged.strip()
+        
         return (merged,)
     
 class CFGSkimmingSingleScalePreCFGNode:
@@ -1177,7 +1184,7 @@ class APNextNode:
             },
             "optional": {
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
-                "attributes": ("BOOLEAN", {"default": False})  # New attributes flag
+                "attributes": ("BOOLEAN", {"default": False})
             }
         }
         
@@ -1189,7 +1196,7 @@ class APNextNode:
                     field_name = file[:-5]
                     with open(os.path.join(category_path, file), 'r', encoding='utf-8') as f:
                         data = json.load(f)
-                        options = data if isinstance(data, list) else data.get("items", [])
+                        options = data.get("items", []) if isinstance(data, dict) else data
                     inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
         
         return inputs
@@ -1206,21 +1213,22 @@ class APNextNode:
                     file_path = os.path.join(category_path, file)
                     with open(file_path, 'r', encoding='utf-8') as f:
                         json_data = json.load(f)
-                        if isinstance(json_data, list):
-                            data[file[:-5]] = {
-                                "items": json_data,
-                                "preprompt": "",
-                                "separator": ", ",
-                                "endprompt": "",
-                                "attributes": {}
-                            }
-                        else:
+                        if isinstance(json_data, dict):
                             data[file[:-5]] = {
                                 "items": json_data.get("items", []),
                                 "preprompt": json_data.get("preprompt", ""),
                                 "separator": json_data.get("separator", ", "),
                                 "endprompt": json_data.get("endprompt", ""),
                                 "attributes": json_data.get("attributes", {})
+                            }
+                        else:
+                            # Handle the case where the JSON is just a list
+                            data[file[:-5]] = {
+                                "items": json_data,
+                                "preprompt": "",
+                                "separator": ", ",
+                                "endprompt": "",
+                                "attributes": {}
                             }
         return data
 
@@ -1249,8 +1257,12 @@ class APNextNode:
                 formatted_items = []
                 for item in selected_items:
                     if attributes and item in field_data["attributes"]:
-                        item_attributes = random.sample(field_data["attributes"][item], min(3, len(field_data["attributes"][item])))
-                        formatted_items.append(f"{item} ({', '.join(item_attributes)})")
+                        item_attributes = field_data["attributes"].get(item, [])
+                        if item_attributes:
+                            selected_attributes = random.sample(item_attributes, min(3, len(item_attributes)))
+                            formatted_items.append(f"{item} ({', '.join(selected_attributes)})")
+                        else:
+                            formatted_items.append(item)  # Add item without attributes if none found
                     else:
                         formatted_items.append(item)
                 
