@@ -1197,19 +1197,19 @@ class APNextNode:
                     try:
                         with open(file_path, 'r', encoding='utf-8') as f:
                             content = f.read().strip()
-                            if content:  # Check if file is not empty
+                            if content:
                                 data = json.loads(content)
                                 options = data.get("items", []) if isinstance(data, dict) else data
-                                if options:  # Check if options list is not empty
-                                    inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
-                                else:
-                                    print(f"Warning: Empty options list in file {file}")
+                                inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
                             else:
                                 print(f"Warning: Empty file {file}")
+                                inputs["optional"][field_name] = (["None", "Random", "Multiple Random"], {"default": "None"})
                     except json.JSONDecodeError as e:
                         print(f"Error decoding JSON in file {file}: {e}")
+                        inputs["optional"][field_name] = (["None", "Random", "Multiple Random"], {"default": "None"})
                     except Exception as e:
                         print(f"Error processing file {file}: {e}")
+                        inputs["optional"][field_name] = (["None", "Random", "Multiple Random"], {"default": "None"})
 
         return inputs
 
@@ -1245,66 +1245,83 @@ class APNextNode:
 
     def process(self, prompt, separator, string="", attributes=False, seed=0, **kwargs):
         random.seed(seed)
-        additions = []
-        random_choices = {}
+        prompt_additions = []
+        random_additions = []
 
         for field, value in kwargs.items():
             if field in self.data:
-                random_choice = random.choice(["None", "Random", "Multiple Random"])
-                random_choices[field] = random_choice
+                field_data = self.data[field]
+                items = field_data["items"]
                 
-                if random_choice != "None":
-                    field_data = self.data[field]
-                    items = field_data["items"]
-                    if random_choice == "Random":
-                        selected_items = [random.choice(items)]
-                    elif random_choice == "Multiple Random":
-                        count = random.randint(1, 3)
-                        selected_items = random.sample(items, min(count, len(items)))
-                    else:
-                        continue
+                # For the prompt output
+                if value == "None":
+                    prompt_items = []
+                elif value == "Random":
+                    prompt_items = [random.choice(items)]
+                elif value == "Multiple Random":
+                    count = random.randint(1, 3)
+                    prompt_items = random.sample(items, min(count, len(items)))
+                else:
+                    prompt_items = [value]
 
-                    preprompt = field_data["preprompt"].strip()
-                    field_separator = f" {field_data['separator'].strip()} "
-                    endprompt = field_data["endprompt"].strip()
-                    
-                    formatted_items = []
-                    for item in selected_items:
-                        if attributes and item in field_data["attributes"]:
-                            item_attributes = field_data["attributes"].get(item, [])
-                            if item_attributes:
-                                selected_attributes = random.sample(item_attributes, min(3, len(item_attributes)))
-                                formatted_items.append(f"{item} ({', '.join(selected_attributes)})")
-                            else:
-                                formatted_items.append(item) 
-                        else:
-                            formatted_items.append(item)
-                    
-                    formatted_values = field_separator.join(formatted_items)
-                    
-                    formatted_addition = []
-                    if preprompt:
-                        formatted_addition.append(preprompt)
-                    formatted_addition.append(formatted_values)
-                    if endprompt:
-                        formatted_addition.append(endprompt)
-                    
-                    additions.append(" ".join(formatted_addition).strip())
+                # For the random output
+                random_choice = random.choice(["None", "Random", "Multiple Random"])
+                if random_choice == "None":
+                    random_items = []
+                elif random_choice == "Random":
+                    random_items = [random.choice(items)]
+                else:  # Multiple Random
+                    count = random.randint(1, 3)
+                    random_items = random.sample(items, min(count, len(items)))
+
+                self.format_and_add_items(prompt_items, field_data, attributes, prompt_additions)
+                self.format_and_add_items(random_items, field_data, attributes, random_additions)
 
         if string:
             modified_prompt = f"{string} {prompt}"
         else:
             modified_prompt = prompt
 
-        if additions:
-            modified_prompt = f"{modified_prompt} {' '.join(additions)}"
+        if prompt_additions:
+            modified_prompt = f"{modified_prompt} {' '.join(prompt_additions)}"
         
         if separator:
             modified_prompt = f"{modified_prompt}{separator}"
 
-        random_output = json.dumps(random_choices)
+        random_output = f"{' '.join(random_additions)}{separator}" if random_additions else ""
 
         return (modified_prompt, random_output)
+
+    def format_and_add_items(self, selected_items, field_data, attributes, additions):
+        if selected_items:
+            preprompt = str(field_data["preprompt"]).strip()
+            field_separator = f" {str(field_data['separator']).strip()} "
+            endprompt = str(field_data["endprompt"]).strip()
+            
+            formatted_items = []
+            for item in selected_items:
+                item_str = str(item)
+                if attributes and item_str in field_data["attributes"]:
+                    item_attributes = field_data["attributes"].get(item_str, [])
+                    if item_attributes:
+                        selected_attributes = random.sample(item_attributes, min(3, len(item_attributes)))
+                        formatted_items.append(f"{item_str} ({', '.join(map(str, selected_attributes))})")
+                    else:
+                        formatted_items.append(item_str)
+                else:
+                    formatted_items.append(item_str)
+            
+            formatted_values = field_separator.join(formatted_items)
+            
+            formatted_addition = []
+            if preprompt:
+                formatted_addition.append(preprompt)
+            formatted_addition.append(formatted_values)
+            if endprompt:
+                formatted_addition.append(endprompt)
+            
+            formatted_output = " ".join(formatted_addition).strip()
+            additions.append(formatted_output)
 
 NODE_CLASS_MAPPINGS = {
     # Your existing mappings here
