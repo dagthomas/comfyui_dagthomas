@@ -1,16 +1,21 @@
-[
-    "geek",
-    "gentleman",
-    "lady",
-    "man",
-    "middle-aged man",
-    "middle-aged woman",
-    "millennial",
-    "model",
-    "old man",
-    "old woman",
-    "person",
-    "woman",
-    "young man",
-    "young woman"
-]
+{
+    "preprompt": "",
+    "separator": "AND",
+    "endprompt": "",
+    "items": [
+        "geek",
+        "gentleman",
+        "lady",
+        "man",
+        "middle-aged man",
+        "middle-aged woman",
+        "millennial",
+        "model",
+        "old man",
+        "old woman",
+        "person",
+        "woman",
+        "young man",
+        "young woman"
+    ]
+}

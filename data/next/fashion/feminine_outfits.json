@@ -1,7 +1,62 @@
-[
-    {
-        "style": "1920s art deco",
-        "items": [
+{
+    "preprompt": "",
+    "separator": "AND",
+    "endprompt": "custom outfit",
+    "items": [
+        "1920s art deco",
+        "1920s flapper",
+        "1920s parisian",
+        "1930s film noir",
+        "1930s hollywood glamour",
+        "1940s military",
+        "1940s pin-up",
+        "1940s secretary",
+        "1950s housewife",
+        "1950s pin-up",
+        "1950s rockabilly",
+        "1950s teddy girl",
+        "1960s beatnik",
+        "1960s hippie",
+        "1960s mod",
+        "1970s boho",
+        "1970s disco",
+        "1980s new romantic",
+        "1980s power dressing",
+        "1980s punk",
+        "1980s workout",
+        "1990s grunge",
+        "1990s rave",
+        "1990s riot grrrl",
+        "2000s aughts pop",
+        "2000s y2k",
+        "2010s athleisure",
+        "2010s indie",
+        "2010s street style",
+        "2030s smart wear",
+        "2035s futuristic chic",
+        "2040s space travel",
+        "2045s ethereal beauty",
+        "2050s cyberpunk",
+        "2055s space princess",
+        "2060s biotech",
+        "2065s techno fairy",
+        "2070s eco-friendly",
+        "2075s eco glam",
+        "2080s virtual reality",
+        "2090s augmented reality",
+        "2100s transhuman",
+        "2110s post-human",
+        "2120s singularity",
+        "early 2000s low-rise jeans",
+        "edwardian",
+        "elizabethan",
+        "medieval",
+        "renaissance",
+        "victorian",
+        "y2k aesthetic"
+    ],
+    "attributes": {
+        "1920s art deco": [
             "sequin dress",
             "fur stole",
             "drop earrings",
@@ -10,11 +65,8 @@
             "long gloves",
             "beaded purse",
             "bobbed hair"
-        ]
-    },
-    {
-        "style": "1920s flapper",
-        "items": [
+        ],
+        "1920s flapper": [
             "fringed dress",
             "beaded headband",
             "long pearl necklace",
@@ -23,24 +75,8 @@
             "high heels",
             "long gloves",
             "cigarette holder"
-        ]
-    },
-    {
-        "style": "1920s flapper",
-        "items": [
-            "fringed dress",
-            "strand of pearls",
-            "long gloves",
-            "cloche hat",
-            "t-strap heels",
-            "sequin headband",
-            "feather boa",
-            "drop waist dress"
-        ]
-    },
-    {
-        "style": "1920s parisian",
-        "items": [
+        ],
+        "1920s parisian": [
             "knee-length dress",
             "cloche hat",
             "long gloves",
@@ -49,11 +85,8 @@
             "high heels",
             "silk stockings",
             "cigarette holder"
-        ]
-    },
-    {
-        "style": "1930s film noir",
-        "items": [
+        ],
+        "1930s film noir": [
             "fitted dress",
             "t-strap heels",
             "long gloves",
@@ -62,11 +95,8 @@
             "clutch",
             "fedora hat",
             "smoky eye"
-        ]
-    },
-    {
-        "style": "1930s hollywood glamour",
-        "items": [
+        ],
+        "1930s hollywood glamour": [
             "evening gown",
             "faux fur wrap",
             "diamond jewellery",
@@ -75,11 +105,8 @@
             "clutch",
             "opera gloves",
             "up-do hairstyle"
-        ]
-    },
-    {
-        "style": "1940s military",
-        "items": [
+        ],
+        "1940s military": [
             "jumpsuit",
             "peep-toe heels",
             "seamed stockings",
@@ -88,11 +115,8 @@
             "beret",
             "satin scarf",
             "pearl earrings"
-        ]
-    },
-    {
-        "style": "1940s pin-up",
-        "items": [
+        ],
+        "1940s pin-up": [
             "wiggle dress",
             "peep-toe heels",
             "seamed stockings",
@@ -101,11 +125,8 @@
             "polka-dot dress",
             "cat eye glasses",
             "victory rolls"
-        ]
-    },
-    {
-        "style": "1940s secretary",
-        "items": [
+        ],
+        "1940s secretary": [
             "a-line dress",
             "cardigan sweater",
             "brooch",
@@ -114,11 +135,8 @@
             "pad",
             "briefcase",
             "glasses"
-        ]
-    },
-    {
-        "style": "1950s housewife",
-        "items": [
+        ],
+        "1950s housewife": [
             "a-line dress",
             "cardigan sweater",
             "kitten heels",
@@ -127,24 +145,8 @@
             "gloves",
             "handbag",
             "full skirt"
-        ]
-    },
-    {
-        "style": "1950s housewife",
-        "items": [
-            "a-line dress",
-            "cardigan sweater",
-            "pearls",
-            "pumps",
-            "apron",
-            "kitchen gloves",
-            "hair scarf",
-            "cat-eye glasses"
-        ]
-    },
-    {
-        "style": "1950s pin-up",
-        "items": [
+        ],
+        "1950s pin-up": [
             "knee-length dress",
             "cat-eye sunglasses",
             "red lipstick",
@@ -153,11 +155,8 @@
             "pen",
             "pad",
             "statement handbag"
-        ]
-    },
-    {
-        "style": "1950s rockabilly",
-        "items": [
+        ],
+        "1950s rockabilly": [
             "poodle skirt",
             "saddle shoes",
             "biker jacket",
@@ -166,11 +165,8 @@
             "high ponytail",
             "bandana",
             "cat-eye sunglasses"
-        ]
-    },
-    {
-        "style": "1950s teddy girl",
-        "items": [
+        ],
+        "1950s teddy girl": [
             "poodle skirt",
             "biker jacket",
             "saddle shoes",
@@ -179,11 +175,8 @@
             "tee",
             "bandana",
             "cat-eye sunglasses"
-        ]
-    },
-    {
-        "style": "1960s beatnik",
-        "items": [
+        ],
+        "1960s beatnik": [
             "turtleneck",
             "cigarette pants",
             "beret",
@@ -192,11 +185,8 @@
             "loafers",
             "beat poetry",
             "goatee"
-        ]
-    },
-    {
-        "style": "1960s hippie",
-        "items": [
+        ],
+        "1960s hippie": [
             "tie-dye tunic",
             "bell-bottom pants",
             "sandals",
@@ -205,11 +195,8 @@
             "sunglasses",
             "peace sign pendant",
             "beaded bracelets"
-        ]
-    },
-    {
-        "style": "1960s mod",
-        "items": [
+        ],
+        "1960s mod": [
             "mini skirt",
             "shift dress",
             "go-go boots",
@@ -218,32 +205,8 @@
             "statement earrings",
             "statement necklaces",
             "mod hat"
-        ]
-    },
-    {
-        "style": "1960s mod",
-        "items": [
-            "shift dress",
-            "go-go boots",
-            "mini skirt",
-            "op-art print blouse",
-            "tights",
-            "bold jewellery",
-            "mod hat",
-            "sunglasses"
-        ]
-    },
-    {
-        "style": "1960s psychedelic",
-        "items": [
-            "tie-dye dress",
-            "flower crown",
-            "bell-bottom pants"
-        ]
-    },
-    {
-        "style": "1970s boho",
-        "items": [
+        ],
+        "1970s boho": [
             "fringed vest",
             "maxi dress",
             "wide-brimmed hat",
@@ -252,24 +215,8 @@
             "bell-bottom pants",
             "platform shoes",
             "long scarf"
-        ]
-    },
-    {
-        "style": "1970s boho",
-        "items": [
-            "maxi dress",
-            "denim vest",
-            "fringe boots",
-            "wide-brimmed hat",
-            "beaded bracelets",
-            "oversized sunglasses",
-            "woven bag",
-            "peace sign pendant"
-        ]
-    },
-    {
-        "style": "1970s disco",
-        "items": [
+        ],
+        "1970s disco": [
             "halter top",
             "bell-bottom jumpsuit",
             "platform shoes",
@@ -278,37 +225,8 @@
             "sunglasses",
             "disco ball earrings",
             "shimmering clutch"
-        ]
-    },
-    {
-        "style": "1970s disco",
-        "items": [
-            "halter top",
-            "bell-bottom pants",
-            "platform shoes",
-            "oversized sunglasses",
-            "statement earrings",
-            "afro wig",
-            "boa",
-            "hand fan"
-        ]
-    },
-    {
-        "style": "1970s hippie",
-        "items": [
-            "fringed vest",
-            "maxi dress",
-            "wide-brimmed hat",
-            "sunglasses",
-            "choker necklace",
-            "bell-bottom pants",
-            "platform shoes",
-            "long scarf"
-        ]
-    },
-    {
-        "style": "1980s new romantic",
-        "items": [
+        ],
+        "1980s new romantic": [
             "puffy blouse",
             "lace tights",
             "high-waisted pants",
@@ -317,11 +235,8 @@
             "power skirt",
             "shoulder padded blazer",
             "leather gloves"
-        ]
-    },
-    {
-        "style": "1980s power dressing",
-        "items": [
+        ],
+        "1980s power dressing": [
             "shoulder padded blazer",
             "high-waisted pants",
             "pumps",
@@ -330,24 +245,8 @@
             "power skirt",
             "lace tights",
             "leather gloves"
-        ]
-    },
-    {
-        "style": "1980s power dressing",
-        "items": [
-            "shoulder padded blazer",
-            "tapered pants",
-            "silk blouse",
-            "kitten heels",
-            "statement earrings",
-            "power tie",
-            "briefcase",
-            "oversized sunglasses"
-        ]
-    },
-    {
-        "style": "1980s punk",
-        "items": [
+        ],
+        "1980s punk": [
             "studded leather jacket",
             "ripped jeans",
             "combat boots",
@@ -356,11 +255,8 @@
             "spiked bracelets",
             "mohawk",
             "chains"
-        ]
-    },
-    {
-        "style": "1980s workout",
-        "items": [
+        ],
+        "1980s workout": [
             "leotard",
             "leg warmers",
             "headband",
@@ -369,11 +265,8 @@
             "sweatbands",
             "gym bag",
             "high-top socks"
-        ]
-    },
-    {
-        "style": "1990s grunge",
-        "items": [
+        ],
+        "1990s grunge": [
             "flannel shirt",
             "torn denim",
             "converse sneakers",
@@ -382,24 +275,8 @@
             "combat boots",
             "mini skirt",
             "graphic t-shirt"
-        ]
-    },
-    {
-        "style": "1990s grunge",
-        "items": [
-            "plaid flannel shirt",
-            "ripped denim shorts",
-            "combat boots",
-            "choker necklace",
-            "beanie",
-            "oversized sunglasses",
-            "leather jacket",
-            "backpack"
-        ]
-    },
-    {
-        "style": "1990s rave",
-        "items": [
+        ],
+        "1990s rave": [
             "neon tutu",
             "bralette",
             "mesh top",
@@ -408,11 +285,8 @@
             "fanny pack",
             "fishnet tights",
             "glow sticks"
-        ]
-    },
-    {
-        "style": "1990s riot grrrl",
-        "items": [
+        ],
+        "1990s riot grrrl": [
             "flannel shirt",
             "torn denim",
             "converse sneakers",
@@ -421,11 +295,8 @@
             "combat boots",
             "mini skirt",
             "graphic t-shirt"
-        ]
-    },
-    {
-        "style": "2000s aughts pop",
-        "items": [
+        ],
+        "2000s aughts pop": [
             "low-rise jeans",
             "halter top",
             "piercing",
@@ -434,24 +305,8 @@
             "bangle bracelets",
             "sandals",
             "crop top"
-        ]
-    },
-    {
-        "style": "2000s low-rise jeans",
-        "items": [
-            "low-rise jeans",
-            "halter top",
-            "piercing",
-            "sunglasses",
-            "tote bag",
-            "bangle bracelets",
-            "sandals",
-            "crop top"
-        ]
-    },
-    {
-        "style": "2000s y2k",
-        "items": [
+        ],
+        "2000s y2k": [
             "cargo pants",
             "belly shirt",
             "truckers hat",
@@ -460,11 +315,8 @@
             "studded belt",
             "tube top",
             "sunglasses chain"
-        ]
-    },
-    {
-        "style": "2010s athleisure",
-        "items": [
+        ],
+        "2010s athleisure": [
             "yoga pants",
             "crop top",
             "sneakers",
@@ -473,11 +325,8 @@
             "water bottle",
             "gym bag",
             "fitness tracker"
-        ]
-    },
-    {
-        "style": "2010s indie",
-        "items": [
+        ],
+        "2010s indie": [
             "denim overalls",
             "chunky boots",
             "fedora hat",
@@ -486,305 +335,236 @@
             "graphic t-shirt",
             "biker jacket",
             "backpack"
-        ]
-    },
-    {
-        "style": "2010s street style",
-        "items": [
+        ],
+        "2010s street style": [
             "sneakers",
             "leggings",
-            "oversized t-shirt",
-            "baseball cap",
-            "hoodie",
-            "backpack",
-            "ankle boots",
-            "denim jacket"
-        ]
-    },
-    {
-        "style": "2030s smart wear",
-        "items": [
-            "body-hugging bodysuit",
-            "smart glasses",
-            "vr headset",
-            "smart gloves",
-            "smart boots",
-            "smart belt",
-            "smart wristband",
-            "smart backpack"
-        ]
-    },
-    {
-        "style": "2035s futuristic chic",
-        "items": [
-            "silver metallic dress",
-            "clear heels",
-            "silver clutch",
-            "silver hoop earrings",
-            "silver bangle bracelets",
-            "silver neck choker",
-            "silver hair accessory",
-            "silver sunglasses"
-        ]
-    },
-    {
-        "style": "2040s space travel",
-        "items": [
+            "oversized hoodie",
+            "beanie",
+            "fanny pack",
+            "layered necklaces",
+            "statement earrings",
+            "hooded jacket"
+        ],
+        "2030s smart wear": [
+            "augmented reality glasses",
+            "self-heating jacket",
+            "smart fabric dress",
+            "integrated tech accessories",
+            "3D-printed shoes",
+            "wearable tech",
+            "interactive bag",
+            "self-cleaning clothing"
+        ],
+        "2035s futuristic chic": [
+            "sleek jumpsuit",
+            "holographic accessories",
+            "high-tech fabrics",
+            "glowing boots",
+            "minimalist design",
+            "visors",
+            "neon accents",
+            "LED-integrated clothing"
+        ],
+        "2040s space travel": [
             "space suit",
-            "helmet",
-            "oxygen tank",
-            "lunar boots",
-            "spacewalk gloves",
-            "lunar backpack",
-            "lunar rover",
-            "lunar communication device"
-        ]
-    },
-    {
-        "style": "2045s ethereal beauty",
-        "items": [
-            "polythene blouse",
-            "iridescent skirt",
-            "holographic heels",
-            "glow-in-the-dark purse",
-            "phosphorescent neckpiece",
-            "luminescent bracelets",
-            "ethereal headpiece",
-            "starry earrings"
-        ]
-    },
-    {
-        "style": "2050s cyberpunk",
-        "items": [
-            "futuristic leather jacket",
-            "metallic leggings",
-            "holographic boots",
-            "cybernetically enhanced arm",
-            "virtual reality headset",
-            "cybernetic eye",
-            "smart gauntlets",
-            "data gloves"
-        ]
-    },
-    {
-        "style": "2055s space princess",
-        "items": [
-            "pastel space suit",
-            "gem-studded helmet",
-            "glittering oxygen tank",
-            "metallic moon boots",
-            "sparkling spacewalk gloves",
-            "celestial backpack",
-            "star-shaped communication device",
-            "cosmic crown"
-        ]
-    },
-    {
-        "style": "2060s biotech",
-        "items": [
-            "bioengineered clothing",
-            "implant accessories",
-            "sensory gloves",
-            "nanotech backpack",
-            "bio-luminescent jewelry",
-            "bio-responsive makeup",
-            "bionic prosthetics",
-            "augmented reality contacts"
-        ]
-    },
-    {
-        "style": "2065s techno fairy",
-        "items": [
-            "glittering techno-dress",
-            "light-up accessories",
-            "fairy-wing boots",
-            "fairy-dust purse",
-            "fairy-light headpiece",
-            "fairy-dust earrings",
-            "fairy-dust necklace",
-            "fairy-dust bracelets"
-        ]
-    },
-    {
-        "style": "2070s eco-friendly",
-        "items": [
-            "sustainable fabric clothing",
-            "recycled accessories",
-            "biodegradable shoes",
-            "solar backpack",
-            "compostable handbag",
-            "reusable water bottle",
-            "organic cotton scarf",
-            "bamboo sunglasses"
-        ]
-    },
-    {
-        "style": "2075s eco glam",
-        "items": [
-            "sustainable fabric gown",
-            "recycled jeweled accessories",
-            "biodegradable glitter heels",
-            "solar-powered clutch",
-            "compostable beaded handbag",
-            "reusable water bottle with a built-in light show",
-            "organic cotton shawl",
-            "bamboo sunglasses with iridescent lenses"
-        ]
-    },
-    {
-        "style": "2080s virtual reality",
-        "items": [
-            "virtual reality bodysuit",
-            "vr gloves",
-            "vr boots",
-            "vr headset",
-            "vr backpack",
-            "vr hand controllers",
-            "vr waistband",
-            "vr body sensors"
-        ]
-    },
-    {
-        "style": "2090s augmented reality",
-        "items": [
-            "augmented reality contacts",
-            "ar gloves",
-            "ar shoes",
-            "ar belt",
-            "ar wristband",
-            "ar backpack",
-            "ar necklace",
-            "ar earrings"
-        ]
-    },
-    {
-        "style": "2100s transhuman",
-        "items": [
-            "transhuman bodysuit",
-            "nanotech gloves",
-            "nanotech shoes",
-            "nanotech belt",
-            "nanotech backpack",
-            "nanotech wristband",
-            "nanotech implant",
-            "nanotech earrings"
-        ]
-    },
-    {
-        "style": "2110s post-human",
-        "items": [
-            "post-human bodysuit",
-            "cybernetic implants",
-            "energy shoes",
-            "energy belt",
-            "energy backpack",
-            "energy wristband",
-            "energy earrings",
-            "energy necklace"
-        ]
-    },
-    {
-        "style": "2120s singularity",
-        "items": [
-            "singularity bodysuit",
-            "quantum gloves",
-            "quantum shoes",
-            "quantum backpack",
-            "quantum wristband",
-            "quantum necklace",
-            "quantum earrings",
-            "quantum belt"
-        ]
-    },
-    {
-        "style": "early 2000s low-rise jeans",
-        "items": [
-            "belly-baring t-shirt",
+            "interstellar boots",
+            "HUD helmet",
+            "zero-gravity gear",
+            "thermo-regulating fabric",
+            "personal air supply",
+            "astro-gloves",
+            "protective visors"
+        ],
+        "2045s ethereal beauty": [
+            "translucent fabrics",
+            "light-emitting dress",
+            "luminescent makeup",
+            "floating accessories",
+            "glittering shoes",
+            "fluid silhouettes",
+            "glow-in-the-dark accents",
+            "dreamlike designs"
+        ],
+        "2050s cyberpunk": [
+            "neon accents",
+            "reflective materials",
+            "holographic elements",
+            "cyber-enhanced accessories",
+            "futuristic visors",
+            "streetwear-inspired",
+            "tech-augmented clothing",
+            "edgy makeup"
+        ],
+        "2055s space princess": [
+            "cosmic gown",
+            "star-studded tiara",
+            "luminous fabrics",
+            "planetary-themed accessories",
+            "light-up shoes",
+            "galactic gloves",
+            "interstellar crown",
+            "shimmering cape"
+        ],
+        "2060s biotech": [
+            "bioluminescent materials",
+            "genetic modification clothing",
+            "adaptive fabric",
+            "wearable bio-tech",
+            "smart tattoos",
+            "living accessories",
+            "integrated health monitors",
+            "eco-sustainable designs"
+        ],
+        "2065s techno fairy": [
+            "LED wings",
+            "electroluminescent fabrics",
+            "bioluminescent makeup",
+            "holographic accessories",
+            "glowing shoes",
+            "tech-enhanced apparel",
+            "ethereal designs",
+            "lightweight materials"
+        ],
+        "2070s eco-friendly": [
+            "recycled materials",
+            "biodegradable fabrics",
+            "solar-powered clothing",
+            "eco-conscious accessories",
+            "sustainable production",
+            "organic dyes",
+            "modular designs",
+            "green technology integration"
+        ],
+        "2075s eco glam": [
+            "sustainable haute couture",
+            "recycled materials",
+            "organic fabrics",
+            "eco-friendly embellishments",
+            "solar-charged accessories",
+            "glamorous green gowns",
+            "ethically sourced diamonds",
+            "biodegradable couture"
+        ],
+        "2080s virtual reality": [
+            "augmented reality wearables",
+            "virtual wardrobe",
+            "interactive garments",
+            "holographic outfits",
+            "sensory-enhanced fabrics",
+            "3D-printed accessories",
+            "immersive design",
+            "dynamic clothing"
+        ],
+        "2090s augmented reality": [
+            "AR-enhanced clothing",
+            "adaptive visuals",
+            "dynamic textures",
+            "responsive accessories",
+            "immersive tech integration",
+            "holographic projections",
+            "interactive materials",
+            "virtual customization"
+        ],
+        "2100s transhuman": [
+            "cybernetic enhancements",
+            "biomechanical clothing",
+            "augmented reality integration",
+            "tech-enhanced fashion",
+            "wearable AI",
+            "self-repairing materials",
+            "adaptive design",
+            "transhumanist aesthetics"
+        ],
+        "2110s post-human": [
+            "nanotech attire",
+            "bio-engineered fabrics",
+            "cybernetic accessories",
+            "enhanced sensory clothing",
+            "post-human silhouettes",
+            "quantum computing integration",
+            "fluid design",
+            "self-evolving garments"
+        ],
+        "2120s singularity": [
+            "neural-integrated clothing",
+            "hyper-responsive fabrics",
+            "AI-driven fashion",
+            "self-assembling outfits",
+            "quantum tech apparel",
+            "transcendent designs",
+            "post-material aesthetics",
+            "smart nanofabrics"
+        ],
+        "early 2000s low-rise jeans": [
+            "low-rise cut",
+            "bootcut",
+            "embellished belt loops",
+            "flared legs",
+            "crop tops",
+            "casual sneakers",
+            "graphic tees",
+            "denim jackets"
+        ],
+        "edwardian": [
+            "high-neck blouses",
+            "long skirts",
+            "corsets",
+            "lace collars",
+            "bustle skirts",
+            "pinned-up hair",
+            "victorian hats",
+            "elaborate gloves"
+        ],
+        "elizabethan": [
+            "ruff collars",
+            "puffy sleeves",
+            "full skirts",
+            "bodices",
+            "embroidered fabrics",
+            "tudor hats",
+            "knee-high socks",
+            "luxurious fabrics"
+        ],
+        "medieval": [
+            "chainmail",
+            "fur-lined cloaks",
+            "tunic dresses",
+            "belts",
+            "pointed shoes",
+            "hoods",
+            "embroidered patterns",
+            "medieval headdresses"
+        ],
+        "renaissance": [
+            "doublets",
+            "ruff collars",
+            "puffy sleeves",
+            "high-waisted skirts",
+            "corsets",
+            "velvet fabrics",
+            "brocade",
+            "elegant shoes"
+        ],
+        "victorian": [
+            "bustle skirts",
+            "high-neck blouses",
+            "corsets",
+            "lace trim",
+            "long gloves",
+            "top hats",
+            "tea-length dresses",
+            "pinned-up hair"
+        ],
+        "y2k aesthetic": [
+            "chunky highlights",
+            "bedazzled clothing",
             "low-rise jeans",
-            "flip-flops",
-            "choker necklace",
-            "oversized sunglasses",
-            "denim jacket",
-            "velvet scrunchies",
-            "messenger bag"
-        ]
-    },
-    {
-        "style": "edwardian",
-        "items": [
-            "high-neck blouse",
-            "long skirt",
-            "corset",
-            "petticoat",
-            "stockings",
-            "leather shoes",
-            "hand fan",
-            "hat with feathers"
-        ]
-    },
-    {
-        "style": "elizabethan",
-        "items": [
-            "ruffled collar blouse",
-            "long skirt",
-            "corset",
-            "petticoat",
-            "stockings",
-            "leather shoes",
-            "hand fan",
-            "headdress"
-        ]
-    },
-    {
-        "style": "medieval",
-        "items": [
-            "long tunic",
-            "under tunic",
-            "belted waist",
-            "leggings",
-            "boots",
-            "hooded cloak",
-            "sword",
-            "belt pouch"
-        ]
-    },
-    {
-        "style": "renaissance",
-        "items": [
-            "ruffled blouse",
-            "corset",
-            "long skirt",
-            "petticoat",
-            "bodice",
-            "stockings",
-            "leather shoes",
-            "hand fan"
-        ]
-    },
-    {
-        "style": "victorian",
-        "items": [
-            "high-neck blouse",
-            "long skirt",
-            "corset",
-            "petticoat",
-            "stockings",
-            "leather shoes",
-            "hand fan",
-            "bonnet"
-        ]
-    },
-    {
-        "style": "y2k aesthetic",
-        "items": [
-            "sequined tank top",
-            "low-rise jeans",
+            "graphic tees",
+            "frosted lip gloss",
+            "trucker hats",
             "platform sneakers",
-            "oversized sunglasses",
-            "choker necklace",
-            "bucket hat",
-            "fur vest",
-            "mini backpack"
+            "bright colors"
         ]
     }
-]
+}

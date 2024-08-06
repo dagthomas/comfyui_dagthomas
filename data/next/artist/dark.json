@@ -1,17 +1,22 @@
-[
-    "alfred kubin",
-    "bastien lecouffe-deharme",
-    "daniel merriam",
-    "dave mckean",
-    "earnst haeckel",
-    "edmund dulac",
-    "emmanuel shiu",
-    "jean delville",
-    "john bauer",
-    "karol bak",
-    "mikalojus konstantinas čiurlionis",
-    "peter gric",
-    "roger ballen",
-    "wayne barlowe",
-    "zdzisław beksiński"
-]
+{
+    "preprompt": "Art by ",
+    "separator": "and",
+    "endprompt": "",
+    "items": [
+        "alfred kubin",
+        "bastien lecouffe-deharme",
+        "daniel merriam",
+        "dave mckean",
+        "earnst haeckel",
+        "edmund dulac",
+        "emmanuel shiu",
+        "jean delville",
+        "john bauer",
+        "karol bak",
+        "mikalojus konstantinas čiurlionis",
+        "peter gric",
+        "roger ballen",
+        "wayne barlowe",
+        "zdzisław beksiński"
+    ]
+}

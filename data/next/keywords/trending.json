@@ -1,20 +1,25 @@
-[
-    "featured on 500px",
-    "featured on cgsociety",
-    "featured on conceptartworld",
-    "featured on getty images",
-    "featured on pixiv",
-    "trending on 500px",
-    "trending on artstation",
-    "trending on behance",
-    "trending on cgsociety",
-    "trending on conceptartworld",
-    "trending on deviantart",
-    "trending on flickr",
-    "trending on getty images",
-    "trending on pixiv",
-    "trending on zbrushcentral",
-    "unsplash contest winner",
-    "zbrush central",
-    "zbrushcentral"
-]
+{
+    "preprompt": "",
+    "separator": "AND",
+    "endprompt": "",
+    "items": [
+        "featured on 500px",
+        "featured on cgsociety",
+        "featured on conceptartworld",
+        "featured on getty images",
+        "featured on pixiv",
+        "trending on 500px",
+        "trending on artstation",
+        "trending on behance",
+        "trending on cgsociety",
+        "trending on conceptartworld",
+        "trending on deviantart",
+        "trending on flickr",
+        "trending on getty images",
+        "trending on pixiv",
+        "trending on zbrushcentral",
+        "unsplash contest winner",
+        "zbrush central",
+        "zbrushcentral"
+    ]
+}

@@ -1,0 +1,32 @@
+{
+    "preprompt": "",
+    "separator": "AND",
+    "endprompt": "artstyle",
+    "items": [
+        "Pixel Art",
+        "3D Graphics",
+        "2D Graphics",
+        "Hand-Drawn Art",
+        "Low Poly",
+        "Cel Shading",
+        "Photorealistic",
+        "Vector Graphics",
+        "Voxel Art",
+        "ASCII Art",
+        "Retro",
+        "Isometric",
+        "Stylized",
+        "Minimalist",
+        "Flat Design",
+        "Claymation",
+        "Paper Craft",
+        "Motion Capture",
+        "Silhouette",
+        "Stop Motion",
+        "Parallax Scrolling",
+        "Digital Painting",
+        "Mixed Media",
+        "Procedural Generation",
+        "Sprite-Based"
+    ]
+}

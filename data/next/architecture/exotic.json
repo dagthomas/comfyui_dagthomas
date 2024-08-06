@@ -1,7 +1,29 @@
-[
-    {
-        "name": "Crystal House",
-        "descriptors": [
+{
+    "preprompt": "House type",
+    "separator": ",",
+    "endprompt": ",",
+    "items": [
+        "Crystal House",
+        "Desert House",
+        "Garden House",
+        "Geodesic Dome",
+        "Glass House",
+        "High-Tech House",
+        "Home in the Clouds",
+        "Ice House",
+        "Infinity House",
+        "Lunar Home",
+        "Mountain House",
+        "Ocean House",
+        "Smart House",
+        "Solar House",
+        "Space Station House",
+        "Tree House",
+        "Underwater House",
+        "Virtual Reality House"
+    ],
+    "attributes": {
+        "Crystal House": [
             "transparent",
             "minimalist",
             "light-filled",
@@ -11,11 +33,8 @@
             "efficient",
             "ethereal",
             "modern"
-        ]
-    },
-    {
-        "name": "Desert House",
-        "descriptors": [
+        ],
+        "Desert House": [
             "sustainable",
             "minimalist",
             "organic",
@@ -26,11 +45,8 @@
             "connected",
             "harmonious",
             "innovative"
-        ]
-    },
-    {
-        "name": "Garden House",
-        "descriptors": [
+        ],
+        "Garden House": [
             "sustainable",
             "organic",
             "natural",
@@ -41,11 +57,8 @@
             "connected",
             "self-sufficient",
             "efficient"
-        ]
-    },
-    {
-        "name": "Geodesic Dome",
-        "descriptors": [
+        ],
+        "Geodesic Dome": [
             "organic",
             "futuristic",
             "minimalist",
@@ -56,11 +69,8 @@
             "connected",
             "efficient",
             "circular"
-        ]
-    },
-    {
-        "name": "Glass House",
-        "descriptors": [
+        ],
+        "Glass House": [
             "transparent",
             "minimalist",
             "light-filled",
@@ -71,11 +81,8 @@
             "dynamic",
             "smart",
             "future-ready"
-        ]
-    },
-    {
-        "name": "High-Tech House",
-        "descriptors": [
+        ],
+        "High-Tech House": [
             "innovative",
             "futuristic",
             "dynamic",
@@ -86,11 +93,8 @@
             "efficient",
             "transparent",
             "smart"
-        ]
-    },
-    {
-        "name": "Home in the Clouds",
-        "descriptors": [
+        ],
+        "Home in the Clouds": [
             "futuristic",
             "floating",
             "transparent",
@@ -101,11 +105,8 @@
             "light-filled",
             "sustainable",
             "autonomous"
-        ]
-    },
-    {
-        "name": "Ice House",
-        "descriptors": [
+        ],
+        "Ice House": [
             "sustainable",
             "efficient",
             "innovative",
@@ -115,11 +116,8 @@
             "dynamic",
             "connected",
             "minimalist"
-        ]
-    },
-    {
-        "name": "Infinity House",
-        "descriptors": [
+        ],
+        "Infinity House": [
             "modern",
             "futuristic",
             "light-filled",
@@ -130,11 +128,8 @@
             "innovative",
             "connected",
             "ethereal"
-        ]
-    },
-    {
-        "name": "Lunar Home",
-        "descriptors": [
+        ],
+        "Lunar Home": [
             "lunar-inspired",
             "angular",
             "reflective",
@@ -144,12 +139,9 @@
             "monolithic",
             "sustainable",
             "autonomous",
-            "innovational"
-        ]
-    },
-    {
-        "name": "Mountain House",
-        "descriptors": [
+            "innovative"
+        ],
+        "Mountain House": [
             "harmonious",
             "sustainable",
             "light-filled",
@@ -160,11 +152,8 @@
             "connected",
             "autonomous",
             "efficient"
-        ]
-    },
-    {
-        "name": "Ocean House",
-        "descriptors": [
+        ],
+        "Ocean House": [
             "waterfront",
             "sustainable",
             "minimalist",
@@ -175,11 +164,8 @@
             "efficient",
             "connected",
             "modern"
-        ]
-    },
-    {
-        "name": "Smart House",
-        "descriptors": [
+        ],
+        "Smart House": [
             "connected",
             "innovative",
             "sustainable",
@@ -188,11 +174,8 @@
             "autonomous",
             "future-ready",
             "dynamic"
-        ]
-    },
-    {
-        "name": "Solar House",
-        "descriptors": [
+        ],
+        "Solar House": [
             "sustainable",
             "efficient",
             "light-filled",
@@ -202,11 +185,8 @@
             "connected",
             "minimalist",
             "modern"
-        ]
-    },
-    {
-        "name": "Space Station House",
-        "descriptors": [
+        ],
+        "Space Station House": [
             "futuristic",
             "space-age",
             "autonomous",
@@ -216,11 +196,8 @@
             "light-filled",
             "connected",
             "dynamic"
-        ]
-    },
-    {
-        "name": "Tree House",
-        "descriptors": [
+        ],
+        "Tree House": [
             "ethereal",
             "organic",
             "natural",
@@ -231,11 +208,8 @@
             "minimalist",
             "playful",
             "harmonious"
-        ]
-    },
-    {
-        "name": "Underwater House",
-        "descriptors": [
+        ],
+        "Underwater House": [
             "futuristic",
             "ethereal",
             "sustainable",
@@ -245,11 +219,8 @@
             "efficient",
             "dynamic",
             "connected"
-        ]
-    },
-    {
-        "name": "Virtual Reality House",
-        "descriptors": [
+        ],
+        "Virtual Reality House": [
             "innovative",
             "futuristic",
             "dynamic",
@@ -262,4 +233,4 @@
             "modern"
         ]
     }
-]
+}
