@@ -1136,7 +1136,6 @@ class PromptGenerator:
             
 
             params = [
-                # ("photography_styles", PHOTOGRAPHY_STYLES),
                 ("device", DEVICE),
                 ("photographer", PHOTOGRAPHER),
             ]
@@ -1171,9 +1170,10 @@ class PromptGenerator:
         return self.process_string(replaced, seed)
 
 class APNextNode:
-    RETURN_TYPES = ("STRING",)
+    RETURN_TYPES = ("STRING", "STRING")  
+    RETURN_NAMES = ("prompt", "random_choices")  
     FUNCTION = "process"
-    CATEGORY = "CUSTOM_CATEGORY"  # Replace with actual category if known
+    CATEGORY = "CUSTOM_CATEGORY" 
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -1183,12 +1183,11 @@ class APNextNode:
                 "separator": ("STRING", {"default": ","})
             },
             "optional": {
+                "string": ("STRING", {"default": "", "forceInput": True}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
                 "attributes": ("BOOLEAN", {"default": False})
             }
         }
-        
-        # Dynamically load options from JSON files
         category_path = os.path.join(os.path.dirname(__file__), "data", "next", cls.CATEGORY.lower())
         if os.path.exists(category_path):
             for file in os.listdir(category_path):
@@ -1222,7 +1221,6 @@ class APNextNode:
                                 "attributes": json_data.get("attributes", {})
                             }
                         else:
-                            # Handle the case where the JSON is just a list
                             data[file[:-5]] = {
                                 "items": json_data,
                                 "preprompt": "",
@@ -1232,69 +1230,68 @@ class APNextNode:
                             }
         return data
 
-    def process(self, prompt, separator, attributes=False, seed=0, **kwargs):
+    def process(self, prompt, separator, string="", attributes=False, seed=0, **kwargs):
         random.seed(seed)
         additions = []
+        random_choices = {}
 
         for field, value in kwargs.items():
-            if value != "None" and field in self.data:
-                field_data = self.data[field]
-                items = field_data["items"]
-                if value == "Random":
-                    selected_items = [random.choice(items)]
-                elif value == "Multiple Random":
-                    count = random.randint(1, 3)
-                    selected_items = random.sample(items, min(count, len(items)))
-                elif value in items:
-                    selected_items = [value]
-                else:
-                    continue
-
-                preprompt = field_data["preprompt"].strip()
-                field_separator = f" {field_data['separator'].strip()} "
-                endprompt = field_data["endprompt"].strip()
+            if field in self.data:
+                random_choice = random.choice(["None", "Random", "Multiple Random"])
+                random_choices[field] = random_choice
                 
-                formatted_items = []
-                for item in selected_items:
-                    if attributes and item in field_data["attributes"]:
-                        item_attributes = field_data["attributes"].get(item, [])
-                        if item_attributes:
-                            selected_attributes = random.sample(item_attributes, min(3, len(item_attributes)))
-                            formatted_items.append(f"{item} ({', '.join(selected_attributes)})")
-                        else:
-                            formatted_items.append(item)  # Add item without attributes if none found
+                if random_choice != "None":
+                    field_data = self.data[field]
+                    items = field_data["items"]
+                    if random_choice == "Random":
+                        selected_items = [random.choice(items)]
+                    elif random_choice == "Multiple Random":
+                        count = random.randint(1, 3)
+                        selected_items = random.sample(items, min(count, len(items)))
                     else:
-                        formatted_items.append(item)
-                
-                formatted_values = field_separator.join(formatted_items)
-                
-                formatted_addition = []
-                if preprompt:
-                    formatted_addition.append(preprompt)
-                formatted_addition.append(formatted_values)
-                if endprompt:
-                    formatted_addition.append(endprompt)
-                
-                additions.append(" ".join(formatted_addition).strip())
+                        continue
 
-        if additions:
-            modified_prompt = f"{prompt} {' '.join(additions)}"
+                    preprompt = field_data["preprompt"].strip()
+                    field_separator = f" {field_data['separator'].strip()} "
+                    endprompt = field_data["endprompt"].strip()
+                    
+                    formatted_items = []
+                    for item in selected_items:
+                        if attributes and item in field_data["attributes"]:
+                            item_attributes = field_data["attributes"].get(item, [])
+                            if item_attributes:
+                                selected_attributes = random.sample(item_attributes, min(3, len(item_attributes)))
+                                formatted_items.append(f"{item} ({', '.join(selected_attributes)})")
+                            else:
+                                formatted_items.append(item) 
+                        else:
+                            formatted_items.append(item)
+                    
+                    formatted_values = field_separator.join(formatted_items)
+                    
+                    formatted_addition = []
+                    if preprompt:
+                        formatted_addition.append(preprompt)
+                    formatted_addition.append(formatted_values)
+                    if endprompt:
+                        formatted_addition.append(endprompt)
+                    
+                    additions.append(" ".join(formatted_addition).strip())
+
+        if string:
+            modified_prompt = f"{string} {prompt}"
         else:
             modified_prompt = prompt
 
-        # Add the separator at the end of the prompt
+        if additions:
+            modified_prompt = f"{modified_prompt} {' '.join(additions)}"
+        
         if separator:
             modified_prompt = f"{modified_prompt}{separator}"
 
-        return (modified_prompt,)
+        random_output = json.dumps(random_choices)
 
-# Create a custom node class for each category
-categories = [
-    "Architecture", "Art", "Artist", "Character", "Cinematic",
-    "Fashion", "Feelings", "Geography", "Interaction", "Keywords",
-    "People", "Photography", "Plots", "Poses", "Scene",
-    "Science", "Stuff", "Time", "Typography", "Vehicle", "Video_Game"
-]
+        return (modified_prompt, random_output)
 
 NODE_CLASS_MAPPINGS = {
     # Your existing mappings here
@@ -1312,7 +1309,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    # Your existing mappings here
     "DynamicStringCombinerNode": "Dynamic String Combiner",
     "SentenceMixerNode": "Sentence Mixer",
     "RandomIntegerNode": "Random Integer Generator",
@@ -1326,16 +1322,11 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "OllamaNode": "OllamaNode",
 }
 
-categories = [
-    "Architecture", "Art", "Artist", "Character", "Cinematic",
-    "Fashion", "Feelings", "Geography", "Interaction", "Keywords",
-    "People", "Photography", "Plots", "Poses", "Scene",
-    "Science", "Stuff", "Time", "Typography", "Vehicle", "Video_Game"
-]
+categories = [d for d in os.listdir(next_dir) if os.path.isdir(os.path.join(next_dir, d))]
 
 for category in categories:
-    class_name = f"{category}PromptNode"
+    class_name = f"{''.join(word.capitalize() for word in category.split('_'))}PromptNode"
     new_class = type(class_name, (APNextNode,), {"CATEGORY": category})
     globals()[class_name] = new_class
     NODE_CLASS_MAPPINGS[class_name] = new_class
-    NODE_DISPLAY_NAME_MAPPINGS[class_name] = f"APNext {category}"
+    NODE_DISPLAY_NAME_MAPPINGS[class_name] = f"APNext {category.replace('_', ' ').title()}"
