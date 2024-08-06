@@ -1,0 +1,265 @@
+[
+    {
+        "name": "Crystal House",
+        "descriptors": [
+            "transparent",
+            "minimalist",
+            "light-filled",
+            "innovative",
+            "sustainable",
+            "dynamic",
+            "efficient",
+            "ethereal",
+            "modern"
+        ]
+    },
+    {
+        "name": "Desert House",
+        "descriptors": [
+            "sustainable",
+            "minimalist",
+            "organic",
+            "light-filled",
+            "dynamic",
+            "efficient",
+            "autonomous",
+            "connected",
+            "harmonious",
+            "innovative"
+        ]
+    },
+    {
+        "name": "Garden House",
+        "descriptors": [
+            "sustainable",
+            "organic",
+            "natural",
+            "harmonious",
+            "light-filled",
+            "minimalist",
+            "innovative",
+            "connected",
+            "self-sufficient",
+            "efficient"
+        ]
+    },
+    {
+        "name": "Geodesic Dome",
+        "descriptors": [
+            "organic",
+            "futuristic",
+            "minimalist",
+            "innovative",
+            "sustainable",
+            "self-sufficient",
+            "harmonious",
+            "connected",
+            "efficient",
+            "circular"
+        ]
+    },
+    {
+        "name": "Glass House",
+        "descriptors": [
+            "transparent",
+            "minimalist",
+            "light-filled",
+            "modern",
+            "open-plan",
+            "connected",
+            "sustainable",
+            "dynamic",
+            "smart",
+            "future-ready"
+        ]
+    },
+    {
+        "name": "High-Tech House",
+        "descriptors": [
+            "innovative",
+            "futuristic",
+            "dynamic",
+            "minimalist",
+            "sustainable",
+            "connected",
+            "autonomous",
+            "efficient",
+            "transparent",
+            "smart"
+        ]
+    },
+    {
+        "name": "Home in the Clouds",
+        "descriptors": [
+            "futuristic",
+            "floating",
+            "transparent",
+            "organic",
+            "ethereal",
+            "minimalist",
+            "dynamic",
+            "light-filled",
+            "sustainable",
+            "autonomous"
+        ]
+    },
+    {
+        "name": "Ice House",
+        "descriptors": [
+            "sustainable",
+            "efficient",
+            "innovative",
+            "autonomous",
+            "light-filled",
+            "modern",
+            "dynamic",
+            "connected",
+            "minimalist"
+        ]
+    },
+    {
+        "name": "Infinity House",
+        "descriptors": [
+            "modern",
+            "futuristic",
+            "light-filled",
+            "minimalist",
+            "harmonious",
+            "dynamic",
+            "sustainable",
+            "innovative",
+            "connected",
+            "ethereal"
+        ]
+    },
+    {
+        "name": "Lunar Home",
+        "descriptors": [
+            "lunar-inspired",
+            "angular",
+            "reflective",
+            "space-age",
+            "futuristic",
+            "minimalist",
+            "monolithic",
+            "sustainable",
+            "autonomous",
+            "innovational"
+        ]
+    },
+    {
+        "name": "Mountain House",
+        "descriptors": [
+            "harmonious",
+            "sustainable",
+            "light-filled",
+            "minimalist",
+            "organic",
+            "dynamic",
+            "innovative",
+            "connected",
+            "autonomous",
+            "efficient"
+        ]
+    },
+    {
+        "name": "Ocean House",
+        "descriptors": [
+            "waterfront",
+            "sustainable",
+            "minimalist",
+            "innovative",
+            "autonomous",
+            "light-filled",
+            "dynamic",
+            "efficient",
+            "connected",
+            "modern"
+        ]
+    },
+    {
+        "name": "Smart House",
+        "descriptors": [
+            "connected",
+            "innovative",
+            "sustainable",
+            "efficient",
+            "minimalist",
+            "autonomous",
+            "future-ready",
+            "dynamic"
+        ]
+    },
+    {
+        "name": "Solar House",
+        "descriptors": [
+            "sustainable",
+            "efficient",
+            "light-filled",
+            "autonomous",
+            "dynamic",
+            "innovative",
+            "connected",
+            "minimalist",
+            "modern"
+        ]
+    },
+    {
+        "name": "Space Station House",
+        "descriptors": [
+            "futuristic",
+            "space-age",
+            "autonomous",
+            "innovative",
+            "sustainable",
+            "compact",
+            "light-filled",
+            "connected",
+            "dynamic"
+        ]
+    },
+    {
+        "name": "Tree House",
+        "descriptors": [
+            "ethereal",
+            "organic",
+            "natural",
+            "innovative",
+            "dynamic",
+            "vertical",
+            "sustainable",
+            "minimalist",
+            "playful",
+            "harmonious"
+        ]
+    },
+    {
+        "name": "Underwater House",
+        "descriptors": [
+            "futuristic",
+            "ethereal",
+            "sustainable",
+            "innovative",
+            "autonomous",
+            "minimalist",
+            "efficient",
+            "dynamic",
+            "connected"
+        ]
+    },
+    {
+        "name": "Virtual Reality House",
+        "descriptors": [
+            "innovative",
+            "futuristic",
+            "dynamic",
+            "autonomous",
+            "sustainable",
+            "minimalist",
+            "connected",
+            "efficient",
+            "ethereal",
+            "modern"
+        ]
+    }
+]

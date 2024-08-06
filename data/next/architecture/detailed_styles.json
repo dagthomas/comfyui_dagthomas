@@ -1,0 +1,1102 @@
+[
+    {
+        "style": "american foursquare",
+        "attributes": [
+            "square",
+            "symmetrical",
+            "plain",
+            "simple",
+            "practical",
+            "functional"
+        ]
+    },
+    {
+        "style": "ancient egyptian",
+        "attributes": [
+            "massive",
+            "symmetrical",
+            "monumental",
+            "decorative",
+            "hieroglyphs",
+            "sunken reliefs"
+        ]
+    },
+    {
+        "style": "art brut",
+        "attributes": [
+            "raw",
+            "unrefined",
+            "brutalist",
+            "found materials",
+            "honest",
+            "unpretentious"
+        ]
+    },
+    {
+        "style": "art deco",
+        "attributes": [
+            "glamorous",
+            "modern",
+            "geometric",
+            "streamlined",
+            "decorative",
+            "colorful"
+        ]
+    },
+    {
+        "style": "art nouveau",
+        "attributes": [
+            "organic",
+            "flowing",
+            "intricate",
+            "curvilinear",
+            "ornate",
+            "floral"
+        ]
+    },
+    {
+        "style": "baroque",
+        "attributes": [
+            "ornate",
+            "grandeur",
+            "theatrical",
+            "dramatic",
+            "sculptural",
+            "extravagant"
+        ]
+    },
+    {
+        "style": "bauhaus",
+        "attributes": [
+            "functional",
+            "minimal",
+            "industrial",
+            "geometric",
+            "monochromatic",
+            "abstract"
+        ]
+    },
+    {
+        "style": "bay-and-gable",
+        "attributes": [
+            "wood",
+            "ornate",
+            "victorian",
+            "picturesque",
+            "asymmetrical",
+            "cozy"
+        ]
+    },
+    {
+        "style": "beaux arts classicism",
+        "attributes": [
+            "grand",
+            "ornate",
+            "sculptural",
+            "classical",
+            "monumental",
+            "historicist"
+        ]
+    },
+    {
+        "style": "beaux-arts",
+        "attributes": [
+            "classical",
+            "grand",
+            "elaborate",
+            "sculptural",
+            "ornate",
+            "monumental"
+        ]
+    },
+    {
+        "style": "brutalism",
+        "attributes": [
+            "raw",
+            "monolithic",
+            "rough",
+            "concrete",
+            "utilitarian",
+            "minimalistic"
+        ]
+    },
+    {
+        "style": "châteauesque",
+        "attributes": [
+            "ornate",
+            "grand",
+            "picturesque",
+            "castle-like",
+            "turrets",
+            "opulent"
+        ]
+    },
+    {
+        "style": "chinoiserie revival",
+        "attributes": [
+            "ornate",
+            "decorative",
+            "exotic",
+            "colorful",
+            "whimsical",
+            "fanciful"
+        ]
+    },
+    {
+        "style": "churrigueresque",
+        "attributes": [
+            "decorative",
+            "ornate",
+            "exaggerated",
+            "sculptural",
+            "baroque",
+            "theatrical"
+        ]
+    },
+    {
+        "style": "churrigueresque baroque revival",
+        "attributes": [
+            "ornate",
+            "exaggerated",
+            "sculptural",
+            "dramatic",
+            "theatrical",
+            "baroque"
+        ]
+    },
+    {
+        "style": "classicism",
+        "attributes": [
+            "symmetrical",
+            "elegant",
+            "refined",
+            "classical",
+            "harmonious",
+            "balanced"
+        ]
+    },
+    {
+        "style": "collegiate gothic",
+        "attributes": [
+            "ornate",
+            "elaborate",
+            "gothic",
+            "academic",
+            "ivy-clad",
+            "picturesque"
+        ]
+    },
+    {
+        "style": "colonial",
+        "attributes": [
+            "symmetrical",
+            "simple",
+            "symmetrical",
+            "practical",
+            "traditional",
+            "conservative"
+        ]
+    },
+    {
+        "style": "constructivist",
+        "attributes": [
+            "geometric",
+            "abstract",
+            "avant-garde",
+            "innovative",
+            "bold",
+            "dynamic"
+        ]
+    },
+    {
+        "style": "deconstructivism",
+        "attributes": [
+            "fragmented",
+            "unstable",
+            "disorienting",
+            "abstract",
+            "chaotic",
+            "challenging"
+        ]
+    },
+    {
+        "style": "desert modernism",
+        "attributes": [
+            "organic",
+            "sleek",
+            "minimalist",
+            "low-slung",
+            "rugged",
+            "modern"
+        ]
+    },
+    {
+        "style": "dutch colonial",
+        "attributes": [
+            "gambrel roof",
+            "wood shingles",
+            "symmetrical",
+            "traditional",
+            "cozy",
+            "charming"
+        ]
+    },
+    {
+        "style": "early christian",
+        "attributes": [
+            "simple",
+            "austere",
+            "rounded arches",
+            "historical",
+            "ancient",
+            "symbolic"
+        ]
+    },
+    {
+        "style": "eclectic",
+        "attributes": [
+            "mixed",
+            "varied",
+            "diverse",
+            "nonconformist",
+            "unconventional",
+            "whimsical"
+        ]
+    },
+    {
+        "style": "egyptian revival",
+        "attributes": [
+            "massive",
+            "symmetrical",
+            "monumental",
+            "hieroglyphs",
+            "exotic",
+            "ancient"
+        ]
+    },
+    {
+        "style": "elizabethan",
+        "attributes": [
+            "timber framing",
+            "decorative",
+            "ornate",
+            "picturesque",
+            "tudor",
+            "traditional"
+        ]
+    },
+    {
+        "style": "exotic revival",
+        "attributes": [
+            "ornate",
+            "exotic",
+            "colorful",
+            "fanciful",
+            "historicist",
+            "eclectic"
+        ]
+    },
+    {
+        "style": "expressionism",
+        "attributes": [
+            "emotive",
+            "distorted",
+            "unconventional",
+            "organic",
+            "abstract",
+            "surreal"
+        ]
+    },
+    {
+        "style": "farmhouse",
+        "attributes": [
+            "simple",
+            "functional",
+            "unpretentious",
+            "rural",
+            "traditional",
+            "charming"
+        ]
+    },
+    {
+        "style": "fascist",
+        "attributes": [
+            "symmetrical",
+            "grand",
+            "monumental",
+            "historicist",
+            "authoritarian",
+            "austere"
+        ]
+    },
+    {
+        "style": "fascist modernism",
+        "attributes": [
+            "symmetrical",
+            "grand",
+            "monumental",
+            "historicist",
+            "authoritarian",
+            "austere"
+        ]
+    },
+    {
+        "style": "federal",
+        "attributes": [
+            "symmetrical",
+            "elegant",
+            "georgian",
+            "refined",
+            "balanced",
+            "historical"
+        ]
+    },
+    {
+        "style": "federal revival",
+        "attributes": [
+            "symmetrical",
+            "elegant",
+            "refined",
+            "balanced",
+            "historical",
+            "colonial"
+        ]
+    },
+    {
+        "style": "french provincial",
+        "attributes": [
+            "ornate",
+            "elegant",
+            "traditional",
+            "charming",
+            "rural",
+            "symmetrical"
+        ]
+    },
+    {
+        "style": "functionalism",
+        "attributes": [
+            "rational",
+            "minimal",
+            "functional",
+            "geometric",
+            "clean",
+            "innovative"
+        ]
+    },
+    {
+        "style": "futurist",
+        "attributes": [
+            "dynamic",
+            "innovative",
+            "abstract",
+            "colorful",
+            "futuristic",
+            "avant-garde"
+        ]
+    },
+    {
+        "style": "georgian revival",
+        "attributes": [
+            "balanced",
+            "classical",
+            "symmetrical",
+            "elegant",
+            "decorative",
+            "stately"
+        ]
+    },
+    {
+        "style": "gothic",
+        "attributes": [
+            "elaborate",
+            "pointed arches",
+            "ribbed vaults",
+            "gargoyles",
+            "stained glass",
+            "dramatic"
+        ]
+    },
+    {
+        "style": "gothic revival",
+        "attributes": [
+            "dramatic",
+            "pointed arches",
+            "ribbed vaults",
+            "gargoyles",
+            "stained glass",
+            "medieval"
+        ]
+    },
+    {
+        "style": "greek revival",
+        "attributes": [
+            "classical",
+            "symmetrical",
+            "pediments",
+            "columns",
+            "ornate",
+            "grandeur"
+        ]
+    },
+    {
+        "style": "international brutalism",
+        "attributes": [
+            "raw",
+            "rough",
+            "exposed concrete",
+            "stark",
+            "austere",
+            "minimalist"
+        ]
+    },
+    {
+        "style": "international gothic",
+        "attributes": [
+            "elaborate",
+            "ornate",
+            "decorative",
+            "narrative",
+            "medieval",
+            "historical"
+        ]
+    },
+    {
+        "style": "international gothic revival",
+        "attributes": [
+            "elaborate",
+            "ornate",
+            "decorative",
+            "narrative",
+            "medieval",
+            "historical"
+        ]
+    },
+    {
+        "style": "international style",
+        "attributes": [
+            "clean",
+            "functional",
+            "minimal",
+            "glass",
+            "steel",
+            "white"
+        ]
+    },
+    {
+        "style": "international style modernism",
+        "attributes": [
+            "functional",
+            "minimal",
+            "industrial",
+            "geometric",
+            "abstract",
+            "clean"
+        ]
+    },
+    {
+        "style": "italianate",
+        "attributes": [
+            "ornate",
+            "picturesque",
+            "warm",
+            "historical",
+            "symmetrical",
+            "elegant"
+        ]
+    },
+    {
+        "style": "japanese",
+        "attributes": [
+            "natural",
+            "minimal",
+            "organic",
+            "light",
+            "versatile",
+            "innovative"
+        ]
+    },
+    {
+        "style": "late gothic revival",
+        "attributes": [
+            "ornate",
+            "elaborate",
+            "gothic",
+            "historical",
+            "grand",
+            "picturesque"
+        ]
+    },
+    {
+        "style": "late modernism",
+        "attributes": [
+            "abstract",
+            "experimental",
+            "sculptural",
+            "expressive",
+            "innovative",
+            "bold"
+        ]
+    },
+    {
+        "style": "late renaissance",
+        "attributes": [
+            "ornate",
+            "grand",
+            "classical",
+            "historical",
+            "elegant",
+            "harmonious"
+        ]
+    },
+    {
+        "style": "late victorian",
+        "attributes": [
+            "ornate",
+            "eclectic",
+            "colorful",
+            "asymmetrical",
+            "elaborate",
+            "elaborate details"
+        ]
+    },
+    {
+        "style": "mayan revival",
+        "attributes": [
+            "symmetrical",
+            "monumental",
+            "decorative",
+            "ornate",
+            "dramatic",
+            "historicist"
+        ]
+    },
+    {
+        "style": "mediterranean revival",
+        "attributes": [
+            "stucco",
+            "red tile roofs",
+            "courtyards",
+            "colorful",
+            "rustic",
+            "italianate"
+        ]
+    },
+    {
+        "style": "metabolist",
+        "attributes": [
+            "futuristic",
+            "modular",
+            "innovative",
+            "organic",
+            "technological",
+            "visionary"
+        ]
+    },
+    {
+        "style": "mission",
+        "attributes": [
+            "simple",
+            "rustic",
+            "adobe",
+            "arches",
+            "courtyard",
+            "organic"
+        ]
+    },
+    {
+        "style": "mission moderne",
+        "attributes": [
+            "minimal",
+            "symmetrical",
+            "simple",
+            "geometric",
+            "functional",
+            "modern"
+        ]
+    },
+    {
+        "style": "mission revival",
+        "attributes": [
+            "stucco",
+            "red tile roofs",
+            "arched windows",
+            "courtyards",
+            "minimal",
+            "rustic"
+        ]
+    },
+    {
+        "style": "modernism",
+        "attributes": [
+            "minimal",
+            "functional",
+            "geometric",
+            "rational",
+            "sleek",
+            "unornamented"
+        ]
+    },
+    {
+        "style": "moorish revival",
+        "attributes": [
+            "ornate",
+            "decorative",
+            "colorful",
+            "exotic",
+            "arches",
+            "islamic"
+        ]
+    },
+    {
+        "style": "nautical",
+        "attributes": [
+            "sleek",
+            "curved",
+            "streamlined",
+            "modern",
+            "nautical",
+            "innovative"
+        ]
+    },
+    {
+        "style": "neo-baroque",
+        "attributes": [
+            "ornate",
+            "grand",
+            "theatrical",
+            "dramatic",
+            "historical",
+            "opulent"
+        ]
+    },
+    {
+        "style": "neo-classical revival",
+        "attributes": [
+            "symmetrical",
+            "elegant",
+            "refined",
+            "classical",
+            "harmonious",
+            "balanced"
+        ]
+    },
+    {
+        "style": "neoclassical",
+        "attributes": [
+            "symmetrical",
+            "balanced",
+            "pediments",
+            "columns",
+            "elegant",
+            "sophisticated"
+        ]
+    },
+    {
+        "style": "neomodern",
+        "attributes": [
+            "minimal",
+            "sleek",
+            "functional",
+            "abstract",
+            "innovative",
+            "technologically advanced"
+        ]
+    },
+    {
+        "style": "new classical",
+        "attributes": [
+            "classical",
+            "elegant",
+            "refined",
+            "symmetrical",
+            "pediments",
+            "historical"
+        ]
+    },
+    {
+        "style": "new urbanism",
+        "attributes": [
+            "traditional",
+            "human-scale",
+            "walkable",
+            "mixed-use",
+            "sustainable",
+            "community-oriented"
+        ]
+    },
+    {
+        "style": "organic",
+        "attributes": [
+            "natural",
+            "flowing",
+            "biomorphic",
+            "imaginative",
+            "tactile",
+            "abstract"
+        ]
+    },
+    {
+        "style": "postmodernism",
+        "attributes": [
+            "playful",
+            "eclectic",
+            "ironic",
+            "whimsical",
+            "historical references",
+            "colorful"
+        ]
+    },
+    {
+        "style": "prairie school",
+        "attributes": [
+            "horizontal",
+            "low-pitched roofs",
+            "clean lines",
+            "simple",
+            "functional",
+            "elegant"
+        ]
+    },
+    {
+        "style": "pre-romanesque",
+        "attributes": [
+            "rounded arches",
+            "simple",
+            "austere",
+            "sturdy",
+            "medieval",
+            "historicist"
+        ]
+    },
+    {
+        "style": "pueblo revival",
+        "attributes": [
+            "adobe",
+            "rough-hewn wood",
+            "stucco",
+            "simple",
+            "organic",
+            "native"
+        ]
+    },
+    {
+        "style": "renaissance",
+        "attributes": [
+            "harmonious",
+            "classical",
+            "ornate",
+            "decorative",
+            "symmetrical",
+            "proportions"
+        ]
+    },
+    {
+        "style": "renaissance revival",
+        "attributes": [
+            "classical",
+            "ornate",
+            "grandeur",
+            "decorative",
+            "symmetrical",
+            "elegant"
+        ]
+    },
+    {
+        "style": "richardsonian romanesque",
+        "attributes": [
+            "rustic",
+            "solid",
+            "rough-hewn stone",
+            "bold",
+            "monumental",
+            "historical"
+        ]
+    },
+    {
+        "style": "rococo",
+        "attributes": [
+            "ornate",
+            "playful",
+            "curvilinear",
+            "pastel colors",
+            "elaborate",
+            "asymmetrical"
+        ]
+    },
+    {
+        "style": "rococo revival",
+        "attributes": [
+            "ornate",
+            "playful",
+            "curvilinear",
+            "pastel colors",
+            "elaborate",
+            "asymmetrical"
+        ]
+    },
+    {
+        "style": "romanesque",
+        "attributes": [
+            "robust",
+            "simple",
+            "rounded arches",
+            "thick walls",
+            "strong",
+            "austere"
+        ]
+    },
+    {
+        "style": "russian byzantine revival",
+        "attributes": [
+            "elaborate",
+            "colorful",
+            "onion domes",
+            "exotic",
+            "ornamental",
+            "historical"
+        ]
+    },
+    {
+        "style": "second empire",
+        "attributes": [
+            "ornate",
+            "elaborate",
+            "symmetrical",
+            "mansard roofs",
+            "historical",
+            "opulent"
+        ]
+    },
+    {
+        "style": "sgraffito",
+        "attributes": [
+            "decorative",
+            "ornamental",
+            "plaster",
+            "colorful",
+            "patterned",
+            "textured"
+        ]
+    },
+    {
+        "style": "shingle style",
+        "attributes": [
+            "wood shingles",
+            "asymmetrical",
+            "simple",
+            "rustic",
+            "natural",
+            "coastal"
+        ]
+    },
+    {
+        "style": "spanish colonial",
+        "attributes": [
+            "stucco",
+            "red tile roofs",
+            "arched windows",
+            "courtyards",
+            "colorful",
+            "wrought iron"
+        ]
+    },
+    {
+        "style": "streamline moderne",
+        "attributes": [
+            "sleek",
+            "curved",
+            "nautical",
+            "machine age",
+            "aerodynamic",
+            "futuristic"
+        ]
+    },
+    {
+        "style": "swiss chalet",
+        "attributes": [
+            "wood",
+            "ornamental",
+            "picturesque",
+            "alpine",
+            "cozy",
+            "traditional"
+        ]
+    },
+    {
+        "style": "traditional chinese",
+        "attributes": [
+            "symmetrical",
+            "ornate",
+            "colorful",
+            "decorative",
+            "feng shui",
+            "pagoda roofs"
+        ]
+    },
+    {
+        "style": "tudor revival",
+        "attributes": [
+            "timber framing",
+            "steep pitched roofs",
+            "masonry",
+            "ornamental",
+            "medieval",
+            "picturesque"
+        ]
+    },
+    {
+        "style": "tudorbethan",
+        "attributes": [
+            "timber framing",
+            "steep pitched roofs",
+            "masonry",
+            "ornamental",
+            "medieval",
+            "picturesque"
+        ]
+    },
+    {
+        "style": "usonian",
+        "attributes": [
+            "organic",
+            "simple",
+            "functional",
+            "local materials",
+            "democratic",
+            "wrightian"
+        ]
+    },
+    {
+        "style": "venetian gothic",
+        "attributes": [
+            "pointed arches",
+            "tracery",
+            "polychrome",
+            "ornate",
+            "gothic",
+            "italianate"
+        ]
+    },
+    {
+        "style": "victorian",
+        "attributes": [
+            "ornate",
+            "eclectic",
+            "colorful",
+            "asymmetrical",
+            "elaborate",
+            "elaborate details"
+        ]
+    },
+    {
+        "style": "vienna secession",
+        "attributes": [
+            "organic",
+            "ornamental",
+            "geometric",
+            "sensual",
+            "expressive",
+            "innovative"
+        ]
+    },
+    {
+        "style": "viking revival",
+        "attributes": [
+            "wood",
+            "ornate",
+            "elaborate",
+            "dragons",
+            "medieval",
+            "norse"
+        ]
+    },
+    {
+        "style": "washington school",
+        "attributes": [
+            "classical",
+            "monumental",
+            "imposing",
+            "decorative",
+            "historicist",
+            "symbolic"
+        ]
+    },
+    {
+        "style": "western rustic",
+        "attributes": [
+            "log",
+            "stone",
+            "native materials",
+            "natural",
+            "handcrafted",
+            "unpretentious"
+        ]
+    },
+    {
+        "style": "wiener werkstätte",
+        "attributes": [
+            "arts and crafts",
+            "innovative",
+            "functional",
+            "abstract",
+            "geometric",
+            "stylized"
+        ]
+    },
+    {
+        "style": "wrightian",
+        "attributes": [
+            "organic",
+            "functional",
+            "natural",
+            "modern",
+            "innovative",
+            "harmonious"
+        ]
+    },
+    {
+        "style": "yacht style",
+        "attributes": [
+            "sleek",
+            "modern",
+            "luxurious",
+            "nautical",
+            "sophisticated",
+            "innovative"
+        ]
+    },
+    {
+        "style": "zen",
+        "attributes": [
+            "simple",
+            "natural",
+            "balanced",
+            "organic",
+            "minimalist",
+            "serene"
+        ]
+    },
+    {
+        "style": "ziggurat",
+        "attributes": [
+            "pyramid-shaped",
+            "stepped",
+            "monumental",
+            "ancient",
+            "terraced",
+            "tiered"
+        ]
+    },
+    {
+        "style": "zopfstil",
+        "attributes": [
+            "classical",
+            "ornate",
+            "rococo",
+            "historical",
+            "symmetrical",
+            "decorative"
+        ]
+    }
+]

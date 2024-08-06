@@ -15,6 +15,7 @@ import torch
 import numpy as np
 from PIL import Image
 from datetime import datetime
+import codecs
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
@@ -23,6 +24,45 @@ def load_json_file(file_name):
     with open(file_path, "r") as file:
         return json.load(file)
 
+def load_all_json_files(base_path):
+    data = {}
+    for root, dirs, files in os.walk(base_path):
+        for file in files:
+            if file.endswith('.json'):
+                file_path = os.path.join(root, file)
+                relative_path = os.path.relpath(file_path, base_path)
+                key = os.path.splitext(relative_path)[0].replace(os.path.sep, '_')
+                try:
+                    with codecs.open(file_path, 'r', 'utf-8') as f:
+                        data[key] = json.load(f)
+                except UnicodeDecodeError:
+                    print(f"Warning: Unable to decode file {file_path} with UTF-8 encoding. Skipping this file.")
+                except json.JSONDecodeError:
+                    print(f"Warning: Invalid JSON in file {file_path}. Skipping this file.")
+    return data
+
+# Assuming your script is in the same directory as the 'data' folder
+base_dir = os.path.dirname(__file__)
+next_dir = os.path.join(base_dir, "data", "next")
+
+# Load all JSON files
+all_data = load_all_json_files(next_dir)
+
+# Now you can access the data using keys like:
+# all_data['brands']
+# all_data['architecture_architect']
+# all_data['art_painting']
+# etc.
+
+
+# print(all_data.keys()) 
+
+# To access a specific file's data:
+# if 'brands' in all_data:
+#     print(all_data['brands'])
+
+# if 'architecture_architect' in all_data:
+#     print(all_data['architecture_architect'])
 
 # import nodes
 import re
@@ -63,6 +103,45 @@ def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
     cond[outer_influence] -= low_cfg_denoised_outer_difference[outer_influence] / cond_scale
     
     return cond
+class DynamicStringCombinerNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "num_inputs": (["1", "2", "3", "4", "5"],),
+                "user_text": ("STRING", {"multiline": True}),
+            },
+            "optional": {
+                "string1": ("STRING", {"multiline": False}),
+                "string2": ("STRING", {"multiline": False}),
+                "string3": ("STRING", {"multiline": False}),
+                "string4": ("STRING", {"multiline": False}),
+                "string5": ("STRING", {"multiline": False}),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "combine_strings"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def combine_strings(self, num_inputs, user_text, string1="", string2="", string3="", string4="", string5=""):
+        # Convert num_inputs to integer
+        n = int(num_inputs)
+        
+        # Get the specified number of input strings
+        input_strings = [string1, string2, string3, string4, string5][:n]
+        
+        # Combine the input strings
+        combined = ", ".join(s for s in input_strings if s.strip())
+        
+        # Append the user_text to the result
+        result = f"{combined}\nUser Input: {user_text}"
+        
+        return (result,)
+
+    @classmethod
+    def IS_CHANGED(s, num_inputs, user_text, string1, string2, string3, string4, string5):
+        return float(num_inputs)
 
 class SentenceMixerNode:
     @classmethod
@@ -80,7 +159,7 @@ class SentenceMixerNode:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "mix_sentences"
-    CATEGORY = "text"
+    CATEGORY = CUSTOM_CATEGORY
 
     def mix_sentences(self, input1, input2="", input3="", input4=""):
         def process_input(input_data):
@@ -131,7 +210,7 @@ class RandomIntegerNode:
 
     RETURN_TYPES = ("INT",)
     FUNCTION = "generate_random_int"
-    CATEGORY = "CustomNodes"  # Replace with your actual category
+    CATEGORY = CUSTOM_CATEGORY # Replace with your actual category
 
     def generate_random_int(self, min_value, max_value):
         if min_value > max_value:
@@ -175,15 +254,16 @@ class StringMergerNode:
         return {
             "required": {
                 "string1": ("STRING", {"default": ""}),
-                "string2": ("STRING", {"default": ""})
+                "string2": ("STRING", {"default": ""}),
+                "use_and": ("BOOLEAN", {"default": True})
             }
         }
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "merge_strings"
-    CATEGORY = "string_operations"
+    CATEGORY = CUSTOM_CATEGORY
 
-    def merge_strings(self, string1, string2):
+    def merge_strings(self, string1, string2, use_and):
         def process_input(s):
             if isinstance(s, list):
                 return ", ".join(str(item) for item in s)
@@ -191,7 +271,8 @@ class StringMergerNode:
 
         processed_string1 = process_input(string1)
         processed_string2 = process_input(string2)
-        merged = f"{processed_string1} AND {processed_string2}"
+        separator = " AND " if use_and else ","
+        merged = f"{processed_string1}{separator}{processed_string2}"
         return (merged,)
     
 class CFGSkimmingSingleScalePreCFGNode:
@@ -1082,8 +1163,80 @@ class PromptGenerator:
 
         return self.process_string(replaced, seed)
 
+class APNextNode:
+    @classmethod
+    def INPUT_TYPES(cls):
+        inputs = {
+            "required": {
+                "prompt": ("STRING", {"multiline": True})
+            },
+            "optional": {
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF})
+            }
+        }
+        
+        category_path = os.path.join(os.path.dirname(__file__), "data", "next", cls.CATEGORY.lower())
+        if os.path.exists(category_path):
+            for file in os.listdir(category_path):
+                if file.endswith('.json'):
+                    field_name = file[:-5]
+                    with open(os.path.join(category_path, file), 'r', encoding='utf-8') as f:
+                        options = json.load(f)
+                    inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
+        
+        return inputs
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "process"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def __init__(self):
+        self.data = self.load_json_data()
+
+    def load_json_data(self):
+        data = {}
+        category_path = os.path.join(os.path.dirname(__file__), "data", "next", self.CATEGORY.lower())
+        if os.path.exists(category_path):
+            for file in os.listdir(category_path):
+                if file.endswith('.json'):
+                    file_path = os.path.join(category_path, file)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        data[file[:-5]] = json.load(f)
+        return data
+
+    def process(self, prompt, seed=0, **kwargs):
+        random.seed(seed)
+        additions = []
+
+        for field, value in kwargs.items():
+            if value != "None" and field in self.data:
+                items = self.data[field]
+                if value == "Random":
+                    additions.append(random.choice(items))
+                elif value == "Multiple Random":
+                    count = random.randint(1, 3)
+                    additions.extend(random.sample(items, min(count, len(items))))
+                elif value in items:
+                    additions.append(value)
+
+        if additions:
+            modified_prompt = f"{prompt}, {', '.join(additions)}"
+        else:
+            modified_prompt = prompt
+
+        return (modified_prompt,)
+
+# Create a custom node class for each category
+categories = [
+    "Architecture", "Art", "Artist", "Character", "Cinematic",
+    "Fashion", "Feelings", "Geography", "Interaction", "Keywords",
+    "People", "Photography", "Plots", "Poses", "Scene",
+    "Science", "Stuff", "Time", "Typography", "Vehicle", "Video_Game"
+]
 
 NODE_CLASS_MAPPINGS = {
+    # Your existing mappings here
+    "DynamicStringCombinerNode": DynamicStringCombinerNode,
     "SentenceMixerNode": SentenceMixerNode,
     "RandomIntegerNode": RandomIntegerNode,
     "OllamaNode": OllamaNode,
@@ -1096,8 +1249,9 @@ NODE_CLASS_MAPPINGS = {
     "PGSD3LatentGenerator": PGSD3LatentGenerator,
 }
 
-# Human readable names for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
+    # Your existing mappings here
+    "DynamicStringCombinerNode": "Dynamic String Combiner",
     "SentenceMixerNode": "Sentence Mixer",
     "RandomIntegerNode": "Random Integer Generator",
     "GPT4MiniNode": "GPT-4o-mini generator",
@@ -1110,4 +1264,16 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "OllamaNode": "OllamaNode",
 }
 
+categories = [
+    "Architecture", "Art", "Artist", "Character", "Cinematic",
+    "Fashion", "Feelings", "Geography", "Interaction", "Keywords",
+    "People", "Photography", "Plots", "Poses", "Scene",
+    "Science", "Stuff", "Time", "Typography", "Vehicle", "Video_Game"
+]
 
+for category in categories:
+    class_name = f"{category}PromptNode"
+    new_class = type(class_name, (APNextNode,), {"CATEGORY": category})
+    globals()[class_name] = new_class
+    NODE_CLASS_MAPPINGS[class_name] = new_class
+    NODE_DISPLAY_NAME_MAPPINGS[class_name] = f"APNext {category}"
