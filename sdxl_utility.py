@@ -1172,7 +1172,8 @@ class APNextNode:
     def INPUT_TYPES(cls):
         inputs = {
             "required": {
-                "prompt": ("STRING", {"multiline": True, "lines": 4})
+                "prompt": ("STRING", {"multiline": True, "lines": 4}),
+                "separator": ("STRING", {"default": ","})  # New separator field
             },
             "optional": {
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF})
@@ -1220,42 +1221,47 @@ class APNextNode:
                             }
         return data
 
-    def process(self, prompt, seed=0, **kwargs):
+    def process(self, prompt, separator, seed=0, **kwargs):
         random.seed(seed)
-        additions = {}
+        additions = []
 
         for field, value in kwargs.items():
             if value != "None" and field in self.data:
                 field_data = self.data[field]
                 items = field_data["items"]
                 if value == "Random":
-                    additions[field] = [random.choice(items)]
+                    selected_items = [random.choice(items)]
                 elif value == "Multiple Random":
                     count = random.randint(1, 3)
-                    additions[field] = random.sample(items, min(count, len(items)))
+                    selected_items = random.sample(items, min(count, len(items)))
                 elif value in items:
-                    additions[field] = [value]
+                    selected_items = [value]
+                else:
+                    continue
 
-        modified_prompt = prompt
+                preprompt = field_data["preprompt"].strip()
+                field_separator = f" {field_data['separator'].strip()} "
+                endprompt = field_data["endprompt"].strip()
+                
+                formatted_values = field_separator.join(item.strip() for item in selected_items)
+                
+                formatted_addition = []
+                if preprompt:
+                    formatted_addition.append(preprompt)
+                formatted_addition.append(formatted_values)
+                if endprompt:
+                    formatted_addition.append(endprompt)
+                
+                additions.append(" ".join(formatted_addition).strip())
 
-        for field, values in additions.items():
-            field_data = self.data[field]
-            preprompt = field_data["preprompt"].strip()
-            separator = f" {field_data['separator'].strip()} "  # Add spaces before and after separator
-            endprompt = field_data["endprompt"].strip()
-            
-            formatted_values = separator.join(value.strip() for value in values)
-            
-            formatted_additions = []
-            if preprompt:
-                formatted_additions.append(preprompt)
-            formatted_additions.append(formatted_values)
-            if endprompt:
-                formatted_additions.append(endprompt)
-            
-            formatted_string = " ".join(formatted_additions).strip()
-            
-            modified_prompt += f", {formatted_string}"
+        if additions:
+            modified_prompt = f"{prompt} {' '.join(additions)}"
+        else:
+            modified_prompt = prompt
+
+        # Add the separator at the end of the prompt
+        if separator:
+            modified_prompt = f"{modified_prompt}{separator}"
 
         return (modified_prompt,)
 
