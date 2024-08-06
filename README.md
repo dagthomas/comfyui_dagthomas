@@ -121,6 +121,177 @@ These classes can be integrated into ComfyUI workflows to enhance prompt generat
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/94c76273-0a16-450a-876c-9eb515d995d5)
 ![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/37924320-6b46-48fb-9c5d-a24da2d3fd4c)
 
+# ADVANCED PROMPTS
 
+## APNextNode Function
+
+The `APNextNode` is a custom node class designed for processing and enhancing prompts with additional contextual information. It's particularly useful for generating creative content by incorporating random elements from predefined categories.
+
+## Features
+
+- Processes input prompts and adds context from various categories
+- Supports multiple input types including required and optional parameters
+- Dynamically loads category data from JSON files
+- Provides options for random selection of items within categories
+- Allows for attribute addition to selected items
+
+## Categories
+
+The function supports multiple categories, which are loaded from JSON files in a specific directory structure. Based on the provided image, the supported categories include:
+
+1. architecture
+2. art
+3. artist
+4. brands
+5. character
+6. cinematic
+7. fashion
+8. feelings
+9. geography
+10. human
+11. interaction
+12. keywords
+13. people
+14. photography
+15. plots
+16. poses
+17. scene
+18. science
+19. stuff
+20. time
+21. typography
+22. vehicle
+23. video_game
+
+Each category can contain its own set of items and attributes, which are used to enhance the input prompt.
+
+## Usage
+
+The `APNextNode` class is designed to be used within a larger system, likely a node-based content generation pipeline. It processes input prompts and optional category selections to produce an enhanced prompt and a random output.
+
+### Input Types
+
+- **Required**:
+  - `prompt`: A multiline string input for the base prompt
+  - `separator`: A string to separate added elements (default: ",")
+
+- **Optional**:
+  - `string`: An additional string input (default: "")
+  - `seed`: An integer seed for random operations (default: 0)
+  - `attributes`: A boolean to toggle attribute inclusion (default: False)
+  - Category-specific inputs: Dynamically generated based on available JSON files
+
+### Output
+
+The function returns two strings:
+1. An enhanced prompt incorporating selected category items
+2. A random output string with additional category items
+
+## File Structure
+
+The function expects a specific file structure for category data:
+
+```
+data/
+└── next/
+    └── [CATEGORY_NAME]/
+        └── [field_name].json
+```
+
+Each JSON file should contain either an array of items or a dictionary with "items", "preprompt", "separator", "endprompt", and "attributes" keys.
+
+## Note
+
+This README provides an overview of the `APNextNode` function based on the given code snippet. For full implementation details and integration instructions, please refer to the complete source code and any additional documentation provided with the system where this node is used.
+
+# Adding Custom Categories to APNextNode
+
+The `APNextNode` function is designed to be flexible and allow users to add their own categories and fields. This guide will explain how to do this and how to structure the JSON files for new categories.
+
+## Adding a New Category
+
+1. Create a new folder in the `data/next/` directory. The folder name should be lowercase and represent your new category (e.g., `data/next/mycategory/`).
+
+2. Inside this new folder, create one or more JSON files. Each JSON file represents a field within your category. The file name (without the .json extension) will be used as the field name in the `APNextNode` function.
+
+## JSON Structure
+
+The JSON file for each field can have two different structures:
+
+### Simple Structure
+A simple array of items:
+
+```json
+[
+  "item1",
+  "item2",
+  "item3"
+]
+```
+
+### Advanced Structure
+A more detailed structure with additional properties:
+
+```json
+{
+  "preprompt": "Optional text to appear before the selected items",
+  "separator": ", ",
+  "endprompt": "Optional text to appear after the selected items",
+  "items": [
+    "item1",
+    "item2",
+    "item3"
+  ],
+  "attributes": {
+    "item1": ["attribute1", "attribute2"],
+    "item2": ["attribute3", "attribute4"]
+  }
+}
+```
+
+#### Field Descriptions:
+- `preprompt`: (Optional) Text that appears before the selected items.
+- `separator`: (Optional) String used to separate multiple selected items. Default is ", ".
+- `endprompt`: (Optional) Text that appears after the selected items.
+- `items`: (Required) Array of items that can be selected for this field.
+- `attributes`: (Optional) Object where keys are item names and values are arrays of attributes for that item.
+
+## Example: Adding a "Visual Effects" Category
+
+1. Create a new folder: `data/next/visual_effects/`
+2. Create a JSON file in this folder, e.g., `effects.json`:
+
+```json
+{
+  "preprompt": "with",
+  "separator": " and ",
+  "endprompt": "visual effects",
+  "items": [
+    "motion blur",
+    "lens flare",
+    "particle effects",
+    "color grading",
+    "depth of field"
+  ],
+  "attributes": {
+    "motion blur": ["dynamic", "speed-enhancing", "cinematic"],
+    "lens flare": ["bright", "atmospheric", "sci-fi-inspired"],
+    "particle effects": ["intricate", "flowing", "ethereal"],
+    "color grading": ["vibrant", "mood-setting", "stylized"],
+    "depth of field": ["focused", "bokeh-rich", "photorealistic"]
+  }
+}
+```
+
+## Using Your New Category
+
+After adding your new category and JSON file(s), the `APNextNode` function will automatically detect and include it as an optional input. Users can then select items from your new category when using the function for image generation prompts.
+
+For example, using the "Visual Effects" category we just created:
+
+- If a user selects "lens flare", the output might be: "with lens flare visual effects"
+- If "attributes" is set to True and "lens flare" is selected, the output could be: "with lens flare (bright, atmospheric, sci-fi-inspired) visual effects"
+
+Remember that the `APNextNode` function will handle the random selection and formatting based on the JSON structure you provide. This can greatly enhance the variety and specificity of prompts for AI image generation.
 
 
