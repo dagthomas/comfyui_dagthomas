@@ -1186,14 +1186,14 @@ class APNextNode:
                 if file.endswith('.json'):
                     field_name = file[:-5]
                     with open(os.path.join(category_path, file), 'r', encoding='utf-8') as f:
-                        options = json.load(f)
+                        data = json.load(f)
+                        options = data if isinstance(data, list) else data.get("items", [])
                     inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
         
         return inputs
 
     def __init__(self):
         self.data = self.load_json_data()
-        self.settings = self.load_settings()
 
     def load_json_data(self):
         data = {}
@@ -1203,25 +1203,22 @@ class APNextNode:
                 if file.endswith('.json'):
                     file_path = os.path.join(category_path, file)
                     with open(file_path, 'r', encoding='utf-8') as f:
-                        data[file[:-5]] = json.load(f)
-        return data
-
-    def load_settings(self):
-        settings = {}
-        category_path = os.path.join(os.path.dirname(__file__), "data", "next", self.CATEGORY.lower())
-        if os.path.exists(category_path):
-            for file in os.listdir(category_path):
-                if file.endswith('.settings'):
-                    field_name = file[:-9]  # Remove '.settings'
-                    file_path = os.path.join(category_path, file)
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        lines = f.readlines()
-                        if len(lines) >= 2:
-                            settings[field_name] = {
-                                'prefix': lines[0].strip(),
-                                'separator': lines[1].strip()
+                        json_data = json.load(f)
+                        if isinstance(json_data, list):
+                            data[file[:-5]] = {
+                                "items": json_data,
+                                "preprompt": "",
+                                "separator": ", ",
+                                "endprompt": ""
                             }
-        return settings
+                        else:
+                            data[file[:-5]] = {
+                                "items": json_data.get("items", []),
+                                "preprompt": json_data.get("preprompt", ""),
+                                "separator": json_data.get("separator", ", "),
+                                "endprompt": json_data.get("endprompt", "")
+                            }
+        return data
 
     def process(self, prompt, seed=0, **kwargs):
         random.seed(seed)
@@ -1229,7 +1226,8 @@ class APNextNode:
 
         for field, value in kwargs.items():
             if value != "None" and field in self.data:
-                items = self.data[field]
+                field_data = self.data[field]
+                items = field_data["items"]
                 if value == "Random":
                     additions[field] = [random.choice(items)]
                 elif value == "Multiple Random":
@@ -1241,21 +1239,23 @@ class APNextNode:
         modified_prompt = prompt
 
         for field, values in additions.items():
-            if field in self.settings:
-                prefix = self.settings[field]['prefix'].strip()
-                separator = f" {self.settings[field]['separator'].strip()} "  # Add spaces around the separator
-                # Ensure there's a space after the prefix and between names
-                formatted_values = [value.strip() for value in values]
-                formatted_additions = f"{prefix} {separator.join(formatted_values)}"
-            else:
-                # For fields without settings, still add a generic prefix if it's the architect field
-                if field == "architect":
-                    prefix = "Design by"
-                    formatted_additions = f"{prefix} {' and '.join(value.strip() for value in values)}"
-                else:
-                    formatted_additions = ", ".join(value.strip() for value in values)
+            field_data = self.data[field]
+            preprompt = field_data["preprompt"].strip()
+            separator = f" {field_data['separator'].strip()} "  # Add spaces before and after separator
+            endprompt = field_data["endprompt"].strip()
             
-            modified_prompt += f", {formatted_additions}"
+            formatted_values = separator.join(value.strip() for value in values)
+            
+            formatted_additions = []
+            if preprompt:
+                formatted_additions.append(preprompt)
+            formatted_additions.append(formatted_values)
+            if endprompt:
+                formatted_additions.append(endprompt)
+            
+            formatted_string = " ".join(formatted_additions).strip()
+            
+            modified_prompt += f", {formatted_string}"
 
         return (modified_prompt,)
 
