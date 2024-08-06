@@ -253,9 +253,9 @@ class StringMergerNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "string1": ("STRING", {"default": ""}),
-                "string2": ("STRING", {"default": ""}),
-                "use_and": ("BOOLEAN", {"default": True})
+                "string1": ("STRING", {"default": "", "forceInput": True}),
+                "string2": ("STRING", {"default": "", "forceInput": True}),
+                "use_and": ("BOOLEAN", {"default": False})
             }
         }
 
@@ -271,7 +271,7 @@ class StringMergerNode:
 
         processed_string1 = process_input(string1)
         processed_string2 = process_input(string2)
-        separator = " AND " if use_and else ","
+        separator = " AND " if use_and else ", "
         merged = f"{processed_string1}{separator}{processed_string2}"
         return (merged,)
     
@@ -1164,17 +1164,22 @@ class PromptGenerator:
         return self.process_string(replaced, seed)
 
 class APNextNode:
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "process"
+    CATEGORY = "CUSTOM_CATEGORY"  # Replace with actual category if known
+
     @classmethod
     def INPUT_TYPES(cls):
         inputs = {
             "required": {
-                "prompt": ("STRING", {"multiline": True})
+                "prompt": ("STRING", {"multiline": True, "lines": 4})
             },
             "optional": {
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF})
             }
         }
         
+        # Dynamically load options from JSON files
         category_path = os.path.join(os.path.dirname(__file__), "data", "next", cls.CATEGORY.lower())
         if os.path.exists(category_path):
             for file in os.listdir(category_path):
@@ -1185,13 +1190,10 @@ class APNextNode:
                     inputs["optional"][field_name] = (["None", "Random", "Multiple Random"] + options, {"default": "None"})
         
         return inputs
-    
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "process"
-    CATEGORY = CUSTOM_CATEGORY
 
     def __init__(self):
         self.data = self.load_json_data()
+        self.settings = self.load_settings()
 
     def load_json_data(self):
         data = {}
@@ -1204,25 +1206,56 @@ class APNextNode:
                         data[file[:-5]] = json.load(f)
         return data
 
+    def load_settings(self):
+        settings = {}
+        category_path = os.path.join(os.path.dirname(__file__), "data", "next", self.CATEGORY.lower())
+        if os.path.exists(category_path):
+            for file in os.listdir(category_path):
+                if file.endswith('.settings'):
+                    field_name = file[:-9]  # Remove '.settings'
+                    file_path = os.path.join(category_path, file)
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                        if len(lines) >= 2:
+                            settings[field_name] = {
+                                'prefix': lines[0].strip(),
+                                'separator': lines[1].strip()
+                            }
+        return settings
+
     def process(self, prompt, seed=0, **kwargs):
         random.seed(seed)
-        additions = []
+        additions = {}
 
         for field, value in kwargs.items():
             if value != "None" and field in self.data:
                 items = self.data[field]
                 if value == "Random":
-                    additions.append(random.choice(items))
+                    additions[field] = [random.choice(items)]
                 elif value == "Multiple Random":
                     count = random.randint(1, 3)
-                    additions.extend(random.sample(items, min(count, len(items))))
+                    additions[field] = random.sample(items, min(count, len(items)))
                 elif value in items:
-                    additions.append(value)
+                    additions[field] = [value]
 
-        if additions:
-            modified_prompt = f"{prompt}, {', '.join(additions)}"
-        else:
-            modified_prompt = prompt
+        modified_prompt = prompt
+
+        for field, values in additions.items():
+            if field in self.settings:
+                prefix = self.settings[field]['prefix'].strip()
+                separator = f" {self.settings[field]['separator'].strip()} "  # Add spaces around the separator
+                # Ensure there's a space after the prefix and between names
+                formatted_values = [value.strip() for value in values]
+                formatted_additions = f"{prefix} {separator.join(formatted_values)}"
+            else:
+                # For fields without settings, still add a generic prefix if it's the architect field
+                if field == "architect":
+                    prefix = "Design by"
+                    formatted_additions = f"{prefix} {' and '.join(value.strip() for value in values)}"
+                else:
+                    formatted_additions = ", ".join(value.strip() for value in values)
+            
+            modified_prompt += f", {formatted_additions}"
 
         return (modified_prompt,)
 
