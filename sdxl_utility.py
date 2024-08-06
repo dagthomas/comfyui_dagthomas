@@ -44,7 +44,7 @@ def load_all_json_files(base_path):
 # Assuming your script is in the same directory as the 'data' folder
 base_dir = os.path.dirname(__file__)
 next_dir = os.path.join(base_dir, "data", "next")
-
+# custom_dir = os.path.join(base_dir, "data", "custom")
 # Load all JSON files
 all_data = load_all_json_files(next_dir)
 
