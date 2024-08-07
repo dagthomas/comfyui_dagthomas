@@ -515,6 +515,181 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
             print(f"Images tensor type: {images.dtype}")
             return (f"Error occurred while processing the request: {str(e)}",)
         
+class Gpt4VisionCloner:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+            },
+            "optional": {
+                "custom_prompt": ("STRING", {"multiline": True, "default": ""})
+            }
+        }
+    
+    RETURN_TYPES = ("STRING", "STRING",)
+    RETURN_NAMES = ("formatted_output", "raw_json",)
+    FUNCTION = "analyze_images"
+    CATEGORY = "Custom"
+
+    def encode_image(self, image):
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+    def tensor_to_pil(self, img_tensor):
+        i = 255. * img_tensor.cpu().numpy()
+        img_array = np.clip(i, 0, 255).astype(np.uint8)
+        return Image.fromarray(img_array)
+    
+    def save_prompt(self, prompt):
+        filename_text = "vision_json_" + prompt[:30].replace(" ", "_")
+        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+        
+        with open(filename, "w") as file:
+            file.write(prompt)
+        
+        print(f"Prompt saved to {filename}")
+
+    def format_element(self, element):
+        element_type = element.get('Type', '')
+        description = element.get('Description', '').lower()
+        attributes = element.get('Attributes', {})
+        
+        if element_type.lower() == 'object':
+            formatted = description
+        else:
+            formatted = f"{element_type} {description}"
+        
+        attr_details = []
+        for key, value in attributes.items():
+            if value and value.lower() not in ['n/a', 'none', 'None']:
+                attr_details.append(f"{key.lower()}: {value.lower()}")
+        
+        if attr_details:
+            formatted += f" ({', '.join(attr_details)})"
+        
+        return formatted
+
+    def extract_data(self, data):
+        extracted = []
+        extracted.append(data.get('Title', ''))
+        extracted.append(data.get('Artistic Style', ''))
+        
+        color_scheme = data.get('Color Scheme', [])
+        if color_scheme:
+            extracted.append(f"palette ({', '.join(color.lower() for color in color_scheme)})")
+        
+        for element in data.get('Elements', []):
+            extracted.append(self.format_element(element))
+        
+        overall_scene = data.get('Overall Scene', {})
+        extracted.append(overall_scene.get('Theme', ''))
+        extracted.append(overall_scene.get('Setting', ''))
+        extracted.append(overall_scene.get('Lighting', ''))
+        
+        return ', '.join(item for item in extracted if item)
+
+    def analyze_images(self, images, custom_prompt=""):
+        try:
+            default_prompt = """Analyze the provided image and generate a JSON object with the following structure:
+{
+"title": [A descriptive title for the image],
+"color_scheme": [Array of dominant colors, including notes on significant contrasts or mood-setting choices],
+"elements": [
+{
+"type": [Either "character" or "object"],
+"description": [Brief description of the element],
+"attributes": {
+[Relevant attributes like clothing, accessories, position, location, category, etc.]
+}
+},
+... [Additional elements]
+],
+"overall_scene": {
+"theme": [Overall theme of the image],
+"setting": [Where the scene takes place and how it contributes to the narrative],
+"lighting": {
+"type": [Type of lighting, e.g. natural, artificial, magical],
+"direction": [Direction of the main light source],
+"quality": [Quality of light, e.g. soft, harsh, diffused],
+"effects": [Any special lighting effects or atmosphere created]
+},
+"mood": [The emotional tone or atmosphere conveyed],
+"camera_angle": {
+"perspective": [e.g. eye-level, low angle, high angle, bird's eye view],
+"focus": [What the camera is focused on],
+"depth_of_field": [Describe if all elements are in focus or if there's a specific focal point]
+}
+},
+"distant_objects": [
+{
+"description": [Brief description of the distant object or element],
+"role": [How it contributes to the overall scene or narrative]
+},
+... [Additional distant objects]
+],
+"artistic_choices": [Array of notable artistic decisions that contribute to the image's impact]
+}
+Ensure that all aspects of the image are thoroughly analyzed and accurately represented in the JSON output, including the camera angle, lighting details, and any significant distant objects or background elements. Provide the JSON output without any additional explanation or commentary."""
+
+            final_prompt = custom_prompt if custom_prompt.strip() else default_prompt
+
+            messages = [{"role": "user", "content": [{"type": "text", "text": final_prompt}]}]
+
+            # Handle single image or multiple images
+            if len(images.shape) == 3:  # Single image
+                images = [images]
+            else:  # Multiple images
+                images = [img for img in images]
+
+            for img_tensor in images:
+                pil_image = self.tensor_to_pil(img_tensor)
+                base64_image = self.encode_image(pil_image)
+                messages[0]["content"].append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+                })
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages
+            )
+            
+            content = response.choices[0].message.content
+            print(content)
+
+            # Check if the content is wrapped in Markdown code blocks
+            if content.startswith("```json") and content.endswith("```"):
+                # Remove the Markdown code block markers
+                json_str = content[7:-3].strip()
+            else:
+                json_str = content
+
+            # Parse the JSON
+            data = json.loads(json_str)
+
+            # Handle single image or multiple images
+            if isinstance(data, list):
+                results = [self.extract_data(image_data) for image_data in data]
+                result = ' | '.join(results)
+            else:
+                result = self.extract_data(data)
+
+            self.save_prompt(result)
+            return (result, json.dumps(data, indent=2))
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return (f"Error occurred while processing the request: {str(e)}", "{}")
+        
 class RandomIntegerNode:
     @classmethod
     def INPUT_TYPES(cls):
@@ -1334,6 +1509,7 @@ NODE_CLASS_MAPPINGS = {
     "StringMergerNode": StringMergerNode,
     "CFGSkimming": CFGSkimmingSingleScalePreCFGNode,
     "GPT4VisionNode": GPT4VisionNode,
+    "Gpt4VisionCloner": Gpt4VisionCloner,
     "GPT4MiniNode": GPT4MiniNode,
     "PromptGenerator": PromptGenerator,
     "PGSD3LatentGenerator": PGSD3LatentGenerator,
@@ -1347,6 +1523,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PromptGenerator": "Auto Prompter",
     "PGSD3LatentGenerator": "PGSD3LatentGenerator", 
     "GPT4VisionNode": "GPT4VisionNode",
+    "Gpt4VisionCloner": "Gpt4VisionCloner",
     "CFGSkimming": "CFG Skimming",
     "StringMergerNode": "String Merger", 
     "FlexibleStringMergerNode": "Flexible String Merger",
