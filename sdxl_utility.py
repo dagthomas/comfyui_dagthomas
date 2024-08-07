@@ -6,16 +6,19 @@ import comfy.sd
 import comfy.model_management
 import nodes
 import torch
-import torchvision.transforms as transforms
 import os
 import base64
 from io import BytesIO
 from openai import OpenAI
 import torch
 import numpy as np
-from PIL import Image
 from datetime import datetime
 import codecs
+from torchvision.transforms import ToPILImage
+from PIL import Image, ImageFilter, ImageChops, ImageEnhance
+from color_matcher import ColorMatcher
+from color_matcher.normalizer import Normalizer
+import tempfile
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
@@ -630,14 +633,17 @@ class Gpt4VisionCloner:
 "depth_of_field": [Describe if all elements are in focus or if there's a specific focal point]
 }
 },
-"distant_objects": [
+
+"artistic_choices": [Array of notable artistic decisions that contribute to the image's impact],
+"text_elements": [
 {
-"description": [Brief description of the distant object or element],
-"role": [How it contributes to the overall scene or narrative]
+"content": [The text content],
+"placement": [Description of where the text is placed in the image],
+"style": [Description of the text style, font, color, etc.],
+"purpose": [The role or purpose of the text in the overall composition]
 },
-... [Additional distant objects]
-],
-"artistic_choices": [Array of notable artistic decisions that contribute to the image's impact]
+... [Additional text elements]
+]
 }
 Ensure that all aspects of the image are thoroughly analyzed and accurately represented in the JSON output, including the camera angle, lighting details, and any significant distant objects or background elements. Provide the JSON output without any additional explanation or commentary."""
 
@@ -1499,8 +1505,493 @@ class APNextNode:
             formatted_output = " ".join(formatted_addition).strip()
             additions.append(formatted_output)
 
+        
+class MergedOllamaNode:
+    def __init__(self):
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
+        self.ollama_model = None
+        self.current_model = None
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "input_text": ("STRING", {"multiline": True}),
+                "happy_talk": ("BOOLEAN", {"default": True}),
+                "compress": ("BOOLEAN", {"default": False}),
+                "compression_level": (["soft", "medium", "hard"],),
+                "poster": ("BOOLEAN", {"default": False}),
+                "image": ("IMAGE",),
+                "temperature": ("FLOAT", {"default": 0.1, "min": 0.01, "max": 1.0, "step": 0.01}),
+                "unload": ("BOOLEAN", {"default": False}),
+                "custom_model": ("STRING", {"default": "llama3.1:8b"}),
+                "ollama_url": ("STRING", {"default": "http://localhost:11434/api/generate"}),
+            },
+            "optional": {
+                "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "custom_title": ("STRING", {"default": ""}),
+                "override": ("STRING", {"multiline": True, "default": ""})
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "generate"
+    CATEGORY = "Custom/Ollama"
+
+    def save_prompt(self, prompt):
+        filename_text = "mini_" + prompt.split(',')[0].strip()
+        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        filename_text = filename_text[:30]  
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+        
+        with open(filename, "w") as file:
+            file.write(prompt)
+        
+        print(f"Prompt saved to {filename}")
+
+    def load_model(self, custom_model, ollama_url):
+        if self.current_model != custom_model:
+            # Unload the previous model if it exists
+            if self.current_model:
+                self.unload_model(ollama_url)
+
+            # Load the new model
+            payload = {
+                "model": custom_model,
+                "prompt": "Hello, World!",  # A simple prompt to load the model
+                "stream": False
+            }
+            response = requests.post(ollama_url, json=payload)
+            response.raise_for_status()
+            
+            self.current_model = custom_model
+            print(f"Loaded model: {custom_model}")
+
+    def unload_model(self, ollama_url):
+        if self.current_model:
+            requests.post(f"{ollama_url}/unload", json={"model": self.current_model})
+            self.current_model = None
+            gc.collect()
+            torch.cuda.empty_cache()
+            print(f"Unloaded model: {self.current_model}")
+
+    def generate(self, input_text, happy_talk, compress, compression_level, poster, image, temperature, unload, custom_model, ollama_url, custom_base_prompt="", custom_title="", override=""):
+        try:
+            # Load the model if it's not already loaded or if it's different
+            self.load_model(custom_model, ollama_url)
+
+            # ... (keep the existing prompt logic) ...
+
+            # Convert image to base64
+            pil_image = ToPILImage()(image[0].permute(2, 0, 1))
+            buffer = BytesIO()
+            pil_image.save(buffer, format="PNG")
+            image_bytes = buffer.getvalue()
+            base64_string = f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
+
+            # Prepare the final prompt
+            final_prompt = f"{override}\n\n{base_prompt}" if override else base_prompt
+            prompt = f"{final_prompt}\nDescription: {input_text}\n[IMAGE]{base64_string}[/IMAGE]"
+
+            payload = {
+                "model": custom_model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": temperature
+                }
+            }
+
+            response = requests.post(ollama_url, json=payload)
+            response.raise_for_status()
+            result = response.json()['response']
+
+            self.save_prompt(result)
+
+            if unload:
+                self.unload_model(ollama_url)
+
+            return (result,)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return (f"Error occurred while processing the request: {str(e)}",)
+        
+class ApplyEffectsNode:
+    #Shoutout to @digitaljohn https://github.com/digitaljohn/comfyui-propost/blob/master/filmgrainer/graingamma.py
+    MASK_CACHE_PATH = os.path.join(tempfile.gettempdir(), "mask-cache")
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "enable_sharpen": ("BOOLEAN", {"default": True}),
+                "sharpen_strength": ("FLOAT", {"default": 0.35, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "sharpen_radius": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 2, "step": 0.1}),
+                "enable_bloom": ("BOOLEAN", {"default": True}),
+                "bloom_radius": ("FLOAT", {"default": 10, "min": 0.1, "max": 25.0, "step": 0.1}),
+                "bloom_intensity": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 5.0, "step": 0.01}),
+                "bloom_blend_mode": (["normal", "overlay", "soft_light", "hard_light", "multiply", "screen", "lighten", "darken", "color_dodge", "color_burn", "add", "subtract"], {"default": "screen"}),
+                "enable_grain": ("BOOLEAN", {"default": True}),
+                "grain_type": ("INT", {"default": 2, "min": 1, "max": 4, "step": 1}),
+                "grain_power": ("FLOAT", {"default": 45.0, "min": 0.0, "max": 100.0, "step": 0.1}),
+                "grain_saturation": ("FLOAT", {"default": 0.5, "min": -1.0, "max": 1.0, "step": 0.01}),
+                "grain_blend_mode": (["normal", "overlay", "soft_light", "hard_light", "multiply", "screen", "lighten", "darken", "color_dodge", "color_burn", "add", "subtract"], {"default": "soft_light"}),
+                "grain_blend_strength": ("FLOAT", {"default": 0.2, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "src_gamma": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 5.0, "step": 0.1}),
+                "shadows": ("FLOAT", {"default": 0.2, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "highs": ("FLOAT", {"default": 0.3, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "enable_cc": ("BOOLEAN", {"default": False})
+            },
+            "optional": {
+                "cc_image": ("IMAGE",),
+                "cc_strength": ("FLOAT", {"default": 0.35, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "cc_blend_mode": (["normal", "overlay", "soft_light", "hard_light", "multiply", "screen", "lighten", "darken", "color_dodge", "color_burn", "add", "subtract"], {"default": "normal"}),
+            }
+        }
+
+    RETURN_TYPES = ("IMAGE",)
+    FUNCTION = "apply_effects"
+    CATEGORY = "image/postprocessing"
+
+    @staticmethod
+    def tensor2pil(image):
+        return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+
+    @staticmethod
+    def pil2tensor(image):
+        return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
+
+    @staticmethod
+    def _grain_types(typ):
+        grain_types = {
+            1: (0.8, 63),  # more interesting fine grain
+            2: (1, 45),    # basic fine grain
+            3: (1.5, 50),  # coarse grain
+            4: (1.6666, 50)  # coarser grain
+        }
+        return grain_types.get(typ, (1, 45))
+
+    @classmethod
+    def _get_grain_mask(cls, img_width, img_height, saturation, grayscale, grain_size, grain_power, seed):
+        if grayscale:
+            str_sat = "BW"
+            sat = -1.0  # Graingen makes a grayscale image if sat is negative
+        else:
+            str_sat = f"{saturation:.2f}"
+            sat = saturation
+
+        filename = f"{cls.MASK_CACHE_PATH}grain-{img_width}-{img_height}-{str_sat}-{grain_size:.2f}-{grain_power:.2f}-{seed}.png"
+        
+        if os.path.isfile(filename):
+            print(f"Reusing: {filename}")
+            mask = Image.open(filename)
+        else:
+            mask = cls._grain_gen(img_width, img_height, grain_size, grain_power, sat, seed)
+            print(f"Saving: {filename}")
+            if not os.path.isdir(cls.MASK_CACHE_PATH):
+                os.makedirs(cls.MASK_CACHE_PATH, exist_ok=True)
+            mask.save(filename, format="png", compress_level=1)
+        return mask
+
+    @staticmethod
+    def _grain_gen(width, height, grain_size, power, saturation, seed=1):
+        noise_width = int(width / grain_size)
+        noise_height = int(height / grain_size)
+        random.seed(seed)
+
+        if saturation < 0.0:
+            buffer = np.random.normal(128, power, (noise_height, noise_width)).clip(0, 255).astype(np.uint8)
+            img = Image.fromarray(buffer, mode='L')
+        else:
+            intens_power = power * (1.0 - saturation)
+            intens = np.random.normal(128, intens_power, (noise_height, noise_width))
+            buffer = np.random.normal(0, power, (noise_height, noise_width, 3)) * saturation + intens[:, :, np.newaxis]
+            buffer = buffer.clip(0, 255).astype(np.uint8)
+            img = Image.fromarray(buffer, mode='RGB')
+
+        if grain_size != 1.0:
+            img = img.resize((width, height), resample=Image.LANCZOS)
+        return img
+
+    def apply_effects(self, image, enable_sharpen, sharpen_strength, sharpen_radius, 
+                      enable_bloom, bloom_radius, bloom_intensity, bloom_blend_mode,
+                      enable_cc, enable_grain, grain_type, grain_power, grain_saturation,
+                      grain_blend_mode, grain_blend_strength,
+                      src_gamma, shadows, highs,
+                      cc_image=None, cc_strength=1.0, cc_blend_mode="normal"):
+        pil_image = self.tensor2pil(image)
+        
+        if enable_sharpen:
+            pil_image = self.apply_sharpen(pil_image, sharpen_strength, sharpen_radius)
+        
+        if enable_bloom:
+            pil_image = self.apply_bloom_filter(pil_image, bloom_radius, bloom_intensity, bloom_blend_mode)
+        
+        if enable_cc and cc_image is not None:
+            cc_pil_image = self.tensor2pil(cc_image)
+            pil_image = self.apply_color_correction(pil_image, cc_pil_image, cc_strength, cc_blend_mode)
+        
+        if enable_grain:
+            print(f"Debug - grain parameters: type={grain_type}, power={grain_power}, saturation={grain_saturation}")
+            print(f"Debug - grain blend: mode={grain_blend_mode}, strength={grain_blend_strength}")
+            print(f"Debug - other params: src_gamma={src_gamma}, shadows={shadows}, highs={highs}")
+            
+            # Ensure all numeric parameters are converted to float
+            try:
+                grain_power = float(grain_power)
+                grain_saturation = float(grain_saturation)
+                src_gamma = float(src_gamma)
+                shadows = float(shadows)
+                highs = float(highs)
+                grain_blend_strength = float(grain_blend_strength)
+            except ValueError as e:
+                print(f"Error converting parameters to float: {e}")
+                # Handle the error appropriately, e.g., set default values or skip grain application
+                return pil_image
+
+            pil_image = self.apply_grain(
+                image=pil_image,
+                grain_type=grain_type,
+                grain_power=grain_power,
+                grain_saturation=grain_saturation,
+                src_gamma=src_gamma,
+                shadows=shadows,
+                highs=highs,
+                blend_mode=grain_blend_mode,
+                blend_strength=grain_blend_strength
+            )
+
+        return (self.pil2tensor(pil_image),)
+
+    @staticmethod
+    def apply_sharpen(image, strength, radius):
+        blurred = image.filter(ImageFilter.GaussianBlur(radius=radius))
+        high_pass = ImageChops.subtract(image, blurred)
+        enhanced_high_pass = ImageEnhance.Contrast(high_pass).enhance(strength)
+        return ImageChops.add(image, enhanced_high_pass)
+
+    @staticmethod
+    def apply_bloom_filter(input_image, radius, bloom_factor, blend_mode):
+        blurred_image = input_image.filter(ImageFilter.GaussianBlur(radius=radius))
+        high_pass_filter = ImageChops.subtract(input_image, blurred_image)
+        bloom_filter = high_pass_filter.filter(ImageFilter.GaussianBlur(radius=radius*2))
+        bloom_filter = ImageEnhance.Brightness(bloom_filter).enhance(2.0)
+        bloom_factor_color = int(255 * bloom_factor)
+        bloom_filter = ImageChops.multiply(bloom_filter, Image.new('RGB', input_image.size, (bloom_factor_color, bloom_factor_color, bloom_factor_color)))
+        
+        blend_functions = {
+            "normal": ApplyEffectsNode.blend_normal,
+            "overlay": ApplyEffectsNode.blend_overlay,
+            "soft_light": ApplyEffectsNode.blend_soft_light,
+            "hard_light": ApplyEffectsNode.blend_hard_light,
+            "multiply": ApplyEffectsNode.blend_multiply,
+            "screen": ApplyEffectsNode.blend_screen,
+            "lighten": ApplyEffectsNode.blend_lighten,
+            "darken": ApplyEffectsNode.blend_darken,
+            "color_dodge": ApplyEffectsNode.blend_color_dodge,
+            "color_burn": ApplyEffectsNode.blend_color_burn,
+            "add": ApplyEffectsNode.blend_add,
+            "subtract": ApplyEffectsNode.blend_subtract
+        }
+        
+        blend_func = blend_functions.get(blend_mode, ApplyEffectsNode.blend_screen)
+        return blend_func(ApplyEffectsNode(), input_image, bloom_filter, 1.0)
+
+    def apply_color_correction(self, source_image, reference_image, strength, blend_mode):
+        cm = ColorMatcher()
+        source_array = np.array(source_image)
+        reference_array = np.array(reference_image)
+        
+        result_array = cm.transfer(src=source_array, ref=reference_array, method='mkl')
+        result_array = Normalizer(result_array).uint8_norm()
+        
+        color_corrected = Image.fromarray(result_array)
+        
+        blend_functions = {
+            "normal": self.blend_normal,
+            "overlay": self.blend_overlay,
+            "soft_light": self.blend_soft_light,
+            "hard_light": self.blend_hard_light,
+            "multiply": self.blend_multiply,
+            "screen": self.blend_screen,
+            "lighten": self.blend_lighten,
+            "darken": self.blend_darken,
+            "color_dodge": self.blend_color_dodge,
+            "color_burn": self.blend_color_burn,
+            "add": self.blend_add,
+            "subtract": self.blend_subtract
+        }
+        
+        blend_func = blend_functions.get(blend_mode, self.blend_normal)
+        return blend_func(source_image, color_corrected, strength)
+
+    def apply_grain(self, image, grain_type, grain_power, grain_saturation, 
+                    src_gamma, shadows, highs, blend_mode, blend_strength):
+        # Add debug print statements
+        print(f"Debug - apply_grain received: highs={highs}, blend_mode={blend_mode}")
+        img_width, img_height = image.size
+        grain_size, grain_gauss = self._grain_types(grain_type)
+        mask = self._get_grain_mask(img_width, img_height, grain_saturation, False, grain_size, grain_gauss, 1)
+        
+        # Convert all parameters to float to ensure they're the correct type
+        src_gamma = float(src_gamma)
+        grain_power = float(grain_power)
+        shadows = float(shadows)
+        highs = float(highs)
+        
+        map = self.calculate_map(src_gamma, grain_power, shadows, highs)
+        
+        img_array = np.array(image)
+        mask_array = np.array(mask)
+        
+        grain_result = map[img_array, mask_array]
+        grain_image = Image.fromarray(grain_result.astype(np.uint8))
+
+        blend_functions = {
+            "normal": self.blend_normal,
+            "overlay": self.blend_overlay,
+            "soft_light": self.blend_soft_light,
+            "hard_light": self.blend_hard_light,
+            "multiply": self.blend_multiply,
+            "screen": self.blend_screen,
+            "lighten": self.blend_lighten,
+            "darken": self.blend_darken,
+            "color_dodge": self.blend_color_dodge,
+            "color_burn": self.blend_color_burn,
+            "add": self.blend_add,
+            "subtract": self.blend_subtract
+        }
+        
+        blend_func = blend_functions.get(blend_mode, self.blend_normal)
+        return blend_func(image, grain_image, blend_strength)
+
+    @staticmethod
+    def calculate_map(src_gamma, noise_power, shadow_level, high_level):
+        print(f"Inputs: src_gamma={src_gamma}, noise_power={noise_power}, shadow_level={shadow_level}, high_level={high_level}")
+
+        def gamma_curve(gamma, x):
+            return np.power((x / 255.0), (1.0 / gamma))
+        
+        def calc_development(shadow_level, high_level, x):
+            ShadowEnd = 160
+            HighlightStart = 200
+            mask_shadow = x < ShadowEnd
+            mask_highlight = x >= HighlightStart
+            mask_midtones = ~mask_shadow & ~mask_highlight
+
+            power = np.zeros_like(x, dtype=float)
+            power[mask_shadow] = 0.5 - (ShadowEnd - x[mask_shadow]) * (0.5 - shadow_level) / ShadowEnd
+            power[mask_midtones] = 0.5
+            power[mask_highlight] = 0.5 - (x[mask_highlight] - HighlightStart) * (0.5 - high_level) / (255 - HighlightStart)
+            return power
+
+        try:
+            src_values = np.arange(256, dtype=float)
+            noise_values = np.arange(256, dtype=float)
+            pic_values = gamma_curve(src_gamma, src_values) * 255.0
+            gamma = pic_values * (1.5 / 256) + 0.5
+            gamma_offset = gamma_curve(gamma, 128)
+            power = calc_development(shadow_level, high_level, pic_values)
+            crop_top = noise_power * high_level / 12
+            crop_low = noise_power * shadow_level / 20
+            pic_scale = 1 - (crop_top + crop_low)
+            pic_offs = 255 * crop_low
+            gamma_compensated = gamma_curve(gamma[:, np.newaxis], noise_values) - gamma_offset[:, np.newaxis]
+            value = pic_values[:, np.newaxis] * pic_scale + pic_offs + 255.0 * power[:, np.newaxis] * noise_power * gamma_compensated
+            result = np.clip(value, 0, 255).astype(np.uint8)
+
+            return result
+
+        except Exception as e:
+            print(f"Error in calculate_map: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise
+
+    def blend_normal(self, base, top, opacity):
+        return Image.blend(base, top, opacity)
+
+    def blend_multiply(self, base, top, opacity):
+        base_array = np.array(base).astype(float) / 255
+        top_array = np.array(top).astype(float) / 255
+        result = base_array * top_array * 255
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_screen(self, base, top, opacity):
+        base_array = np.array(base).astype(float) / 255
+        top_array = np.array(top).astype(float) / 255
+        result = (1 - (1 - base_array) * (1 - top_array)) * 255
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_overlay(self, base, top, opacity):
+        base_array = np.array(base).astype(float)
+        top_array = np.array(top).astype(float)
+        mask = base_array < 128
+        result = np.zeros_like(base_array)
+        result[mask] = 2 * base_array[mask] * top_array[mask] / 255.0
+        result[~mask] = 255 - 2 * (255 - base_array[~mask]) * (255 - top_array[~mask]) / 255.0
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_soft_light(self, base, top, opacity):
+        base_array = np.array(base).astype(float) / 255
+        top_array = np.array(top).astype(float) / 255
+        result = ((1 - 2 * top_array) * base_array**2 + 2 * top_array * base_array) * 255
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_hard_light(self, base, top, opacity):
+        base_array = np.array(base).astype(float)
+        top_array = np.array(top).astype(float)
+        mask = top_array < 128
+        result = np.zeros_like(base_array)
+        result[mask] = 2 * base_array[mask] * top_array[mask] / 255.0
+        result[~mask] = 255 - 2 * (255 - base_array[~mask]) * (255 - top_array[~mask]) / 255.0
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_lighten(self, base, top, opacity):
+        result = ImageChops.lighter(base, top)
+        return Image.blend(base, result, opacity)
+
+    def blend_darken(self, base, top, opacity):
+        result = ImageChops.darker(base, top)
+        return Image.blend(base, result, opacity)
+
+    def blend_color_dodge(self, base, top, opacity):
+        base_array = np.array(base).astype(float)
+        top_array = np.array(top).astype(float)
+        result = base_array / (255 - top_array) * 255
+        result[top_array == 255] = 255
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_color_burn(self, base, top, opacity):
+        base_array = np.array(base).astype(float)
+        top_array = np.array(top).astype(float)
+        result = 255 - (255 - base_array) / (top_array + 1e-6) * 255
+        result[top_array == 0] = 0
+        result = np.clip(result, 0, 255).astype(np.uint8)
+        return Image.blend(base, Image.fromarray(result), opacity)
+
+    def blend_add(self, base, top, opacity):
+        result = ImageChops.add(base, top)
+        return Image.blend(base, result, opacity)
+
+    def blend_subtract(self, base, top, opacity):
+        result = ImageChops.subtract(base, top)
+        return Image.blend(base, result, opacity)
+
+      
 NODE_CLASS_MAPPINGS = {
-    # Your existing mappings here
+    "ApplyBloom": ApplyEffectsNode,
+    "MergedOllamaNode": MergedOllamaNode,
     "DynamicStringCombinerNode": DynamicStringCombinerNode,
     "SentenceMixerNode": SentenceMixerNode,
     "RandomIntegerNode": RandomIntegerNode,
@@ -1516,18 +2007,20 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "DynamicStringCombinerNode": "Dynamic String Combiner",
-    "SentenceMixerNode": "Sentence Mixer",
-    "RandomIntegerNode": "Random Integer Generator",
-    "GPT4MiniNode": "GPT-4o-mini generator",
+    "ApplyBloom": "APNext Enhanced Effects Node",
+    "MergedOllamaNode": "Merged Ollama",
+    "DynamicStringCombinerNode": "APNext Dynamic String Combiner",
+    "SentenceMixerNode": "APNext Sentence Mixer",
+    "RandomIntegerNode": "APNext Random Integer Generator",
+    "GPT4MiniNode": "APNext GPT-4o-mini generator",
     "PromptGenerator": "Auto Prompter",
-    "PGSD3LatentGenerator": "PGSD3LatentGenerator", 
-    "GPT4VisionNode": "GPT4VisionNode",
-    "Gpt4VisionCloner": "Gpt4VisionCloner",
-    "CFGSkimming": "CFG Skimming",
-    "StringMergerNode": "String Merger", 
-    "FlexibleStringMergerNode": "Flexible String Merger",
-    "OllamaNode": "OllamaNode",
+    "PGSD3LatentGenerator": "APNext PGSD3LatentGenerator", 
+    "GPT4VisionNode": "APNext GPT4VisionNode",
+    "Gpt4VisionCloner": "APNext Gpt4VisionCloner",
+    "CFGSkimming": "APNext CFG Skimming",
+    "StringMergerNode": "APNext String Merger", 
+    "FlexibleStringMergerNode": "APNext Flexible String Merger",
+    "OllamaNode": "APNext OllamaNode",
 }
 
 categories = [d for d in os.listdir(next_dir) if os.path.isdir(os.path.join(next_dir, d))]
