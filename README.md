@@ -123,6 +123,9 @@ These classes can be integrated into ComfyUI workflows to enhance prompt generat
 
 # ADVANCED PROMPTS
 
+## APNext workflow example
+[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/apnext/APNext_Examples.json)
+
 ## APNextNode Function
 
 The `APNextNode` is a custom node class designed for processing and enhancing prompts with additional contextual information. It's particularly useful for generating creative content by incorporating random elements from predefined categories.
