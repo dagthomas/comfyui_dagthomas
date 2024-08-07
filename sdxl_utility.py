@@ -431,6 +431,7 @@ class GPT4VisionNode:
 6. Incorporate a specific movie director's visual style (e.g., Wes Anderson, Christopher Nolan, Quentin Tarantino).
 7. Describe the lighting setup in detail, including type, color, and placement of light sources.
 
+If you want to add text, state the font, style and where it should be placed, a sign, a poster, etc. The text should be captioned like this " ".
 Always describn how characters look at each other, their expressions, and the overall mood of the scene.
 Examples of prompts to generate: 
 

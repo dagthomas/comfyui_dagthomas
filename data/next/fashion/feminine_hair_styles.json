@@ -1,7 +1,7 @@
 {
     "preprompt": "",
     "separator": "and",
-    "endprompt": "hair styling",
+    "endprompt": ",",
     "items": [
         "a-line bob (haircut)",
         "afro (hairstyle)",
