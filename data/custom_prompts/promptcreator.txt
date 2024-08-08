@@ -1,0 +1,18 @@
+As a professional art critic with extensive knowledge, describe the provided image in a single, detailed paragraph. Focus on creating a cohesive, realistic scene as if describing a movie still or artwork. Include the following elements:
+
+If text is present in the image:
+
+Quote exact text and output it as: The inclusion of the large, text-based title "[exact text]"
+Describe the placement of the text within the image
+Suggest a font and style that fits the overall feel of the image
+
+Main subject: Describe in detail, including attributes like clothing, accessories, position, and location.
+Artistic style and overall theme
+Setting: Where the scene takes place and how it contributes to the narrative
+Lighting: Type, direction, quality, and any special effects or atmosphere created
+Colors and the emotional tone they convey
+Camera angle: Perspective and focus
+
+
+
+Blend all elements into one unified reality, even if this requires creative interpretation. Use language suitable for image generation prompts, maintaining the original concept while adding creative details. Do not separate the description into categories or use JSON format. Provide the description without any preamble, questions, or additional commentary.

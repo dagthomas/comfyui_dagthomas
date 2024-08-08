@@ -375,6 +375,56 @@ class PGSD3LatentGenerator:
         latent = torch.ones([batch_size, 16, height // 8, width // 8], device=self.device) * 0.0609
         return ({"samples": latent}, )
     
+class APNLatent:
+    def __init__(self):
+        self.device = comfy.model_management.intermediate_device()
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": { "width": ("INT", {"default": 1024, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+                              "height": ("INT", {"default": 1024, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+                              "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})}}
+    RETURN_TYPES = ("LATENT", "INT", "INT")
+    RETURN_NAMES = ("LATENT", "width", "height") 
+    FUNCTION = "generate"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def generate(self, width=1024, height=1024, batch_size=1):
+        def adjust_dimensions(width, height):
+            megapixel = 1_000_000
+            multiples = 64
+
+            if width == 0 and height != 0:
+                height = int(height)
+                width = megapixel // height
+                
+                if width % multiples != 0:
+                    width += multiples - (width % multiples)
+                
+                if width * height > megapixel:
+                    width -= multiples
+
+            elif height == 0 and width != 0:
+                width = int(width)
+                height = megapixel // width
+                
+                if height % multiples != 0:
+                    height += multiples - (height % multiples)
+                
+                if width * height > megapixel:
+                    height -= multiples
+
+            elif width == 0 and height == 0:
+                width = 1024
+                height = 1024
+
+            return width, height
+
+        width, height = adjust_dimensions(width, height)
+
+        latent = torch.ones([batch_size, 16, height // 8, width // 8], device=self.device) * 0.0609
+        return ({"samples": latent}, width, height)
+    
 class GPT4VisionNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -2133,6 +2183,7 @@ class CustomPromptLoader:
 
 
 NODE_CLASS_MAPPINGS = {
+    "APNLatent": APNLatent,
     "CustomPromptLoader": CustomPromptLoader,
     "ApplyBloom": ApplyEffectsNode,
     "MergedOllamaNode": MergedOllamaNode,
@@ -2152,6 +2203,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "APNLatent": "APNext Latent Generator",
     "CustomPromptLoader": "APNext Custom Prompts",
     "ApplyBloom": "APNext Enhanced Effects Node",
     "MergedOllamaNode": "Merged Ollama",
