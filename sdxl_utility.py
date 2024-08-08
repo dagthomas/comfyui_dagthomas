@@ -729,16 +729,26 @@ class Gpt4CustomVision:
         return Image.fromarray(img_array)
     
     def save_prompt(self, prompt):
-        filename_text = "custom_vision_json_" + prompt[:30].replace(" ", "_")
-        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        filename_text = "custom_vision_json_" + ''.join(c if c.isalnum() or c in '-_' else '_' for c in prompt[:30])
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         base_filename = f"{filename_text}_{timestamp}.txt"
         filename = os.path.join(self.prompts_dir, base_filename)
         
-        with open(filename, "w") as file:
-            file.write(prompt)
-        
-        print(f"Prompt saved to {filename}")
+        try:
+            # First, try to save as ASCII
+            with open(filename, "w", encoding="ascii") as file:
+                file.write(prompt)
+            print(f"Prompt saved as ASCII to {filename}")
+        except UnicodeEncodeError:
+            # If ASCII fails, save as UTF-8
+            try:
+                with open(filename, "w", encoding="utf-8") as file:
+                    file.write(prompt)
+                print(f"Prompt saved as UTF-8 to {filename}")
+            except Exception as e:
+                print(f"Error saving prompt as UTF-8: {e}")
+        except Exception as e:
+            print(f"Error saving prompt: {e}")
 
     def analyze_images(self, images, custom_prompt=""):
         try:
