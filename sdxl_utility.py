@@ -781,12 +781,13 @@ class Gpt4CustomVision:
                 messages=messages
             )
 
-            if response.choices and response.choices[0].message:
-                content = response.choices[0].message.content
-                self.save_prompt(content)
-                return (content,)
-            else:
-                return ("No response generated.",)
+
+            try:
+                self.save_prompt(response.choices[0].message.content)
+            except Exception as e:
+                print(f"Failed to save prompt: {e}")
+            return (response.choices[0].message.content,)
+
         except Exception as e:
             print(f"An error occurred: {e}")
             return (f"Error occurred while processing the request: {str(e)}",)
