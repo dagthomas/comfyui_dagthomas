@@ -1,5 +1,5 @@
 # comfyui_dagthomas
-## Advanced Prompt Generation and Image Analysis
+### Advanced Prompt Generation and Image Analysis
 
 This plugin extends ComfyUI with advanced prompt generation capabilities and image analysis using GPT-4 Vision. It includes the following components:
 
