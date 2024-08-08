@@ -778,8 +778,7 @@ class Gpt4CustomVision:
 
             response = self.client.chat.completions.create(
                 model="gpt-4o",
-                messages=messages,
-                max_tokens=300
+                messages=messages
             )
 
             if response.choices and response.choices[0].message:
