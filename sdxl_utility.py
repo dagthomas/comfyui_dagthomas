@@ -19,6 +19,7 @@ from PIL import Image, ImageFilter, ImageChops, ImageEnhance
 from color_matcher import ColorMatcher
 from color_matcher.normalizer import Normalizer
 import tempfile
+import chardet
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
@@ -2089,8 +2090,27 @@ class CustomPromptLoader:
 
     def load_prompt(self, prompt_file):
         file_path = os.path.join(prompt_dir, prompt_file)
-        with open(file_path, 'r') as file:
-            content = file.read()
+        
+        # Detect the file encoding
+        with open(file_path, 'rb') as file:
+            raw_data = file.read()
+            detected = chardet.detect(raw_data)
+            encoding = detected['encoding']
+
+        # Read the file with the detected encoding
+        try:
+            with open(file_path, 'r', encoding=encoding) as file:
+                content = file.read()
+        except UnicodeDecodeError:
+            # If the detected encoding fails, try UTF-8 as a fallback
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+            except UnicodeDecodeError:
+                # If UTF-8 also fails, try ANSI (Windows-1252) as a last resort
+                with open(file_path, 'r', encoding='windows-1252') as file:
+                    content = file.read()
+        
         return (content,)
     
 

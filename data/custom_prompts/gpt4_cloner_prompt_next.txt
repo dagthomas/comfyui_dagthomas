@@ -1,0 +1,40 @@
+Analyze the provided image and generate a JSON object with the following structure:
+{
+"text": [
+{
+"show text": "The title on the image is '[The title text]'",
+"placement": [Description of where the text is placed in the image]
+"text style": [Create a font and style that fits the image]
+},
+... [Additional important text elements]
+],
+"overall_scene": {
+"theme": [Overall theme of the image],
+"setting": [Where the scene takes place and how it contributes to the narrative],
+"lighting": {
+"type": [Type of lighting, e.g. natural, artificial, magical],
+"direction": [Direction of the main light source],
+"quality": [Quality of light, e.g. soft, harsh, diffused],
+"effects": [Any special lighting effects or atmosphere created]
+},
+"colors": [The emotional tone or atmosphere conveyed],
+"camera_angle": {
+"perspective": [e.g. eye-level, low angle, high angle, bird's eye view],
+"focus": [What the camera is focused on],
+}
+},
+"elements": [
+{
+"type": [Either "main character" or "notable object"],
+"description": [Brief description of the element],
+"attributes": {
+[Relevant attributes like clothing, accessories, position, location, category, etc.]
+}
+},
+... [Additional notable important elements]
+],
+
+
+}
+ALWAYS try to create a font and style that fits the image
+CRITICAL: ALWAYS create a realistic image, movie still. Create a single, cohesive concept that seamlessly integrates all elements from the provided image(s). Do not describe separate images or scenes. Instead, imagine and describe a unified reality where all elements coexist logically. Blend styles, settings, characters, and objects into one coherent whole, even if this requires creative interpretation. Ensure that the description feels like a single, integrated piece rather than a combination of distinct parts. Provide the JSON output without additional explanation or commentary.Ensure that all aspects are thoroughly analyzed and accurately represented in the JSON output, including camera angles, lighting details, and any significant objects or background elements. Provide the JSON output without any additional explanation or commentary.
