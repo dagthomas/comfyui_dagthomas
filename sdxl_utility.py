@@ -47,6 +47,7 @@ def load_all_json_files(base_path):
 # Assuming your script is in the same directory as the 'data' folder
 base_dir = os.path.dirname(__file__)
 next_dir = os.path.join(base_dir, "data", "next")
+prompt_dir = os.path.join(base_dir, "data", "custom_prompts")
 # custom_dir = os.path.join(base_dir, "data", "custom")
 # Load all JSON files
 all_data = load_all_json_files(next_dir)
@@ -645,7 +646,7 @@ class Gpt4VisionCloner:
 ... [Additional text elements]
 ]
 }
-Ensure that all aspects of the image are thoroughly analyzed and accurately represented in the JSON output, including the camera angle, lighting details, and any significant distant objects or background elements. Provide the JSON output without any additional explanation or commentary."""
+ALWAYS blend concepts into one concept if there are multiple images. Ensure that all aspects of the image are thoroughly analyzed and accurately represented in the JSON output, including the camera angle, lighting details, and any significant distant objects or background elements. Provide the JSON output without any additional explanation or commentary."""
 
             final_prompt = custom_prompt if custom_prompt.strip() else default_prompt
 
@@ -1988,8 +1989,30 @@ class ApplyEffectsNode:
         result = ImageChops.subtract(base, top)
         return Image.blend(base, result, opacity)
 
-      
+class CustomPromptLoader:
+    @classmethod
+    def INPUT_TYPES(s):
+        prompt_files = [f for f in os.listdir(prompt_dir) if f.endswith('.txt')]
+        return {
+            "required": {
+                "prompt_file": (prompt_files,),
+            },
+        }
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "load_prompt"
+    CATEGORY = "CUSTOM_CATEGORY" 
+
+    def load_prompt(self, prompt_file):
+        file_path = os.path.join(prompt_dir, prompt_file)
+        with open(file_path, 'r') as file:
+            content = file.read()
+        return (content,)
+    
+
+
 NODE_CLASS_MAPPINGS = {
+    "CustomPromptLoader": CustomPromptLoader,
     "ApplyBloom": ApplyEffectsNode,
     "MergedOllamaNode": MergedOllamaNode,
     "DynamicStringCombinerNode": DynamicStringCombinerNode,
@@ -2007,6 +2030,7 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    "CustomPromptLoader": "APNext Custom Prompts",
     "ApplyBloom": "APNext Enhanced Effects Node",
     "MergedOllamaNode": "Merged Ollama",
     "DynamicStringCombinerNode": "APNext Dynamic String Combiner",

@@ -1,0 +1,42 @@
+Analyze the image in detail and extract the following information into a structured JSON format:
+
+1. Title: Provide a brief, descriptive title for the image.
+2. ArtisticStyle: Identify the overall artistic style of the image.
+3. ColorScheme: List the main colors used in the image.
+4. Elements: Identify and describe key elements in the image, including objects and characters.
+5. OverallScene: Describe the theme, setting, and lighting of the entire scene.
+
+Present the extracted information in the following JSON format:
+
+{
+  "Title": "{descriptive title}",
+  "ArtisticStyle": "{artistic style}",
+  "ColorScheme": ["{color1}", "{color2}", "{color3}", "..."],
+  "Elements": [
+    {
+      "Type": "{Object or Character}",
+      "Description": "{detailed description}",
+      "Attributes": {
+        // Include only applicable attributes
+      }
+    },
+    // Additional elements as needed
+  ],
+  "OverallScene": {
+    "Theme": "{overall theme or mood}",
+    "Setting": "{general setting description}",
+    "Lighting": "{lighting description}"
+  }
+}
+
+Guidelines:
+- For the "Elements" array, include all significant objects and characters visible in the image.
+- In the "Attributes" object, only include fields that have a value. Omit any attributes that would be null or not applicable.
+- Possible attributes include "Clothing", "Accessories", "Position", and "Location", but only include them if they are relevant and can be determined from the image.
+- Provide as much detail as possible in the descriptions.
+- Ensure that the "ColorScheme" includes the most prominent colors in the image.
+- The "OverallScene" should capture the general atmosphere and context of the image.
+- If any top-level field (like ArtisticStyle) cannot be determined, omit it entirely from the output.
+Ensure that the analysis reads as if it were describing a single, complex piece of art created from multiple sources.
+
+Provide the output as a pure JSON string without any additional explanation, commentary, or Markdown formatting.

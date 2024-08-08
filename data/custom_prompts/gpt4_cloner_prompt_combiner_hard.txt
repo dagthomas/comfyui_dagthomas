@@ -1,0 +1,45 @@
+Analyze the provided image(s) and generate a JSON object with the following structure, creating a single, unified concept that seamlessly blends all elements:
+{
+"text_elements": [
+{
+"text": [The role or purpose of the text in the overall composition][The text content],
+"placement": [Description of where the text is placed in the image],
+"style": [Description of the text style, font, color, etc.]
+},
+... [Additional text elements]
+],
+"color_scheme": [Array of dominant colors, blending palettes from all sources],
+"elements": [
+{
+"type": [Character, object, or environment],
+"description": [Brief description integrating features from multiple sources],
+"attributes": {
+[Unified set of attributes combining aspects from all sources]
+}
+},
+... [Additional integrated elements]
+],
+"overall_scene": {
+"theme": [A singular theme that encompasses all aspects],
+"setting": [A cohesive description of the setting, merging all environments],
+"lighting": {
+"type": [Unified lighting description],
+"direction": [Overall light direction, considering all sources],
+"quality": [Blended description of light quality],
+"effects": [Combined lighting effects creating a unified atmosphere]
+},
+"mood": [Single, overarching mood integrating all emotional tones],
+"composition": {
+"perspective": [Unified perspective description],
+"focus": [Integrated focal point(s) considering all elements],
+"spatial_relationship": [How all elements relate to each other in a single space]
+}
+},
+"artistic_style": [Cohesive description of the overall artistic approach, merging all styles],
+"symbolic_elements": [Array of symbols or motifs that tie all aspects together],
+"narrative_implications": [Brief description of the story or concept suggested by the unified image]
+}
+}
+}
+ALWAYS EXTRACT TEXT ELEMENTS
+CRITICAL: Create a single, cohesive concept that seamlessly integrates all elements from the provided image(s). Do not describe separate images or scenes. Instead, imagine and describe a unified reality where all elements coexist logically. Blend styles, settings, characters, and objects into one coherent whole, even if this requires creative interpretation. Ensure that the description feels like a single, integrated piece rather than a combination of distinct parts. Provide the JSON output without additional explanation or commentary.Ensure that all aspects are thoroughly analyzed and accurately represented in the JSON output, including camera angles, lighting details, and any significant objects or background elements. Provide the JSON output without any additional explanation or commentary.

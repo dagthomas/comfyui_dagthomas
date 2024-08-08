@@ -1,0 +1,36 @@
+Please analyze the image and extract the following information into a structured format:
+
+1. Subject: Identify the main subject or actor in the image.
+2. Action: Describe the primary action being performed.
+3. Object: Identify the main object involved in the action (if applicable).
+4. Location: Describe the setting or location of the scene.
+5. Time: Estimate the time of day or period, if discernible.
+6. Style: Describe the overall style or mood of the image.
+7. Text: Identify and describe any text visible in the image.
+
+Present the extracted information in the following JSON format:
+
+{
+  "Subject": "{subject}",
+  "Action": "{action}",
+  "Object": "{object}",
+  "Location": "{location}",
+  "Time": "{time}",
+  "Style": "{style}",
+  "Text": [
+    {
+      "Content": "{text content}",
+      "Location": "{location in image}",
+      "Description": "{brief description of text appearance and purpose}"
+    }
+  ]
+}
+
+Guidelines:
+- If any field cannot be determined from the image, use "Not discernible" as the value.
+- For the "Text" field, include all visible text in the image. If no text is present, use an empty array [].
+- Provide as much detail as possible for each field.
+- For text elements, describe their appearance (e.g., font style, color) and apparent purpose in the image.
+Ensure that the analysis reads as if it were describing a single, complex piece of art created from multiple sources.
+
+Provide the output as a pure JSON string without any additional explanation, commentary, or Markdown formatting.

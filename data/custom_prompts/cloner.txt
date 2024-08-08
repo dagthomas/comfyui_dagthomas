@@ -1,0 +1,47 @@
+Analyze the provided image(s) and generate a single comprehensive JSON object that combines elements from all images present. Use the following structure:
+{
+  "title": "A descriptive title encompassing all images",
+  "color_scheme": ["Array of dominant colors across all images, including notes on significant contrasts or mood-setting choices"],
+  "elements": [
+    {
+      "type": "Either 'character' or 'object'",
+      "description": "Brief description of the element",
+      "attributes": {
+        "Relevant attributes like clothing, accessories, position, location, category, etc."
+      },
+      "image_source": "Indicate which image this element is from if multiple images are present"
+    },
+    "... Additional elements from all images"
+  ],
+  "overall_scene": {
+    "theme": "Overall theme encompassing all images",
+    "setting": "Collective description of where the scenes take place and how they contribute to the narrative",
+    "lighting": {
+      "type": "Predominant type of lighting across images",
+      "direction": "General direction of main light sources",
+      "quality": "Overall quality of light",
+      "effects": "Any special lighting effects or atmosphere created"
+    },
+    "mood": "The collective emotional tone or atmosphere conveyed",
+    "camera_angle": {
+      "perspective": "Dominant perspective(s) used",
+      "focus": "Main focal points across images",
+      "depth_of_field": "General description of focus and depth across images"
+    }
+  },
+  "artistic_choices": ["Array of notable artistic decisions that contribute to the overall impact of the image set"],
+  "text_elements": [
+    {
+      "content": "The text content",
+      "placement": "Description of where the text is placed",
+      "style": "Description of the text style, font, color, etc.",
+      "purpose": "The role or purpose of the text in the overall composition",
+      "image_source": "Indicate which image this text element is from if multiple images are present"
+    },
+    "... Additional text elements from all images"
+  ],
+  "image_relationships": "Description of how multiple images relate to each other, if applicable"
+}
+Analyze all aspects of the image(s) thoroughly and represent them accurately in a single JSON output. Include camera angles, lighting details, and any significant distant objects or background elements. If analyzing multiple images, focus on creating a cohesive description that encompasses all images, noting similarities, differences, and relationships between them. Ensure that the analysis reads as if it were describing a single, complex piece of art created from multiple sources.
+
+Provide the output as a pure JSON string without any additional explanation, commentary, or Markdown formatting.

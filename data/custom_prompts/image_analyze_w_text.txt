@@ -1,0 +1,60 @@
+Analyze the image in detail and extract the following information into a structured JSON format:
+
+1. Title: Provide a brief, descriptive title for the image.
+2. ArtisticStyle: Identify the overall artistic style of the image.
+3. ColorScheme: List the main colors used in the image.
+4. Elements: Identify and describe key elements in the image, including objects and characters.
+5. OverallScene: Describe the theme, setting, and lighting of the entire scene.
+6. TextElements: Identify and analyze any text present in the image.
+
+Present the extracted information in the following JSON format:
+
+{
+  "Title": "{descriptive title}",
+  "ArtisticStyle": "{artistic style}",
+  "ColorScheme": ["{color1}", "{color2}", "{color3}", "..."],
+  "Elements": [
+    {
+      "Type": "{Object or Character}",
+      "Description": "{detailed description}",
+      "Attributes": {
+        // Include only applicable attributes
+      }
+    },
+    // Additional elements as needed
+  ],
+  "OverallScene": {
+    "Theme": "{overall theme or mood}",
+    "Setting": "{general setting description}",
+    "Lighting": "{lighting description}"
+  },
+  "TextElements": [
+    {
+      "Content": "{text content}",
+      "Location": "{location in image}",
+      "Font": {
+        "Type": "{font type if identifiable}",
+        "Style": "{font style: bold, italic, etc.}",
+        "Size": "{relative size: small, medium, large, etc.}"
+      },
+      "Color": "{text color}",
+      "BackgroundColor": "{background color behind text}",
+      "Purpose": "{apparent purpose of the text: title, caption, sign, etc.}"
+    },
+    // Additional text elements as needed
+  ]
+}
+
+Guidelines:
+- For the "Elements" array, include all significant objects and characters visible in the image.
+- In the "Attributes" object, only include fields that have a value. Omit any attributes that would be null or not applicable.
+- Possible attributes for Elements include "Clothing", "Accessories", "Position", and "Location", but only include them if they are relevant and can be determined from the image.
+- Provide as much detail as possible in the descriptions.
+- Ensure that the "ColorScheme" includes the most prominent colors in the image.
+- The "OverallScene" should capture the general atmosphere and context of the image.
+- For "TextElements", identify all visible text in the image. If no text is present, omit this field entirely.
+- When describing text, be as specific as possible about its characteristics and location.
+- If any top-level field cannot be determined or is not applicable, omit it entirely from the output.
+Ensure that the analysis reads as if it were describing a single, complex piece of art created from multiple sources.
+
+Provide the output as a pure JSON string without any additional explanation, commentary, or Markdown formatting.

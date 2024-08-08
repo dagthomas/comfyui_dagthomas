@@ -1,0 +1,48 @@
+Analyze the provided image(s) and generate a single, cohesive JSON object that blends elements and concepts from all images present. Create a unified narrative that synthesizes the visual information. Use the following structure:
+{
+  "title": "A creative title that captures the essence of all images combined",
+  "unified_theme": "An overarching theme that ties all images together",
+  "color_palette": ["Array of colors that represent the overall visual harmony across all images"],
+  "composite_elements": [
+    {
+      "name": "A descriptive name for this blended element",
+      "description": "Detailed description of how this element combines features from multiple images",
+      "symbolic_meaning": "The symbolic or thematic significance of this combined element",
+      "visual_details": {
+        "Relevant visual attributes that showcase the blending of different images"
+      }
+    },
+    "... Additional composite elements"
+  ],
+  "synthesized_scene": {
+    "setting": "A creative description of a unified setting that incorporates elements from all images",
+    "atmosphere": {
+      "mood": "The overall emotional tone created by combining all images",
+      "lighting": "A description of how lighting across all images contributes to the unified atmosphere",
+      "visual_style": "The collective artistic style that emerges from blending the images"
+    },
+    "narrative": "A brief story or concept that ties together elements from all images"
+  },
+  "artistic_synthesis": [
+    "Array of observations about how different artistic choices across images create a cohesive whole"
+  ],
+  "textual_integration": {
+    "unified_message": "How text elements across images contribute to a central theme or message",
+    "visual_text_relationship": "Description of how text and visual elements interact across all images"
+  },
+  "conceptual_connections": [
+    {
+      "concept": "A unifying concept or idea",
+      "manifestation": "How this concept is visually represented across different images"
+    },
+    "... Additional conceptual connections"
+  ],
+  "meta_analysis": {
+    "visual_harmony": "Description of how well the images blend together conceptually and visually",
+    "thematic_resonance": "Analysis of overarching themes and their strength across the image set",
+    "viewer_impact": "The potential emotional or intellectual impact on the viewer of these combined images"
+  }
+}
+Thoroughly analyze all aspects of the image(s) and create a unified interpretation that blends concepts, themes, and visual elements. Instead of describing individual images, focus on synthesizing a cohesive narrative that emerges from combining all visual information. Consider how elements from different images could interact, complement, or contrast with each other to create new meanings or visual stories.Ensure that the analysis reads as if it were describing a single, complex piece of art created from multiple sources.
+
+Provide the output as a pure JSON string without any additional explanation, commentary, or Markdown formatting.

@@ -1,0 +1,43 @@
+Analyze the provided image(s) and generate a JSON object with the following structure, blending all concepts into a single, unified description:
+{
+"title": [A descriptive title encompassing all elements across the image(s)],
+"color_scheme": [Array of dominant colors across all image(s), including notes on significant contrasts or mood-setting choices],
+"elements": [
+{
+"type": [Either "character" or "object"],
+"description": [Brief description of the element],
+"attributes": {
+[Relevant attributes like clothing, accessories, position, location, category, etc.]
+}
+},
+... [Additional elements from all image(s)]
+],
+"overall_scene": {
+"theme": [Overall theme encompassing all aspects of the image(s)],
+"setting": [Comprehensive description of where the scene(s) take place and how they contribute to the narrative],
+"lighting": {
+"type": [Type(s) of lighting, e.g. natural, artificial, magical],
+"direction": [Direction(s) of the main light source(s)],
+"quality": [Quality of light, e.g. soft, harsh, diffused],
+"effects": [Any special lighting effects or atmosphere created across all image(s)]
+},
+"mood": [The overall emotional tone or atmosphere conveyed by all elements],
+"camera_angle": {
+"perspective": [e.g. eye-level, low angle, high angle, bird's eye view - describe if varied],
+"focus": [What the camera is focused on across all image(s)],
+"depth_of_field": [Describe if all elements are in focus or if there are specific focal points]
+}
+},
+"artistic_choices": [Array of notable artistic decisions that contribute to the overall impact],
+"text_elements": [
+{
+"content": [The text content],
+"placement": [Description of where the text is placed],
+"style": [Description of the text style, font, color, etc.],
+"purpose": [The role or purpose of the text in the overall composition]
+},
+... [Additional text elements]
+]
+}
+
+IMPORTANT: Blend all concepts into a single, unified description. Do not separate or distinguish between different images. Treat all elements as part of one cohesive scene or concept. Ensure that all aspects are thoroughly analyzed and accurately represented in the JSON output, including camera angles, lighting details, and any significant objects or background elements. Provide the JSON output without any additional explanation or commentary.

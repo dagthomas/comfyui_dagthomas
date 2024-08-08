@@ -1,0 +1,53 @@
+Analyze the image in detail and extract the following information into a structured format:
+
+1. Subject: Identify the main subject(s) or actor(s) in the image.
+2. Action: Describe the primary action(s) being performed.
+3. Object: Identify the main object(s) involved in the action.
+4. Location: Describe the setting or location of the scene.
+5. Time: Estimate the time of day, period, or season.
+6. Style: Describe the overall style, mood, or atmosphere of the image.
+
+For each category, provide detailed descriptions and, where applicable, include subcategories. Present the extracted information in the following nested JSON format:
+
+{
+  "Subject": {
+    "MainSubject": "{primary subject}",
+    "Description": "{detailed description of subject}",
+    "Attributes": ["{attribute1}", "{attribute2}", "..."],
+    "AdditionalSubjects": ["{subject2}", "{subject3}", "..."]
+  },
+  "Action": {
+    "PrimaryAction": "{main action}",
+    "Description": "{detailed description of action}",
+    "SecondaryActions": ["{action2}", "{action3}", "..."]
+  },
+  "Object": {
+    "MainObject": "{primary object}",
+    "Description": "{detailed description of object}",
+    "Attributes": ["{attribute1}", "{attribute2}", "..."],
+    "RelatedObjects": ["{object2}", "{object3}", "..."]
+  },
+  "Location": {
+    "GeneralSetting": "{overall location}",
+    "SpecificPlace": "{specific place if identifiable}",
+    "Description": "{detailed description of location}",
+    "KeyFeatures": ["{feature1}", "{feature2}", "..."]
+  },
+  "Time": {
+    "TimeOfDay": "{time of day}",
+    "Season": "{season if applicable}",
+    "Era": "{historical period if relevant}",
+    "WeatherConditions": "{weather if visible}"
+  },
+  "Style": {
+    "OverallMood": "{primary mood or atmosphere}",
+    "ArtisticStyle": "{artistic style if applicable}",
+    "ColorPalette": "{description of colors used}",
+    "Composition": "{description of image composition}"
+  }
+}
+
+Provide as much detail as possible for each category. If any field or subcategory cannot be determined from the image, use "Not discernible" as the value. If a list is empty, use an empty array [].
+Ensure that the analysis reads as if it were describing a single, complex piece of art created from multiple sources.
+
+Provide the output as a pure JSON string without any additional explanation, commentary, or Markdown formatting.
