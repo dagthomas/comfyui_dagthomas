@@ -696,6 +696,90 @@ ALWAYS blend concepts into one concept if there are multiple images. Ensure that
         except Exception as e:
             print(f"An error occurred: {e}")
             return (f"Error occurred while processing the request: {str(e)}", "{}")
+
+class Gpt4CustomVision:
+    def __init__(self):
+        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
+
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "custom_prompt": ("STRING", {"multiline": True, "default": ""})
+            }
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("output",)
+    FUNCTION = "analyze_images"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def encode_image(self, image):
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+    def tensor_to_pil(self, img_tensor):
+        i = 255. * img_tensor.cpu().numpy()
+        img_array = np.clip(i, 0, 255).astype(np.uint8)
+        return Image.fromarray(img_array)
+    
+    def save_prompt(self, prompt):
+        filename_text = "custom_vision_json_" + prompt[:30].replace(" ", "_")
+        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+        
+        with open(filename, "w") as file:
+            file.write(prompt)
+        
+        print(f"Prompt saved to {filename}")
+
+    def analyze_images(self, images, custom_prompt=""):
+        try:
+            # Prepare the messages
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": custom_prompt if custom_prompt else "Analyze this image."}
+                    ]
+                }
+            ]
+
+            # Handle single image or multiple images
+            if len(images.shape) == 3:  # Single image
+                images = [images]
+            else:  # Multiple images
+                images = [img for img in images]
+
+            for img_tensor in images:
+                pil_image = self.tensor_to_pil(img_tensor)
+                base64_image = self.encode_image(pil_image)
+                messages[0]["content"].append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+                })
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                max_tokens=300
+            )
+
+            if response.choices and response.choices[0].message:
+                content = response.choices[0].message.content
+                self.save_prompt(content)
+                return (content,)
+            else:
+                return ("No response generated.",)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return (f"Error occurred while processing the request: {str(e)}",)
         
 class RandomIntegerNode:
     @classmethod
@@ -2022,6 +2106,7 @@ NODE_CLASS_MAPPINGS = {
     "FlexibleStringMergerNode": FlexibleStringMergerNode,
     "StringMergerNode": StringMergerNode,
     "CFGSkimming": CFGSkimmingSingleScalePreCFGNode,
+    "Gpt4CustomVision": Gpt4CustomVision,
     "GPT4VisionNode": GPT4VisionNode,
     "Gpt4VisionCloner": Gpt4VisionCloner,
     "GPT4MiniNode": GPT4MiniNode,
@@ -2039,6 +2124,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "GPT4MiniNode": "APNext GPT-4o-mini generator",
     "PromptGenerator": "Auto Prompter",
     "PGSD3LatentGenerator": "APNext PGSD3LatentGenerator", 
+    "Gpt4CustomVision": "APNext Gpt4CustomVision",
     "GPT4VisionNode": "APNext GPT4VisionNode",
     "Gpt4VisionCloner": "APNext Gpt4VisionCloner",
     "CFGSkimming": "APNext CFG Skimming",
