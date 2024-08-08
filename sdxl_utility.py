@@ -2077,16 +2077,23 @@ class ApplyEffectsNode:
 class CustomPromptLoader:
     @classmethod
     def INPUT_TYPES(s):
-        prompt_files = [f for f in os.listdir(prompt_dir) if f.endswith('.txt')]
         return {
             "required": {
-                "prompt_file": (prompt_files,),
+                "prompt_file": (s.get_prompt_files(),),
             },
         }
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "load_prompt"
-    CATEGORY = "CUSTOM_CATEGORY" 
+    CATEGORY = "CUSTOM_CATEGORY"
+
+    @staticmethod
+    def get_prompt_files():
+        return [f for f in os.listdir(prompt_dir) if f.endswith('.txt')]
+
+    @classmethod
+    def IS_CHANGED(s, prompt_file):
+        return float("nan")  # This ensures the widget is always refreshed
 
     def load_prompt(self, prompt_file):
         file_path = os.path.join(prompt_dir, prompt_file)
