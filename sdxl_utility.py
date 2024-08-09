@@ -381,46 +381,49 @@ class APNLatent:
 
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": { "width": ("INT", {"default": 1024, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "height": ("INT", {"default": 1024, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
-                              "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})}}
+        return {"required": { 
+            "width": ("INT", {"default": 1024, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+            "height": ("INT", {"default": 1024, "min": 0, "max": nodes.MAX_RESOLUTION, "step": 8}),
+            "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096}),
+            "megapixel_scale": ("FLOAT", {"default": 1.0, "min": 0.1, "max": 2.0, "step": 0.1}),
+            "aspect_ratio": (["1:1", "3:2", "4:3", "16:9", "21:9"], {"default": "1:1"})
+        }}
     RETURN_TYPES = ("LATENT", "INT", "INT")
     RETURN_NAMES = ("LATENT", "width", "height") 
     FUNCTION = "generate"
     CATEGORY = CUSTOM_CATEGORY
 
-    def generate(self, width=1024, height=1024, batch_size=1):
-        def adjust_dimensions(width, height):
-            megapixel = 1_000_000
-            multiples = 64
-
-            if width == 0 and height != 0:
-                height = int(height)
-                width = megapixel // height
-                
-                if width % multiples != 0:
-                    width += multiples - (width % multiples)
-                
-                if width * height > megapixel:
-                    width -= multiples
-
-            elif height == 0 and width != 0:
-                width = int(width)
-                height = megapixel // width
-                
-                if height % multiples != 0:
-                    height += multiples - (height % multiples)
-                
-                if width * height > megapixel:
-                    height -= multiples
-
-            elif width == 0 and height == 0:
-                width = 1024
-                height = 1024
-
+    def generate(self, width=1024, height=1024, batch_size=1, megapixel_scale=1.0, aspect_ratio="1:1"):
+        def adjust_dimensions(megapixels, aspect_ratio):
+            aspect_ratios = {
+                "1:1": (1, 1),
+                "3:2": (3, 2),
+                "4:3": (4, 3),
+                "16:9": (16, 9),
+                "21:9": (21, 9)
+            }
+            
+            ar_width, ar_height = aspect_ratios[aspect_ratio]
+            total_pixels = int(megapixels * 1_000_000)
+            
+            width = int((total_pixels * ar_width / ar_height) ** 0.5)
+            height = int(total_pixels / width)
+            
+            # Round to nearest multiple of 64
+            width = (width + 32) // 64 * 64
+            height = (height + 32) // 64 * 64
+            
             return width, height
 
-        width, height = adjust_dimensions(width, height)
+        if width == 0 or height == 0:
+            width, height = adjust_dimensions(megapixel_scale, aspect_ratio)
+        else:
+            # If width and height are provided, adjust them to fit within the megapixel scale
+            current_mp = (width * height) / 1_000_000
+            if current_mp > megapixel_scale:
+                scale_factor = (megapixel_scale / current_mp) ** 0.5
+                width = int((width * scale_factor + 32) // 64 * 64)
+                height = int((height * scale_factor + 32) // 64 * 64)
 
         latent = torch.ones([batch_size, 16, height // 8, width // 8], device=self.device) * 0.0609
         return ({"samples": latent}, width, height)
@@ -763,11 +766,15 @@ class Gpt4CustomVision:
             }
         }
     
-    RETURN_TYPES = ("STRING",)
-    RETURN_NAMES = ("output",)
+    RETURN_TYPES = ("STRING","STRING",)
+    RETURN_NAMES = ("output","clip_l")
     FUNCTION = "analyze_images"
     CATEGORY = CUSTOM_CATEGORY
-
+    
+    def extract_first_two_sentences(self, text):
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        return ' '.join(sentences[:2])
+    
     def encode_image(self, image):
         buffered = BytesIO()
         image.save(buffered, format="PNG")
@@ -836,7 +843,7 @@ class Gpt4CustomVision:
                 self.save_prompt(response.choices[0].message.content)
             except Exception as e:
                 print(f"Failed to save prompt: {e}")
-            return (response.choices[0].message.content,)
+            return (response.choices[0].message.content,self.extract_first_two_sentences(response.choices[0].message.content),)
 
         except Exception as e:
             print(f"An error occurred: {e}")

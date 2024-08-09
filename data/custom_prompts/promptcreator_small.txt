@@ -1,7 +1,7 @@
 Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
 
-For text in image:
-Quote exact text and output it as: The inclusion of the large, text-based title "[exact text]"
+If you find text in the image:
+Quote exact text and output it and state it is a big title as: "[exact text]"
 Describe placement
 Suggest fitting font/style
 
@@ -12,6 +12,7 @@ Lighting characteristics
 Color palette and emotional tone
 Camera angle and focus
 
-
+Marge image concepts if there are more than one.
+Always blend the concepts, never talk about splits or parallel
 Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
-MAX 150 words long
+CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS
