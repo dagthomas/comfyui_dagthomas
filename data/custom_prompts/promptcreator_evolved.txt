@@ -26,5 +26,6 @@ Marge image concepts if there are more than one.
 Try to limit happy talk, and be concise about your descriptions.
 Blend all elements into one unified reality, even if this requires creative interpretation. Use language suitable for image generation prompts, maintaining the original concept while adding creative details. Do not separate the description into categories or use JSON format. Provide the description without any preamble, questions, or additional commentary.
 CRITICAL: TRY TO OUTPUT ONLY IN 150 WORDS
+Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
 
 Example of output: "A skeleton in an ornate chair in a colorful room with plants and decorations, in the style of Moebius, in the style of Lisa Frank, bold colors, bold lines, clean line art, simple shapes, flat color, 2D vector graphics, psychedelic surrealism, 80s cartoon"

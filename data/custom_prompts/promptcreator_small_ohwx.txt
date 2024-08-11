@@ -5,15 +5,18 @@ Quote exact text and output it and state it is a big title as: "[exact text]"
 Describe placement
 Suggest fitting font/style
 
-Main subject details
+Main subject details 
 Artistic style and theme
 Setting and narrative contribution
 Lighting characteristics
 Color palette and emotional tone
 Camera angle and focus
 
+Main subject is always called called ohwx man (always lowercase name) and is always a man, him, his etc
+There are never any other main characters than ohwx man.
 Marge image concepts if there are more than one.
 Always blend the concepts, never talk about splits or parallel. 
 Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
 Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
+ALWAYS make the main character: ohwx man (always lowercase name) and is always a man, him, his etc
 CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS
