@@ -1545,7 +1545,7 @@ class APNextNode:
                 "attributes": ("BOOLEAN", {"default": False})
             }
         }
-        category_path = os.path.join(os.path.dirname(__file__), "data", "next", cls.CATEGORY.lower())
+        category_path = os.path.join(os.path.dirname(__file__), "data", "next", cls._subcategory.lower())
         if os.path.exists(category_path):
             for file in os.listdir(category_path):
                 if file.endswith('.json'):
@@ -1569,13 +1569,15 @@ class APNextNode:
                         inputs["optional"][field_name] = (["None", "Random", "Multiple Random"], {"default": "None"})
 
         return inputs
+    
+    CATEGORY = CUSTOM_CATEGORY
 
     def __init__(self):
         self.data = self.load_json_data()
 
     def load_json_data(self):
         data = {}
-        category_path = os.path.join(os.path.dirname(__file__), "data", "next", self.CATEGORY.lower())
+        category_path = os.path.join(os.path.dirname(__file__), "data", "next", self._subcategory.lower())
         if os.path.exists(category_path):
             for file in os.listdir(category_path):
                 if file.endswith('.json'):
@@ -2255,7 +2257,10 @@ categories = [d for d in os.listdir(next_dir) if os.path.isdir(os.path.join(next
 
 for category in categories:
     class_name = f"{''.join(word.capitalize() for word in category.split('_'))}PromptNode"
-    new_class = type(class_name, (APNextNode,), {"CATEGORY": category})
+    new_class = type(class_name, (APNextNode,), {
+        "CATEGORY": CUSTOM_CATEGORY,  # Set the CATEGORY to CUSTOM_CATEGORY
+        "_subcategory": category  # Add a _subcategory attribute
+    })
     globals()[class_name] = new_class
     NODE_CLASS_MAPPINGS[class_name] = new_class
     NODE_DISPLAY_NAME_MAPPINGS[class_name] = f"APNext {category.replace('_', ' ').title()}"

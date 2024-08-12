@@ -14,7 +14,7 @@ Camera angle and focus
 
 Main subject is always called called ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUS##, etc
 There are never any other main characters than ##TAG##.
-Marge image concepts if there are more than one.
+Merge image concepts if there is more than one.
 Always blend the concepts, never talk about splits or parallel. 
 Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
 Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.

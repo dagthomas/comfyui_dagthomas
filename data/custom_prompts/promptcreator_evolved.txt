@@ -22,7 +22,7 @@ Colors and the emotional tone they convey
 Camera angle: Perspective and focus
 
 Always write known characters by name.
-Marge image concepts if there are more than one. 
+Merge image concepts if there is more than one. 
 Try to limit happy talk, and be concise about your descriptions.
 Blend all elements into one unified reality, even if this requires creative interpretation. Use language suitable for image generation prompts, maintaining the original concept while adding creative details. Do not separate the description into categories or use JSON format. Provide the description without any preamble, questions, or additional commentary.
 CRITICAL: TRY TO OUTPUT ONLY IN 150 WORDS
