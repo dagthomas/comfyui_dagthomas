@@ -603,7 +603,7 @@ class Gpt4VisionCloner:
     RETURN_TYPES = ("STRING", "STRING",)
     RETURN_NAMES = ("formatted_output", "raw_json",)
     FUNCTION = "analyze_images"
-    CATEGORY = "Custom"
+    CATEGORY = CUSTOM_CATEGORY
 
     def encode_image(self, image):
         buffered = BytesIO()
@@ -772,12 +772,17 @@ class Gpt4CustomVision:
         return {
             "required": {
                 "images": ("IMAGE",),
-                "custom_prompt": ("STRING", {"multiline": True, "default": ""})
+                "custom_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "additive_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "dynamic_prompt": ("BOOLEAN", {"default": False}),
+                "tag": ("STRING", {"default": "ohwx man"}),
+                "sex": ("STRING", {"default": "male"}),
+                "pronouns": ("STRING", {"default": "him, his"})
             }
         }
     
-    RETURN_TYPES = ("STRING","STRING",)
-    RETURN_NAMES = ("output","clip_l")
+    RETURN_TYPES = ("STRING", "STRING",)
+    RETURN_NAMES = ("output", "clip_l")
     FUNCTION = "analyze_images"
     CATEGORY = CUSTOM_CATEGORY
     
@@ -802,29 +807,37 @@ class Gpt4CustomVision:
         filename = os.path.join(self.prompts_dir, base_filename)
         
         try:
-            # First, try to save as ASCII
-            with open(filename, "w", encoding="ascii") as file:
+            with open(filename, "w", encoding="utf-8") as file:
                 file.write(prompt)
-            print(f"Prompt saved as ASCII to {filename}")
-        except UnicodeEncodeError:
-            # If ASCII fails, save as UTF-8
-            try:
-                with open(filename, "w", encoding="utf-8") as file:
-                    file.write(prompt)
-                print(f"Prompt saved as UTF-8 to {filename}")
-            except Exception as e:
-                print(f"Error saving prompt as UTF-8: {e}")
+            print(f"Prompt saved to {filename}")
         except Exception as e:
             print(f"Error saving prompt: {e}")
 
-    def analyze_images(self, images, custom_prompt=""):
+    def analyze_images(self, images, custom_prompt="", additive_prompt="", tag="", sex="other", pronouns="them, their", dynamic_prompt=False):
         try:
+            if not dynamic_prompt:
+                # In dynamic mode, we don't replace tags and use the custom_prompt as is
+                full_prompt = custom_prompt if custom_prompt else "Analyze this image."
+            else:
+                # Static mode: Replace tags in custom_prompt
+                custom_prompt = custom_prompt.replace("##TAG##", tag.lower())
+                custom_prompt = custom_prompt.replace("##SEX##", sex)
+                custom_prompt = custom_prompt.replace("##PRONOUNS##", pronouns)
+                
+                # Combine additive_prompt and custom_prompt if additive_prompt has a value
+                if additive_prompt:
+                    full_prompt = f"{additive_prompt} {custom_prompt}".strip()
+                else:
+                    full_prompt = custom_prompt if custom_prompt else "Analyze this image."
+            
+            print(f"Full prompt: {full_prompt}")
+            
             # Prepare the messages
             messages = [
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": custom_prompt if custom_prompt else "Analyze this image."}
+                        {"type": "text", "text": full_prompt}
                     ]
                 }
             ]
@@ -848,12 +861,11 @@ class Gpt4CustomVision:
                 messages=messages
             )
 
-
             try:
                 self.save_prompt(response.choices[0].message.content)
             except Exception as e:
                 print(f"Failed to save prompt: {e}")
-            return (response.choices[0].message.content,self.extract_first_two_sentences(response.choices[0].message.content),)
+            return (response.choices[0].message.content, self.extract_first_two_sentences(response.choices[0].message.content),)
 
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -1518,7 +1530,7 @@ class APNextNode:
     RETURN_TYPES = ("STRING", "STRING")  
     RETURN_NAMES = ("prompt", "random")  
     FUNCTION = "process"
-    CATEGORY = "CUSTOM_CATEGORY" 
+    CATEGORY = CUSTOM_CATEGORY
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -1700,7 +1712,7 @@ class MergedOllamaNode:
     
     RETURN_TYPES = ("STRING",)
     FUNCTION = "generate"
-    CATEGORY = "Custom/Ollama"
+    CATEGORY = CUSTOM_CATEGORY
 
     def save_prompt(self, prompt):
         filename_text = "mini_" + prompt.split(',')[0].strip()
@@ -1818,7 +1830,7 @@ class ApplyEffectsNode:
 
     RETURN_TYPES = ("IMAGE",)
     FUNCTION = "apply_effects"
-    CATEGORY = "image/postprocessing"
+    CATEGORY = CUSTOM_CATEGORY
 
     @staticmethod
     def tensor2pil(image):
@@ -2162,7 +2174,7 @@ class CustomPromptLoader:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "load_prompt"
-    CATEGORY = "CUSTOM_CATEGORY"
+    CATEGORY = CUSTOM_CATEGORY
 
     @staticmethod
     def get_prompt_files():
