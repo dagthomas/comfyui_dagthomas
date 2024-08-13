@@ -777,6 +777,7 @@ class Gpt4CustomVision:
                 "dynamic_prompt": ("BOOLEAN", {"default": False}),
                 "tag": ("STRING", {"default": "ohwx man"}),
                 "sex": ("STRING", {"default": "male"}),
+                "words": ("STRING", {"default": "100"}),
                 "pronouns": ("STRING", {"default": "him, his"})
             }
         }
@@ -813,7 +814,7 @@ class Gpt4CustomVision:
         except Exception as e:
             print(f"Error saving prompt: {e}")
 
-    def analyze_images(self, images, custom_prompt="", additive_prompt="", tag="", sex="other", pronouns="them, their", dynamic_prompt=False):
+    def analyze_images(self, images, custom_prompt="", additive_prompt="", tag="", sex="other", pronouns="them, their", dynamic_prompt=False, words="100"):
         try:
             if not dynamic_prompt:
                 # In dynamic mode, we don't replace tags and use the custom_prompt as is
@@ -823,6 +824,7 @@ class Gpt4CustomVision:
                 custom_prompt = custom_prompt.replace("##TAG##", tag.lower())
                 custom_prompt = custom_prompt.replace("##SEX##", sex)
                 custom_prompt = custom_prompt.replace("##PRONOUNS##", pronouns)
+                custom_prompt = custom_prompt.replace("##WORDS##", words)
                 
                 # Combine additive_prompt and custom_prompt if additive_prompt has a value
                 if additive_prompt:
@@ -1003,7 +1005,7 @@ Merge image concepts if there is more than one.
 Always blend the concepts, never talk about splits or parallel. 
 Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
 Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
-CRITICAL: TRY TO OUTPUT ONLY IN 200 WORDS"""
+CRITICAL: TRY TO OUTPUT ONLY IN 200 WORDS"""##
 
             poster_prompt = f"""
 Title: {"Use the title '" + custom_title + "'" if poster and custom_title else "A catchy, intriguing title that captures the essence of the scene"}, place the title in "".

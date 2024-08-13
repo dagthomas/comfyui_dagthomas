@@ -1,7 +1,7 @@
 {
     "preprompt": "clothes designed by",
     "separator": "and",
-    "endprompt": "",
+    "endprompt": ",",
     "items": [
         "acne studios",
         "akris",

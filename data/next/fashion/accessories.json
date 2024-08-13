@@ -1,7 +1,7 @@
 {
-    "preprompt": "",
+    "preprompt": "wearing ",
     "separator": "and",
-    "endprompt": "accessory",
+    "endprompt": "accessory,",
     "items": [
         "anklet",
         "arm warmers",

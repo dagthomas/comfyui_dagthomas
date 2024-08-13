@@ -1,7 +1,7 @@
 {
-    "preprompt": "",
+    "preprompt": "wearing",
     "separator": "AND",
-    "endprompt": "custom outfit",
+    "endprompt": "custom outfit,",
     "items": [
         "1920s art deco",
         "1920s flapper",

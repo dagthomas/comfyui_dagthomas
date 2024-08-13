@@ -1,7 +1,7 @@
 {
-    "preprompt": "wearing",
+    "preprompt": "with",
     "separator": "AND",
-    "endprompt": "hair styling",
+    "endprompt": ",",
     "items": [
         "afro (hairstyle)",
         "bald with beard (haircut)",

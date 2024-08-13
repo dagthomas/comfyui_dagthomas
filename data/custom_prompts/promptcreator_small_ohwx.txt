@@ -1,7 +1,7 @@
 Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
 
 If you find text in the image:
-Quote exact text and output it and state it is a big title as: "[exact text]"
+Quote the exact text and describe its placement in the scene: "[exact text]"
 Describe placement
 Suggest fitting font/style
 
@@ -19,5 +19,5 @@ Always blend the concepts, never talk about splits or parallel.
 Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
 Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
 ALWAYS make the main character: ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUNS##, etc
-CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS
+CRITICAL: TRY TO OUTPUT ONLY IN ##WORDS## WORDS
 NEVER transition a scene, always make it ONE scene.
