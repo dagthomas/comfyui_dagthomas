@@ -971,33 +971,61 @@ class OllamaNode:
 
     def generate(self, input_text, happy_talk, compress, compression_level, poster, custom_base_prompt="", custom_model="llama3.1:8b", ollama_url="http://localhost:11434/api/generate", custom_title="", override=""):
         try:
-            default_happy_prompt = """Create a detailed visually descriptive caption of this description, which will be used as a prompt for a text to image AI system (caption only, no instructions like "create an image").Remove any mention of digital artwork or artwork style. Give detailed visual descriptions of the character(s), including ethnicity, skin tone, expression etc. Imagine using keywords for a still for someone who has aphantasia. Describe the image style, e.g. any photographic or art styles / techniques utilized. Make sure to fully describe all aspects of the cinematography, with abundant technical details and visual descriptions. If there is more than one image, combine the elements and characters from all of the images creatively into a single cohesive composition with a single background, inventing an interaction between the characters. Be creative in combining the characters into a single cohesive scene. Focus on two primary characters (or one) and describe an interesting interaction between them, such as a hug, a kiss, a fight, giving an object, an emotional reaction / interaction. If there is more than one background in the images, pick the most appropriate one. Your output is only the caption itself, no comments or extra formatting. The caption is in a single long paragraph. If you feel the images are inappropriate, invent a new scene / characters inspired by these. Additionally, incorporate a specific movie director's visual style (e.g. Wes Anderson, Christopher Nolan, Quentin Tarantino) and describe the lighting setup in detail, including the type, color, and placement of light sources to create the desired mood and atmosphere. Including details about the film grain, color grading."""
+            default_happy_prompt = """Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
+If you find text in the image:
+Quote exact text and output it and state it is a big title as: "[exact text]"
+Describe placement
+Suggest fitting font/style
+Main subject details
+Artistic style and theme
+Setting and narrative contribution
+Lighting characteristics
+Color palette and emotional tone
+Camera angle and focus
+Merge image concepts if there is more than one.
+Always blend the concepts, never talk about splits or parallel. 
+Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
+Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
+CRITICAL: TRY TO OUTPUT ONLY IN 150 WORDS"""
 
-            default_simple_prompt = """Create a brief, straightforward caption for this description, suitable for a text-to-image AI system. Focus on the main elements, key characters, and overall scene without elaborate details. Provide a clear and concise description in one or two sentences."""
+            default_simple_prompt = """Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
+If you find text in the image:
+Quote exact text and output it and state it is a big title as: "[exact text]"
+Describe placement
+Suggest fitting font/style
+Main subject details
+Artistic style and theme
+Setting and narrative contribution
+Lighting characteristics
+Color palette and emotional tone
+Camera angle and focus
+Merge image concepts if there is more than one.
+Always blend the concepts, never talk about splits or parallel. 
+Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
+Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
+CRITICAL: TRY TO OUTPUT ONLY IN 200 WORDS"""
 
-            poster_prompt = f"""Analyze the provided description and extract key information to create a movie poster style description. Format the output as follows:
-
+            poster_prompt = f"""
 Title: {"Use the title '" + custom_title + "'" if poster and custom_title else "A catchy, intriguing title that captures the essence of the scene"}, place the title in "".
-Main character: Give a description of the main character.
-Background: Describe the background in detail.
-Supporting characters: Describe the supporting characters
-Branding type: Describe the branding type
-Tagline: Include a tagline that captures the essence of the movie.
-Visual style: Ensure that the visual style fits the branding type and tagline.
-You are allowed to make up film and branding names, and do them like 80's, 90's or modern movie posters.
+Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
 
-Output should NEVER be markdown or include any formatting.
-NEVER ADD ANY HAPPY TALK IN THE PROMPT
-Always add font type and color to describe the title
+If you find text in the image:
+Quote exact text and output it and state it is a big title as: "[exact text]"
+Describe placement
+Suggest fitting font/style
 
-EXAMPLE OF WANTED OUTPUT: 
-Title: Display the title "Verdant Spirits" in elegant and ethereal text, placed centrally at the top of the poster.
-Main Character: Depict a serene and enchantingly beautiful woman with an aura of nature, her face partly adorned and encased with vibrant green foliage and delicate floral arrangements. 
-Background: The background should feature a dreamlike enchanted forest with lush greenery, vibrant flowers, and an ethereal glow emanating from the foliage. 
-Supporting Characters: Add an enigmatic skeletal figure entwined with glowing, bioluminescent leaves and plants, subtly blending with the dark, verdant background. 
-Studio Ghibli Branding: Incorporate the Studio Ghibli logo at the bottom center of the poster to establish it as an official Ghibli film.
-Tagline: Include a tagline that reads: "Where Nature's Secrets Come to Life" prominently on the poster.
-Visual Style: Ensure the overall visual style is consistent with Studio Ghiblis signature look."""
+Main subject details
+Artistic style and theme
+Setting and narrative contribution
+Lighting characteristics
+Color palette and emotional tone
+Camera angle and focus
+
+Merge image concepts if there is more than one.
+Always blend the concepts, never talk about splits or parallel. 
+Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
+Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
+CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS"""
 
             if poster:
                 base_prompt = poster_prompt
