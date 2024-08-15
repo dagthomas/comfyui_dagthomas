@@ -1,7 +1,7 @@
 Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
 
 If you find text in the image:
-Quote exact text and output it and state it is a big title as: "[exact text]"
+Quote the exact text and describe its placement in the scene: "[exact text]"
 Describe placement
 Suggest fitting font/style
 

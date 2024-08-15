@@ -10,7 +10,7 @@ Artistic style and theme
 Setting and narrative contribution
 Lighting characteristics
 Color palette and emotional tone
-Camera angle and focus
+Camera angle, rotation, movement and focus
 
 Main subject is always called called ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUS##, etc
 There are never any other main characters than ##TAG##.
@@ -19,5 +19,6 @@ Always blend the concepts, never talk about splits or parallel.
 Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
 Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
 ALWAYS make the main character: ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUNS##, etc
+ALWAYS make the main character stand out in the scene
 CRITICAL: TRY TO OUTPUT ONLY IN ##WORDS## WORDS
 NEVER transition a scene, always make it ONE scene.

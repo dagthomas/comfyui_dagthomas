@@ -20,6 +20,8 @@ from color_matcher import ColorMatcher
 from color_matcher.normalizer import Normalizer
 import tempfile
 import chardet
+from collections import Counter
+from typing import List
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
@@ -221,7 +223,7 @@ class RandomIntegerNode:
         if min_value > max_value:
             min_value, max_value = max_value, min_value
         result = random.randint(min_value, max_value)
-        print(f"Generating random int between {min_value} and {max_value}: {result}")
+        # print(f"Generating random int between {min_value} and {max_value}: {result}")
         return (result,)
     
 class FlexibleStringMergerNode:
@@ -736,7 +738,7 @@ ALWAYS blend concepts into one concept if there are multiple images. Ensure that
             )
             
             content = response.choices[0].message.content
-            print(content)
+            # print(content)
 
             # Check if the content is wrapped in Markdown code blocks
             if content.startswith("```json") and content.endswith("```"):
@@ -832,7 +834,7 @@ class Gpt4CustomVision:
                 else:
                     full_prompt = custom_prompt if custom_prompt else "Analyze this image."
             
-            print(f"Full prompt: {full_prompt}")
+            # print(f"Full prompt: {full_prompt}")
             
             # Prepare the messages
             messages = [
@@ -1337,13 +1339,13 @@ class PromptGenerator:
 
         # print(f"PromptGenerator String: {replaced}")
         print(f"prompt: {original}")
-        print("")
-        print(f"clip_l: {clip_l}")
-        print("")
-        print(f"clip_g: {clip_g}")
-        print("")
-        print(f"t5xxl: {t5xxl}")
-        print("")
+        # print("")
+        # print(f"clip_l: {clip_l}")
+        # print("")
+        # print(f"clip_g: {clip_g}")
+        # print("")
+        # print(f"t5xxl: {t5xxl}")
+        # print("")
 
         return original, seed, t5xxl, clip_l, clip_g
     
@@ -1712,119 +1714,6 @@ class APNextNode:
             formatted_output = " ".join(formatted_addition).strip()
             additions.append(formatted_output)
 
-        
-class MergedOllamaNode:
-    def __init__(self):
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
-        self.ollama_model = None
-        self.current_model = None
-
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": {
-                "input_text": ("STRING", {"multiline": True}),
-                "happy_talk": ("BOOLEAN", {"default": True}),
-                "compress": ("BOOLEAN", {"default": False}),
-                "compression_level": (["soft", "medium", "hard"],),
-                "poster": ("BOOLEAN", {"default": False}),
-                "image": ("IMAGE",),
-                "temperature": ("FLOAT", {"default": 0.1, "min": 0.01, "max": 1.0, "step": 0.01}),
-                "unload": ("BOOLEAN", {"default": False}),
-                "custom_model": ("STRING", {"default": "llama3.1:8b"}),
-                "ollama_url": ("STRING", {"default": "http://localhost:11434/api/generate"}),
-            },
-            "optional": {
-                "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
-                "custom_title": ("STRING", {"default": ""}),
-                "override": ("STRING", {"multiline": True, "default": ""})
-            }
-        }
-    
-    RETURN_TYPES = ("STRING",)
-    FUNCTION = "generate"
-    CATEGORY = CUSTOM_CATEGORY
-
-    def save_prompt(self, prompt):
-        filename_text = "mini_" + prompt.split(',')[0].strip()
-        filename_text = re.sub(r'[^\w\-_\. ]', '_', filename_text)
-        filename_text = filename_text[:30]  
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-        
-        with open(filename, "w") as file:
-            file.write(prompt)
-        
-        print(f"Prompt saved to {filename}")
-
-    def load_model(self, custom_model, ollama_url):
-        if self.current_model != custom_model:
-            # Unload the previous model if it exists
-            if self.current_model:
-                self.unload_model(ollama_url)
-
-            # Load the new model
-            payload = {
-                "model": custom_model,
-                "prompt": "Hello, World!",  # A simple prompt to load the model
-                "stream": False
-            }
-            response = requests.post(ollama_url, json=payload)
-            response.raise_for_status()
-            
-            self.current_model = custom_model
-            print(f"Loaded model: {custom_model}")
-
-    def unload_model(self, ollama_url):
-        if self.current_model:
-            requests.post(f"{ollama_url}/unload", json={"model": self.current_model})
-            self.current_model = None
-            gc.collect()
-            torch.cuda.empty_cache()
-            print(f"Unloaded model: {self.current_model}")
-
-    def generate(self, input_text, happy_talk, compress, compression_level, poster, image, temperature, unload, custom_model, ollama_url, custom_base_prompt="", custom_title="", override=""):
-        try:
-            # Load the model if it's not already loaded or if it's different
-            self.load_model(custom_model, ollama_url)
-
-            # ... (keep the existing prompt logic) ...
-
-            # Convert image to base64
-            pil_image = ToPILImage()(image[0].permute(2, 0, 1))
-            buffer = BytesIO()
-            pil_image.save(buffer, format="PNG")
-            image_bytes = buffer.getvalue()
-            base64_string = f"data:image/png;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
-
-            # Prepare the final prompt
-            final_prompt = f"{override}\n\n{base_prompt}" if override else base_prompt
-            prompt = f"{final_prompt}\nDescription: {input_text}\n[IMAGE]{base64_string}[/IMAGE]"
-
-            payload = {
-                "model": custom_model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {
-                    "temperature": temperature
-                }
-            }
-
-            response = requests.post(ollama_url, json=payload)
-            response.raise_for_status()
-            result = response.json()['response']
-
-            self.save_prompt(result)
-
-            if unload:
-                self.unload_model(ollama_url)
-
-            return (result,)
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return (f"Error occurred while processing the request: {str(e)}",)
         
 class ApplyEffectsNode:
     #Shoutout to @digitaljohn https://github.com/digitaljohn/comfyui-propost/blob/master/filmgrainer/graingamma.py
@@ -2241,13 +2130,131 @@ class CustomPromptLoader:
         
         return (content,)
     
+class MedianOppositeColorNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"image": ("IMAGE",)}}
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "process"
+    CATEGORY = CUSTOM_CATEGORY
 
+    @staticmethod
+    def tensor2pil(image):
+        return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+
+    @staticmethod
+    def pil2tensor(image):
+        return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
+
+    def process(self, image):
+        pil_image = self.tensor2pil(image)
+        pil_image = pil_image.convert('RGB')
+        img_data = np.array(pil_image)
+        pixels = img_data.reshape(-1, 3)
+        median_color = np.median(pixels, axis=0).astype(int)
+        opposite_color = tuple(255 - c for c in median_color)
+        rgb_string = f"{opposite_color[0]},{opposite_color[1]},{opposite_color[2]}"
+        
+        return (rgb_string,)
+    
+class ProminentOppositeColorNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {"image": ("IMAGE",),
+                             "num_colors": ("INT", {"default": 10, "min": 2, "max": 256})}}
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "process"
+    CATEGORY = "image/analysis"
+
+    @staticmethod
+    def tensor2pil(image):
+        return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+
+    @staticmethod
+    def pil2tensor(image):
+        return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
+
+    def process(self, image, num_colors):
+        pil_image = self.tensor2pil(image)
+        
+        pil_image = pil_image.convert('RGB')
+        
+        pil_image.thumbnail((100, 100))
+        
+        quantized = pil_image.quantize(colors=num_colors)
+        
+        palette = quantized.getpalette()
+        color_counts = Counter(quantized.getdata())
+        
+        most_common_index = color_counts.most_common(1)[0][0]
+        
+        prominent_color = tuple(palette[most_common_index*3:most_common_index*3+3])
+        
+        opposite_color = tuple(255 - c for c in prominent_color)
+        
+        rgb_string = f"{opposite_color[0]},{opposite_color[1]},{opposite_color[2]}"
+        
+        return (rgb_string,)
+
+
+class FileReaderNode:
+    def __init__(self):
+        pass
+    
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "file_path": ("STRING", {"default": "./custom_nodes/comfyui_dagthomas/concat/output.json"}),
+                "amount": ("INT", {"default": 10, "min": 1, "max": 100}),
+                "custom_tag": ("STRING", {"default": ""}),
+            }, 
+            "optional": {                
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF})
+            },
+        }
+    
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "generate_prompt"
+    CATEGORY = CUSTOM_CATEGORY
+
+    def generate_prompt(self, file_path: str, amount: int, custom_tag: str, seed: int = 0) -> tuple:
+        try:
+            # Set the random seed if provided
+            if seed != 0:
+                random.seed(seed)
+
+            # Step 1: Load JSON data from the file with UTF-8 encoding
+            with open(file_path, 'r', encoding='utf-8') as file:
+                json_list = json.load(file)
+            
+            # Step 2: Randomly select the specified number of elements from the list
+            random_values = random.sample(json_list, min(amount, len(json_list)))
+            
+            # Step 3: Join the selected elements into a single string separated by commas
+            result_string = ", ".join(random_values)
+            
+            # Step 4: Add the custom tag if provided
+            if custom_tag:
+                result_string = f"{custom_tag}, {result_string}"
+            
+            return (result_string,)
+        
+        except Exception as e:
+            return (f"Error: {str(e)}",)
+
+# This line is required for ComfyUI to recognize and load the node
+NODE_CLASS_MAPPINGS = {
+    "FileReaderNode": FileReaderNode
+}
 
 NODE_CLASS_MAPPINGS = {
+    "FileReaderNode": FileReaderNode,
     "APNLatent": APNLatent,
     "CustomPromptLoader": CustomPromptLoader,
     "ApplyBloom": ApplyEffectsNode,
-    "MergedOllamaNode": MergedOllamaNode,
     "DynamicStringCombinerNode": DynamicStringCombinerNode,
     "SentenceMixerNode": SentenceMixerNode,
     "RandomIntegerNode": RandomIntegerNode,
@@ -2261,13 +2268,16 @@ NODE_CLASS_MAPPINGS = {
     "GPT4MiniNode": GPT4MiniNode,
     "PromptGenerator": PromptGenerator,
     "PGSD3LatentGenerator": PGSD3LatentGenerator,
+    "MedianOppositeColorNode": MedianOppositeColorNode,
+    "ProminentOppositeColorNode": ProminentOppositeColorNode,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
+    
+    "FileReaderNode": "APNext Local random prompt",
     "APNLatent": "APNext Latent Generator",
     "CustomPromptLoader": "APNext Custom Prompts",
     "ApplyBloom": "APNext Enhanced Effects Node",
-    "MergedOllamaNode": "Merged Ollama",
     "DynamicStringCombinerNode": "APNext Dynamic String Combiner",
     "SentenceMixerNode": "APNext Sentence Mixer",
     "RandomIntegerNode": "APNext Random Integer Generator",
@@ -2281,6 +2291,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "StringMergerNode": "APNext String Merger", 
     "FlexibleStringMergerNode": "APNext Flexible String Merger",
     "OllamaNode": "APNext OllamaNode",
+    "MedianOppositeColorNode": "APNext Median Opposite Color",
+    "ProminentOppositeColorNode": "APNext Prominent Opposite Color",
 }
 
 categories = [d for d in os.listdir(next_dir) if os.path.isdir(os.path.join(next_dir, d))]
