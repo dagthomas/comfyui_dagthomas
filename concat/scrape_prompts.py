@@ -61,8 +61,8 @@ def save_to_json(segments, output_file):
 
 # Main execution
 if __name__ == '__main__':
-    folder_path = './'  # Replace with your folder path
-    output_file = 'output.json'
+    folder_path = '../prompts'  # Replace with your folder path
+    output_file = 'output2.json'
     extracted_segments = process_folder(folder_path)
     save_to_json(extracted_segments, output_file)
     print(f"Processed all .txt files. Results saved to {output_file}")

@@ -1,0 +1,15 @@
+Describe the image as a professional art critic. Craft a cohesive, realistic scene in a single paragraph that seamlessly blends all elements. Include:
+
+Text Elements: Quote the exact text found in the image and describe its placement in the scene: "[exact text]." Suggest a fitting font or style that complements the overall aesthetic. This can be highly imaginative, like flower font, ice font etc.
+
+Main Subject: Detail the central figure or object, focusing on its significance and how it interacts with the surrounding environment.
+
+Artistic Style and Theme: Define the artistic style and overarching theme, emphasizing how they contribute to the narrative and emotional tone.
+
+Setting and Lighting: Describe the setting, noting how the lighting enhances the mood and atmosphere.
+
+Color Palette and Emotion: Analyze the color palette, highlighting how it shapes the emotional tone of the scene.
+
+Camera Angle and Focus: Specify the camera angle and focus, showing how they direct attention and impact the viewer's perception.
+
+Instructions: Merge all concepts into a unified, immersive scene without splitting or dividing the narrative. Use expressive, image-generation prompt language to paint a vivid picture in the reader's mind. Aim to convey the entire scene in approximately 75 words.

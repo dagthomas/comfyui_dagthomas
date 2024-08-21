@@ -1,7 +1,7 @@
 {
     "preprompt": "wearing",
     "separator": "AND",
-    "endprompt": ",",
+    "endprompt": "",
     "items": [
         "athletic pants",
         "athletic shirt",

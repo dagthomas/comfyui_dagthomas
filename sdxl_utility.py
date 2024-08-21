@@ -14,14 +14,13 @@ import torch
 import numpy as np
 from datetime import datetime
 import codecs
-from torchvision.transforms import ToPILImage
 from PIL import Image, ImageFilter, ImageChops, ImageEnhance
 from color_matcher import ColorMatcher
 from color_matcher.normalizer import Normalizer
 import tempfile
 import chardet
 from collections import Counter
-from typing import List
+import io
 
 # Function to load data from a JSON file
 def load_json_file(file_name):
@@ -793,8 +792,24 @@ class Gpt4CustomVision:
         sentences = re.split(r'(?<=[.!?])\s+', text)
         return ' '.join(sentences[:2])
     
+    def combine_images(self, images):
+        # Calculate the total width and maximum height
+        total_width = sum(img.width for img in images)
+        max_height = max(img.height for img in images)
+        
+        # Create a new image with the calculated dimensions
+        combined_image = Image.new('RGB', (total_width, max_height))
+        
+        # Paste each image
+        x_offset = 0
+        for img in images:
+            combined_image.paste(img, (x_offset, 0))
+            x_offset += img.width
+        
+        return combined_image
+
     def encode_image(self, image):
-        buffered = BytesIO()
+        buffered = io.BytesIO()
         image.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
@@ -802,6 +817,8 @@ class Gpt4CustomVision:
         i = 255. * img_tensor.cpu().numpy()
         img_array = np.clip(i, 0, 255).astype(np.uint8)
         return Image.fromarray(img_array)
+
+
     
     def save_prompt(self, prompt):
         filename_text = "custom_vision_json_" + ''.join(c if c.isalnum() or c in '-_' else '_' for c in prompt[:30])
@@ -847,18 +864,25 @@ class Gpt4CustomVision:
             ]
 
             # Handle single image or multiple images
+
             if len(images.shape) == 3:  # Single image
                 images = [images]
             else:  # Multiple images
                 images = [img for img in images]
 
-            for img_tensor in images:
-                pil_image = self.tensor_to_pil(img_tensor)
-                base64_image = self.encode_image(pil_image)
-                messages[0]["content"].append({
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/png;base64,{base64_image}"}
-                })
+            pil_images = [self.tensor_to_pil(img_tensor) for img_tensor in images]
+            
+            # Combine images into a single image
+            combined_image = self.combine_images(pil_images)
+            
+            # Encode the combined image
+            base64_image = self.encode_image(combined_image)
+
+            # Add the combined image to the message
+            messages[0]["content"].append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+            })
 
             response = self.client.chat.completions.create(
                 model="gpt-4o",
@@ -1068,6 +1092,8 @@ CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS"""
             print(f"An error occurred: {e}")
             return (f"Error occurred while processing the request: {str(e)}",)
         
+
+             
 class GPT4MiniNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -1679,7 +1705,16 @@ class APNextNode:
         if separator:
             modified_prompt = f"{modified_prompt}{separator}"
 
-        random_output = f"{' '.join(random_additions)}{separator}" if random_additions else ""
+        # Construct random output, including 'string' if it exists
+        random_output = ""
+        if string:
+            random_output += string
+        if random_additions:
+            if random_output:
+                random_output += " "
+            random_output += " ".join(random_additions)
+        if random_output and separator:
+            random_output += separator
 
         return (modified_prompt, random_output)
 
@@ -2273,7 +2308,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    
     "FileReaderNode": "APNext Local random prompt",
     "APNLatent": "APNext Latent Generator",
     "CustomPromptLoader": "APNext Custom Prompts",

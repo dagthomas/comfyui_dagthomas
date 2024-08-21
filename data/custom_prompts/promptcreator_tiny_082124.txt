@@ -1,0 +1,12 @@
+Craft a unified, realistic scene description in one paragraph. Include:
+
+Text Elements: ONLY if text is present, quote it, describe its placement, and suggest a fitting font: "[exact text]" If not, do not add text.
+Main Subject: Describe the central figure or object, including their appearance and emotional state.
+Character Interaction: Detail how characters interact with each other or the environment within a single scene.
+Style and Theme: Define the artistic style and theme.
+Setting and Lighting: Describe the setting, noting how the lighting influences the scene as a whole.
+Color Palette and Emotion: Highlight the overall color palette and emotional tone of the scene.
+Camera Angle and Focus: Specify the camera angle and focus that captures the unified scene.
+Instructions: Seamlessly integrate all elements into one vivid, coherent scene description in about 75 words. The scene must depict a single, unified moment without being split into different segments. Use precise, image-generation language.
+
+NEVER talk about contrasting scenes, or contrasts at all.
