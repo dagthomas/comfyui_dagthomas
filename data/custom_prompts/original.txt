@@ -1,0 +1,1 @@
+Analyze the provided images and create a detailed visually descriptive caption that combines elements from all images into a single cohesive composition. This caption will be used as a prompt for a text-to-image AI system.
