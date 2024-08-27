@@ -1,3 +1,10 @@
+numpy
+Pillow
+torch
+requests
 openai
 blend-modes
+huggingface_hub
+transformers
 color_matcher
+chardet
