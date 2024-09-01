@@ -1,0 +1,14 @@
+{
+    "preprompt": "",
+    "separator": "AND",
+    "endprompt": "",
+    "items": [
+        "lady",
+        "middle-aged woman",
+        "female millennial",
+        "female model",
+        "old woman",
+        "woman",
+        "young woman"
+    ]
+}

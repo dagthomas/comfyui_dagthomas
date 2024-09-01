@@ -1,0 +1,240 @@
+{
+    "preprompt": "wearing",
+    "separator": "AND",
+    "endprompt": "custom outfit,",
+    "items": [
+        "1920s gangster",
+        "1930s gentleman",
+        "1940s military",
+        "1950s greaser",
+        "1960s mod",
+        "1970s disco",
+        "1980s business",
+        "1990s grunge",
+        "2000s skater",
+        "2010s hipster",
+        "2020s streetwear",
+        "2030s smart casual",
+        "2040s tech wear",
+        "2050s neo-vintage",
+        "victorian gentleman",
+        "edwardian dandy",
+        "renaissance nobleman",
+        "medieval knight",
+        "western cowboy",
+        "steampunk explorer",
+        "cyberpunk rebel"
+    ],
+    "attributes": {
+        "1920s gangster": [
+            "pinstripe suit",
+            "fedora hat",
+            "silk tie",
+            "wingtip shoes",
+            "pocket watch",
+            "suspenders",
+            "spats",
+            "carnation boutonnière"
+        ],
+        "1930s gentleman": [
+            "double-breasted suit",
+            "pocket square",
+            "oxford shoes",
+            "bowler hat",
+            "cane",
+            "gloves",
+            "mustache",
+            "monocle"
+        ],
+        "1940s military": [
+            "army uniform",
+            "combat boots",
+            "service cap",
+            "dog tags",
+            "trench coat",
+            "aviator sunglasses",
+            "wristwatch",
+            "cigarette pack"
+        ],
+        "1950s greaser": [
+            "leather jacket",
+            "white t-shirt",
+            "blue jeans",
+            "pompadour hairstyle",
+            "motorcycle boots",
+            "comb",
+            "cigarette pack",
+            "switchblade"
+        ],
+        "1960s mod": [
+            "slim-fit suit",
+            "chelsea boots",
+            "turtleneck sweater",
+            "parka jacket",
+            "mop-top haircut",
+            "sunglasses",
+            "scooter",
+            "target symbol patch"
+        ],
+        "1970s disco": [
+            "flared pants",
+            "wide-collar shirt",
+            "platform shoes",
+            "gold chains",
+            "afro hairstyle",
+            "sunglasses",
+            "medallion necklace",
+            "polyester suit"
+        ],
+        "1980s business": [
+            "power suit",
+            "wide tie",
+            "suspenders",
+            "briefcase",
+            "Rolex watch",
+            "brick cell phone",
+            "slicked-back hair",
+            "pocket protector"
+        ],
+        "1990s grunge": [
+            "flannel shirt",
+            "ripped jeans",
+            "converse sneakers",
+            "beanie",
+            "band t-shirt",
+            "wallet chain",
+            "goatee",
+            "baggy cargo pants"
+        ],
+        "2000s skater": [
+            "oversized t-shirt",
+            "baggy jeans",
+            "skateboard",
+            "vans shoes",
+            "beanie",
+            "chain wallet",
+            "wristbands",
+            "backpack"
+        ],
+        "2010s hipster": [
+            "skinny jeans",
+            "plaid shirt",
+            "thick-rimmed glasses",
+            "beanie",
+            "oxfords",
+            "messenger bag",
+            "beard",
+            "sleeve tattoos"
+        ],
+        "2020s streetwear": [
+            "graphic hoodie",
+            "joggers",
+            "sneakers",
+            "snapback cap",
+            "smartwatch",
+            "crossbody bag",
+            "airpods",
+            "face mask"
+        ],
+        "2030s smart casual": [
+            "3D-printed blazer",
+            "climate-control pants",
+            "self-lacing shoes",
+            "holographic watch",
+            "AR glasses",
+            "biometric cufflinks",
+            "nano-fabric shirt",
+            "smart earbud"
+        ],
+        "2040s tech wear": [
+            "exoskeleton suit",
+            "haptic feedback gloves",
+            "neural interface headset",
+            "adaptive camouflage jacket",
+            "nanotech boots",
+            "holographic accessory",
+            "energy-harvesting backpack",
+            "air purification mask"
+        ],
+        "2050s neo-vintage": [
+            "retro-futuristic suit",
+            "hover shoes",
+            "holographic pocket square",
+            "antigravity watch",
+            "nano-fiber fedora",
+            "AI-powered cane",
+            "digital monocle",
+            "quantum pocket watch"
+        ],
+        "victorian gentleman": [
+            "frock coat",
+            "top hat",
+            "cravat",
+            "waistcoat",
+            "pocket watch",
+            "walking stick",
+            "monocle",
+            "mutton chops"
+        ],
+        "edwardian dandy": [
+            "morning coat",
+            "ascot tie",
+            "striped trousers",
+            "bowler hat",
+            "spats",
+            "cane",
+            "boutonnière",
+            "waxed mustache"
+        ],
+        "renaissance nobleman": [
+            "doublet",
+            "breeches",
+            "ruff collar",
+            "codpiece",
+            "plumed hat",
+            "rapier",
+            "cape",
+            "pointed shoes"
+        ],
+        "medieval knight": [
+            "chainmail armor",
+            "surcoat",
+            "helmet",
+            "shield",
+            "sword",
+            "gauntlets",
+            "greaves",
+            "spurs"
+        ],
+        "western cowboy": [
+            "stetson hat",
+            "leather vest",
+            "bandana",
+            "chaps",
+            "cowboy boots",
+            "spurs",
+            "revolver",
+            "lasso"
+        ],
+        "steampunk explorer": [
+            "top hat with goggles",
+            "waistcoat",
+            "pocket watch",
+            "leather boots",
+            "brass telescope",
+            "mechanical arm",
+            "airship blueprints",
+            "steam-powered gadgets"
+        ],
+        "cyberpunk rebel": [
+            "neon-lit jacket",
+            "augmented reality visor",
+            "holographic tattoos",
+            "cyber-enhanced limbs",
+            "data-jack implants",
+            "EMP grenades",
+            "hacker's gloves",
+            "retro-futuristic sneakers"
+        ]
+    }
+}

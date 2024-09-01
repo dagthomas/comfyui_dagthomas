@@ -1,0 +1,14 @@
+{
+    "preprompt": "",
+    "separator": "AND",
+    "endprompt": "",
+    "items": [
+        "gentleman",
+        "man",
+        "middle-aged man",
+        "millennial man",
+        "male model",
+        "old man",
+        "young man"
+    ]
+}
