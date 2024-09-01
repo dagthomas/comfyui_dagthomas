@@ -297,4 +297,65 @@ For example, using the "Visual Effects" category we just created:
 
 Remember that the `APNextNode` function will handle the random selection and formatting based on the JSON structure you provide. This can greatly enhance the variety and specificity of prompts for AI image generation.
 
+Here's a more professional version of the text, formatted as a README.md:
 
+# ComfyUI Node Family
+
+This new family of nodes for ComfyUI offers extensive flexibility and capabilities for prompt engineering and image generation workflows.
+
+## Overview
+
+![Node Family Overview](https://github.com/user-attachments/assets/89c23e6f-44f5-4d2f-bb37-abf8cbd797c4)
+
+The system includes numerous nodes that can be chained together to create complex workflows:
+
+![Node Chaining Example](https://github.com/user-attachments/assets/bf402844-ffdc-4dcf-bc6c-28d40e125011)
+
+## Features
+
+### GPT-4 Integration
+
+Enhance prompts using the GPT-4 node:
+
+![GPT-4 Node](https://github.com/user-attachments/assets/3cff0d18-a6e7-43c3-be5a-b2fb8964fa23)
+
+### Local Ollama Support
+
+Utilize local language models with the Ollama node:
+
+![Ollama Node](https://github.com/user-attachments/assets/9d8f7eaa-07c2-48a2-bf67-37ebfbbfa4ba)
+
+### Image-Based Prompt Generation
+
+Create prompts based on images using various vision models:
+
+![Image-Based Prompt Generation](https://github.com/user-attachments/assets/c9bbceaf-4a84-4d89-aecd-6026bafa1ab7)
+
+### Dynamic Prompt Generation
+
+Automatically incorporate LORA tokens using pre-defined prompts:
+
+![Dynamic Prompt Generation](https://github.com/user-attachments/assets/1e69febe-2963-426c-b308-56766006b05e)
+
+### Random Prompt Generator
+
+Generate completely random prompts without the need for external language models:
+
+![Random Prompt Generator](https://github.com/user-attachments/assets/3db6b94a-adca-4853-8530-5a95a79bceb7)
+
+## Installation and Usage
+
+1. Download the example workflow: [apntest.json](https://github.com/user-attachments/files/16830214/apntest.json)
+2. To use GPT workflows, set your OpenAI API key in the environment:
+   ```
+   set OPENAI_API_KEY=sk-your-api-key-here
+   ```
+3. Run ComfyUI
+
+## Custom Extensions
+
+Add your own custom folders within `comfyui_dagthomas/data/next` with custom properties. These will be loaded in ComfyUI alongside the other nodes.
+
+## Note
+
+This project is currently in beta. Detailed documentation is in progress. Explore the various nodes and their capabilities to unlock the full potential of this ComfyUI extension.
