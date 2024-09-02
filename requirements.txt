@@ -8,3 +8,4 @@ huggingface_hub
 transformers
 color_matcher
 chardet
+google-generative-ai
