@@ -1131,7 +1131,26 @@ class GeminiCustomVision:
 
             combined_image = self.fade_images(pil_images, fade_percentage)
 
-            model = genai.GenerativeModel(gemini_model)
+            safety_settings = [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_NONE",
+                },
+            ]
+
+            model = genai.GenerativeModel(gemini_model, safety_settings=safety_settings)
 
 
             response = model.generate_content(
