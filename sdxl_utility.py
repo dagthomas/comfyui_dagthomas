@@ -109,31 +109,6 @@ BODY_TYPES = load_json_file("body_types.json")
 CUSTOM_CATEGORY = "comfyui_dagthomas"
 
 
-@torch.no_grad()
-def skimmed_CFG(x_orig, cond, uncond, cond_scale, skimming_scale):
-    denoised = x_orig - ((x_orig - uncond) + cond_scale * (cond - uncond))
-
-    outer_influence = (
-        (torch.sign(cond - uncond) == torch.sign(cond))
-        & (
-            torch.sign(cond)
-            == torch.sign(cond * cond_scale - uncond * (cond_scale - 1))
-        )
-        & (torch.sign(denoised) == torch.sign(denoised - x_orig))
-    )
-
-    low_cfg_denoised_outer = x_orig - (
-        (x_orig - uncond) + skimming_scale * (cond - uncond)
-    )
-    low_cfg_denoised_outer_difference = denoised - low_cfg_denoised_outer
-
-    cond[outer_influence] -= (
-        low_cfg_denoised_outer_difference[outer_influence] / cond_scale
-    )
-
-    return cond
-
-
 class DynamicStringCombinerNode:
     @classmethod
     def INPUT_TYPES(s):
@@ -333,58 +308,6 @@ class StringMergerNode:
         merged = merged.strip()
 
         return (merged,)
-
-
-class CFGSkimmingSingleScalePreCFGNode:
-    @classmethod
-    def INPUT_TYPES(cls):
-        return {
-            "required": {
-                "model": ("MODEL",),
-                "skimming_cfg": (
-                    "FLOAT",
-                    {
-                        "default": 7.0,
-                        "min": 0.0,
-                        "max": 7.0,
-                        "step": 0.1,
-                        "round": 0.01,
-                    },
-                ),
-                "razor_skim": ("BOOLEAN", {"default": False}),
-            }
-        }
-
-    RETURN_TYPES = ("MODEL",)
-    FUNCTION = "patch"
-    CATEGORY = CUSTOM_CATEGORY
-
-    def patch(self, model, skimming_cfg, razor_skim):
-        @torch.no_grad()
-        def pre_cfg_patch(args):
-            conds_out, cond_scale, x_orig = (
-                args["conds_out"],
-                args["cond_scale"],
-                args["input"],
-            )
-
-            if not torch.any(conds_out[1]):
-                return conds_out
-
-            uncond_skimming_scale = 0.0 if razor_skim else skimming_cfg
-            conds_out[1] = skimmed_CFG(
-                x_orig, conds_out[1], conds_out[0], cond_scale, uncond_skimming_scale
-            )
-            conds_out[0] = skimmed_CFG(
-                x_orig, conds_out[0], conds_out[1], cond_scale, skimming_cfg
-            )
-
-            return conds_out
-
-        new_model = model.clone()
-        new_model.set_model_sampler_pre_cfg_function(pre_cfg_patch)
-        return (new_model,)
-
 
 class PGSD3LatentGenerator:
     def __init__(self):
@@ -3607,7 +3530,6 @@ NODE_CLASS_MAPPINGS = {
     "OllamaNode": OllamaNode,
     "FlexibleStringMergerNode": FlexibleStringMergerNode,
     "StringMergerNode": StringMergerNode,
-    "CFGSkimming": CFGSkimmingSingleScalePreCFGNode,
     "Gpt4CustomVision": Gpt4CustomVision,
     "GPT4VisionNode": GPT4VisionNode,
     "Gpt4VisionCloner": Gpt4VisionCloner,
@@ -3617,7 +3539,6 @@ NODE_CLASS_MAPPINGS = {
     "MedianOppositeColorNode": MedianOppositeColorNode,
     "ProminentOppositeColorNode": ProminentOppositeColorNode,
     "PhiModelLoader": PhiModelLoader,
-    
     "PhiModelInference": PhiModelInference,
     "PhiCustomModelInference": PhiCustomModelInference,
     "GeminiCustomVision": GeminiCustomVision
@@ -3638,13 +3559,12 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Gpt4CustomVision": "APNext Gpt4CustomVision",
     "GPT4VisionNode": "APNext GPT4VisionNode",
     "Gpt4VisionCloner": "APNext Gpt4VisionCloner",
-    "CFGSkimming": "APNext CFG Skimming",
     "StringMergerNode": "APNext String Merger",
     "FlexibleStringMergerNode": "APNext Flexible String Merger",
     "OllamaNode": "APNext OllamaNode",
     "MedianOppositeColorNode": "APNext Median Opposite Color",
     "ProminentOppositeColorNode": "APNext Prominent Opposite Color",
-     "PhiModelLoader": "APNext Phi Model Loader",
+    "PhiModelLoader": "APNext Phi Model Loader",
     "PhiModelInference": "APNext Phi Model Inference",
     "PhiCustomModelInference": "APNext Phi Custom Model Inference",
     "GeminiCustomVision": "APNext Gemini Custom Vision"
