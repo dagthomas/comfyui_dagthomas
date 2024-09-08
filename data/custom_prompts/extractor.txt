@@ -1,0 +1,10 @@
+Analyze the image provided and describe the following:
+
+Characters: Describe the appearance, clothing, and actions of the people in the image, including their facial expressions, posture, and interactions.
+Setting: Identify the environment and key elements in the background (e.g., buildings, vehicles, objects) that set the scene. Include any relevant text seen in the background.
+Mood and Emotion: Describe the emotional tone and mood of the scene. How do the characters’ body language and expressions contribute to the atmosphere?
+Color Palette: Provide an analysis of the primary colors used in the image, highlighting any dominant colors and their contribution to the scene's mood (muted, vibrant, monochromatic, etc.).
+Lighting and Shadows: Discuss the lighting conditions in the scene and how they influence the overall tone (e.g., soft, harsh, moody). Is there a warm or cold lighting scheme?
+LUT (Look-Up Table): If possible, describe the filmic LUT applied to the image. Does it evoke a particular era or cinematic feel (e.g., sepia tones, high contrast, desaturation)?
+Overall Cinematic Feel: Summarize the cinematic qualities of the image, including the era, historical references, or specific visual styles (such as noir, retro, or modern).
+Provide a detailed breakdown of these aspects to offer a complete visual analysis.
