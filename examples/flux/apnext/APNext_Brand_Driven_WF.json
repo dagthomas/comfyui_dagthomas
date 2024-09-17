@@ -1,0 +1,1065 @@
+{
+  "last_node_id": 172,
+  "last_link_id": 321,
+  "nodes": [
+    {
+      "id": 59,
+      "type": "APNLatent",
+      "pos": [
+        23.87878769816774,
+        461.8282649492977
+      ],
+      "size": {
+        "0": 315,
+        "1": 218
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            232
+          ],
+          "slot_index": 0,
+          "shape": 3
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            222
+          ],
+          "slot_index": 1,
+          "shape": 3
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            223
+          ],
+          "slot_index": 2,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "APNLatent"
+      },
+      "widgets_values": [
+        1344,
+        0,
+        1,
+        1,
+        "4:3",
+        false
+      ]
+    },
+    {
+      "id": 78,
+      "type": "Fast Groups Muter (rgthree)",
+      "pos": {
+        "0": -734,
+        "1": 1848,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0,
+        "6": 0,
+        "7": 0,
+        "8": 0,
+        "9": 0
+      },
+      "size": {
+        "0": 605.4334716796875,
+        "1": 250
+      },
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "OPT_CONNECTION",
+          "type": "*",
+          "links": null
+        }
+      ],
+      "properties": {
+        "matchColors": "",
+        "matchTitle": "",
+        "showNav": true,
+        "sort": "position",
+        "customSortAlphabet": "",
+        "toggleRestriction": "default"
+      }
+    },
+    {
+      "id": 80,
+      "type": "SaveImage",
+      "pos": [
+        21,
+        823
+      ],
+      "size": {
+        "0": 1799.6265869140625,
+        "1": 1212.839111328125
+      },
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 275
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "AP_"
+      ]
+    },
+    {
+      "id": 107,
+      "type": "CLIPTextEncode",
+      "pos": [
+        424,
+        182
+      ],
+      "size": {
+        "0": 376.6766357421875,
+        "1": 54
+      },
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 261
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 321,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            220
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 108,
+      "type": "VAEDecode",
+      "pos": [
+        2320,
+        189
+      ],
+      "size": {
+        "0": 140,
+        "1": 46
+      },
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 209
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 210
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            275
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 109,
+      "type": "VAELoader",
+      "pos": [
+        1532,
+        208
+      ],
+      "size": {
+        "0": 210,
+        "1": 58
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            210
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 110,
+      "type": "DualCLIPLoader",
+      "pos": [
+        23.87878769816774,
+        161.82826494929765
+      ],
+      "size": {
+        "0": 318.3628845214844,
+        "1": 106
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            261
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DualCLIPLoader"
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn.safetensors",
+        "clip_l.safetensors",
+        "flux"
+      ]
+    },
+    {
+      "id": 111,
+      "type": "UNETLoader",
+      "pos": [
+        23.87878769816774,
+        311.82826494929765
+      ],
+      "size": {
+        "0": 319.3628845214844,
+        "1": 94.02400207519531
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            301
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader"
+      },
+      "widgets_values": [
+        "flux\\flux1-dev-fp8.safetensors",
+        "fp8_e4m3fn"
+      ]
+    },
+    {
+      "id": 112,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1803,
+        186
+      ],
+      "size": {
+        "0": 657.7457885742188,
+        "1": 582.8757934570312
+      },
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 211,
+          "slot_index": 0
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 212,
+          "slot_index": 1
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 213,
+          "slot_index": 2
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 214,
+          "slot_index": 3
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 232,
+          "slot_index": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [],
+          "slot_index": 0,
+          "shape": 3
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": [
+            209
+          ],
+          "slot_index": 1,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced"
+      }
+    },
+    {
+      "id": 113,
+      "type": "KSamplerSelect",
+      "pos": [
+        1095,
+        463
+      ],
+      "size": {
+        "0": 219.2825164794922,
+        "1": 58
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            213
+          ],
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "euler"
+      ]
+    },
+    {
+      "id": 114,
+      "type": "BasicScheduler",
+      "pos": [
+        1096,
+        289
+      ],
+      "size": {
+        "0": 218.59176635742188,
+        "1": 115.6019287109375
+      },
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 216,
+          "slot_index": 0
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            214
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "beta",
+        25,
+        1
+      ]
+    },
+    {
+      "id": 115,
+      "type": "BasicGuider",
+      "pos": [
+        1092,
+        176
+      ],
+      "size": {
+        "0": 220.7312469482422,
+        "1": 49.22465896606445
+      },
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 217,
+          "slot_index": 0
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 218,
+          "slot_index": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            212
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider"
+      }
+    },
+    {
+      "id": 116,
+      "type": "RandomNoise",
+      "pos": [
+        1483,
+        322
+      ],
+      "size": {
+        "0": 259.623291015625,
+        "1": 88.16699981689453
+      },
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            211
+          ],
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        1102073319126483,
+        "randomize"
+      ]
+    },
+    {
+      "id": 117,
+      "type": "ModelSamplingFlux",
+      "pos": [
+        858,
+        287
+      ],
+      "size": {
+        "0": 210,
+        "1": 122
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 301
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": 222,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": 223,
+          "widget": {
+            "name": "height"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            216,
+            217
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingFlux"
+      },
+      "widgets_values": [
+        1.1500000000000001,
+        0.5,
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": 118,
+      "type": "FluxGuidance",
+      "pos": [
+        857,
+        173
+      ],
+      "size": {
+        "0": 211.60000610351562,
+        "1": 58
+      },
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 220
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            218
+          ],
+          "slot_index": 0,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxGuidance"
+      },
+      "widgets_values": [
+        2.2
+      ]
+    },
+    {
+      "id": 169,
+      "type": "BrandsPromptNode",
+      "pos": [
+        -813,
+        188
+      ],
+      "size": [
+        400,
+        222
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "string"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            318
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BrandsPromptNode"
+      },
+      "widgets_values": [
+        "",
+        ",",
+        "",
+        1060585273789839,
+        "randomize",
+        false,
+        "Random"
+      ]
+    },
+    {
+      "id": 170,
+      "type": "CinematicPromptNode",
+      "pos": [
+        -811,
+        463
+      ],
+      "size": [
+        400,
+        438
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "link": 319,
+          "widget": {
+            "name": "string"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": [
+            320
+          ],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CinematicPromptNode"
+      },
+      "widgets_values": [
+        "",
+        ",",
+        "",
+        1102656743940545,
+        "randomize",
+        false,
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "id": 171,
+      "type": "KeywordsPromptNode",
+      "pos": [
+        -376,
+        188
+      ],
+      "size": [
+        339.57393299492173,
+        409.21483345299634
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "type": "STRING",
+          "link": 318,
+          "widget": {
+            "name": "string"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            319
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KeywordsPromptNode"
+      },
+      "widgets_values": [
+        "",
+        ",",
+        "",
+        609345063152968,
+        "randomize",
+        false,
+        "Random",
+        "Random",
+        "Random",
+        "None",
+        "Random",
+        "None",
+        "None",
+        "None",
+        "Random"
+      ]
+    },
+    {
+      "id": 172,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -376,
+        658
+      ],
+      "size": [
+        324.2581494810738,
+        148.0394862406606
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 320,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            321
+          ],
+          "shape": 6,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        " Branded by dream,  fine-grained palatial genres are film noir image type is multiple exposure strange, Italian Mafia aesthetic visual effects and film still and sharpen effects bold color grading color grading pastel and wintry and deep color modifier Color assimilation optical effect sci-fi adventure and historical movie genre Brazil (1985) and The Social Network (2010) and The Crow (1994) movie likeness crane shot,"
+      ]
+    }
+  ],
+  "links": [
+    [
+      209,
+      112,
+      1,
+      108,
+      0,
+      "LATENT"
+    ],
+    [
+      210,
+      109,
+      0,
+      108,
+      1,
+      "VAE"
+    ],
+    [
+      211,
+      116,
+      0,
+      112,
+      0,
+      "NOISE"
+    ],
+    [
+      212,
+      115,
+      0,
+      112,
+      1,
+      "GUIDER"
+    ],
+    [
+      213,
+      113,
+      0,
+      112,
+      2,
+      "SAMPLER"
+    ],
+    [
+      214,
+      114,
+      0,
+      112,
+      3,
+      "SIGMAS"
+    ],
+    [
+      216,
+      117,
+      0,
+      114,
+      0,
+      "MODEL"
+    ],
+    [
+      217,
+      117,
+      0,
+      115,
+      0,
+      "MODEL"
+    ],
+    [
+      218,
+      118,
+      0,
+      115,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      220,
+      107,
+      0,
+      118,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      222,
+      59,
+      1,
+      117,
+      1,
+      "INT"
+    ],
+    [
+      223,
+      59,
+      2,
+      117,
+      2,
+      "INT"
+    ],
+    [
+      232,
+      59,
+      0,
+      112,
+      4,
+      "LATENT"
+    ],
+    [
+      261,
+      110,
+      0,
+      107,
+      0,
+      "CLIP"
+    ],
+    [
+      275,
+      108,
+      0,
+      80,
+      0,
+      "IMAGE"
+    ],
+    [
+      301,
+      111,
+      0,
+      117,
+      0,
+      "MODEL"
+    ],
+    [
+      318,
+      169,
+      0,
+      171,
+      0,
+      "STRING"
+    ],
+    [
+      319,
+      171,
+      0,
+      170,
+      0,
+      "STRING"
+    ],
+    [
+      320,
+      170,
+      1,
+      172,
+      0,
+      "STRING"
+    ],
+    [
+      321,
+      172,
+      0,
+      107,
+      1,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "title": "Load FLUX.1",
+      "bounding": [
+        4,
+        82,
+        360,
+        692
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "Set Parameters",
+      "bounding": [
+        374,
+        82,
+        2110,
+        699
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "locked": false
+    },
+    {
+      "title": "APN Prompts",
+      "bounding": [
+        -844,
+        82,
+        834,
+        1712
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "locked": false
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5989500000000068,
+      "offset": [
+        1601.5836514452087,
+        235.63125943924135
+      ]
+    },
+    "0246.VERSION": [
+      0,
+      0,
+      4
+    ]
+  },
+  "version": 0.4
+}
