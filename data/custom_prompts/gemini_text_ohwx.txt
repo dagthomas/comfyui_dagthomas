@@ -1,0 +1,18 @@
+Analyze the provided text input. Based on the text:
+
+Create a cohesive, realistic scene in a single paragraph. Include:
+Main subject details
+Artistic style and theme
+Setting and narrative contribution
+Lighting characteristics
+Color palette and emotional tone
+Narrative perspective and focus
+
+The main subject is always called ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUNS##, etc.
+There are never any other main characters than ##TAG##.
+Blend all elements into a unified reality. Use descriptive, evocative language.
+No preamble, questions, or commentary.
+ALWAYS make the main character: ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUNS##, etc
+ALWAYS make the main character stand out in the scene
+CRITICAL: TRY TO OUTPUT ONLY IN ##WORDS## WORDS
+NEVER transition a scene, always make it ONE scene.

@@ -623,7 +623,113 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
             print(f"Images tensor shape: {images.shape}")
             print(f"Images tensor type: {images.dtype}")
             return (f"Error occurred while processing the request: {str(e)}",)
+        
+class GeminiTextOnly:
+    def __init__(self):
+        self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
+        if not self.gemini_api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is not set")
+        genai.configure(api_key=self.gemini_api_key)
+        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
+        os.makedirs(self.prompts_dir, exist_ok=True)
 
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "custom_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "additive_prompt": ("STRING", {"multiline": True, "default": ""}),
+                "dynamic_prompt": ("BOOLEAN", {"default": False}),
+                "tag": ("STRING", {"default": "ohwx man"}),
+                "sex": ("STRING", {"default": "male"}),
+                "words": ("STRING", {"default": "100"}),
+                "pronouns": ("STRING", {"default": "him, his"}),
+                "gemini_model": (["gemini-1.5-pro-latest", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", "STRING")
+    RETURN_NAMES = ("output", "clip_l")
+    FUNCTION = "process_text"
+    CATEGORY = "dagthomas"
+
+    def extract_first_two_sentences(self, text):
+        sentences = re.split(r"(?<=[.!?])\s+", text)
+        return " ".join(sentences[:2])
+
+    def save_prompt(self, prompt):
+        filename_text = "gemini_text_only_" + "".join(
+            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
+        )
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"{filename_text}_{timestamp}.txt"
+        filename = os.path.join(self.prompts_dir, base_filename)
+
+        try:
+            with open(filename, "w", encoding="utf-8") as file:
+                file.write(prompt)
+            print(f"Prompt saved to {filename}")
+        except Exception as e:
+            print(f"Error saving prompt: {e}")
+
+    def process_text(
+        self,
+        custom_prompt="",
+        additive_prompt="",
+        tag="",
+        sex="other",
+        pronouns="them, their",
+        dynamic_prompt=False,
+        words="100",
+        gemini_model="gemini-1.5-pro-latest",
+    ):
+        try:
+            if not dynamic_prompt:
+                full_prompt = custom_prompt if custom_prompt else "Generate a response."
+            else:
+                custom_prompt = custom_prompt.replace("##TAG##", tag.lower())
+                custom_prompt = custom_prompt.replace("##SEX##", sex)
+                custom_prompt = custom_prompt.replace("##PRONOUNS##", pronouns)
+                custom_prompt = custom_prompt.replace("##WORDS##", words)
+
+                full_prompt = f"{additive_prompt} {custom_prompt}".strip() if additive_prompt else custom_prompt
+
+            safety_settings = [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_NONE",
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_NONE",
+                },
+            ]
+
+            model = genai.GenerativeModel(gemini_model, safety_settings=safety_settings)
+
+            response = model.generate_content(full_prompt)
+
+            result = response.text
+
+            self.save_prompt(result)
+
+            return (
+                result,
+                self.extract_first_two_sentences(result),
+            )
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            error_message = f"Error occurred while processing the request: {str(e)}"
+            return (error_message, error_message[:100])
 
 class Gpt4VisionCloner:
     def __init__(self):
@@ -2918,7 +3024,8 @@ NODE_CLASS_MAPPINGS = {
     "PhiModelLoader": PhiModelLoader,
     "PhiModelInference": PhiModelInference,
     "PhiCustomModelInference": PhiCustomModelInference,
-    "GeminiCustomVision": GeminiCustomVision
+    "GeminiCustomVision": GeminiCustomVision,
+    "GeminiTextOnly": GeminiTextOnly,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -2941,7 +3048,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PhiModelLoader": "APNext Phi Model Loader",
     "PhiModelInference": "APNext Phi Model Inference",
     "PhiCustomModelInference": "APNext Phi Custom Model Inference",
-    "GeminiCustomVision": "APNext Gemini Custom Vision"
+    "GeminiCustomVision": "APNext Gemini Custom Vision",
+    "GeminiTextOnly": "APNext Gemini Text Only",
 }
 
 categories = [
