@@ -644,7 +644,7 @@ class GeminiTextOnly:
                 "sex": ("STRING", {"default": "male"}),
                 "words": ("STRING", {"default": "100"}),
                 "pronouns": ("STRING", {"default": "him, his"}),
-                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-exp-1206", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
             }
         }
 
@@ -1045,7 +1045,7 @@ class GeminiCustomVision:
                     "FLOAT",
                     {"default": 15.0, "min": 0.1, "max": 50.0, "step": 0.1},
                 ),
-                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-exp-1206", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
             }
         }
 
