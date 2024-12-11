@@ -644,7 +644,7 @@ class GeminiTextOnly:
                 "sex": ("STRING", {"default": "male"}),
                 "words": ("STRING", {"default": "100"}),
                 "pronouns": ("STRING", {"default": "him, his"}),
-                "gemini_model": (["gemini-1.5-pro-latest", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
             }
         }
 
@@ -676,12 +676,12 @@ class GeminiTextOnly:
         self,
         custom_prompt="",
         additive_prompt="",
-        tag="",
-        sex="other",
-        pronouns="them, their",
+        tag="ohwx man",
+        sex="male",
+        pronouns="him, his",
         dynamic_prompt=False,
         words="100",
-        gemini_model="gemini-1.5-pro-latest",
+        gemini_model="gemini-2.0-flash-exp",
     ):
         try:
             if not dynamic_prompt:
@@ -1045,7 +1045,7 @@ class GeminiCustomVision:
                     "FLOAT",
                     {"default": 15.0, "min": 0.1, "max": 50.0, "step": 0.1},
                 ),
-                "gemini_model": (["gemini-1.5-pro-latest", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
             }
         }
 
@@ -1136,7 +1136,7 @@ class GeminiCustomVision:
         dynamic_prompt=False,
         words="100",
         fade_percentage=15.0,
-        gemini_model="gemini-1.5-pro-latest",
+        gemini_model="gemini-2.0-flash-exp",
     ):
         try:
             if not dynamic_prompt:

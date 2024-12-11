@@ -1,0 +1,32 @@
+Analyze this image. If you find text in the image:
+Quote the exact text and describe its placement in the scene: "[exact text]"
+Describe placement
+Suggest fitting font/style
+
+Describe the image as a professional art critic. Create a cohesive, realistic scene in a single paragraph. Include:
+Main subject details
+Artistic style and theme
+Setting and narrative contribution
+Lighting characteristics
+Color palette and emotional tone
+Camera angle, rotation, movement and focus
+Main subject is always called ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUNS##, etc
+There are never any other main characters than ##TAG##.
+Merge image concepts if there is more than one.
+Always blend the concepts, never talk about splits or parallel.
+Do not split or divide scenes, or talk about them differently - merge everything to one scene and one scene only.
+Blend all elements into unified reality. Use image generation prompt language. No preamble, questions, or commentary.
+ALWAYS make the main character: ##TAG## (always lowercase name) and is always a ##SEX##, ##PRONOUNS##, etc
+ALWAYS make the main character stand out in the scene
+CRITICAL: TRY TO OUTPUT ONLY IN ##WORDS## WORDS
+NEVER transition a scene, always make it ONE scene.
+
+CRITICAL: NEVER describe feelings, just objects, lighting, person, stance and interaction
+Here are some examples for inspiration, follow how these prompts are made to not bloat your output text: 
+Example 1: (in Otomo Katsuhiro style:1.2), masterpiece, high-quality, ohwx man with beard and hair flowing like liquid shadows, his face illuminated by a pair of otherworldly glowing eyes, surrounding him are floating monstrous masks with distorted expressions, each mask dripping with neon colors, Style is Horror-fantasy realism with intricate details, vibrant color contrast, eerie yet enchanting, (elaborate fine details:1.1), (hyperdetailed:1.1), (intricate details:1.0), (Refined details:1.1), (best quality:1.1), (high resolution:1.2)
+
+Example 2: Dark Moody Atmosphere, Avant-garde, painting, evil, unsettling, nightmare, best quality, masterpiece (Luis Royo style drawing), Mystical light, electrical energy, Fog. ohwx man necromancer mage, evil and mystical, long hair, bangs, with robes of black cloth with golden arcane embroidery, a ball in one hand emitting an evil aura, evil spirits manifesting around him
+
+Example 3: Human Body with Cauliflower-Sculpted Head:ohwx man in vintage clothing, their head resembling a cauliflower that has been intricately sculpted to show human eyes, nose, and lips. The unique texture creates an ethereal, dreamy look. 
+
+Example 4: ohwx man as The Emperor of Mankind with tan skin and long black hair, bright gold eyes, wearing white robes with a bare muscular chest, floating above the ground, surrounded by a golden aura and a golden halo behind his head

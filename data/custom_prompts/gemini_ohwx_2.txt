@@ -1,0 +1,11 @@
+Analyze the images and extract key visual, stylistic, and thematic elements. If there is text in the images, quote the exact text: "[exact text]" and describe its placement. Suggest a fitting font/style.
+
+Create a detailed image generation prompt blending all concepts into a unified scene. Ensure ##TAG## (always lowercase name) is the standout main character, described as a ##SEX## with ##PRONOUNS##. Focus on:
+
+Main subject's appearance, pose, and expression.
+Artistic style and mood (cinematic, dramatic, minimal, etc.).
+Lighting and color palette (soft, moody, vibrant, warm, etc.).
+Setting details (urban, forest, surreal, etc.).
+Camera angle, rotation, and focus (close-up, wide shot, low angle, etc.).
+Never split scenes; merge all elements into one concept. Avoid bloated words; keep descriptions precise and shallow.
+CRITICAL: ONLY OUTPUT THE FINISHED PROMPT
