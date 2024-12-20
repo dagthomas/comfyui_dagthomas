@@ -25,7 +25,11 @@ from transformers import AutoProcessor
 def tensor2pil(t_image: torch.Tensor)  -> Image:
     return Image.fromarray(np.clip(255.0 * t_image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
 
+models_file = os.path.join(os.path.dirname(__file__), "data", "gemini_models.json")
 
+with open(models_file, 'r') as f:
+    models_data = json.load(f)
+    gemini_models = models_data.get('models', [])
 # Function to load data from a JSON file
 def load_json_file(file_name):
     # Construct the absolute path to the data file
@@ -635,6 +639,7 @@ class GeminiTextOnly:
 
     @classmethod
     def INPUT_TYPES(s):
+        
         return {
             "required": {
                 "custom_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -644,7 +649,7 @@ class GeminiTextOnly:
                 "sex": ("STRING", {"default": "male"}),
                 "words": ("STRING", {"default": "100"}),
                 "pronouns": ("STRING", {"default": "him, his"}),
-                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-exp-1206", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+                "gemini_model": (gemini_models,),
             }
         }
 
@@ -1045,7 +1050,7 @@ class GeminiCustomVision:
                     "FLOAT",
                     {"default": 15.0, "min": 0.1, "max": 50.0, "step": 0.1},
                 ),
-                "gemini_model": (["gemini-1.5-pro-latest", "gemini-2.0-flash-exp", "gemini-exp-1206", "gemini-1.5-pro-exp-0801", "gemini-1.5-flash"],),
+                "gemini_model": (gemini_models,),
             }
         }
 
