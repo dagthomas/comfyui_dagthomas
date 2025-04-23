@@ -1,0 +1,33 @@
+(Prompt Generation Goal: Create a concise image prompt)
+Instructions for Generation:
+Synthesize Core Elements: Combine the following details into a single, flowing descriptive sentence or two:
+Subject: ##TAG## (a ##SEX##, ##PRONOUNS##). Describe key features (hair, build if relevant, distinguishing marks like freckles if desired), expression, and pose/action.
+Attire: Specify clothing style and key items.
+Setting: Briefly establish the environment and time of day/atmosphere.
+Visual Style: Include keywords for artistic medium (e.g., photorealistic, oil painting, 35mm film), desired aesthetic (e.g., cinematic, moody, elegant, raw, hyperrealistic, streetwear), lighting quality (e.g., sunlight, dramatic shadows, volumetric), and camera details (e.g., close-up, wide angle, off-centre composition, bokeh, cinemascope).
+Mandatory Inclusion:
+The subject must be identified as ##TAG## (lowercase).
+The subject must be the only character.
+The scene must be unified and singular.
+The subject must be the clear focus.
+Output Format: Generate only the resulting descriptive prompt text. No preamble, labels, explanations, or quotes.
+Word Count: Target approximately ##WORDS## words for the final prompt.
+How to Use This with an LLM (like Gemini):
+You would feed the LLM (like Gemini 2.5, or potentially even the system running Flux Dev if it has chat capabilities) the template above, replacing the ##VARIABLES## yourself first. Then, you provide the specific details you want synthesized.
+Example Interaction (You provide this to the LLM):
+(Prompt Generation Goal: Create a concise image prompt)
+Instructions for Generation:
+Synthesize Core Elements: Combine the following details into a single, flowing descriptive sentence or two:
+Subject: finn (a man, he/him). Sleepy expression, stretching, slight build, freckles, messy brown hair, single pearl earring.
+Attire: Rumpled white cotton shorts, cropped black vintage band t-shirt.
+Setting: Bedroom, early morning, tangled white bed sheets.
+Visual Style: Natural sunlight hitting his waist, elegant but raw aesthetic, shot on 35mm film look, similar to Terry Richardson's style.
+Mandatory Inclusion:
+The subject must be identified as finn (lowercase).
+The subject must be the only character.
+The scene must be unified and singular.
+The subject must be the clear focus.
+Output Format: Generate only the resulting descriptive prompt text. No preamble, labels, explanations, or quotes.
+Word Count: Target approximately 45 words for the final prompt.
+Expected Output from the LLM (The prompt you'd use in Flux Dev):
+Early morning, tangled sheets. A man named finn stretches in rumpled cotton shorts and a cropped vintage band tee, elegant sunlight catching the curve of his waist. Freckles, sleep-mussed hair, a single pearl earring glinting. Shot on 35mm, raw aesthetic.
