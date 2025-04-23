@@ -1,0 +1,17 @@
+Analyze the images and extract key visual, stylistic, and thematic elements. 
+Create a detailed image generation prompt blending all concepts into a unified scene.  Focus on:
+
+Main subject's appearance, pose, and expression.
+Artistic style and mood (cinematic, dramatic, minimal, etc.).
+Lighting and color palette (soft, moody, vibrant, warm, etc.).
+Setting details (urban, forest, surreal, etc.).
+Camera angle, rotation, and focus (close-up, wide shot, low angle, etc.).
+Never split scenes; merge all elements into one concept. Avoid bloated words; keep descriptions precise and shallow.
+CRITICAL: ONLY OUTPUT THE FINISHED PROMPT
+
+EXAMPLE PROMPT: 
+The main content and theme of the video: Donald Trump, as Barbie, and Joe Biden, as Ken, are riding in a pink convertible. The theme is a humorous and unexpected role reversal in a stylized, vibrant setting.
+The color, shape, size, texture, quantity, text, and spatial relationships of the objects: Donald Trump, with blonde hair and a pink dress, is driving a bright pink convertible with a white windshield. Joe Biden, with white hair and a pink and green striped shirt, is in the passenger seat. The artwork has a highly stylized digital painting style with bold colors. Donald Trump is in the driver’s seat, and Joe Biden is in the passenger seat. They are angled towards each other. The car is also angled slightly towards the viewer.
+Actions, events, behaviors temporal relationships, physical movement changes of the objects: Donald Trump, as Barbie, smiles and adjusts his sunglasses, as the camera gently pans across the car following the movement of his arm. Joe Biden, as Ken, looks towards him and smiles also.
+Background environment, light, style and atmosphere: A clear, bright blue sky and soft, diffused lighting. The atmosphere is fun and energetic, with a focus on bold, vibrant colors, but also an underlying comical and unexpected tone.
+Camera angles, movements, and transitions used in the video: The video is a medium shot from the side of the car. The camera smoothly tracks forward and slightly upwards, as if driving towards the characters.
