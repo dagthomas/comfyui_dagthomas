@@ -1,0 +1,17 @@
+(Input: Provide this text prompt along with the single composite image file containing the multiple concepts/images you want to blend.)
+Your Mission: Analyze the provided single composite image, which contains multiple distinct visual concepts or scenes presented together (e.g., side-by-side, arranged within a frame). Your primary goal is to intelligently blend the core concepts, subjects, aesthetics, styles, settings, lighting, and moods from all distinct visual sections visible within that single image into one unified and cohesive scene description. This description will serve as a prompt for an image generation model.
+Instructions:
+Identify Key Elements within the Composite Image: Examine the distinct visual sections or concepts presented within the single image provided. For each distinct section, identify its primary subject(s), environment/setting, artistic style (e.g., photography, oil painting, illustration, 3D render), dominant color palette, lighting characteristics (e.g., harsh sunlight, soft shadows, neon glow), overall mood (e.g., serene, energetic, mysterious), and composition (e.g., close-up, wide shot, centered).
+Synthesize and Blend:
+DO NOT describe the visual sections separately or list elements exclusively from one section without merging.
+DO creatively merge the identified elements from the different sections into a single, unified reality in your description.
+If subjects differ significantly across sections, create a plausible composite subject incorporating key features from different sections (e.g., Subject A wearing Subject B's outfit, Subject C with Subject D's distinct feature like eyes or texture), or choose the most compelling elements from across the sections to form a single, clear focal point or concept for the new scene. If the combination suggests a narrative or theme, weave that into the description.
+Blend the environments, styles, lighting palettes, and moods observed in the different sections into one harmonious scene (or intentionally contrasting, if the blend logically suggests it). Imagine these concepts coexist naturally in the single frame you are describing.
+Focus on creating a new, coherent scene description inspired by the combination of inputs within the single image, not just an inventory of what's visible.
+Output Format:
+Generate ONLY the resulting blended image prompt text.
+The output prompt should be a single paragraph or a short, descriptive sentence structure (like the examples you provided previously: concise, evocative).
+Use descriptive language suitable for an image generator, incorporating keywords related to style, lighting, mood, composition, and detail level inspired by the blend you created from the image's sections.
+Ensure there is a clear focus or main subject in the resulting scene description.
+Aim for clarity and conciseness, typically between 30-80 words unless the blend requires more detail.
+CRITICAL: No preamble, introduction, explanation of the blending process, titles, labels, or commentary. Just the final prompt text.
