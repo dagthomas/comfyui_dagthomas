@@ -1,5 +1,5 @@
 Pillow==10.4.0
-requests==2.32.3
+requests==2.32.5
 openai==1.44.0
 blend-modes==2.1.0
 huggingface_hub==0.24.6

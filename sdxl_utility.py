@@ -30,6 +30,13 @@ models_file = os.path.join(os.path.dirname(__file__), "data", "gemini_models.jso
 with open(models_file, 'r') as f:
     models_data = json.load(f)
     gemini_models = models_data.get('models', [])
+
+# Load GPT models
+gpt_models_file = os.path.join(os.path.dirname(__file__), "data", "gpt_models.json")
+
+with open(gpt_models_file, 'r') as f:
+    gpt_models_data = json.load(f)
+    gpt_models = gpt_models_data.get('models', [])
 # Function to load data from a JSON file
 def load_json_file(file_name):
     # Construct the absolute path to the data file
@@ -465,7 +472,7 @@ class APNLatent:
         return ({"samples": latent}, width, height)
 
 
-class GPT4VisionNode:
+class GptVisionNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -478,6 +485,7 @@ class GPT4VisionNode:
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
                 "poster": ("BOOLEAN", {"default": False}),
+                "gpt_model": (gpt_models,),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -511,6 +519,7 @@ class GPT4VisionNode:
         compress,
         compression_level,
         poster,
+        gpt_model="gpt-5",
         custom_base_prompt="",
         custom_title="",
         override="",
@@ -604,7 +613,7 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
                 )
 
             response = self.client.chat.completions.create(
-                model="gpt-4o", messages=messages
+                model=gpt_model, messages=messages
             )
             return (response.choices[0].message.content,)
         except Exception as e:
@@ -703,7 +712,7 @@ class GeminiTextOnly:
             error_message = f"Error occurred while processing the request: {str(e)}"
             return (error_message, error_message[:100])
 
-class Gpt4VisionCloner:
+class GptVisionCloner:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -716,6 +725,7 @@ class Gpt4VisionCloner:
                     "FLOAT",
                     {"default": 15.0, "min": 0.1, "max": 50.0, "step": 0.1},
                 ),
+                "gpt_model": (gpt_models,),
             },
             "optional": {
                 "custom_prompt": ("STRING", {"multiline": True, "default": ""})
@@ -875,7 +885,7 @@ class Gpt4VisionCloner:
 
         return ", ".join(item for item in extracted if item)
 
-    def analyze_images(self, images, fade_percentage=15.0, custom_prompt=""):
+    def analyze_images(self, images, fade_percentage=15.0, gpt_model="gpt-5", custom_prompt=""):
         try:
             default_prompt = """Analyze the provided image and generate a JSON object with the following structure:
 {
@@ -944,7 +954,7 @@ ALWAYS blend concepts into one concept if there are multiple images. Ensure that
             )
 
             response = self.client.chat.completions.create(
-                model="gpt-4o", messages=messages
+                model=gpt_model, messages=messages
             )
 
             content = response.choices[0].message.content
@@ -1137,7 +1147,7 @@ class GeminiCustomVision:
             error_image = Image.new("RGB", (512, 512), color="red")
             return (error_message, error_message[:100], self.pil2tensor(error_image))
         
-class Gpt4CustomVision:
+class GptCustomVision:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -1157,6 +1167,7 @@ class Gpt4CustomVision:
                     "FLOAT",
                     {"default": 15.0, "min": 0.1, "max": 50.0, "step": 0.1},
                 ),
+                "gpt_model": (gpt_models,),
             }
         }
 
@@ -1283,6 +1294,7 @@ class Gpt4CustomVision:
         dynamic_prompt=False,
         words="100",
         fade_percentage=15.0,
+        gpt_model="gpt-5",
     ):
         try:
             if not dynamic_prompt:
@@ -1321,7 +1333,7 @@ class Gpt4CustomVision:
             )
 
             response = self.client.chat.completions.create(
-                model="gpt-4o", messages=messages
+                model=gpt_model, messages=messages
             )
 
 
@@ -2054,7 +2066,7 @@ class PhiCustomModelInference:
             error_image = Image.new("RGB", (512, 512), color="red")
             return (error_message, error_message[:100], self.pil2tensor(error_image))   
                
-class GPT4MiniNode:
+class GptMiniNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -2067,6 +2079,7 @@ class GPT4MiniNode:
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
                 "poster": ("BOOLEAN", {"default": False}),
+                "gpt_model": (gpt_models,),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -2089,6 +2102,7 @@ class GPT4MiniNode:
         compress,
         compression_level,
         poster,
+        gpt_model="gpt-4o-mini",
         custom_base_prompt="",
         custom_title="",
         override="",
@@ -2149,7 +2163,7 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
             final_prompt = f"{override}\n\n{base_prompt}" if override else base_prompt
 
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=gpt_model,
                 messages=[
                     {
                         "role": "user",
@@ -2867,10 +2881,10 @@ NODE_CLASS_MAPPINGS = {
     "OllamaNode": OllamaNode,
     "FlexibleStringMergerNode": FlexibleStringMergerNode,
     "StringMergerNode": StringMergerNode,
-    "Gpt4CustomVision": Gpt4CustomVision,
-    "GPT4VisionNode": GPT4VisionNode,
-    "Gpt4VisionCloner": Gpt4VisionCloner,
-    "GPT4MiniNode": GPT4MiniNode,
+    "GptCustomVision": GptCustomVision,
+    "GptVisionNode": GptVisionNode,
+    "GptVisionCloner": GptVisionCloner,
+    "GptMiniNode": GptMiniNode,
     "PromptGenerator": PromptGenerator,
     "PGSD3LatentGenerator": PGSD3LatentGenerator,
     "PhiModelLoader": PhiModelLoader,
@@ -2888,12 +2902,12 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "DynamicStringCombinerNode": "APNext Dynamic String Combiner",
     "SentenceMixerNode": "APNext Sentence Mixer",
     "RandomIntegerNode": "APNext Random Integer Generator",
-    "GPT4MiniNode": "APNext GPT-4o-mini generator",
+    "GptMiniNode": "APNext GPT Mini Generator",
     "PromptGenerator": "Auto Prompter",
     "PGSD3LatentGenerator": "APNext PGSD3LatentGenerator",
-    "Gpt4CustomVision": "APNext Gpt4CustomVision",
-    "GPT4VisionNode": "APNext GPT4VisionNode",
-    "Gpt4VisionCloner": "APNext Gpt4VisionCloner",
+    "GptCustomVision": "APNext GPT Custom Vision",
+    "GptVisionNode": "APNext GPT Vision Node",
+    "GptVisionCloner": "APNext GPT Vision Cloner",
     "StringMergerNode": "APNext String Merger",
     "FlexibleStringMergerNode": "APNext Flexible String Merger",
     "OllamaNode": "APNext OllamaNode",
