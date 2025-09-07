@@ -468,8 +468,6 @@ class APNLatent:
 class GPT4VisionNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -505,18 +503,6 @@ class GPT4VisionNode:
         img_array = np.clip(i, 0, 255).astype(np.uint8)
         return Image.fromarray(img_array)
 
-    def save_prompt(self, prompt):
-        filename_text = "vision_" + prompt.split(",")[0].strip()
-        filename_text = re.sub(r"[^\w\-_\. ]", "_", filename_text)
-        filename_text = filename_text[:30]
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        with open(filename, "w") as file:
-            file.write(prompt)
-
-        print(f"Prompt saved to {filename}")
 
     def analyze_images(
         self,
@@ -620,7 +606,6 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
             response = self.client.chat.completions.create(
                 model="gpt-4o", messages=messages
             )
-            self.save_prompt(response.choices[0].message.content)
             return (response.choices[0].message.content,)
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -634,8 +619,6 @@ class GeminiTextOnly:
         if not self.gemini_api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
         genai.configure(api_key=self.gemini_api_key)
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -662,20 +645,6 @@ class GeminiTextOnly:
         sentences = re.split(r"(?<=[.!?])\s+", text)
         return " ".join(sentences[:2])
 
-    def save_prompt(self, prompt):
-        filename_text = "gemini_text_only_" + "".join(
-            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        try:
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(prompt)
-            print(f"Prompt saved to {filename}")
-        except Exception as e:
-            print(f"Error saving prompt: {e}")
 
     def process_text(
         self,
@@ -724,8 +693,6 @@ class GeminiTextOnly:
 
             result = response.text
 
-            self.save_prompt(result)
-
             return (
                 result,
                 self.extract_first_two_sentences(result),
@@ -739,8 +706,6 @@ class GeminiTextOnly:
 class Gpt4VisionCloner:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -868,20 +833,6 @@ class Gpt4VisionCloner:
         image.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    def save_prompt(self, prompt):
-        filename_text = "vision_json_" + "".join(
-            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        try:
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(prompt)
-            print(f"Prompt saved to {filename}")
-        except Exception as e:
-            print(f"Error saving prompt: {e}")
 
     def format_element(self, element):
         element_type = element.get("Type", "")
@@ -1016,7 +967,6 @@ ALWAYS blend concepts into one concept if there are multiple images. Ensure that
             else:
                 result = self.extract_data(data)
 
-            self.save_prompt(result)
             faded_image_tensor = self.pil2tensor(combined_image)
             return (result, json.dumps(data, indent=2), faded_image_tensor)
         except Exception as e:
@@ -1031,8 +981,6 @@ class GeminiCustomVision:
         if not self.gemini_api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
         genai.configure(api_key=self.gemini_api_key)
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -1115,20 +1063,6 @@ class GeminiCustomVision:
 
         return combined_image
 
-    def save_prompt(self, prompt):
-        filename_text = "gemini_custom_vision_" + "".join(
-            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        try:
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(prompt)
-            print(f"Prompt saved to {filename}")
-        except Exception as e:
-            print(f"Error saving prompt: {e}")
 
     def analyze_images(
         self,
@@ -1189,7 +1123,6 @@ class GeminiCustomVision:
 
             result = response.text
 
-            self.save_prompt(result)
             faded_image_tensor = self.pil2tensor(combined_image)
 
             return (
@@ -1207,8 +1140,6 @@ class GeminiCustomVision:
 class Gpt4CustomVision:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -1340,20 +1271,6 @@ class Gpt4CustomVision:
         image.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    def save_prompt(self, prompt):
-        filename_text = "custom_vision_json_" + "".join(
-            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        try:
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(prompt)
-            print(f"Prompt saved to {filename}")
-        except Exception as e:
-            print(f"Error saving prompt: {e}")
 
     def analyze_images(
         self,
@@ -1407,10 +1324,6 @@ class Gpt4CustomVision:
                 model="gpt-4o", messages=messages
             )
 
-            try:
-                self.save_prompt(response.choices[0].message.content)
-            except Exception as e:
-                print(f"Failed to save prompt: {e}")
 
             faded_image_tensor = self.pil2tensor(combined_image)
 
@@ -1481,8 +1394,7 @@ class RandomIntegerNode:
 
 class OllamaNode:
     def __init__(self):
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
+        pass
 
     @classmethod
     def INPUT_TYPES(s):
@@ -1512,19 +1424,6 @@ class OllamaNode:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "generate"
     CATEGORY = CUSTOM_CATEGORY
-
-    def save_prompt(self, prompt):
-        filename_text = "mini_" + prompt.split(",")[0].strip()
-        filename_text = re.sub(r"[^\w\-_\. ]", "_", filename_text)
-        filename_text = filename_text[:30]
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        with open(filename, "w") as file:
-            file.write(prompt)
-
-        print(f"Prompt saved to {filename}")
 
     def generate(
         self,
@@ -1625,7 +1524,6 @@ CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS"""
             response.raise_for_status()
             result = response.json()["response"]
 
-            self.save_prompt(result)
             return (result,)
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -1633,8 +1531,6 @@ CRITICAL: TRY TO OUTPUT ONLY IN 75 WORDS"""
 
 class OllamaVisionNode:
     def __init__(self):
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
         self.loaded_model = None
 
     @classmethod
@@ -1727,21 +1623,6 @@ class OllamaVisionNode:
         image.save(buffered, format="PNG")
         return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    def save_prompt(self, prompt):
-        filename_text = "ollama_vision_" + "".join(
-            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        try:
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(prompt)
-            print(f"Prompt saved to {filename}")
-        except Exception as e:
-            print(f"Error saving prompt: {e}")
-
     def check_ollama_service(self, url):
             try:
                 response = requests.get(url.replace("/api/generate", ""))
@@ -1825,7 +1706,6 @@ class OllamaVisionNode:
             response.raise_for_status()
             result = response.json()["response"]
 
-            self.save_prompt(result)
             faded_image_tensor = self.pil2tensor(combined_image)
             if unload_after_use:
                 self.unload_model(ollama_url)
@@ -1987,8 +1867,7 @@ class PhiModelInference:
     
 class PhiCustomModelInference:
     def __init__(self):
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
+        pass
 
     @classmethod
     def INPUT_TYPES(cls):
@@ -2068,21 +1947,6 @@ class PhiCustomModelInference:
     def extract_first_two_sentences(self, text):
         sentences = re.split(r"(?<=[.!?])\s+", text)
         return " ".join(sentences[:2])
-
-    def save_prompt(self, prompt):
-        filename_text = "phi_custom_vision_" + "".join(
-            c if c.isalnum() or c in "-_" else "_" for c in prompt[:30]
-        )
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        try:
-            with open(filename, "w", encoding="utf-8") as file:
-                file.write(prompt)
-            print(f"Prompt saved to {filename}")
-        except Exception as e:
-            print(f"Error saving prompt: {e}")
 
     def run_phi_custom_inference(
         self,
@@ -2176,7 +2040,6 @@ class PhiCustomModelInference:
                 skip_special_tokens=True, 
                 clean_up_tokenization_spaces=False)[0]
 
-            self.save_prompt(generated_text)
             faded_image_tensor = self.pil2tensor(combined_image)
 
             return (
@@ -2194,8 +2057,6 @@ class PhiCustomModelInference:
 class GPT4MiniNode:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        self.prompts_dir = "./custom_nodes/comfyui_dagthomas/prompts"
-        os.makedirs(self.prompts_dir, exist_ok=True)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -2220,19 +2081,6 @@ class GPT4MiniNode:
     RETURN_TYPES = ("STRING",)
     FUNCTION = "generate"
     CATEGORY = CUSTOM_CATEGORY
-
-    def save_prompt(self, prompt):
-        filename_text = "mini_" + prompt.split(",")[0].strip()
-        filename_text = re.sub(r"[^\w\-_\. ]", "_", filename_text)
-        filename_text = filename_text[:30]
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        base_filename = f"{filename_text}_{timestamp}.txt"
-        filename = os.path.join(self.prompts_dir, base_filename)
-
-        with open(filename, "w") as file:
-            file.write(prompt)
-
-        print(f"Prompt saved to {filename}")
 
     def generate(
         self,
@@ -2310,7 +2158,6 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
                 ],
             )
 
-            self.save_prompt(response.choices[0].message.content)
             return (response.choices[0].message.content,)
         except Exception as e:
             print(f"An error occurred: {e}")
