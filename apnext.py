@@ -1,9 +1,10 @@
-# LEGACY FILE - DYNAMIC NODES ONLY
+# APNext Dynamic Nodes Generator
 # 
-# This file now only handles the dynamic APNext nodes generation.
-# All other nodes have been migrated to the modular structure.
+# This file handles the generation of dynamic APNext nodes based on data categories.
+# All static nodes have been migrated to the modular structure in nodes/.
 # 
-# Migration Status: 26/26 nodes migrated (100% complete)
+# This creates nodes like: ArchitecturePromptNode, ArtPromptNode, etc.
+# Migration Status: 26/26 static nodes migrated (100% complete)
 # 
 
 import os

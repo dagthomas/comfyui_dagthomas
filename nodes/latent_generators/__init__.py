@@ -1,0 +1,1 @@
+# Latent generator nodes
