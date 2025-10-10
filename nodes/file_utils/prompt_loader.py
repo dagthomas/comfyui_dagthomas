@@ -1,6 +1,7 @@
 # CustomPromptLoader Node
 
 import os
+import chardet
 from ...utils.constants import CUSTOM_CATEGORY, prompt_dir
 
 
