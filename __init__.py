@@ -213,6 +213,15 @@ try:
 except Exception as e:
     print(f"⚠️ Could not load modular APNextGenerator: {e}")
 
+# Universal Vision Cloner
+try:
+    from .nodes.prompt_generators.universal_vision_cloner import UniversalVisionCloner
+    NEW_MAPPINGS["UniversalVisionCloner"] = UniversalVisionCloner
+    NEW_DISPLAY_MAPPINGS["UniversalVisionCloner"] = "APNext Universal Vision Cloner"
+    print("✅ Loaded modular UniversalVisionCloner")
+except Exception as e:
+    print(f"⚠️ Could not load modular UniversalVisionCloner: {e}")
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}
