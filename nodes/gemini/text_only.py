@@ -2,6 +2,7 @@
 
 import os
 import re
+import random
 import google.generativeai as genai
 
 from ...utils.constants import CUSTOM_CATEGORY, gemini_models
@@ -26,6 +27,8 @@ class GeminiTextOnly:
                 "words": ("STRING", {"default": "100"}),
                 "pronouns": ("STRING", {"default": "him, his"}),
                 "gemini_model": (gemini_models,),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
+                "randomize_each_run": ("BOOLEAN", {"default": True}),
             }
         }
 
@@ -48,8 +51,25 @@ class GeminiTextOnly:
         dynamic_prompt=False,
         words="100",
         gemini_model="gemini-flash-latest",
+        seed=-1,
+        randomize_each_run=True,
     ):
         try:
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                # Generate a new random seed each time
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                # Use a fixed seed for reproducibility
+                current_seed = 12345
+            else:
+                # Use provided seed
+                current_seed = seed
+            
+            # Set random seed for consistent randomization within this call
+            random.seed(current_seed)
+            print(f"🎲 Gemini Text Only using seed: {current_seed}")
+            
             if not dynamic_prompt:
                 full_prompt = custom_prompt if custom_prompt else "Generate a response."
             else:

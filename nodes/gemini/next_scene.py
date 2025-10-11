@@ -2,6 +2,7 @@
 
 import os
 import re
+import random
 import torch
 import numpy as np
 from PIL import Image
@@ -38,6 +39,8 @@ class GeminiNextScene:
                 "image": ("IMAGE",),
                 "original_prompt": ("STRING", {"multiline": True, "default": ""}),
                 "gemini_model": (gemini_models, {"default": "gemini-2.5-flash"}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
+                "randomize_each_run": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "focus_on": (
@@ -67,10 +70,26 @@ class GeminiNextScene:
         image,
         original_prompt="",
         gemini_model="gemini-2.5-flash",
+        seed=-1,
+        randomize_each_run=True,
         focus_on="Automatic",
         transition_intensity="Moderate"
     ):
         try:
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                # Generate a new random seed each time
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                # Use a fixed seed for reproducibility
+                current_seed = 12345
+            else:
+                # Use provided seed
+                current_seed = seed
+            
+            # Set random seed for consistent randomization within this call
+            random.seed(current_seed)
+            
             print("\n" + "="*80)
             print("🎬 GEMINI NEXT SCENE - Processing")
             print("="*80)
@@ -78,6 +97,7 @@ class GeminiNextScene:
             print(f"🤖 Model: {gemini_model}")
             print(f"🎯 Focus: {focus_on}")
             print(f"⚡ Intensity: {transition_intensity}")
+            print(f"🎲 Using seed: {current_seed}")
             print("-"*80)
             
             # Convert tensor to PIL image
