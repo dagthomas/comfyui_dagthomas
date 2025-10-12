@@ -1576,6 +1576,8 @@ class GeminiNextScene:
                 "image": ("IMAGE",),
                 "original_prompt": ("STRING", {"multiline": True, "default": ""}),
                 "gemini_model": (gemini_models, {"default": "gemini-2.5-flash"}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
+                "randomize_each_run": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "focus_on": (
@@ -1605,6 +1607,8 @@ class GeminiNextScene:
         image,
         original_prompt="",
         gemini_model="gemini-2.5-flash",
+        seed=-1,
+        randomize_each_run=True,
         focus_on="Automatic",
         transition_intensity="Moderate"
     ):
@@ -1616,6 +1620,21 @@ class GeminiNextScene:
             print(f"🤖 Model: {gemini_model}")
             print(f"🎯 Focus: {focus_on}")
             print(f"⚡ Intensity: {transition_intensity}")
+            
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                # Generate a new random seed each time
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                # Use a fixed seed for reproducibility
+                current_seed = 12345
+            else:
+                # Use provided seed
+                current_seed = seed
+            
+            # Set random seed for consistent randomization within this call
+            random.seed(current_seed)
+            print(f"🎲 Using seed: {current_seed}")
             print("-"*80)
             
             # Convert tensor to PIL image
@@ -3500,60 +3519,63 @@ class FileReaderNode:
             return (f"Error: {str(e)}",)
 
 
-# This line is required for ComfyUI to recognize and load the node
-NODE_CLASS_MAPPINGS = {"FileReaderNode": FileReaderNode}
+# DISABLED - This is a backup file. ComfyUI should not load nodes from this file.
+# NODE_CLASS_MAPPINGS = {"FileReaderNode": FileReaderNode}
 
-NODE_CLASS_MAPPINGS = {
-    "OllamaVisionNode": OllamaVisionNode,
-    "FileReaderNode": FileReaderNode,
-    "APNLatent": APNLatent,
-    "CustomPromptLoader": CustomPromptLoader,
-    "DynamicStringCombinerNode": DynamicStringCombinerNode,
-    "SentenceMixerNode": SentenceMixerNode,
-    "RandomIntegerNode": RandomIntegerNode,
-    "OllamaNode": OllamaNode,
-    "FlexibleStringMergerNode": FlexibleStringMergerNode,
-    "StringMergerNode": StringMergerNode,
-    "GptCustomVision": GptCustomVision,
-    "GptVisionNode": GptVisionNode,
-    "GptVisionCloner": GptVisionCloner,
-    "GptMiniNode": GptMiniNode,
-    "PromptGenerator": PromptGenerator,
-    "PGSD3LatentGenerator": PGSD3LatentGenerator,
-    "PhiModelLoader": PhiModelLoader,
-    "PhiModelInference": PhiModelInference,
-    "PhiCustomModelInference": PhiCustomModelInference,
-    "GeminiCustomVision": GeminiCustomVision,
-    "GeminiTextOnly": GeminiTextOnly,
-    "GeminiPromptEnhancer": GeminiPromptEnhancer,
-    "GeminiNextScene": GeminiNextScene,
-}
+# DISABLED - This is a backup file. All nodes have been migrated to the modular structure.
+# ComfyUI should not load nodes from this file.
+# NODE_CLASS_MAPPINGS = {
+#     "OllamaVisionNode": OllamaVisionNode,
+#     "FileReaderNode": FileReaderNode,
+#     "APNLatent": APNLatent,
+#     "CustomPromptLoader": CustomPromptLoader,
+#     "DynamicStringCombinerNode": DynamicStringCombinerNode,
+#     "SentenceMixerNode": SentenceMixerNode,
+#     "RandomIntegerNode": RandomIntegerNode,
+#     "OllamaNode": OllamaNode,
+#     "FlexibleStringMergerNode": FlexibleStringMergerNode,
+#     "StringMergerNode": StringMergerNode,
+#     "GptCustomVision": GptCustomVision,
+#     "GptVisionNode": GptVisionNode,
+#     "GptVisionCloner": GptVisionCloner,
+#     "GptMiniNode": GptMiniNode,
+#     "PromptGenerator": PromptGenerator,
+#     "PGSD3LatentGenerator": PGSD3LatentGenerator,
+#     "PhiModelLoader": PhiModelLoader,
+#     "PhiModelInference": PhiModelInference,
+#     "PhiCustomModelInference": PhiCustomModelInference,
+#     "GeminiCustomVision": GeminiCustomVision,
+#     "GeminiTextOnly": GeminiTextOnly,
+#     "GeminiPromptEnhancer": GeminiPromptEnhancer,
+#     "GeminiNextScene": GeminiNextScene,
+# }
 
-NODE_DISPLAY_NAME_MAPPINGS = {
-    "OllamaVisionNode": "APNext OllamaVision",
-    "FileReaderNode": "APNext Local random prompt",
-    "APNLatent": "APNext Latent Generator",
-    "CustomPromptLoader": "APNext Custom Prompts",
-    "DynamicStringCombinerNode": "APNext Dynamic String Combiner",
-    "SentenceMixerNode": "APNext Sentence Mixer",
-    "RandomIntegerNode": "APNext Random Integer Generator",
-    "GptMiniNode": "APNext GPT Mini Generator",
-    "PromptGenerator": "Auto Prompter",
-    "PGSD3LatentGenerator": "APNext PGSD3LatentGenerator",
-    "GptCustomVision": "APNext GPT Custom Vision",
-    "GptVisionNode": "APNext GPT Vision Node",
-    "GptVisionCloner": "APNext GPT Vision Cloner",
-    "StringMergerNode": "APNext String Merger",
-    "FlexibleStringMergerNode": "APNext Flexible String Merger",
-    "OllamaNode": "APNext OllamaNode",
-    "PhiModelLoader": "APNext Phi Model Loader",
-    "PhiModelInference": "APNext Phi Model Inference",
-    "PhiCustomModelInference": "APNext Phi Custom Model Inference",
-    "GeminiCustomVision": "APNext Gemini Custom Vision",
-    "GeminiTextOnly": "APNext Gemini Text Only",
-    "GeminiPromptEnhancer": "APNext Gemini Prompt Enhancer",
-    "GeminiNextScene": "APNext Gemini Next Scene",
-}
+# DISABLED - This is a backup file. All nodes have been migrated to the modular structure.
+# NODE_DISPLAY_NAME_MAPPINGS = {
+#     "OllamaVisionNode": "APNext OllamaVision",
+#     "FileReaderNode": "APNext Local random prompt",
+#     "APNLatent": "APNext Latent Generator",
+#     "CustomPromptLoader": "APNext Custom Prompts",
+#     "DynamicStringCombinerNode": "APNext Dynamic String Combiner",
+#     "SentenceMixerNode": "APNext Sentence Mixer",
+#     "RandomIntegerNode": "APNext Random Integer Generator",
+#     "GptMiniNode": "APNext GPT Mini Generator",
+#     "PromptGenerator": "Auto Prompter",
+#     "PGSD3LatentGenerator": "APNext PGSD3LatentGenerator",
+#     "GptCustomVision": "APNext GPT Custom Vision",
+#     "GptVisionNode": "APNext GPT Vision Node",
+#     "GptVisionCloner": "APNext GPT Vision Cloner",
+#     "StringMergerNode": "APNext String Merger",
+#     "FlexibleStringMergerNode": "APNext Flexible String Merger",
+#     "OllamaNode": "APNext OllamaNode",
+#     "PhiModelLoader": "APNext Phi Model Loader",
+#     "PhiModelInference": "APNext Phi Model Inference",
+#     "PhiCustomModelInference": "APNext Phi Custom Model Inference",
+#     "GeminiCustomVision": "APNext Gemini Custom Vision",
+#     "GeminiTextOnly": "APNext Gemini Text Only",
+#     "GeminiPromptEnhancer": "APNext Gemini Prompt Enhancer",
+#     "GeminiNextScene": "APNext Gemini Next Scene",
+# }
 
 categories = [
     d for d in os.listdir(next_dir) if os.path.isdir(os.path.join(next_dir, d))
