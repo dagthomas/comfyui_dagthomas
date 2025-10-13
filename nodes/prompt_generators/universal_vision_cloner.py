@@ -25,7 +25,15 @@ except ImportError:
     GEMINI_AVAILABLE = False
     genai = None
 
-from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models
+# Anthropic imports (optional)
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+    anthropic = None
+
+from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models, grok_models, claude_models
 from ...utils.image_utils import tensor2pil, pil2tensor
 
 
@@ -38,20 +46,35 @@ class UniversalVisionCloner:
     def __init__(self):
         # Don't initialize clients here - do it lazily when needed
         self.openai_client = None
+        self.grok_client = None
+        self.claude_client = None
         self.gemini_configured = False
 
     @classmethod
     def INPUT_TYPES(s):
         # Combine available vision models from all providers
-        vision_models = (
-            ["auto-detect"] + 
-            [f"gpt:{model}" for model in gpt_models if "vision" in model.lower() or "4o" in model.lower() or "4-turbo" in model.lower()] +
-            [f"gemini:{model}" for model in gemini_models]
-        )
+        vision_models = ["auto-detect"]
+        
+        # Add GPT vision models
+        vision_models += [f"gpt:{model}" for model in gpt_models if "vision" in model.lower() or "4o" in model.lower() or "4-turbo" in model.lower()]
+        
+        # Add Gemini models (all have vision)
+        vision_models += [f"gemini:{model}" for model in gemini_models]
+        
+        # Add Grok vision models
+        grok_vision_models = ["grok-2-vision-1212", "grok-4-0709", "grok-4-fast-reasoning", "grok-4-fast-non-reasoning"]
+        vision_models += [f"grok:{model}" for model in grok_models if model in grok_vision_models]
+        
+        # Add Claude models (all have vision)
+        vision_models += [f"claude:{model}" for model in claude_models]
         
         # If no specific vision models found, include all models
         if len(vision_models) == 1:  # Only "auto-detect"
-            vision_models = ["auto-detect"] + [f"gpt:{model}" for model in gpt_models] + [f"gemini:{model}" for model in gemini_models]
+            vision_models = (["auto-detect"] + 
+                           [f"gpt:{model}" for model in gpt_models] + 
+                           [f"gemini:{model}" for model in gemini_models] +
+                           [f"grok:{model}" for model in grok_models] +
+                           [f"claude:{model}" for model in claude_models])
         
         return {
             "required": {
@@ -89,10 +112,13 @@ class UniversalVisionCloner:
 
     def auto_detect_model(self):
         """Auto-detect the best available vision model"""
-        # Check if OpenAI API key and library are available first (better vision capabilities)
-        if OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
+        # Check available API keys in order of preference (best vision models first)
+        if ANTHROPIC_AVAILABLE and (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")):
+            return "claude:claude-sonnet-4.5"
+        elif OPENAI_AVAILABLE and (os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY")):
+            return "grok:grok-2-vision-1212"
+        elif OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
             return "gpt:gpt-4o"
-        # Check if Gemini API key and library are available
         elif GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
             return "gemini:gemini-2.5-flash"
         else:
@@ -101,6 +127,8 @@ class UniversalVisionCloner:
                 missing_deps.append("openai library")
             if not GEMINI_AVAILABLE:
                 missing_deps.append("google-generativeai library")
+            if not ANTHROPIC_AVAILABLE:
+                missing_deps.append("anthropic library")
             
             missing_keys = []
             if not os.environ.get("OPENAI_API_KEY"):
@@ -401,6 +429,110 @@ class UniversalVisionCloner:
             error_message = f"Error occurred while processing the request: {str(e)}"
             return error_message
 
+    def analyze_with_grok(self, model_name, image, prompt, temperature, seed):
+        """Analyze image using xAI Grok"""
+        try:
+            if not OPENAI_AVAILABLE:
+                raise ValueError("OpenAI library not available. Install with: pip install openai")
+            
+            # Lazy initialization of Grok client
+            if self.grok_client is None:
+                api_key = os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY")
+                if not api_key:
+                    raise ValueError("XAI_API_KEY or GROK_API_KEY environment variable not set")
+                self.grok_client = OpenAI(
+                    api_key=api_key,
+                    base_url="https://api.x.ai/v1"
+                )
+            
+            # Extract model name (remove "grok:" prefix)
+            grok_model = model_name.replace("grok:", "")
+            
+            # Encode image
+            base64_image = self.encode_image(image)
+            
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:image/png;base64,{base64_image}"},
+                        }
+                    ]
+                }
+            ]
+            
+            print(f"🔄 Sending to Grok vision model: {grok_model}")
+            response = self.grok_client.chat.completions.create(
+                model=grok_model,
+                messages=messages,
+                max_tokens=2000,
+                temperature=temperature,
+                seed=seed if seed != -1 else None,
+            )
+            
+            result = response.choices[0].message.content
+            print(f"📥 Grok response: {len(result)} characters")
+            return result.strip()
+            
+        except Exception as e:
+            print(f"❌ Grok vision error: {e}")
+            error_message = f"Error occurred while processing the request: {str(e)}"
+            return error_message
+
+    def analyze_with_claude(self, model_name, image, prompt, temperature):
+        """Analyze image using Anthropic Claude"""
+        try:
+            if not ANTHROPIC_AVAILABLE:
+                raise ValueError("Anthropic library not available. Install with: pip install anthropic")
+            
+            # Lazy initialization of Claude client
+            if self.claude_client is None:
+                api_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
+                if not api_key:
+                    raise ValueError("ANTHROPIC_API_KEY or CLAUDE_API_KEY environment variable not set")
+                self.claude_client = anthropic.Anthropic(api_key=api_key)
+            
+            # Extract model name (remove "claude:" prefix)
+            claude_model = model_name.replace("claude:", "")
+            
+            # Encode image
+            base64_image = self.encode_image(image)
+            
+            print(f"🔄 Sending to Claude vision model: {claude_model}")
+            response = self.claude_client.messages.create(
+                model=claude_model,
+                max_tokens=2000,
+                temperature=temperature,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",
+                                    "data": base64_image
+                                }
+                            }
+                        ]
+                    }
+                ]
+            )
+            
+            result = response.content[0].text
+            print(f"📥 Claude response: {len(result)} characters")
+            return result.strip()
+            
+        except Exception as e:
+            print(f"❌ Claude vision error: {e}")
+            error_message = f"Error occurred while processing the request: {str(e)}"
+            return error_message
+
     def analyze_images(
         self,
         images,
@@ -472,6 +604,12 @@ class UniversalVisionCloner:
             elif model.startswith("gemini:"):
                 raw_result = self.analyze_with_gemini(model, combined_image, final_prompt, temperature)
                 formatted_result = raw_result  # Gemini typically returns clean text
+            elif model.startswith("grok:"):
+                raw_result = self.analyze_with_grok(model, combined_image, final_prompt, temperature, current_seed)
+                formatted_result = self.format_gpt_response(raw_result, output_format)  # Grok uses OpenAI format
+            elif model.startswith("claude:"):
+                raw_result = self.analyze_with_claude(model, combined_image, final_prompt, temperature)
+                formatted_result = raw_result  # Claude typically returns clean text
             else:
                 raise ValueError(f"Unsupported model format: {model}")
             

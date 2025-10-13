@@ -75,6 +75,16 @@ with open(gpt_models_file, 'r') as f:
     gpt_models_data = json.load(f)
     gpt_models = gpt_models_data.get('models', [])
 
+grok_models_file = os.path.join(base_dir, "data", "grok_models.json")
+with open(grok_models_file, 'r') as f:
+    grok_models_data = json.load(f)
+    grok_models = grok_models_data.get('models', [])
+
+claude_models_file = os.path.join(base_dir, "data", "claude_models.json")
+with open(claude_models_file, 'r') as f:
+    claude_models_data = json.load(f)
+    claude_models = claude_models_data.get('models', [])
+
 # Legacy constants that were in sdxl_utility.py (now moved to utils)
 def tensor2pil(t_image):
     """Legacy tensor to PIL conversion function"""

@@ -250,6 +250,40 @@ try:
 except Exception as e:
     print(f"⚠️ Could not load modular APNextRough: {e}")
 
+# Grok Nodes
+try:
+    from .nodes.grok.text_node import GrokTextNode
+    NEW_MAPPINGS["GrokTextNode"] = GrokTextNode
+    NEW_DISPLAY_MAPPINGS["GrokTextNode"] = "APNext Grok Text Generator"
+    print("✅ Loaded modular GrokTextNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular GrokTextNode: {e}")
+
+try:
+    from .nodes.grok.vision_node import GrokVisionNode
+    NEW_MAPPINGS["GrokVisionNode"] = GrokVisionNode
+    NEW_DISPLAY_MAPPINGS["GrokVisionNode"] = "APNext Grok Vision Analyzer"
+    print("✅ Loaded modular GrokVisionNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular GrokVisionNode: {e}")
+
+# Claude Nodes
+try:
+    from .nodes.claude.text_node import ClaudeTextNode
+    NEW_MAPPINGS["ClaudeTextNode"] = ClaudeTextNode
+    NEW_DISPLAY_MAPPINGS["ClaudeTextNode"] = "APNext Claude Text Generator"
+    print("✅ Loaded modular ClaudeTextNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular ClaudeTextNode: {e}")
+
+try:
+    from .nodes.claude.vision_node import ClaudeVisionNode
+    NEW_MAPPINGS["ClaudeVisionNode"] = ClaudeVisionNode
+    NEW_DISPLAY_MAPPINGS["ClaudeVisionNode"] = "APNext Claude Vision Analyzer"
+    print("✅ Loaded modular ClaudeVisionNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular ClaudeVisionNode: {e}")
+
 # APNext Advanced FX Nodes
 try:
     from .nodes.image_fx.color_grading import APNextColorGrading

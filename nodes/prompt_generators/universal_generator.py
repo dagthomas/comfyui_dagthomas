@@ -4,8 +4,9 @@ import os
 import random
 import google.generativeai as genai
 from openai import OpenAI
+import anthropic
 
-from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models
+from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models, grok_models, claude_models
 
 
 class APNextGenerator:
@@ -17,12 +18,18 @@ class APNextGenerator:
     def __init__(self):
         # Don't initialize clients here - do it lazily when needed
         self.openai_client = None
+        self.grok_client = None
+        self.claude_client = None
         self.gemini_configured = False
 
     @classmethod
     def INPUT_TYPES(s):
         # Combine available models from all providers
-        all_models = ["auto-detect"] + [f"gpt:{model}" for model in gpt_models] + [f"gemini:{model}" for model in gemini_models]
+        all_models = (["auto-detect"] + 
+                     [f"gpt:{model}" for model in gpt_models] + 
+                     [f"gemini:{model}" for model in gemini_models] +
+                     [f"grok:{model}" for model in grok_models] +
+                     [f"claude:{model}" for model in claude_models])
         
         return {
             "required": {
@@ -60,14 +67,17 @@ class APNextGenerator:
 
     def auto_detect_model(self):
         """Auto-detect the best available model"""
-        # Check if Gemini API key is available first (often more reliable)
-        if os.environ.get("GEMINI_API_KEY"):
+        # Check available API keys in order of preference
+        if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY"):
+            return "claude:claude-sonnet-4.5"
+        elif os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY"):
+            return "grok:grok-beta"
+        elif os.environ.get("GEMINI_API_KEY"):
             return "gemini:gemini-2.5-flash"
-        # Check if OpenAI API key is available
         elif os.environ.get("OPENAI_API_KEY"):
             return "gpt:gpt-4o-mini"
         else:
-            raise ValueError("No API keys found. Please set OPENAI_API_KEY or GEMINI_API_KEY")
+            raise ValueError("No API keys found. Please set one of: ANTHROPIC_API_KEY, XAI_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY")
 
     def get_base_prompt(self, generation_mode, detail_level, style_preference):
         """Generate base prompt based on preferences"""
@@ -200,6 +210,70 @@ Generate a prompt that would create compelling, high-quality images. Be specific
             error_message = f"Error occurred while processing the request: {str(e)}"
             return error_message
 
+    def generate_with_grok(self, model_name, prompt, temperature, seed):
+        """Generate using xAI Grok"""
+        try:
+            # Lazy initialization of Grok client
+            if self.grok_client is None:
+                api_key = os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY")
+                if not api_key:
+                    raise ValueError("XAI_API_KEY or GROK_API_KEY environment variable not set")
+                self.grok_client = OpenAI(
+                    api_key=api_key,
+                    base_url="https://api.x.ai/v1"
+                )
+            
+            # Extract model name (remove "grok:" prefix)
+            grok_model = model_name.replace("grok:", "")
+            
+            print(f"🔄 Sending to Grok model: {grok_model}")
+            response = self.grok_client.chat.completions.create(
+                model=grok_model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                temperature=temperature,
+                seed=seed if seed != -1 else None,
+            )
+            
+            result = response.choices[0].message.content
+            print(f"📥 Grok response: {len(result)} characters")
+            return result.strip()
+            
+        except Exception as e:
+            print(f"❌ Grok error: {e}")
+            error_message = f"Error occurred while processing the request: {str(e)}"
+            return error_message
+
+    def generate_with_claude(self, model_name, prompt, temperature):
+        """Generate using Anthropic Claude"""
+        try:
+            # Lazy initialization of Claude client
+            if self.claude_client is None:
+                api_key = os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")
+                if not api_key:
+                    raise ValueError("ANTHROPIC_API_KEY or CLAUDE_API_KEY environment variable not set")
+                self.claude_client = anthropic.Anthropic(api_key=api_key)
+            
+            # Extract model name (remove "claude:" prefix)
+            claude_model = model_name.replace("claude:", "")
+            
+            print(f"🔄 Sending to Claude model: {claude_model}")
+            response = self.claude_client.messages.create(
+                model=claude_model,
+                max_tokens=2000,
+                temperature=temperature,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            result = response.content[0].text
+            print(f"📥 Claude response: {len(result)} characters")
+            return result.strip()
+            
+        except Exception as e:
+            print(f"❌ Claude error: {e}")
+            error_message = f"Error occurred while processing the request: {str(e)}"
+            return error_message
+
     def generate(
         self,
         input_text,
@@ -274,6 +348,10 @@ Generate a prompt that would create compelling, high-quality images. Be specific
                 result = self.generate_with_gpt(model, final_prompt, temperature, current_seed)
             elif model.startswith("gemini:"):
                 result = self.generate_with_gemini(model, final_prompt, temperature)
+            elif model.startswith("grok:"):
+                result = self.generate_with_grok(model, final_prompt, temperature, current_seed)
+            elif model.startswith("claude:"):
+                result = self.generate_with_claude(model, final_prompt, temperature)
             else:
                 raise ValueError(f"Unsupported model format: {model}")
             
