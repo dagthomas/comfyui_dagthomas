@@ -3,6 +3,8 @@
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil, pil2tensor
 from PIL import Image
+import base64
+import io
 import json
 import numpy as np
 import re
