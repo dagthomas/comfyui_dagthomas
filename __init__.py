@@ -217,6 +217,88 @@ try:
 except Exception as e:
     print(f"⚠️ Could not load modular UniversalVisionCloner: {e}")
 
+# APNext FX Nodes
+try:
+    from .nodes.image_fx.bloom import APNextBloom
+    NEW_MAPPINGS["APNextBloom"] = APNextBloom
+    NEW_DISPLAY_MAPPINGS["APNextBloom"] = "APNext Bloom FX"
+    # print("✅ Loaded modular APNextBloom")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextBloom: {e}")
+
+try:
+    from .nodes.image_fx.sharpen import APNextSharpen
+    NEW_MAPPINGS["APNextSharpen"] = APNextSharpen
+    NEW_DISPLAY_MAPPINGS["APNextSharpen"] = "APNext Sharpen FX"
+    # print("✅ Loaded modular APNextSharpen")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextSharpen: {e}")
+
+try:
+    from .nodes.image_fx.noise import APNextNoise
+    NEW_MAPPINGS["APNextNoise"] = APNextNoise
+    NEW_DISPLAY_MAPPINGS["APNextNoise"] = "APNext Noise FX"
+    # print("✅ Loaded modular APNextNoise")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextNoise: {e}")
+
+try:
+    from .nodes.image_fx.rough import APNextRough
+    NEW_MAPPINGS["APNextRough"] = APNextRough
+    NEW_DISPLAY_MAPPINGS["APNextRough"] = "APNext Rough FX"
+    # print("✅ Loaded modular APNextRough")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextRough: {e}")
+
+# APNext Advanced FX Nodes
+try:
+    from .nodes.image_fx.color_grading import APNextColorGrading
+    NEW_MAPPINGS["APNextColorGrading"] = APNextColorGrading
+    NEW_DISPLAY_MAPPINGS["APNextColorGrading"] = "APNext Color Grading FX"
+    # print("✅ Loaded modular APNextColorGrading")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextColorGrading: {e}")
+
+try:
+    from .nodes.image_fx.cross_processing import APNextCrossProcessing
+    NEW_MAPPINGS["APNextCrossProcessing"] = APNextCrossProcessing
+    NEW_DISPLAY_MAPPINGS["APNextCrossProcessing"] = "APNext Cross Processing FX"
+    # print("✅ Loaded modular APNextCrossProcessing")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextCrossProcessing: {e}")
+
+try:
+    from .nodes.image_fx.split_toning import APNextSplitToning
+    NEW_MAPPINGS["APNextSplitToning"] = APNextSplitToning
+    NEW_DISPLAY_MAPPINGS["APNextSplitToning"] = "APNext Split Toning FX"
+    # print("✅ Loaded modular APNextSplitToning")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextSplitToning: {e}")
+
+try:
+    from .nodes.image_fx.hdr_tone_mapping import APNextHDRToneMapping
+    NEW_MAPPINGS["APNextHDRToneMapping"] = APNextHDRToneMapping
+    NEW_DISPLAY_MAPPINGS["APNextHDRToneMapping"] = "APNext HDR Tone Mapping FX"
+    # print("✅ Loaded modular APNextHDRToneMapping")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextHDRToneMapping: {e}")
+
+try:
+    from .nodes.image_fx.glitch_art import APNextGlitchArt
+    NEW_MAPPINGS["APNextGlitchArt"] = APNextGlitchArt
+    NEW_DISPLAY_MAPPINGS["APNextGlitchArt"] = "APNext Glitch Art FX"
+    # print("✅ Loaded modular APNextGlitchArt")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextGlitchArt: {e}")
+
+try:
+    from .nodes.image_fx.film_halation import APNextFilmHalation
+    NEW_MAPPINGS["APNextFilmHalation"] = APNextFilmHalation
+    NEW_DISPLAY_MAPPINGS["APNextFilmHalation"] = "APNext Film Halation FX"
+    # print("✅ Loaded modular APNextFilmHalation")
+except Exception as e:
+    print(f"⚠️ Could not load modular APNextFilmHalation: {e}")
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}
