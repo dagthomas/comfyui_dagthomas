@@ -62,6 +62,20 @@ try:
 except Exception as e:
     print(f"⚠️ Could not load modular GptMiniNode: {e}")
 
+# MiniCPM Nodes
+try:
+    from .nodes.minicpm.video_node import MiniCPMVideoNode
+    NEW_MAPPINGS["MiniCPMVideoNode"] = MiniCPMVideoNode
+    NEW_DISPLAY_MAPPINGS["MiniCPMVideoNode"] = "APNext MiniCPM Video"
+except Exception as e:
+    print(f"⚠️ Could not load modular MiniCPMVideoNode: {e}")
+
+try:
+    from .nodes.minicpm.image_node import MiniCPMImageNode
+    NEW_MAPPINGS["MiniCPMImageNode"] = MiniCPMImageNode
+    NEW_DISPLAY_MAPPINGS["MiniCPMImageNode"] = "APNext MiniCPM Image"
+except Exception as e:
+    print(f"⚠️ Could not load modular MiniCPMImageNode: {e}")
 
 try:
     from .nodes.string_utils.mixer import SentenceMixerNode
