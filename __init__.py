@@ -284,6 +284,23 @@ try:
 except Exception as e:
     print(f"⚠️ Could not load modular ClaudeVisionNode: {e}")
 
+# Groq Nodes
+try:
+    from .nodes.groq.text_node import GroqTextNode
+    NEW_MAPPINGS["GroqTextNode"] = GroqTextNode
+    NEW_DISPLAY_MAPPINGS["GroqTextNode"] = "APNext Groq Text Generator"
+    print("✅ Loaded modular GroqTextNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular GroqTextNode: {e}")
+
+try:
+    from .nodes.groq.vision_node import GroqVisionNode
+    NEW_MAPPINGS["GroqVisionNode"] = GroqVisionNode
+    NEW_DISPLAY_MAPPINGS["GroqVisionNode"] = "APNext Groq Vision Analyzer"
+    print("✅ Loaded modular GroqVisionNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular GroqVisionNode: {e}")
+
 # APNext Advanced FX Nodes
 try:
     from .nodes.image_fx.color_grading import APNextColorGrading

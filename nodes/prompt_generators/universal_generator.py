@@ -6,7 +6,7 @@ import google.generativeai as genai
 from openai import OpenAI
 import anthropic
 
-from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models, grok_models, claude_models
+from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models, grok_models, claude_models, groq_models
 
 
 class APNextGenerator:
@@ -20,6 +20,7 @@ class APNextGenerator:
         self.openai_client = None
         self.grok_client = None
         self.claude_client = None
+        self.groq_client = None
         self.gemini_configured = False
 
     @classmethod
@@ -29,7 +30,8 @@ class APNextGenerator:
                      [f"gpt:{model}" for model in gpt_models] + 
                      [f"gemini:{model}" for model in gemini_models] +
                      [f"grok:{model}" for model in grok_models] +
-                     [f"claude:{model}" for model in claude_models])
+                     [f"claude:{model}" for model in claude_models] +
+                     [f"groq:{model}" for model in groq_models])
         
         return {
             "required": {
@@ -72,12 +74,14 @@ class APNextGenerator:
             return "claude:claude-sonnet-4.5"
         elif os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY"):
             return "grok:grok-beta"
+        elif os.environ.get("GROQ_API_KEY"):
+            return "groq:llama-3.3-70b-versatile"
         elif os.environ.get("GEMINI_API_KEY"):
             return "gemini:gemini-2.5-flash"
         elif os.environ.get("OPENAI_API_KEY"):
             return "gpt:gpt-4o-mini"
         else:
-            raise ValueError("No API keys found. Please set one of: ANTHROPIC_API_KEY, XAI_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY")
+            raise ValueError("No API keys found. Please set one of: ANTHROPIC_API_KEY, XAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY")
 
     def get_base_prompt(self, generation_mode, detail_level, style_preference):
         """Generate base prompt based on preferences"""
@@ -274,6 +278,39 @@ Generate a prompt that would create compelling, high-quality images. Be specific
             error_message = f"Error occurred while processing the request: {str(e)}"
             return error_message
 
+    def generate_with_groq(self, model_name, prompt, temperature, seed):
+        """Generate using Groq"""
+        try:
+            # Lazy initialization of Groq client
+            if self.groq_client is None:
+                api_key = os.environ.get("GROQ_API_KEY")
+                if not api_key:
+                    raise ValueError("GROQ_API_KEY environment variable not set")
+                self.groq_client = OpenAI(
+                    api_key=api_key,
+                    base_url="https://api.groq.com/openai/v1"
+                )
+            
+            # Extract model name (remove "groq:" prefix)
+            groq_model = model_name.replace("groq:", "")
+            
+            print(f"🔄 Sending to Groq model: {groq_model}")
+            response = self.groq_client.chat.completions.create(
+                model=groq_model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                temperature=temperature,
+            )
+            
+            result = response.choices[0].message.content
+            print(f"📥 Groq response: {len(result)} characters")
+            return result.strip()
+            
+        except Exception as e:
+            print(f"❌ Groq error: {e}")
+            error_message = f"Error occurred while processing the request: {str(e)}"
+            return error_message
+
     def generate(
         self,
         input_text,
@@ -352,6 +389,8 @@ Generate a prompt that would create compelling, high-quality images. Be specific
                 result = self.generate_with_grok(model, final_prompt, temperature, current_seed)
             elif model.startswith("claude:"):
                 result = self.generate_with_claude(model, final_prompt, temperature)
+            elif model.startswith("groq:"):
+                result = self.generate_with_groq(model, final_prompt, temperature, current_seed)
             else:
                 raise ValueError(f"Unsupported model format: {model}")
             

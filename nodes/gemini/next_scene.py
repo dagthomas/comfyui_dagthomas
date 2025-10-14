@@ -41,8 +41,10 @@ class GeminiNextScene:
                 "gemini_model": (gemini_models, {"default": "gemini-2.5-flash"}),
                 "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
                 "randomize_each_run": ("BOOLEAN", {"default": True}),
+                "add_scene_prefix": ("BOOLEAN", {"default": True}),
             },
             "optional": {
+                "scene_prefix_text": ("STRING", {"default": "NEW SCENE:"}),
                 "focus_on": (
                     ["Automatic", "Camera Movement", "Framing Evolution", "Environmental Reveals", "Atmospheric Shifts"],
                     {"default": "Automatic"}
@@ -72,6 +74,8 @@ class GeminiNextScene:
         gemini_model="gemini-2.5-flash",
         seed=-1,
         randomize_each_run=True,
+        add_scene_prefix=True,
+        scene_prefix_text="NEW SCENE:",
         focus_on="Automatic",
         transition_intensity="Moderate"
     ):
@@ -199,7 +203,8 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
             if not response.candidates:
                 print("⚠️  WARNING: Gemini returned no candidates!")
                 print("This usually means the content was completely blocked.")
-                result = "Next Scene: The camera pulls back to reveal more of the surrounding environment, as lighting shifts to create a different mood and atmosphere."
+                fallback_text = "The camera pulls back to reveal more of the surrounding environment, as lighting shifts to create a different mood and atmosphere."
+                result = f"{scene_prefix_text} {fallback_text}" if add_scene_prefix else fallback_text
                 short_description = result
             elif response.candidates[0].finish_reason != 1:  # 1 = STOP (normal completion)
                 print(f"⚠️  WARNING: Response did not complete normally. Finish reason: {response.candidates[0].finish_reason}")
@@ -220,7 +225,8 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
                     print(f"⚠️  Got partial response: {result[:100]}...")
                 except:
                     # If completely blocked, provide a generic fallback
-                    result = "Next Scene: The camera smoothly transitions to reveal a wider view of the scene, with dynamic lighting and atmospheric changes creating visual interest."
+                    fallback_text = "The camera smoothly transitions to reveal a wider view of the scene, with dynamic lighting and atmospheric changes creating visual interest."
+                    result = f"{scene_prefix_text} {fallback_text}" if add_scene_prefix else fallback_text
                     print("⚠️  Using fallback response due to content filtering.")
                 
                 short_description = result[:150]
@@ -241,6 +247,27 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
                 print("📋 Short Description:")
                 print(short_description)
                 print("="*80 + "\n")
+            
+            # Handle the scene prefix based on user preference
+            if not add_scene_prefix:
+                # Remove any existing "Next Scene:" or "NEW SCENE:" or custom prefix
+                result = re.sub(r'^(Next Scene:|NEW SCENE:)\s*', '', result, flags=re.IGNORECASE).strip()
+                short_description = re.sub(r'^(Next Scene:|NEW SCENE:)\s*', '', short_description, flags=re.IGNORECASE).strip()
+            else:
+                # Ensure the custom prefix is used
+                # First, remove any existing standard prefixes
+                result = re.sub(r'^(Next Scene:|NEW SCENE:)\s*', '', result, flags=re.IGNORECASE).strip()
+                short_description = re.sub(r'^(Next Scene:|NEW SCENE:)\s*', '', short_description, flags=re.IGNORECASE).strip()
+                
+                # Then add the custom prefix (ensure it has proper spacing)
+                prefix = scene_prefix_text.strip()
+                if prefix and not prefix.endswith(' ') and not prefix.endswith(':'):
+                    prefix += ' '
+                elif prefix and prefix.endswith(':'):
+                    prefix += ' '
+                    
+                result = prefix + result
+                short_description = prefix + short_description
 
             return (result, short_description)
 

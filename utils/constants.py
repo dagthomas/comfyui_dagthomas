@@ -85,6 +85,75 @@ with open(claude_models_file, 'r') as f:
     claude_models_data = json.load(f)
     claude_models = claude_models_data.get('models', [])
 
+def load_groq_models_from_file():
+    """Load Groq models from JSON file."""
+    try:
+        groq_models_file = os.path.join(base_dir, "data", "groq_models.json")
+        with open(groq_models_file, 'r') as f:
+            data = json.load(f)
+            
+            # Support both old format (models array) and new format (text_models/vision_models)
+            if 'text_models' in data:
+                text_models = data.get('text_models', [])
+                vision_models = data.get('vision_models', [])
+                print(f"📋 Loaded {len(text_models)} text models and {len(vision_models)} vision models from JSON file")
+                return text_models, vision_models
+            else:
+                # Old format compatibility
+                models = data.get('models', [])
+                print(f"📋 Loaded {len(models)} Groq models from JSON file")
+                return models, []
+    except Exception as e:
+        print(f"⚠️ Could not load Groq models from file: {e}")
+        # Return minimal defaults
+        default_text = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "groq/compound"]
+        default_vision = ["llama-3.2-90b-vision-preview", "llama-3.2-11b-vision-preview"]
+        return default_text, default_vision
+
+def get_groq_models_from_api():
+    """
+    Fetch available Groq models dynamically from API.
+    Returns (text_models, vision_models) tuple.
+    """
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    if not groq_api_key:
+        return None, None
+    
+    try:
+        import requests
+        response = requests.get(
+            "https://api.groq.com/openai/v1/models",
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json"
+            },
+            timeout=5
+        )
+        if response.status_code == 200:
+            models_data = response.json()
+            all_models = [model['id'] for model in models_data.get('data', [])]
+            
+            # Filter out non-text models (audio, tts, guards, etc.)
+            text_models = [m for m in all_models if not any(x in m.lower() for x in ['whisper', 'tts', 'guard'])]
+            # Vision models have 'vision' in the name or certain model types
+            vision_models = [m for m in all_models if 'vision' in m.lower()]
+            
+            if text_models:
+                print(f"✅ Fetched {len(text_models)} text models and {len(vision_models)} vision models from Groq API")
+                return sorted(text_models), sorted(vision_models)
+    except Exception as e:
+        print(f"⚠️ Could not fetch Groq models from API: {e}")
+    
+    return None, None
+
+# Load Groq models - try API first, then fall back to JSON file
+groq_text_models, groq_vision_models = get_groq_models_from_api()
+if groq_text_models is None:
+    groq_text_models, groq_vision_models = load_groq_models_from_file()
+
+# For backward compatibility, provide 'groq_models' as the text models list
+groq_models = groq_text_models
+
 # Legacy constants that were in sdxl_utility.py (now moved to utils)
 def tensor2pil(t_image):
     """Legacy tensor to PIL conversion function"""
