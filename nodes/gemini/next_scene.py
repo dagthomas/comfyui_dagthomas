@@ -14,8 +14,13 @@ from ...utils.constants import CUSTOM_CATEGORY, gemini_models
 class GeminiNextScene:
     """
     Generates the next scene in a visual narrative using Google Gemini.
-    Takes an original prompt and current frame image, then creates a cinematic transition
-    to the next scene with camera movements, framing evolution, and atmospheric shifts.
+    Takes an input prompt (previous scene description) and current frame image, then creates 
+    a cinematic transition FROM the previous scene TO the next scene with camera movements, 
+    framing evolution, and atmospheric shifts.
+    
+    When a non-empty input prompt is provided, it uses it to create a proper transition that
+    connects the previous scene to the next one. When no prompt is provided, it analyzes only
+    the image to suggest the next cinematic evolution.
     """
     def __init__(self):
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
@@ -97,7 +102,12 @@ class GeminiNextScene:
             print("\n" + "="*80)
             print("🎬 GEMINI NEXT SCENE - Processing")
             print("="*80)
-            print(f"📝 Original Prompt: {original_prompt if original_prompt else '(Analyzing image only)'}")
+            if original_prompt and original_prompt.strip():
+                print(f"📝 Previous Scene (transitioning FROM): {original_prompt[:100]}{'...' if len(original_prompt) > 100 else ''}")
+                print("✨ Using full transition mode - creating next scene based on previous prompt")
+            else:
+                print("📝 Previous Scene: (None - analyzing image only)")
+                print("ℹ️  Using image-only mode - no previous prompt for transition")
             print(f"🤖 Model: {gemini_model}")
             print(f"🎯 Focus: {focus_on}")
             print(f"⚡ Intensity: {transition_intensity}")
@@ -115,13 +125,16 @@ class GeminiNextScene:
 
             # Prepare the prompt - handle both with and without original prompt
             if original_prompt and original_prompt.strip():
-                # Use the full system prompt with original prompt context
+                # Use the full system prompt with original prompt context for proper transitions
                 full_prompt = self.system_prompt.replace("##ORIGINAL_PROMPT##", original_prompt)
+                print("🔗 Creating transition that connects previous scene to next scene")
             else:
-                # Create a simplified prompt that just analyzes the image
+                # Create a simplified prompt that just analyzes the image without previous context
                 full_prompt = """You are an expert cinematographer and visual storytelling assistant. 
 
 Analyze the provided image and generate a detailed description of the "Next Scene" in a cinematic narrative.
+
+NOTE: No previous scene prompt was provided, so focus on analyzing the current image and suggesting a natural cinematic evolution from what you see.
 
 First, understand what's happening in the current image, then create a natural, cinematic transition to the next scene.
 

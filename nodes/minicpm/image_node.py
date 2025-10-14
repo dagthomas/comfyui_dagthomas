@@ -50,6 +50,13 @@ class MiniCPMImageNode:
                     ["openbmb/MiniCPM-V-4_5", "openbmb/MiniCPM-o-2_6"],
                     {"default": "openbmb/MiniCPM-V-4_5"}
                 ),
+                "precision": ([
+                    "bfloat16",
+                    "float16",
+                ], {
+                    "default": "bfloat16",
+                    "tooltip": "float16 uses slightly less memory. bfloat16 is more stable."
+                }),
                 "enable_thinking": ("BOOLEAN", {
                     "default": False
                 }),
@@ -84,29 +91,39 @@ class MiniCPMImageNode:
             np.clip(255.0 * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8)
         )
     
-    def load_model(self, model_name, device):
+    def load_model(self, model_name, device, precision="bfloat16"):
         """Load or retrieve cached model and tokenizer"""
         tf = lazy_import_dependencies()
         
-        cache_key = f"{model_name}_{device}"
+        cache_key = f"{model_name}_{device}_{precision}"
         
         # Check if model is already loaded
         if cache_key in self._model_cache:
-            print(f"✅ Using cached model: {model_name}")
+            print(f"✅ Using cached model: {model_name} ({precision})")
             return self._model_cache[cache_key], self._tokenizer_cache[cache_key]
         
         print("\n" + "="*80)
         print(f"📥 LOADING MODEL: {model_name}")
+        print(f"⚙️  Precision: {precision}")
         print("="*80)
         
         try:
-            # Load model with optimizations
-            print("🔧 Loading model with sdpa attention and bfloat16...")
+            # Determine torch dtype
+            if precision == "float16":
+                torch_dtype = torch.float16
+                print("💾 Using FP16 precision")
+            else:
+                torch_dtype = torch.bfloat16
+                print("💾 Using BF16 precision")
+            
+            # Load model with standard optimizations
+            print("🔧 Loading model with sdpa attention...")
             model = tf.AutoModel.from_pretrained(
                 model_name,
                 trust_remote_code=True,
-                attn_implementation='sdpa',  # sdpa or flash_attention_2
-                torch_dtype=torch.bfloat16
+                attn_implementation='sdpa',
+                torch_dtype=torch_dtype,
+                low_cpu_mem_usage=True,
             )
             model = model.eval()
             
@@ -139,9 +156,9 @@ class MiniCPMImageNode:
             print(f"❌ Error loading model: {e}")
             raise
     
-    def unload_model(self, model_name, device):
+    def unload_model(self, model_name, device, precision="bfloat16"):
         """Unload model from memory"""
-        cache_key = f"{model_name}_{device}"
+        cache_key = f"{model_name}_{device}_{precision}"
         
         if cache_key in self._model_cache:
             print(f"🗑️  Unloading model: {model_name}")
@@ -158,6 +175,7 @@ class MiniCPMImageNode:
         images,
         question="Describe this image in detail.",
         model_name="openbmb/MiniCPM-V-4_5",
+        precision="bfloat16",
         enable_thinking=False,
         stream=False,
         device="cuda",
@@ -183,7 +201,7 @@ class MiniCPMImageNode:
         """
         try:
             # Load model and tokenizer
-            model, tokenizer = self.load_model(model_name, device)
+            model, tokenizer = self.load_model(model_name, device, precision)
             
             # Convert tensor images to PIL
             if len(images.shape) == 4:
@@ -249,7 +267,7 @@ class MiniCPMImageNode:
             
             # Unload model if requested
             if unload_after_inference:
-                self.unload_model(model_name, device)
+                self.unload_model(model_name, device, precision)
             
             return (answer, updated_history)
             

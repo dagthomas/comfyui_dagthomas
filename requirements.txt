@@ -10,4 +10,5 @@ anthropic
 transformers>=4.40.0
 decord>=0.6.0
 scipy>=1.10.0
+tqdm>=4.67.1
 huggingface_hub[hf_xet]
