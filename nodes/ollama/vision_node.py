@@ -127,17 +127,15 @@ class OllamaVisionNode:
                 raise Exception(f"Error while loading model: {e}")
 
     def unload_model(self, ollama_url):
+        """
+        Mark model as no longer actively loaded.
+        Note: Ollama will automatically manage VRAM and unload models when needed.
+        We do NOT call /api/delete as that would delete the model entirely from disk.
+        """
         if self.loaded_model:
-            unload_url = ollama_url.replace("/api/generate", "/api/delete")
-            try:
-                response = requests.delete(unload_url, json={"name": self.loaded_model})
-                if response.status_code == 200:
-                    print(f"Successfully unloaded model: {self.loaded_model}")
-                    self.loaded_model = None
-                else:
-                    print(f"Failed to unload model: {self.loaded_model}. Status code: {response.status_code}")
-            except requests.RequestException as e:
-                print(f"Error while unloading model: {e}")
+            print(f"🔓 Marking model as inactive: {self.loaded_model}")
+            print("💡 Ollama will automatically manage VRAM (model stays on disk)")
+            self.loaded_model = None
 
     def analyze_images(
         self,

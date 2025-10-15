@@ -311,18 +311,30 @@ class MiniCPMVideoNode:
             raise
     
     def unload_model(self, model_name, device, precision="bfloat16"):
-        """Unload model from memory"""
+        """Unload model from GPU VRAM only (does NOT delete model files)"""
         cache_key = f"{model_name}_{device}_{precision}"
         
         if cache_key in self._model_cache:
-            print(f"🗑️  Unloading model: {model_name}")
+            print(f"🔓 Unloading model from VRAM: {model_name}")
+            print("💡 Note: Model files are NOT deleted, only unloaded from memory")
+            
+            # Move model to CPU before deleting (helps ensure VRAM is freed)
+            if device == "cuda" and torch.cuda.is_available():
+                try:
+                    self._model_cache[cache_key] = self._model_cache[cache_key].cpu()
+                except:
+                    pass
+            
+            # Remove from cache
             del self._model_cache[cache_key]
             del self._tokenizer_cache[cache_key]
             
+            # Clear CUDA cache to free VRAM
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-            
-            print("✅ Model unloaded from memory")
+                print(f"✅ Model unloaded from GPU VRAM (files remain on disk)")
+            else:
+                print(f"✅ Model unloaded from memory")
     
     def analyze_video(
         self,
