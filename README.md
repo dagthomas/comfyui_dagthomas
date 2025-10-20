@@ -1,6 +1,6 @@
 # comfyui_dagthomas
 ### 您可以在这里找到中文信息
-![plugin.aix.ink](https://plugin.aix.ink/archives/comfyui-dagthomas)
+!["plugin.aix.ink"](https://plugin.aix.ink/archives/comfyui-dagthomas)
 
 ### Advanced Prompt Generation and Image Analysis
 
