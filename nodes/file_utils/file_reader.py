@@ -1,7 +1,9 @@
 # FileReaderNode Node
 
-from ...utils.constants import CUSTOM_CATEGORY
 import json
+import random
+
+from ...utils.constants import CUSTOM_CATEGORY
 
 
 class FileReaderNode:
