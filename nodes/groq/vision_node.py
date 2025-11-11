@@ -26,10 +26,13 @@ class GroqVisionNode:
         # Load vision models from constants (loaded from groq_models.json)
         try:
             from ...utils.constants import groq_vision_models
-            vision_models = groq_vision_models if groq_vision_models else ["llama-3.2-90b-vision-preview"]
+            vision_models = groq_vision_models if groq_vision_models else ["llama-4-scout-17b-16e-instruct"]
         except:
-            vision_models = ["llama-3.2-90b-vision-preview", "llama-3.2-11b-vision-preview"]
-        
+            vision_models = ["llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-scout-17b-16e-instruct"]
+
+        # Use first available model as default
+        default_model = vision_models[0] if vision_models else "llama-4-scout-17b-16e-instruct"
+
         return {
             "required": {
                 "images": ("IMAGE",),
@@ -37,7 +40,7 @@ class GroqVisionNode:
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
                 "poster": ("BOOLEAN", {"default": False}),
-                "groq_model": (vision_models, {"default": "llama-3.2-90b-vision-preview"}),
+                "groq_model": (vision_models, {"default": default_model}),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -70,7 +73,7 @@ class GroqVisionNode:
         compress,
         compression_level,
         poster,
-        groq_model="llama-3.2-90b-vision-preview",
+        groq_model="llama-4-scout-17b-16e-instruct",
         custom_base_prompt="",
         custom_title="",
         override="",

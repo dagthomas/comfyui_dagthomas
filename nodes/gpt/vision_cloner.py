@@ -11,11 +11,23 @@ import json
 import numpy as np
 import os
 import torch
+import httpx
 
 
 class GptVisionCloner:
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+        # Create a compatible httpx client to avoid version conflicts
+        try:
+            http_client = httpx.Client(timeout=60.0)
+        except TypeError:
+            # Fallback for older httpx versions that don't support certain parameters
+            http_client = httpx.Client()
+
+        self.client = OpenAI(api_key=api_key, http_client=http_client)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -254,12 +266,18 @@ ALWAYS blend concepts into one concept if there are multiple images. Ensure that
                 }
             )
 
+            print(f"🔄 GPT Vision Cloner: Sending request to {gpt_model}...")
+
+            # Timeout is handled by the httpx client
             response = self.client.chat.completions.create(
-                model=gpt_model, messages=messages
+                model=gpt_model,
+                messages=messages,
+                max_tokens=4096,
+                temperature=0.7
             )
 
+            print(f"✅ GPT Vision Cloner: Received response from {gpt_model}")
             content = response.choices[0].message.content
-            # print(content)
 
             # Check if the content is wrapped in Markdown code blocks
             if content.startswith("```json") and content.endswith("```"):
@@ -280,8 +298,25 @@ ALWAYS blend concepts into one concept if there are multiple images. Ensure that
 
             faded_image_tensor = self.pil2tensor(combined_image)
             return (result, json.dumps(data, indent=2), faded_image_tensor)
+        except TimeoutError as e:
+            print(f"❌ GPT Vision Cloner: Request timed out after 60 seconds")
+            error_message = "Request timed out. OpenAI API took too long to respond."
+            error_image = Image.new("RGB", (512, 512), color="red")
+            return (error_message, "{}", self.pil2tensor(error_image))
+        except ValueError as e:
+            print(f"❌ GPT Vision Cloner: {str(e)}")
+            error_message = f"Configuration error: {str(e)}"
+            error_image = Image.new("RGB", (512, 512), color="red")
+            return (error_message, "{}", self.pil2tensor(error_image))
+        except json.JSONDecodeError as e:
+            print(f"❌ GPT Vision Cloner: Failed to parse JSON response: {e}")
+            error_message = f"Invalid JSON response from API: {str(e)}"
+            error_image = Image.new("RGB", (512, 512), color="red")
+            return (error_message, "{}", self.pil2tensor(error_image))
         except Exception as e:
-            print(f"An error occurred: {e}")
+            import traceback
+            print(f"❌ GPT Vision Cloner: Unexpected error: {e}")
+            print(traceback.format_exc())
             error_message = f"Error occurred while processing the request: {str(e)}"
             error_image = Image.new("RGB", (512, 512), color="red")
             return (error_message, "{}", self.pil2tensor(error_image))

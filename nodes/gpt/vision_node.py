@@ -6,13 +6,25 @@ import numpy as np
 from io import BytesIO
 from PIL import Image
 from openai import OpenAI
+import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, gpt_models
 
 
 class GptVisionNode:
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+        # Create a compatible httpx client to avoid version conflicts
+        try:
+            http_client = httpx.Client(timeout=60.0)
+        except TypeError:
+            # Fallback for older httpx versions that don't support certain parameters
+            http_client = httpx.Client()
+
+        self.client = OpenAI(api_key=api_key, http_client=http_client)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -149,12 +161,30 @@ Visual Style: Ensure the overall visual style is consistent with Studio Ghibli s
                     }
                 )
 
+            print(f"🔄 GPT Vision: Sending request to {gpt_model}...")
+
+            # Timeout is handled by the httpx client
             response = self.client.chat.completions.create(
-                model=gpt_model, messages=messages
+                model=gpt_model,
+                messages=messages,
+                max_tokens=2000,
+                temperature=0.7
             )
-            return (response.choices[0].message.content,)
+
+            print(f"✅ GPT Vision: Received response from {gpt_model}")
+            result = response.choices[0].message.content
+            print(f"📝 GPT Vision: Generated {len(result)} characters")
+            return (result,)
+        except TimeoutError as e:
+            print(f"❌ GPT Vision: Request timed out after 60 seconds")
+            return ("Error: Request timed out. OpenAI API took too long to respond.",)
+        except ValueError as e:
+            print(f"❌ GPT Vision: {str(e)}")
+            return (f"Configuration error: {str(e)}",)
         except Exception as e:
-            print(f"An error occurred: {e}")
+            import traceback
+            print(f"❌ GPT Vision: Unexpected error: {e}")
             print(f"Images tensor shape: {images.shape}")
             print(f"Images tensor type: {images.dtype}")
+            print(traceback.format_exc())
             return (f"Error occurred while processing the request: {str(e)}",)

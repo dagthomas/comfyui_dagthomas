@@ -14,10 +14,8 @@
         "allam-2-7b"
     ],
     "vision_models": [
-        "llama-3.2-90b-vision-preview",
-        "llama-3.2-11b-vision-preview",
-        "llama-3.3-70b-versatile",
-        "groq/compound"
+        "llama-4-scout-17b-16e-instruct",
+        "meta-llama/llama-4-scout-17b-16e-instruct"
     ],
     "source": "manual_configuration",
     "note": "Edit this file to add/remove models. Text models are for text generation, vision models support image analysis."
