@@ -3,13 +3,25 @@
 import os
 import random
 from openai import OpenAI
+import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, gpt_models
 
 
 class GptMiniNode:
     def __init__(self):
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+        # Create a compatible httpx client to avoid version conflicts
+        try:
+            http_client = httpx.Client(timeout=60.0)
+        except TypeError:
+            # Fallback for older httpx versions that don't support certain parameters
+            http_client = httpx.Client()
+
+        self.client = OpenAI(api_key=api_key, http_client=http_client)
 
     @classmethod
     def INPUT_TYPES(s):

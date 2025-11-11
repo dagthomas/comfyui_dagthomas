@@ -6,6 +6,7 @@ import numpy as np
 from io import BytesIO
 from PIL import Image
 from openai import OpenAI
+import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, grok_models
 
@@ -15,10 +16,18 @@ class GrokVisionNode:
         api_key = os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY")
         if not api_key:
             raise ValueError("XAI_API_KEY or GROK_API_KEY environment variable is not set")
-        
+
+        # Create a compatible httpx client to avoid version conflicts
+        try:
+            http_client = httpx.Client(timeout=60.0)
+        except TypeError:
+            # Fallback for older httpx versions that don't support certain parameters
+            http_client = httpx.Client()
+
         self.client = OpenAI(
             api_key=api_key,
-            base_url="https://api.x.ai/v1"
+            base_url="https://api.x.ai/v1",
+            http_client=http_client
         )
 
     @classmethod

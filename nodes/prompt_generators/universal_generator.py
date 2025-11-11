@@ -5,6 +5,7 @@ import random
 import google.generativeai as genai
 from openai import OpenAI
 import anthropic
+import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models, grok_models, claude_models, groq_models
 
@@ -138,7 +139,14 @@ Generate a prompt that would create compelling, high-quality images. Be specific
                 api_key = os.environ.get("OPENAI_API_KEY")
                 if not api_key:
                     raise ValueError("OPENAI_API_KEY environment variable not set")
-                self.openai_client = OpenAI(api_key=api_key)
+
+                # Create a compatible httpx client to avoid version conflicts
+                try:
+                    http_client = httpx.Client(timeout=60.0)
+                except TypeError:
+                    http_client = httpx.Client()
+
+                self.openai_client = OpenAI(api_key=api_key, http_client=http_client)
             
             # Extract model name (remove "gpt:" prefix)
             gpt_model = model_name.replace("gpt:", "")
@@ -222,9 +230,17 @@ Generate a prompt that would create compelling, high-quality images. Be specific
                 api_key = os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY")
                 if not api_key:
                     raise ValueError("XAI_API_KEY or GROK_API_KEY environment variable not set")
+
+                # Create a compatible httpx client to avoid version conflicts
+                try:
+                    http_client = httpx.Client(timeout=60.0)
+                except TypeError:
+                    http_client = httpx.Client()
+
                 self.grok_client = OpenAI(
                     api_key=api_key,
-                    base_url="https://api.x.ai/v1"
+                    base_url="https://api.x.ai/v1",
+                    http_client=http_client
                 )
             
             # Extract model name (remove "grok:" prefix)
@@ -286,9 +302,17 @@ Generate a prompt that would create compelling, high-quality images. Be specific
                 api_key = os.environ.get("GROQ_API_KEY")
                 if not api_key:
                     raise ValueError("GROQ_API_KEY environment variable not set")
+
+                # Create a compatible httpx client to avoid version conflicts
+                try:
+                    http_client = httpx.Client(timeout=60.0)
+                except TypeError:
+                    http_client = httpx.Client()
+
                 self.groq_client = OpenAI(
                     api_key=api_key,
-                    base_url="https://api.groq.com/openai/v1"
+                    base_url="https://api.groq.com/openai/v1",
+                    http_client=http_client
                 )
             
             # Extract model name (remove "groq:" prefix)
