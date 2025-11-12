@@ -3,7 +3,6 @@
 import os
 import random
 from openai import OpenAI
-import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, groq_models
 
@@ -15,18 +14,20 @@ class GroqTextNode:
         if not api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
 
-        # Create a compatible httpx client to avoid version conflicts
+        # Initialize OpenAI client with Groq's base URL
+        # Groq API endpoint: https://api.groq.com/openai/v1/chat/completions
         try:
-            http_client = httpx.Client(timeout=60.0)
-        except TypeError:
-            # Fallback for older httpx versions that don't support certain parameters
-            http_client = httpx.Client()
-
-        self.client = OpenAI(
-            api_key=api_key,
-            base_url="https://api.groq.com/openai/v1",
-            http_client=http_client
-        )
+            self.client = OpenAI(
+                api_key=api_key,
+                base_url="https://api.groq.com/openai/v1",
+                timeout=60.0,
+                max_retries=2
+            )
+            print("✅ Groq client initialized successfully")
+            print(f"🔗 Base URL: https://api.groq.com/openai/v1")
+        except Exception as e:
+            print(f"❌ Failed to initialize Groq client: {e}")
+            raise
 
     @classmethod
     def INPUT_TYPES(s):
@@ -105,23 +106,41 @@ class GroqTextNode:
                 prompt += f"\n\nVariation Instruction: {variation_instruction}"
 
         try:
-            response = self.client.chat.completions.create(
-                model=groq_model,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=2000,
-                temperature=0.7 if randomize_each_run else 0.3,
-            )
-            
-            result = response.choices[0].message.content.strip()
-            print(f"⚡ Groq ({groq_model}) generated {len(result)} characters")
-            
-            return (result,)
-            
+            print(f"🔄 Groq Text: Calling API with model {groq_model}")
+            print(f"📊 Prompt length: {len(prompt)} characters")
+
+            # Try the new responses.create() API first
+            try:
+                response = self.client.responses.create(
+                    input=prompt,
+                    model=groq_model,
+                )
+                result = response.output_text.strip()
+                print(f"✅ Groq ({groq_model}) generated {len(result)} characters (responses API)")
+                return (result,)
+            except AttributeError:
+                # Fall back to chat completions API if responses API not available
+                print("⚠️ responses.create() not available, falling back to chat.completions.create()")
+                response = self.client.chat.completions.create(
+                    model=groq_model,
+                    messages=[
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=2000,
+                    temperature=0.7 if randomize_each_run else 0.3,
+                )
+                result = response.choices[0].message.content.strip()
+                print(f"✅ Groq ({groq_model}) generated {len(result)} characters (chat API)")
+                return (result,)
+
         except Exception as e:
+            import traceback
             error_msg = f"Groq API Error: {str(e)}"
             print(f"❌ {error_msg}")
+            print(f"🔍 Full error trace:")
+            traceback.print_exc()
+            print(f"🔍 API Base URL: https://api.groq.com/openai/v1")
+            print(f"🔍 Model used: {groq_model}")
             return (error_msg,)
 
     def _get_base_prompt(self, happy_talk, compress, compression_level, poster):

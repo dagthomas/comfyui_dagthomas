@@ -6,7 +6,6 @@ import numpy as np
 from io import BytesIO
 from PIL import Image
 from openai import OpenAI
-import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, groq_models
 
@@ -17,18 +16,20 @@ class GroqVisionNode:
         if not api_key:
             raise ValueError("GROQ_API_KEY environment variable is not set")
 
-        # Create a compatible httpx client to avoid version conflicts
+        # Initialize OpenAI client with Groq's base URL
+        # Groq API endpoint: https://api.groq.com/openai/v1/chat/completions
         try:
-            http_client = httpx.Client(timeout=60.0)
-        except TypeError:
-            # Fallback for older httpx versions that don't support certain parameters
-            http_client = httpx.Client()
-
-        self.client = OpenAI(
-            api_key=api_key,
-            base_url="https://api.groq.com/openai/v1",
-            http_client=http_client
-        )
+            self.client = OpenAI(
+                api_key=api_key,
+                base_url="https://api.groq.com/openai/v1",
+                timeout=60.0,
+                max_retries=2
+            )
+            print("✅ Groq Vision client initialized successfully")
+            print(f"🔗 Base URL: https://api.groq.com/openai/v1")
+        except Exception as e:
+            print(f"❌ Failed to initialize Groq Vision client: {e}")
+            raise
 
     @classmethod
     def INPUT_TYPES(s):
@@ -106,6 +107,11 @@ class GroqVisionNode:
                 prompt = f"{base_prompt}\n\nAnalyze this image and provide a detailed description."
 
         try:
+            print(f"🔄 Groq Vision: Calling API with model {groq_model}")
+            print(f"📊 Prompt length: {len(prompt)} characters")
+            print(f"🖼️  Image encoded as base64 PNG")
+
+            # Vision uses chat.completions API with multimodal content
             response = self.client.chat.completions.create(
                 model=groq_model,
                 messages=[
@@ -123,15 +129,21 @@ class GroqVisionNode:
                 max_tokens=2000,
                 temperature=0.7,
             )
-            
+
             result = response.choices[0].message.content.strip()
-            print(f"⚡ Groq Vision ({groq_model}) analyzed image: {len(result)} characters")
-            
+            print(f"✅ Groq Vision ({groq_model}) analyzed image: {len(result)} characters")
+
             return (result,)
-            
+
         except Exception as e:
+            import traceback
             error_msg = f"Groq Vision API Error: {str(e)}"
             print(f"❌ {error_msg}")
+            print(f"🔍 Full error trace:")
+            traceback.print_exc()
+            print(f"🔍 API Base URL: https://api.groq.com/openai/v1")
+            print(f"🔍 Endpoint: https://api.groq.com/openai/v1/chat/completions")
+            print(f"🔍 Model used: {groq_model}")
             return (error_msg,)
 
     def _get_base_prompt(self, happy_talk, compress, compression_level, poster):

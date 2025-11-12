@@ -59,8 +59,8 @@ class QwenVLVideoNode:
         return {
             "required": {
                 "video_section": (["start", "end"], {"default": "start", "tooltip": "Extract frames from start or end of video"}),
-                "frame_window": ("INT", {"default": 60, "min": 1, "max": 1000, "step": 1, "tooltip": "Number of frames to consider from the selected section"}),
-                "fps_extract": ("INT", {"default": 3, "min": 1, "max": 30, "step": 1, "tooltip": "Number of frames to extract from the frame window"}),
+                "frame_window": ("INT", {"default": 60, "min": 1, "max": 999999, "step": 1, "tooltip": "Number of frames to consider from the selected section (no limit)"}),
+                "fps_extract": ("INT", {"default": 3, "min": 1, "max": 100, "step": 1, "tooltip": "Number of frames to extract from the frame window"}),
                 "qwen_model": (qwenvl_models, {"default": qwenvl_models[0] if qwenvl_models else "Qwen3-VL-4B-Instruct", "tooltip": "Qwen-VL model to use for analysis"}),
                 "max_tokens": ("INT", {"default": 1024, "min": 64, "max": 4096, "tooltip": "Maximum tokens to generate"}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0, "tooltip": "Sampling temperature (lower = more focused)"}),
@@ -414,8 +414,9 @@ class QwenVLVideoNode:
         """
         total_frames = video_tensor.shape[0]
 
-        print(f"📹 Total video frames: {total_frames}")
-        print(f"📹 Extracting from: {video_section}, window: {frame_window}, fps: {fps_extract}")
+        print("\n" + "-"*80)
+        print("🎬 FRAME EXTRACTION")
+        print("-"*80)
 
         # Determine which frames to consider based on video_section
         if video_section == "end":
@@ -431,23 +432,31 @@ class QwenVLVideoNode:
         frame_window_tensor = video_tensor[start_idx:end_idx]
         window_size = frame_window_tensor.shape[0]
 
-        print(f"📹 Frame window: {start_idx} to {end_idx} ({window_size} frames)")
+        print(f"📍 Analyzing {'LAST' if video_section == 'end' else 'FIRST'} {window_size} frames (indices {start_idx} to {end_idx-1})")
 
         # Extract fps_extract frames evenly from the window
         if window_size <= fps_extract:
             # If window is smaller than or equal to fps_extract, take all frames
             indices = list(range(window_size))
+            print(f"⚡ Taking all {len(indices)} frames (fewer than requested {fps_extract})")
         else:
             # Evenly distribute fps_extract frames across the window
             indices = np.linspace(0, window_size - 1, fps_extract, dtype=int).tolist()
+            print(f"⚡ Sampling {len(indices)} frames evenly from window")
 
-        print(f"📹 Extracting frames at indices: {indices}")
+        # Show which absolute frame indices are being used
+        absolute_indices = [start_idx + i for i in indices]
+        if len(absolute_indices) <= 10:
+            print(f"📊 Selected frame indices: {absolute_indices}")
+        else:
+            print(f"📊 Selected frame indices: {absolute_indices[:5]} ... {absolute_indices[-5:]}")
 
         # Extract frames
         extracted_frames_tensor = frame_window_tensor[indices]
         extracted_frames_pil = [self.tensor_to_pil(frame) for frame in extracted_frames_tensor]
 
-        print(f"✅ Extracted {len(extracted_frames_pil)} frames")
+        print(f"✅ Successfully extracted {len(extracted_frames_pil)} frames")
+        print("-"*80 + "\n")
 
         return extracted_frames_pil, extracted_frames_tensor
 
@@ -523,8 +532,19 @@ class QwenVLVideoNode:
                 print(f"❌ {error_msg}")
                 return (error_msg, torch.zeros((1, 64, 64, 3)))
 
+            # Display video information
+            total_frames = video_tensor.shape[0] if len(video_tensor.shape) >= 1 else 1
+            print("\n" + "="*80)
+            print("📹 VIDEO INPUT INFORMATION")
+            print("="*80)
+            print(f"📊 Total frames in video: {total_frames}")
+            print(f"📐 Frame dimensions: {video_tensor.shape}")
+            print(f"🎞️  Section to analyze: {video_section}")
+            print(f"🪟 Frame window: {frame_window} frames")
+            print(f"⚡ Extracting: {fps_extract} frames from window")
+            print("="*80 + "\n")
+
             # Now extract frames from the tensor
-            print(f"📹 Video tensor shape: {video_tensor.shape}")
             frames_pil, frames_tensor = self.extract_frames(
                 video_tensor, video_section, frame_window, fps_extract
             )
