@@ -315,6 +315,31 @@ try:
 except Exception as e:
     print(f"⚠️ Could not load modular GroqVisionNode: {e}")
 
+# QwenVL Nodes
+try:
+    from .nodes.qwenvl.vision_node import QwenVLVisionNode
+    NEW_MAPPINGS["QwenVLVisionNode"] = QwenVLVisionNode
+    NEW_DISPLAY_MAPPINGS["QwenVLVisionNode"] = "APNext QwenVL Vision Analyzer"
+    print("✅ Loaded modular QwenVLVisionNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular QwenVLVisionNode: {e}")
+
+try:
+    from .nodes.qwenvl.vision_cloner import QwenVLVisionCloner
+    NEW_MAPPINGS["QwenVLVisionCloner"] = QwenVLVisionCloner
+    NEW_DISPLAY_MAPPINGS["QwenVLVisionCloner"] = "APNext QwenVL Vision Cloner"
+    print("✅ Loaded modular QwenVLVisionCloner")
+except Exception as e:
+    print(f"⚠️ Could not load modular QwenVLVisionCloner: {e}")
+
+try:
+    from .nodes.qwenvl.video_node import QwenVLVideoNode
+    NEW_MAPPINGS["QwenVLVideoNode"] = QwenVLVideoNode
+    NEW_DISPLAY_MAPPINGS["QwenVLVideoNode"] = "APNext QwenVL Video Analyzer"
+    print("✅ Loaded modular QwenVLVideoNode")
+except Exception as e:
+    print(f"⚠️ Could not load modular QwenVLVideoNode: {e}")
+
 # APNext Advanced FX Nodes
 try:
     from .nodes.image_fx.color_grading import APNextColorGrading

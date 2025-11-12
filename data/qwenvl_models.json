@@ -1,0 +1,22 @@
+{
+    "models": [
+        "Qwen3-VL-2B-Instruct",
+        "Qwen3-VL-2B-Thinking",
+        "Qwen3-VL-2B-Instruct-FP8",
+        "Qwen3-VL-2B-Thinking-FP8",
+        "Qwen3-VL-4B-Instruct",
+        "Qwen3-VL-4B-Thinking",
+        "Qwen3-VL-4B-Instruct-FP8",
+        "Qwen3-VL-4B-Thinking-FP8",
+        "Qwen3-VL-8B-Instruct",
+        "Qwen3-VL-8B-Thinking",
+        "Qwen3-VL-8B-Instruct-FP8",
+        "Qwen3-VL-8B-Thinking-FP8",
+        "Qwen3-VL-32B-Instruct",
+        "Qwen3-VL-32B-Thinking",
+        "Qwen3-VL-32B-Instruct-FP8",
+        "Qwen3-VL-32B-Thinking-FP8",
+        "Qwen2.5-VL-3B-Instruct",
+        "Qwen2.5-VL-7B-Instruct"
+    ]
+}

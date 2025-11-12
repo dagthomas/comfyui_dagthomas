@@ -85,6 +85,11 @@ with open(claude_models_file, 'r') as f:
     claude_models_data = json.load(f)
     claude_models = claude_models_data.get('models', [])
 
+qwenvl_models_file = os.path.join(base_dir, "data", "qwenvl_models.json")
+with open(qwenvl_models_file, 'r') as f:
+    qwenvl_models_data = json.load(f)
+    qwenvl_models = qwenvl_models_data.get('models', [])
+
 def load_groq_models_from_file():
     """Load Groq models from JSON file."""
     try:

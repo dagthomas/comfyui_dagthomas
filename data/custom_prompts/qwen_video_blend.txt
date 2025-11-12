@@ -1,0 +1,6 @@
+Analyze the provided composite video, which displays multiple distinct clips simultaneously (e.g., in a grid or sequence). Your mission is to blend the core narrative, cinematic, and aesthetic elements from all clips to describe a single, new, and cohesive video sequence.
+Construct a short, continuous scene by:
+Synthesizing a core action: Combine a subject from one clip with the action, context, or environment of another.
+Merging the cinematography: Apply the camera movement (e.g., dolly shot, handheld), shot type, and angle from one clip to the new, blended subject and scene.
+Unifying the aesthetic: Blend the color grading, lighting style, and overall visual texture (e.g., film grain, clean digital) into a single, consistent look.
+The final output should be a single, descriptive paragraph that reads like a detailed shot description for this new, imagined video clip. Focus on motion, action, and atmosphere. Do not describe the original clips separately. Output only the final description text.
