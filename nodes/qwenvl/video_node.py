@@ -4,6 +4,7 @@ import os
 import numpy as np
 import torch
 import gc
+import subprocess
 from pathlib import Path
 from PIL import Image
 from huggingface_hub import snapshot_download
@@ -11,6 +12,36 @@ from transformers import AutoModelForVision2Seq, AutoProcessor, AutoTokenizer
 
 from ...utils.constants import CUSTOM_CATEGORY, qwenvl_models
 import folder_paths
+
+# Lazy imports for video libraries
+decord = None
+cv2 = None
+
+def lazy_import_video_libs():
+    """Try to import video libraries, return what's available"""
+    global decord, cv2
+
+    libs = []
+
+    # Try decord
+    if decord is None:
+        try:
+            import decord as dc
+            decord = dc
+            libs.append("decord")
+        except ImportError:
+            pass
+
+    # Try opencv
+    if cv2 is None:
+        try:
+            import cv2 as cv
+            cv2 = cv
+            libs.append("opencv")
+        except ImportError:
+            pass
+
+    return libs
 
 
 class QwenVLVideoNode:
@@ -27,7 +58,6 @@ class QwenVLVideoNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "images": ("IMAGE", {"tooltip": "Video frames from LoadVideo node (IMAGE batch)"}),
                 "video_section": (["start", "end"], {"default": "start", "tooltip": "Extract frames from start or end of video"}),
                 "frame_window": ("INT", {"default": 60, "min": 1, "max": 1000, "step": 1, "tooltip": "Number of frames to consider from the selected section"}),
                 "fps_extract": ("INT", {"default": 3, "min": 1, "max": 30, "step": 1, "tooltip": "Number of frames to extract from the frame window"}),
@@ -37,9 +67,32 @@ class QwenVLVideoNode:
                 "keep_model_loaded": ("BOOLEAN", {"default": True, "tooltip": "Keep model in memory for faster subsequent runs"}),
             },
             "optional": {
+                "video": ("VIDEO,IMAGE", {"tooltip": "Connect VIDEO from LoadVideo node or IMAGE batch"}),
                 "custom_prompt": ("STRING", {"multiline": True, "default": "", "tooltip": "Custom analysis prompt (overrides default)"}),
             },
         }
+
+    @classmethod
+    def IS_CHANGED(cls, **kwargs):
+        """Force re-execution when inputs change"""
+        import hashlib
+        m = hashlib.sha256()
+
+        # Check video input
+        video = kwargs.get('video', None)
+        if video is not None:
+            # Try to get a unique identifier for the video
+            if torch.is_tensor(video):
+                m.update(str(video.shape).encode())
+            else:
+                m.update(str(type(video)).encode())
+
+        # Add other parameters that should trigger re-execution
+        m.update(str(kwargs.get('video_section', 'start')).encode())
+        m.update(str(kwargs.get('frame_window', 60)).encode())
+        m.update(str(kwargs.get('fps_extract', 3)).encode())
+
+        return m.hexdigest()
 
     RETURN_TYPES = ("STRING", "IMAGE")
     RETURN_NAMES = ("analysis", "extracted_frames")
@@ -132,6 +185,220 @@ class QwenVLVideoNode:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
+    def extract_frames_from_video_file(self, video_path, video_section, frame_window, fps_extract):
+        """
+        Extract frames from a video file using available libraries.
+
+        Args:
+            video_path: Path to video file
+            video_section: "start" or "end" - where to extract from
+            frame_window: Number of frames to consider from start/end
+            fps_extract: Number of frames to extract from the window
+
+        Returns:
+            Tuple of (list of PIL images, tensor of extracted frames)
+        """
+        print(f"📹 Extracting frames from video file: {video_path}")
+
+        # Check which libraries are available
+        available_libs = lazy_import_video_libs()
+
+        if not available_libs:
+            print("⚠️ No video libraries found (decord, opencv), trying ffmpeg...")
+            return self._extract_with_ffmpeg(video_path, video_section, frame_window, fps_extract)
+
+        # Try decord first (preferred)
+        if "decord" in available_libs:
+            try:
+                return self._extract_with_decord(video_path, video_section, frame_window, fps_extract)
+            except Exception as e:
+                print(f"⚠️ Decord extraction failed: {e}")
+                if "opencv" in available_libs:
+                    print("Falling back to OpenCV...")
+                    return self._extract_with_opencv(video_path, video_section, frame_window, fps_extract)
+                else:
+                    print("Falling back to ffmpeg...")
+                    return self._extract_with_ffmpeg(video_path, video_section, frame_window, fps_extract)
+
+        # Try opencv
+        elif "opencv" in available_libs:
+            try:
+                return self._extract_with_opencv(video_path, video_section, frame_window, fps_extract)
+            except Exception as e:
+                print(f"⚠️ OpenCV extraction failed: {e}")
+                print("Falling back to ffmpeg...")
+                return self._extract_with_ffmpeg(video_path, video_section, frame_window, fps_extract)
+
+    def _extract_with_decord(self, video_path, video_section, frame_window, fps_extract):
+        """Extract frames using decord library"""
+        print("📚 Using decord for frame extraction")
+
+        vr = decord.VideoReader(video_path, ctx=decord.cpu(0))
+        total_frames = len(vr)
+        fps = vr.get_avg_fps()
+
+        print(f"📹 Total video frames: {total_frames}, FPS: {fps:.2f}")
+
+        # Determine which frames to extract
+        if video_section == "end":
+            start_idx = max(0, total_frames - frame_window)
+            end_idx = total_frames
+        else:  # "start"
+            start_idx = 0
+            end_idx = min(frame_window, total_frames)
+
+        window_size = end_idx - start_idx
+
+        # Calculate indices for fps_extract frames
+        if window_size <= fps_extract:
+            indices = list(range(start_idx, end_idx))
+        else:
+            indices = np.linspace(start_idx, end_idx - 1, fps_extract, dtype=int).tolist()
+
+        print(f"📹 Extracting frames at indices: {indices}")
+
+        # Extract frames
+        frames_array = vr.get_batch(indices).asnumpy()
+        frames_pil = [Image.fromarray(frame.astype('uint8')).convert('RGB') for frame in frames_array]
+
+        # Convert to tensor format
+        frames_tensor = torch.from_numpy(frames_array).float() / 255.0
+
+        print(f"✅ Extracted {len(frames_pil)} frames using decord")
+        return frames_pil, frames_tensor
+
+    def _extract_with_opencv(self, video_path, video_section, frame_window, fps_extract):
+        """Extract frames using opencv library"""
+        print("📚 Using OpenCV for frame extraction")
+
+        cap = cv2.VideoCapture(video_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+
+        print(f"📹 Total video frames: {total_frames}, FPS: {fps:.2f}")
+
+        # Determine which frames to extract
+        if video_section == "end":
+            start_idx = max(0, total_frames - frame_window)
+            end_idx = total_frames
+        else:  # "start"
+            start_idx = 0
+            end_idx = min(frame_window, total_frames)
+
+        window_size = end_idx - start_idx
+
+        # Calculate indices for fps_extract frames
+        if window_size <= fps_extract:
+            indices = list(range(start_idx, end_idx))
+        else:
+            indices = np.linspace(start_idx, end_idx - 1, fps_extract, dtype=int).tolist()
+
+        print(f"📹 Extracting frames at indices: {indices}")
+
+        # Extract frames
+        frames_pil = []
+        frames_array = []
+
+        for idx in indices:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+            ret, frame = cap.read()
+            if ret:
+                # Convert BGR to RGB
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frames_pil.append(Image.fromarray(frame_rgb))
+                frames_array.append(frame_rgb)
+
+        cap.release()
+
+        # Convert to tensor format
+        frames_tensor = torch.from_numpy(np.array(frames_array)).float() / 255.0
+
+        print(f"✅ Extracted {len(frames_pil)} frames using OpenCV")
+        return frames_pil, frames_tensor
+
+    def _extract_with_ffmpeg(self, video_path, video_section, frame_window, fps_extract):
+        """Extract frames using ffmpeg subprocess as fallback"""
+        print("📚 Using ffmpeg for frame extraction")
+
+        # Get video info using ffprobe
+        try:
+            probe_cmd = [
+                'ffprobe', '-v', 'error',
+                '-select_streams', 'v:0',
+                '-count_packets',
+                '-show_entries', 'stream=nb_read_packets,r_frame_rate',
+                '-of', 'csv=p=0',
+                video_path
+            ]
+            result = subprocess.run(probe_cmd, capture_output=True, text=True, check=True)
+            output = result.stdout.strip().split(',')
+            total_frames = int(output[0])
+            fps_str = output[1].split('/')
+            fps = float(fps_str[0]) / float(fps_str[1]) if len(fps_str) == 2 else float(fps_str[0])
+
+            print(f"📹 Total video frames: {total_frames}, FPS: {fps:.2f}")
+
+        except Exception as e:
+            print(f"⚠️ Could not get video info: {e}")
+            # Fallback values
+            total_frames = frame_window
+            fps = 30
+
+        # Determine which frames to extract
+        if video_section == "end":
+            start_idx = max(0, total_frames - frame_window)
+            end_idx = total_frames
+        else:  # "start"
+            start_idx = 0
+            end_idx = min(frame_window, total_frames)
+
+        window_size = end_idx - start_idx
+
+        # Calculate indices for fps_extract frames
+        if window_size <= fps_extract:
+            indices = list(range(start_idx, end_idx))
+        else:
+            indices = np.linspace(start_idx, end_idx - 1, fps_extract, dtype=int).tolist()
+
+        print(f"📹 Extracting frames at indices: {indices}")
+
+        # Extract frames using ffmpeg
+        frames_pil = []
+        frames_array = []
+
+        import tempfile
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for idx in indices:
+                output_file = os.path.join(temp_dir, f"frame_{idx}.png")
+
+                # Extract specific frame
+                ffmpeg_cmd = [
+                    'ffmpeg', '-y',
+                    '-i', video_path,
+                    '-vf', f'select=eq(n\\,{idx})',
+                    '-vframes', '1',
+                    output_file
+                ]
+
+                try:
+                    subprocess.run(ffmpeg_cmd, capture_output=True, check=True)
+
+                    if os.path.exists(output_file):
+                        img = Image.open(output_file).convert('RGB')
+                        frames_pil.append(img)
+                        frames_array.append(np.array(img))
+                except Exception as e:
+                    print(f"⚠️ Failed to extract frame {idx}: {e}")
+
+        if not frames_pil:
+            raise RuntimeError("Failed to extract any frames with ffmpeg")
+
+        # Convert to tensor format
+        frames_tensor = torch.from_numpy(np.array(frames_array)).float() / 255.0
+
+        print(f"✅ Extracted {len(frames_pil)} frames using ffmpeg")
+        return frames_pil, frames_tensor
+
     def extract_frames(self, video_tensor, video_section, frame_window, fps_extract):
         """
         Extract frames from video based on parameters.
@@ -186,7 +453,6 @@ class QwenVLVideoNode:
 
     def analyze_video(
         self,
-        images,
         video_section="start",
         frame_window=60,
         fps_extract=3,
@@ -194,12 +460,73 @@ class QwenVLVideoNode:
         max_tokens=1024,
         temperature=0.7,
         keep_model_loaded=True,
+        video=None,
         custom_prompt="",
     ):
         try:
-            # Extract frames from video
+            # Determine video source and extract frames
+            frames_pil = None
+            frames_tensor = None
+
+            if video is None:
+                error_msg = "No video input provided. Please connect either a VIDEO or IMAGE input."
+                print(f"❌ {error_msg}")
+                return (error_msg, torch.zeros((1, 64, 64, 3)))
+
+            # Try to extract frames from video input (handles both VIDEO and IMAGE types)
+            video_tensor = None
+
+            # Method 1: Check if it's already a torch tensor (IMAGE type)
+            if torch.is_tensor(video):
+                print("🖼️  Detected IMAGE tensor input")
+                video_tensor = video
+
+            # Method 2: Check if it's a VIDEO type with get_components method
+            elif hasattr(video, 'get_components'):
+                print("🎬 Detected VIDEO type with get_components")
+                try:
+                    components = video.get_components()
+                    if hasattr(components, 'images'):
+                        video_tensor = components.images
+                    elif torch.is_tensor(components):
+                        video_tensor = components
+                    else:
+                        # Try to access as dict or object
+                        video_tensor = getattr(components, 'images', components)
+                except Exception as e:
+                    print(f"⚠️ Failed to get components: {e}, trying alternative methods...")
+
+            # Method 3: Check if it has an images attribute directly
+            if video_tensor is None and hasattr(video, 'images'):
+                print("🎬 Detected VIDEO type with images attribute")
+                video_tensor = video.images
+
+            # Method 4: Check if video is a list of tensors or images
+            if video_tensor is None and isinstance(video, (list, tuple)):
+                print("🎬 Detected VIDEO as list/tuple")
+                if len(video) > 0 and torch.is_tensor(video[0]):
+                    video_tensor = torch.stack(video) if len(video) > 1 else video[0]
+
+            # Method 5: Try calling it if it's callable
+            if video_tensor is None and callable(video):
+                print("🎬 Detected VIDEO as callable")
+                try:
+                    result = video()
+                    if torch.is_tensor(result):
+                        video_tensor = result
+                except:
+                    pass
+
+            # If we still don't have a tensor, raise an error
+            if video_tensor is None:
+                error_msg = f"Could not extract frames from video input. Type: {type(video)}, Attributes: {dir(video)[:10]}"
+                print(f"❌ {error_msg}")
+                return (error_msg, torch.zeros((1, 64, 64, 3)))
+
+            # Now extract frames from the tensor
+            print(f"📹 Video tensor shape: {video_tensor.shape}")
             frames_pil, frames_tensor = self.extract_frames(
-                images, video_section, frame_window, fps_extract
+                video_tensor, video_section, frame_window, fps_extract
             )
 
             # Build prompt
@@ -292,5 +619,10 @@ Provide a comprehensive analysis that captures the essence of this video segment
             if not keep_model_loaded:
                 self.clear_model()
 
-            # Return error and original video frames
-            return (error_msg, images)
+            # Return error and frames if available, otherwise dummy tensor
+            if frames_tensor is not None:
+                return (error_msg, frames_tensor)
+            elif images is not None:
+                return (error_msg, images)
+            else:
+                return (error_msg, torch.zeros((1, 64, 64, 3)))
