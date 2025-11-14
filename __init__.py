@@ -4,11 +4,6 @@
 import os
 import sys
 
-# Add the package to Python path
-package_dir = os.path.dirname(__file__)
-if package_dir not in sys.path:
-    sys.path.append(package_dir)
-
 # Import dynamic nodes from APNext file
 try:
     from .apnext import NODE_CLASS_MAPPINGS as DYNAMIC_MAPPINGS
