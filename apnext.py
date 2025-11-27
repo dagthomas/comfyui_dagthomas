@@ -40,10 +40,10 @@ try:
             f"APNext {category.replace('_', ' ').title()}"
         )
         
-    print(f"✅ Generated {len(NODE_CLASS_MAPPINGS)} dynamic APNext nodes")
-    
+    print(f"Generated {len(NODE_CLASS_MAPPINGS)} dynamic APNext nodes")
+
 except ImportError as e:
-    print(f"⚠️ Warning: Could not import APNextNode for dynamic nodes: {e}")
+    print(f"Warning: Could not import APNextNode for dynamic nodes: {e}")
     # Dynamic nodes will not be available
     NODE_CLASS_MAPPINGS = {}
     NODE_DISPLAY_NAME_MAPPINGS = {}

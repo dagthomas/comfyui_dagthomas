@@ -109,39 +109,26 @@ class GroqTextNode:
             print(f"🔄 Groq Text: Calling API with model {groq_model}")
             print(f"📊 Prompt length: {len(prompt)} characters")
 
-            # Try the new responses.create() API first
-            try:
-                response = self.client.responses.create(
-                    input=prompt,
-                    model=groq_model,
-                )
-                result = response.output_text.strip()
-                print(f"✅ Groq ({groq_model}) generated {len(result)} characters (responses API)")
-                return (result,)
-            except AttributeError:
-                # Fall back to chat completions API if responses API not available
-                print("⚠️ responses.create() not available, falling back to chat.completions.create()")
-                response = self.client.chat.completions.create(
-                    model=groq_model,
-                    messages=[
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=2000,
-                    temperature=0.7 if randomize_each_run else 0.3,
-                )
-                result = response.choices[0].message.content.strip()
-                print(f"✅ Groq ({groq_model}) generated {len(result)} characters (chat API)")
-                return (result,)
+            response = self.client.chat.completions.create(
+                model=groq_model,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.7 if randomize_each_run else 0.3,
+            )
+
+            result = response.choices[0].message.content.strip()
+            print(f"✅ Groq ({groq_model}) generated {len(result)} characters")
+            return (result,)
 
         except Exception as e:
             import traceback
             error_msg = f"Groq API Error: {str(e)}"
             print(f"❌ {error_msg}")
-            print(f"🔍 Full error trace:")
             traceback.print_exc()
-            print(f"🔍 API Base URL: https://api.groq.com/openai/v1")
-            print(f"🔍 Model used: {groq_model}")
-            return (error_msg,)
+            # Return the input as fallback instead of crashing
+            return (input_text if input_text else "Error: Could not generate text",)
 
     def _get_base_prompt(self, happy_talk, compress, compression_level, poster):
         """Generate base prompt based on settings"""

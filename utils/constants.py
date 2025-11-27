@@ -101,15 +101,15 @@ def load_groq_models_from_file():
             if 'text_models' in data:
                 text_models = data.get('text_models', [])
                 vision_models = data.get('vision_models', [])
-                print(f"📋 Loaded {len(text_models)} text models and {len(vision_models)} vision models from JSON file")
+                print(f"Loaded {len(text_models)} text models and {len(vision_models)} vision models from JSON file")
                 return text_models, vision_models
             else:
                 # Old format compatibility
                 models = data.get('models', [])
-                print(f"📋 Loaded {len(models)} Groq models from JSON file")
+                print(f"Loaded {len(models)} Groq models from JSON file")
                 return models, []
     except Exception as e:
-        print(f"⚠️ Could not load Groq models from file: {e}")
+        print(f"Warning: Could not load Groq models from file: {e}")
         # Return minimal defaults
         default_text = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "groq/compound"]
         default_vision = ["llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-scout-17b-16e-instruct"]
@@ -142,12 +142,12 @@ def get_groq_models_from_api():
             text_models = [m for m in all_models if not any(x in m.lower() for x in ['whisper', 'tts', 'guard'])]
             # Vision models have 'vision' in the name or certain model types
             vision_models = [m for m in all_models if 'vision' in m.lower()]
-            
+
             if text_models:
-                print(f"✅ Fetched {len(text_models)} text models and {len(vision_models)} vision models from Groq API")
+                print(f"Fetched {len(text_models)} text models and {len(vision_models)} vision models from Groq API")
                 return sorted(text_models), sorted(vision_models)
     except Exception as e:
-        print(f"⚠️ Could not fetch Groq models from API: {e}")
+        print(f"Warning: Could not fetch Groq models from API: {e}")
     
     return None, None
 
