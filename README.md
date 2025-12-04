@@ -1,312 +1,469 @@
 # comfyui_dagthomas
+
 ### 您可以在这里找到中文信息
 [plugin.aix.ink](https://plugin.aix.ink/archives/comfyui-dagthomas)
 
-### Advanced Prompt Generation and Image Analysis
+**Advanced Prompt Generation & Multi-Model AI Integration for ComfyUI**
 
-This plugin extends ComfyUI with advanced prompt generation capabilities and image analysis using GPT-4 Vision. It includes the following components:
+A comprehensive suite of nodes for ComfyUI featuring multi-provider LLM support (OpenAI, Gemini, Claude, Grok, Groq, QwenVL), local model inference (Phi, MiniCPM, Ollama), professional image effects, and advanced prompt generation tools.
 
-## Classes
+---
 
-### 1. PromptGenerator
+## 📦 Installation
 
-A versatile prompt generator for text-to-image AI systems.
+### Method 1: ComfyUI Manager (Recommended)
+Search for "comfyui_dagthomas" in ComfyUI Manager and click Install.
 
-Features:
-- Generates prompts based on various customizable parameters
-- Supports different art forms, photography styles, and digital art
-- Allows for random selection or specific choices for each parameter
-- Outputs separate prompts for different model components (e.g., CLIP, T5)
-
-#### "subject" input field can be changed to support your style or lora, just add your subject and it will overwrite "man, woman ..." etc.
-
-#### "custom" input field will add a prompt to the start of the prompt string. For loading styles
-
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/2c6e7418-51a6-465c-8573-36f36300e8a6)
-
-### GPT4VisionNode
-
-Analyzes images using OpenAI's GPT-4 Vision model.
-
-Features:
-- Accepts image input and generates detailed descriptions
-- Supports custom base prompts
-- Offers options for "happy talk" (detailed descriptions) or simple outputs
-- Includes compression options to limit output length
-- Ability to create posters
-  
-![gpt-4o vision](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt-4o-vision-workflow.png)
-[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o_vision/dagthomas_gpt4o_vision_workflow.json)
-
-There is a toggle to create movie posters (08/04/24)
-![ComfyUI_00161_](https://github.com/user-attachments/assets/262c7d5b-9770-492f-89b1-5dc6b62c9cc3)
-
-
-
-### GPT4MiniNode
-
-Generates text using OpenAI's GPT-4 model based on input text.
-
-Features:
-- Accepts text input and generates enhanced descriptions
-- Supports custom base prompts
-- Offers options for "happy talk" (detailed descriptions) or simple outputs
-- Includes compression options to limit output length
-
-![gpt-4o-mini](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o-mini/dagthomas_gpt-4o-mini_workflow.png)
-[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/gpt-4o-mini/dagthomas_gpt-4o-mini_workflow.json)
-
-
-
-### OllamaNode
-
-Generates text using custom Ollama based on input text.
-
-Features:
-- Accepts text input and generates enhanced descriptions
-- Supports custom base prompts
-- Offers options for "happy talk" (detailed descriptions) or simple outputs
-- Includes compression options to limit output length
-
-![Ollama](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/ollama_local_llm/comfyui_dagthomas_localllm__00044_.png)
-[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/ollama_local_llm/dagthomas_ollama_workflow.json)
-
-
-### Pure Florence workflow: 
-
-- You can also use a pure local Florence workflow without any of the others. The prompt will have some bloat, but works fine with Flux
-
-![Florence2](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/florence2/dagthomas_florence2_workflow.png)
-[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/florence2/dagthomas_florence2_workflow.json)
-
-
-
-
-### PGSD3LatentGenerator
-
-Generates latent representations for use in Stable Diffusion 3 pipelines.
-
-Features:
-- Creates latent tensors with specified dimensions
-- Supports batch processing
-- Automatically adjusts dimensions to maintain a consistent megapixel count
-
-![image](https://github.com/user-attachments/assets/b4e0bb6e-fded-4a99-b8d4-558f21124863)
-
-
-## Usage
-
-These classes can be integrated into ComfyUI workflows to enhance prompt generation, image analysis, and latent space manipulation for advanced AI image generation pipelines.
-
-## Requirements
-
-- OpenAI API key (for GPT4VisionNode and GPT4MiniNode)
-- ComfyUI environment
-- Additional dependencies as specified in the import statements
-
-![354727214-63e0ecbc-650a-4bf1-bfca-d96a4a2a5f33](https://github.com/user-attachments/assets/45dda70b-8f1b-4615-a0c4-0b1c16ff94bc)
-
-
-## Notes
-
-- Ensure that your OpenAI API key is set in the environment variables
-- Some classes may require additional data files (JSON) for their functionality
-- Refer to the individual class documentation for specific usage instructions and input types
-
-
-## Following were generated with Flux Dev - 03/08/2024
-![ComfyUI_00005_](https://github.com/user-attachments/assets/d760bb22-797e-441e-a5b5-52e793a2b7c8)
-![ComfyUI_00007_](https://github.com/user-attachments/assets/6975521b-85e3-4e18-a061-8cefb95159e5)
-![ComfyUI_00034_](https://github.com/user-attachments/assets/470426d5-9320-40a3-816e-9d4bcfda6940)
-
-## Following were generated with SD3 Medium - 06/15/2024
-
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/94c76273-0a16-450a-876c-9eb515d995d5)
-![image](https://github.com/dagthomas/comfyui_dagthomas/assets/4311672/37924320-6b46-48fb-9c5d-a24da2d3fd4c)
-
-# ADVANCED PROMPTS
-
-## APNext workflow example
-[Workflow](https://github.com/dagthomas/comfyui_dagthomas/blob/master/examples/flux/apnext/APNext_Examples.json)
-
-## APNextNode Function
-
-The `APNextNode` is a custom node class designed for processing and enhancing prompts with additional contextual information. It's particularly useful for generating creative content by incorporating random elements from predefined categories.
-
-## Features
-
-- Processes input prompts and adds context from various categories
-- Supports multiple input types including required and optional parameters
-- Dynamically loads category data from JSON files
-- Provides options for random selection of items within categories
-- Allows for attribute addition to selected items
-
-## Categories
-
-The function supports multiple categories, which are loaded from JSON files in a specific directory structure. Based on the provided image, the supported categories include:
-
-1. architecture
-2. art
-3. artist
-4. brands
-5. character
-6. cinematic
-7. fashion
-8. feelings
-9. geography
-10. human
-11. interaction
-12. keywords
-13. people
-14. photography
-15. plots
-16. poses
-17. scene
-18. science
-19. stuff
-20. time
-21. typography
-22. vehicle
-23. video_game
-
-Each category can contain its own set of items and attributes, which are used to enhance the input prompt.
-
-## Usage
-
-The `APNextNode` class is designed to be used within a larger system, likely a node-based content generation pipeline. It processes input prompts and optional category selections to produce an enhanced prompt and a random output.
-
-### Input Types
-
-- **Required**:
-  - `prompt`: A multiline string input for the base prompt
-  - `separator`: A string to separate added elements (default: ",")
-
-- **Optional**:
-  - `string`: An additional string input (default: "")
-  - `seed`: An integer seed for random operations (default: 0)
-  - `attributes`: A boolean to toggle attribute inclusion (default: False)
-  - Category-specific inputs: Dynamically generated based on available JSON files
-
-### Output
-
-The function returns two strings:
-1. An enhanced prompt incorporating selected category items
-2. A random output string with additional category items
-
-## File Structure
-
-The function expects a specific file structure for category data:
-
-```
-data/
-└── next/
-    └── [CATEGORY_NAME]/
-        └── [field_name].json
+### Method 2: Manual Installation
+```bash
+cd ComfyUI/custom_nodes
+git clone https://github.com/dagthomas/comfyui_dagthomas
+cd comfyui_dagthomas
+pip install -r requirements.txt
 ```
 
-Each JSON file should contain either an array of items or a dictionary with "items", "preprompt", "separator", "endprompt", and "attributes" keys.
+---
 
-## Note
+## 🔑 API Key Configuration
 
-This README provides an overview of the `APNextNode` function based on the given code snippet. For full implementation details and integration instructions, please refer to the complete source code and any additional documentation provided with the system where this node is used.
+Set your API keys as environment variables:
 
-# Adding Custom Categories to APNextNode
+```bash
+# OpenAI GPT
+set OPENAI_API_KEY=sk-your-key-here
 
-The `APNextNode` function is designed to be flexible and allow users to add their own categories and fields. This guide will explain how to do this and how to structure the JSON files for new categories.
+# Google Gemini
+set GEMINI_API_KEY=your-key-here
 
-## Adding a New Category
+# Anthropic Claude
+set ANTHROPIC_API_KEY=your-key-here
+# or
+set CLAUDE_API_KEY=your-key-here
 
-1. Create a new folder in the `data/next/` directory. The folder name should be lowercase and represent your new category (e.g., `data/next/mycategory/`).
+# xAI Grok
+set XAI_API_KEY=your-key-here
+# or
+set GROK_API_KEY=your-key-here
 
-2. Inside this new folder, create one or more JSON files. Each JSON file represents a field within your category. The file name (without the .json extension) will be used as the field name in the `APNextNode` function.
-
-## JSON Structure
-
-The JSON file for each field can have two different structures:
-
-### Simple Structure
-A simple array of items:
-
-```json
-[
-  "item1",
-  "item2",
-  "item3"
-]
+# Groq
+set GROQ_API_KEY=your-key-here
 ```
 
-### Advanced Structure
-A more detailed structure with additional properties:
+---
 
-```json
-{
-  "preprompt": "Optional text to appear before the selected items",
-  "separator": ", ",
-  "endprompt": "Optional text to appear after the selected items",
-  "items": [
-    "item1",
-    "item2",
-    "item3"
-  ],
-  "attributes": {
-    "item1": ["attribute1", "attribute2"],
-    "item2": ["attribute3", "attribute4"]
-  }
-}
-```
+## 🧩 Node Categories
 
-#### Field Descriptions:
-- `preprompt`: (Optional) Text that appears before the selected items.
-- `separator`: (Optional) String used to separate multiple selected items. Default is ", ".
-- `endprompt`: (Optional) Text that appears after the selected items.
-- `items`: (Required) Array of items that can be selected for this field.
-- `attributes`: (Optional) Object where keys are item names and values are arrays of attributes for that item.
+### 📝 Universal Nodes (Model-Agnostic)
 
-## Example: Adding a "Visual Effects" Category
+#### APNext Universal Generator
+**Display Name:** `APNext Universal Generator`
 
-1. Create a new folder: `data/next/visual_effects/`
-2. Create a JSON file in this folder, e.g., `effects.json`:
+A model-agnostic prompt generator that automatically detects available API keys and supports all major LLM providers.
 
-```json
-{
-  "preprompt": "with",
-  "separator": " and ",
-  "endprompt": "visual effects",
-  "items": [
-    "motion blur",
-    "lens flare",
-    "particle effects",
-    "color grading",
-    "depth of field"
-  ],
-  "attributes": {
-    "motion blur": ["dynamic", "speed-enhancing", "cinematic"],
-    "lens flare": ["bright", "atmospheric", "sci-fi-inspired"],
-    "particle effects": ["intricate", "flowing", "ethereal"],
-    "color grading": ["vibrant", "mood-setting", "stylized"],
-    "depth of field": ["focused", "bokeh-rich", "photorealistic"]
-  }
-}
-```
+| Input | Description |
+|-------|-------------|
+| `input_text` | Base text to enhance |
+| `model` | Select provider:model or "auto-detect" |
+| `generation_mode` | Creative, Balanced, Focused, or Custom |
+| `seed` | Seed for reproducible variations |
+| `style_preference` | Cinematic, Photorealistic, Artistic, etc. |
+| `detail_level` | Brief to Very Detailed output |
 
-## Using Your New Category
+**Supported Models:**
+- `gpt:gpt-4o`, `gpt:gpt-4o-mini`, `gpt:gpt-4-turbo`
+- `gemini:gemini-2.5-flash`, `gemini:gemini-2.5-pro`
+- `claude:claude-sonnet-4.5`, `claude:claude-3-5-sonnet`
+- `grok:grok-beta`, `grok:grok-2-vision`
+- `groq:llama-3.3-70b-versatile`
 
-After adding your new category and JSON file(s), the `APNextNode` function will automatically detect and include it as an optional input. Users can then select items from your new category when using the function for image generation prompts.
+**Returns:** `(generated_prompt, model_used, seed_used)`
 
-For example, using the "Visual Effects" category we just created:
+---
 
-- If a user selects "lens flare", the output might be: "with lens flare visual effects"
-- If "attributes" is set to True and "lens flare" is selected, the output could be: "with lens flare (bright, atmospheric, sci-fi-inspired) visual effects"
+#### APNext Universal Vision Cloner
+**Display Name:** `APNext Universal Vision Cloner`
 
-Remember that the `APNextNode` function will handle the random selection and formatting based on the JSON structure you provide. This can greatly enhance the variety and specificity of prompts for AI image generation.
+Analyze images with any supported vision model to generate detailed descriptions or clone image styles.
 
-Here's a more professional version of the text, formatted as a README.md:
+| Input | Description |
+|-------|-------------|
+| `images` | One or more images to analyze |
+| `model` | Vision model to use (auto-detect available) |
+| `fade_percentage` | Blend percentage for multiple images |
+| `analysis_mode` | Detailed Analysis, Style Cloning, Scene Description, Creative Interpretation |
+| `output_format` | Text Only, JSON Structure, or Formatted Prompt |
 
-# ComfyUI Node Family
+**Returns:** `(formatted_output, raw_response, faded_image, model_used)`
 
-This new family of nodes for ComfyUI offers extensive flexibility and capabilities for prompt engineering and image generation workflows.
+---
 
-## Overview
+### 🤖 Google Gemini Nodes
+
+#### Gemini Prompt Enhancer
+**Display Name:** `APNext Gemini Prompt Enhancer`
+
+Enhances prompts with cinematic terminology and LLM refinement for video/image generation.
+
+| Input | Description |
+|-------|-------------|
+| `base_prompt` | Original prompt to enhance |
+| `enhancement_mode` | Random Mix, Cinematic/Lighting/Camera/Motion/Style Focus, Full Enhancement, or LLM Only |
+| `use_llm` | Enable Gemini LLM enhancement |
+| `intensity` | Enhancement intensity (0.1-2.0) |
+| Optional dropdowns | visual_style, lighting_type, camera_angle, shot_size, lens_type, color_tone, etc. |
+
+**Returns:** `(enhanced_prompt, random_enhanced, llm_enhanced)`
+
+---
+
+#### Gemini Custom Vision
+**Display Name:** `APNext Gemini Custom Vision`
+
+Analyze multiple images with custom prompts. Supports dynamic prompt templates with variable substitution.
+
+| Input | Description |
+|-------|-------------|
+| `images` | Input images |
+| `custom_prompt` | Custom analysis prompt |
+| `dynamic_prompt` | Enable ##TAG##, ##SEX##, ##PRONOUNS##, ##WORDS## substitution |
+| `fade_percentage` | Blend multiple images together |
+
+**Returns:** `(output, clip_l, faded_image)`
+
+---
+
+#### Gemini Text Only
+**Display Name:** `APNext Gemini Text Only`
+
+Pure text generation with Gemini models. Supports dynamic prompt templates.
+
+**Returns:** `(output, clip_l)`
+
+---
+
+#### Gemini Next Scene
+**Display Name:** `APNext Gemini Next Scene`
+
+Generate cinematic transitions for visual narratives. Creates the "next scene" based on a previous prompt and current frame.
+
+| Input | Description |
+|-------|-------------|
+| `image` | Current frame image |
+| `original_prompt` | Previous scene description |
+| `focus_on` | Camera Movement, Framing Evolution, Environmental Reveals, Atmospheric Shifts |
+| `transition_intensity` | Subtle, Moderate, or Dramatic |
+
+**Returns:** `(next_scene_prompt, short_description)`
+
+---
+
+### 💬 OpenAI GPT Nodes
+
+#### GPT Mini Generator
+**Display Name:** `APNext GPT Mini Generator`
+
+Efficient text generation using GPT-4o-mini.
+
+| Input | Description |
+|-------|-------------|
+| `input_text` | Text to enhance |
+| `happy_talk` | Enthusiastic vs professional tone |
+| `compress` | Enable output compression |
+| `poster` | Movie poster style formatting |
+
+---
+
+#### GPT Vision Cloner
+**Display Name:** `APNext GPT Vision Cloner`
+
+Clone image styles using GPT-4o vision capabilities with custom prompts.
+
+---
+
+#### GPT Custom Vision
+**Display Name:** `APNext GPT Custom Vision`
+
+Full custom vision analysis with GPT-4o.
+
+---
+
+### 🧠 Anthropic Claude Nodes
+
+#### Claude Text Generator
+**Display Name:** `APNext Claude Text Generator`
+
+Text generation with Claude models (Claude 3.5 Sonnet, Claude Sonnet 4.5).
+
+| Input | Description |
+|-------|-------------|
+| `input_text` | Text to process |
+| `claude_model` | Model selection |
+| `happy_talk`, `compress`, `poster` | Output style controls |
+| `variation_instruction` | Custom instruction for creative variations |
+
+---
+
+#### Claude Vision Analyzer
+**Display Name:** `APNext Claude Vision Analyzer`
+
+Image analysis with Claude's multimodal capabilities.
+
+---
+
+### ⚡ xAI Grok Nodes
+
+#### Grok Text Generator
+**Display Name:** `APNext Grok Text Generator`
+
+Text generation using xAI's Grok models.
+
+---
+
+#### Grok Vision Analyzer
+**Display Name:** `APNext Grok Vision Analyzer`
+
+Image analysis with Grok vision models.
+
+---
+
+### 🚀 Groq Nodes (Ultra-Fast Inference)
+
+#### Groq Text Generator
+**Display Name:** `APNext Groq Text Generator`
+
+Lightning-fast text generation using Groq's optimized infrastructure with Llama and Mixtral models.
+
+| Input | Description |
+|-------|-------------|
+| `groq_model` | llama-3.3-70b-versatile, llama-3.1-8b-instant, etc. |
+| Other standard LLM inputs |
+
+---
+
+#### Groq Vision Analyzer
+**Display Name:** `APNext Groq Vision Analyzer`
+
+Fast image analysis with Groq vision models.
+
+---
+
+### 🔍 QwenVL Nodes (Local Vision)
+
+#### QwenVL Vision Analyzer
+**Display Name:** `APNext QwenVL Vision Analyzer`
+
+Local vision analysis using Qwen-VL models. Downloads models automatically.
+
+| Input | Description |
+|-------|-------------|
+| `images` | Input images |
+| `qwen_model` | Qwen3-VL-4B-Instruct, etc. |
+| `max_tokens` | Maximum response length |
+| `keep_model_loaded` | Cache model in memory |
+
+---
+
+#### QwenVL Vision Cloner
+**Display Name:** `APNext QwenVL Vision Cloner`
+
+Clone image styles locally without API calls.
+
+---
+
+#### QwenVL Video Analyzer
+**Display Name:** `APNext QwenVL Video Analyzer`
+
+Analyze video content frame-by-frame.
+
+---
+
+### 🦙 Ollama Nodes (Local LLM)
+
+#### Ollama Node
+**Display Name:** `APNext OllamaNode`
+
+Local LLM inference using Ollama. Supports any model installed in your Ollama instance.
+
+| Input | Description |
+|-------|-------------|
+| `input_text` | Text to process |
+| `model_name` | Any Ollama model (llama3, mistral, etc.) |
+| `happy_talk`, `compress` | Output controls |
+
+---
+
+#### Ollama Vision
+**Display Name:** `APNext OllamaVision`
+
+Local vision analysis with Ollama multimodal models (llava, bakllava, etc.).
+
+---
+
+### 📸 MiniCPM Nodes (Local Vision)
+
+#### MiniCPM Image Node
+**Display Name:** `APNext MiniCPM Image`
+
+Image understanding with MiniCPM-V 4.5 (OpenBMB). Supports thinking mode for complex reasoning.
+
+| Input | Description |
+|-------|-------------|
+| `images` | Input images |
+| `question` | Question about the image |
+| `enable_thinking` | Deep reasoning mode |
+| `precision` | bfloat16 or float16 |
+| `unload_after_inference` | Free memory after use |
+
+---
+
+#### MiniCPM Video Node
+**Display Name:** `APNext MiniCPM Video`
+
+Video understanding and analysis.
+
+---
+
+### 🔬 Phi Nodes (Microsoft Vision)
+
+#### Phi Model Loader
+**Display Name:** `APNext Phi Model Loader`
+
+Load Microsoft Phi-3.5-vision-instruct model.
+
+| Input | Description |
+|-------|-------------|
+| `model_version` | Phi-3.5-vision-instruct |
+| `image_crops` | 4 or 16 crops for detail |
+| `attention_mechanism` | flash_attention_2, sdpa, or eager |
+
+---
+
+#### Phi Model Inference / Custom Inference
+**Display Name:** `APNext Phi Model Inference`
+
+Run inference with loaded Phi model.
+
+---
+
+### 🎨 Image FX Nodes
+
+Professional image effects using optimized tensor operations.
+
+#### APNext Bloom FX
+Creates a bloom/glow effect on bright areas.
+
+| Input | Description |
+|-------|-------------|
+| `intensity` | Bloom strength (0-5) |
+| `threshold` | Brightness threshold (0-1) |
+| `blur_radius` | Glow spread (1-50) |
+| `blend_mode` | additive, screen, or overlay |
+
+---
+
+#### APNext Color Grading FX
+Professional color grading with LUT support or manual controls.
+
+| Input | Description |
+|-------|-------------|
+| `method` | manual or lut_file |
+| `lut_file` | .cube, .3dl, or image LUT |
+| `exposure` | -3 to +3 stops |
+| `contrast`, `saturation` | Standard adjustments |
+| `highlights`, `shadows` | Tone controls |
+| `temperature`, `tint` | White balance |
+
+**Supported LUT Formats:** .cube (Adobe/Blackmagic), .3dl (Autodesk/Flame), Image LUTs (.png, .jpg)
+
+---
+
+#### APNext Sharpen FX
+Intelligent image sharpening.
+
+---
+
+#### APNext Noise FX
+Add film grain and noise effects.
+
+---
+
+#### APNext Rough FX
+Add texture and roughness.
+
+---
+
+#### APNext Cross Processing FX
+Film cross-processing color effects.
+
+---
+
+#### APNext Split Toning FX
+Separate color toning for highlights and shadows.
+
+---
+
+#### APNext HDR Tone Mapping FX
+HDR-style tone mapping.
+
+---
+
+#### APNext Glitch Art FX
+Digital glitch and databending effects.
+
+---
+
+#### APNext Film Halation FX
+Classic film halation (light bleeding) effect.
+
+---
+
+### 📐 Latent Generators
+
+#### APNext Latent Generator
+**Display Name:** `APNext Latent Generator`
+
+Generate latent tensors with intelligent dimension calculation.
+
+| Input | Description |
+|-------|-------------|
+| `width`, `height` | Base dimensions (0 = auto-calculate) |
+| `megapixel_scale` | Target megapixels (0.1-2.0) |
+| `aspect_ratio` | 1:1, 3:2, 4:3, 16:9, 21:9 |
+| `is_portrait` | Portrait orientation |
+
+**Returns:** `(LATENT, width, height)`
+
+---
+
+#### PGSD3 Latent Generator
+**Display Name:** `APNext PGSD3LatentGenerator`
+
+Optimized latent generation for Stable Diffusion 3 pipelines.
+
+---
+
+### 🎲 Prompt Generators
+
+#### Auto Prompter
+**Display Name:** `Auto Prompter`
+
+Generate random prompts from extensive category databases.
+
+| Input | Description |
+|-------|-------------|
+| `subject` | Main subject (can include LoRA triggers) |
+| `custom` | Prefix text for styling |
+| `artform` | Photography, digital art, etc. |
+| Various category selections | Random or specific choices |
+
+---
+
+#### APNext Node
+**Display Name:** `APNext Node`
+
+Advanced prompt building with category-based enhancements.
+
+### Overview
 
 ![Node Family Overview](https://github.com/user-attachments/assets/89c23e6f-44f5-4d2f-bb37-abf8cbd797c4)
 
@@ -314,51 +471,314 @@ The system includes numerous nodes that can be chained together to create comple
 
 ![Node Chaining Example](https://github.com/user-attachments/assets/bf402844-ffdc-4dcf-bc6c-28d40e125011)
 
-## Features
+Supports **24 main categories** with subcategories:
+- **Architecture:** styles, buildings, interiors, materials
+- **Art:** painting, sculpture, techniques, palettes
+- **Artist:** concept artists, illustrators, painters
+- **Character:** anime, fantasy, sci-fi, superheroes
+- **Cinematic:** directors, genres, effects, color grading
+- **Fashion:** designers, outfits, accessories
+- **Feelings:** emotional modifiers
+- **Geography:** countries, nationalities
+- **Human:** jobs, hobbies, groups
+- **Interaction:** individual, couple, group, crowd interactions
+- **Keywords:** modifiers, genres, trending terms
+- **People:** archetypes, body types, expressions
+- **Photography:** cameras, lenses, lighting, film types
+- **Plots:** action, romance, horror, sci-fi scenarios
+- **Poses:** portrait and action poses
+- **Scene:** weather, textures, environments
+- **Science:** astronomy, mathematics, medical
+- **Stuff:** seasonal objects, gadgets, fantasy items
+- **Time:** eras, decades, centuries
+- **Typography:** fonts, word art styles
+- **Vehicle:** cars, classic cars, vehicle types
+- **Video Game:** games, engines, actions
 
-### GPT-4 Integration
+---
 
-Enhance prompts using the GPT-4 node:
+### 🔧 Utility Nodes
 
-![GPT-4 Node](https://github.com/user-attachments/assets/3cff0d18-a6e7-43c3-be5a-b2fb8964fa23)
+#### String Merger
+**Display Name:** `APNext String Merger`
 
-### Local Ollama Support
+Combine multiple strings with separators.
 
-Utilize local language models with the Ollama node:
+---
 
-![Ollama Node](https://github.com/user-attachments/assets/9d8f7eaa-07c2-48a2-bf67-37ebfbbfa4ba)
+#### Flexible String Merger
+**Display Name:** `APNext Flexible String Merger`
 
-### Image-Based Prompt Generation
+Advanced string combining with custom formatting.
 
-Create prompts based on images using various vision models:
+---
 
-![Image-Based Prompt Generation](https://github.com/user-attachments/assets/c9bbceaf-4a84-4d89-aecd-6026bafa1ab7)
+#### Sentence Mixer
+**Display Name:** `APNext Sentence Mixer`
 
-### Dynamic Prompt Generation
+Shuffle and mix sentences from multiple inputs for creative variations.
 
-Automatically incorporate LORA tokens using pre-defined prompts:
+---
 
-![Dynamic Prompt Generation](https://github.com/user-attachments/assets/1e69febe-2963-426c-b308-56766006b05e)
+#### Custom Prompt Loader
+**Display Name:** `APNext Custom Prompts`
 
-### Random Prompt Generator
+Load prompt templates from the `data/custom_prompts/` directory.
 
-Generate completely random prompts without the need for external language models:
+Included templates:
+- `promptcreator.txt` - Full creative prompt generation
+- `image_analyze.txt` - Image analysis prompts
+- `gemini_video.txt` - Video generation prompts
+- `cloner.txt` - Style cloning prompts
+- Various LoRA-specific templates (ohwx, t5xxl, etc.)
 
-![Random Prompt Generator](https://github.com/user-attachments/assets/3db6b94a-adca-4853-8530-5a95a79bceb7)
+---
 
-## Installation and Usage
+#### Local Random Prompt
+**Display Name:** `APNext Local random prompt`
 
-1. Download the example workflow: [apntest.json](https://github.com/user-attachments/files/16830214/apntest.json)
-2. To use GPT workflows, set your OpenAI API key in the environment:
-   ```
-   set OPENAI_API_KEY=sk-your-api-key-here
-   ```
-3. Run ComfyUI
+Load random prompts from local text files.
 
-## Custom Extensions
+---
 
-Add your own custom folders within `comfyui_dagthomas/data/next` with custom properties. These will be loaded in ComfyUI alongside the other nodes.
+#### Random Integer Generator
+**Display Name:** `APNext Random Integer Generator`
 
-## Note
+Generate random integers with min/max range.
 
-This project is currently in beta. Detailed documentation is in progress. Explore the various nodes and their capabilities to unlock the full potential of this ComfyUI extension.
+---
+
+## 📁 Adding Custom Categories
+
+Create your own categories for APNextNode:
+
+1. Create a folder in `data/next/` (e.g., `data/next/mycategory/`)
+2. Add JSON files for each field
+
+### Simple Format
+```json
+["item1", "item2", "item3"]
+```
+
+### Advanced Format
+```json
+{
+  "preprompt": "with",
+  "separator": " and ",
+  "endprompt": "visual effects",
+  "items": ["motion blur", "lens flare", "particle effects"],
+  "attributes": {
+    "motion blur": ["dynamic", "cinematic"],
+    "lens flare": ["bright", "atmospheric"]
+  }
+}
+```
+
+---
+
+## 📝 Custom Prompt Templates
+
+Create your own prompt templates for use with the **Custom Prompt Loader** node.
+
+### Location
+Place `.txt` files in: `data/custom_prompts/`
+
+### Creating a Template
+
+Templates are plain text files containing instructions for LLM nodes. They support dynamic variable substitution:
+
+| Variable | Description |
+|----------|-------------|
+| `##TAG##` | Replaced with the `tag` input (e.g., "ohwx man") |
+| `##SEX##` | Replaced with the `sex` input (e.g., "male", "female") |
+| `##PRONOUNS##` | Replaced with pronouns (e.g., "him, his") |
+| `##WORDS##` | Replaced with target word count |
+
+### Example Template
+
+Create a file `data/custom_prompts/my_style.txt`:
+
+```
+As a professional art critic, describe the provided image in detail.
+Focus on creating a cohesive scene as if describing a movie still.
+
+If the subject is ##TAG##, use ##PRONOUNS## pronouns appropriately.
+The subject is ##SEX##.
+
+Include:
+- Main subject description with clothing, accessories, position
+- Setting and environment details
+- Lighting type, direction, and atmosphere
+- Color palette and emotional tone
+- Camera angle and composition
+
+Output approximately ##WORDS## words.
+Do not use JSON format. Provide a single cohesive paragraph.
+```
+
+### Included Templates
+
+| Template | Purpose |
+|----------|---------|
+| `promptcreator.txt` | Detailed image analysis (~150 words) |
+| `promptcreator_small.txt` | Concise image analysis |
+| `image_analyze.txt` | General image description |
+| `cloner.txt` | Style cloning prompts |
+| `gemini_video.txt` | Video generation prompts |
+| `gemini_ohwx.txt` | LoRA trigger-aware prompts |
+| `t5xxl.txt` | T5-XXL optimized prompts |
+| `ltxv.txt` | LTX Video model prompts |
+| `next_scene.txt` | Cinematic scene transitions |
+
+---
+
+## ⚙️ Configuring LLM Models
+
+Customize available models by editing JSON configuration files in the `data/` folder.
+
+### Model Configuration Files
+
+| File | Provider | Description |
+|------|----------|-------------|
+| `gemini_models.json` | Google Gemini | Gemini model list |
+| `gpt_models.json` | OpenAI | GPT model list |
+| `claude_models.json` | Anthropic | Claude model list |
+| `grok_models.json` | xAI | Grok model list |
+| `groq_models.json` | Groq | Groq model list (text + vision) |
+| `qwenvl_models.json` | QwenVL | Local Qwen vision models |
+
+### Basic Format
+
+Most model files use a simple array format:
+
+```json
+{
+    "models": [
+        "model-name-1",
+        "model-name-2",
+        "model-name-3"
+    ]
+}
+```
+
+### Example: Adding New Gemini Models
+
+Edit `data/gemini_models.json`:
+
+```json
+{
+    "models": [
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-flash-latest",
+        "gemini-flash-lite-latest",
+        "gemini-2.5-flash-lite",
+        "gemini-exp-1206"
+    ]
+}
+```
+
+### Example: Adding New Claude Models
+
+Edit `data/claude_models.json`:
+
+```json
+{
+    "models": [
+        "claude-sonnet-4.5",
+        "claude-sonnet-4",
+        "claude-sonnet-3.7",
+        "claude-opus-4.1",
+        "claude-opus-4",
+        "claude-haiku-3.5",
+        "claude-haiku-3"
+    ]
+}
+```
+
+### Groq Models (Advanced Format)
+
+Groq supports separate text and vision model lists:
+
+```json
+{
+    "text_models": [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "groq/compound",
+        "qwen/qwen3-32b"
+    ],
+    "vision_models": [
+        "meta-llama/llama-4-scout-17b-16e-instruct",
+        "meta-llama/llama-4-maverick-17b-128e-instruct"
+    ],
+    "note": "Edit this file to add/remove models"
+}
+```
+
+### Notes
+
+- **Restart ComfyUI** after editing model configuration files
+- For Groq, the system will first try to fetch models from the API, then fall back to the JSON file
+- Model names must match exactly what the provider's API expects
+- Invalid model names will cause API errors at runtime
+
+---
+
+## 🖼️ Example Workflows
+
+Example workflows are available in the `examples/` directory:
+
+- **APNext workflows:** `examples/flux/apnext/`
+- **Florence2 local:** `examples/flux/florence2/`
+- **GPT-4o Vision:** `examples/flux/gpt-4o_vision/`
+- **Ollama local:** `examples/flux/ollama_local_llm/`
+- **MiniCPM:** `examples/minicpm/`
+
+---
+
+## 📋 Requirements
+
+```
+Pillow>=10.4.0
+requests>=2.32.5
+openai>=1.44.0
+blend-modes>=2.1.0
+huggingface_hub>=0.34.0
+color_matcher>=0.5.0
+chardet>=5.2.0
+google-generativeai>=0.7.2
+anthropic
+transformers>=4.40.0
+decord>=0.6.0
+scipy>=1.10.0
+tqdm>=4.67.1
+```
+
+---
+
+## 🔄 Model Support Matrix
+
+| Provider | Text | Vision | Video | Local |
+|----------|------|--------|-------|-------|
+| OpenAI GPT | ✅ | ✅ | ❌ | ❌ |
+| Google Gemini | ✅ | ✅ | ✅ | ❌ |
+| Anthropic Claude | ✅ | ✅ | ❌ | ❌ |
+| xAI Grok | ✅ | ✅ | ❌ | ❌ |
+| Groq | ✅ | ✅ | ❌ | ❌ |
+| QwenVL | ✅ | ✅ | ✅ | ✅ |
+| Ollama | ✅ | ✅ | ❌ | ✅ |
+| MiniCPM | ✅ | ✅ | ✅ | ✅ |
+| Phi-3.5 | ✅ | ✅ | ❌ | ✅ |
+
+---
+
+## 📝 License
+
+MIT License
+
+---
+
+## 🙏 Acknowledgments
+
+Built for the ComfyUI community. Special thanks to all contributors and users providing feedback.
