@@ -10,8 +10,9 @@ from PIL import Image
 from huggingface_hub import snapshot_download
 from transformers import AutoModelForVision2Seq, AutoProcessor, AutoTokenizer
 
-from ...utils.constants import CUSTOM_CATEGORY, qwenvl_models
+from ...utils.constants import CUSTOM_CATEGORY, qwenvl_models, prompt_dir
 import folder_paths
+import os
 
 
 class QwenVLZImageVision:
@@ -25,16 +26,39 @@ class QwenVLZImageVision:
     _cached_processor = None
     _cached_tokenizer = None
     _cached_model_name = None
+    
+    # Default prompt file names
+    DEFAULT_PROMPT_FILE = "zimage_vision_analysis.txt"
+    DEFAULT_SYSTEM_PROMPT_FILE = "zimage_vision_system.txt"
+    DEFAULT_USER_MOD_FILE = "zimage_vision_user_mod.txt"
 
     def __init__(self):
         pass
 
+    @staticmethod
+    def get_prompt_files():
+        """Get list of available prompt files from custom_prompts directory"""
+        try:
+            files = [f for f in os.listdir(prompt_dir) if f.endswith(".txt")]
+            return ["(none)"] + sorted(files)
+        except Exception:
+            return ["(none)"]
+
     @classmethod
     def INPUT_TYPES(cls):
+        prompt_files = cls.get_prompt_files()
+        # Set defaults if files exist, otherwise (none)
+        default_prompt = cls.DEFAULT_PROMPT_FILE if cls.DEFAULT_PROMPT_FILE in prompt_files else "(none)"
+        default_system = cls.DEFAULT_SYSTEM_PROMPT_FILE if cls.DEFAULT_SYSTEM_PROMPT_FILE in prompt_files else "(none)"
+        default_user_mod = cls.DEFAULT_USER_MOD_FILE if cls.DEFAULT_USER_MOD_FILE in prompt_files else "(none)"
+        
         return {
             "required": {
                 "images": ("IMAGE",),
                 "qwen_model": (qwenvl_models, {"default": qwenvl_models[0] if qwenvl_models else "Qwen3-VL-4B-Instruct"}),
+                "prompt_file": (prompt_files, {"default": default_prompt}),
+                "system_prompt_file": (prompt_files, {"default": default_system}),
+                "user_mod_file": (prompt_files, {"default": default_user_mod}),
                 "max_tokens": ("INT", {"default": 4096, "min": 512, "max": 8192}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
@@ -138,11 +162,35 @@ class QwenVLZImageVision:
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
 
-    def build_analysis_prompt(self, custom_prompt=""):
-        """Build the prompt for image analysis"""
+    def load_prompt_from_file(self, prompt_file):
+        """Load prompt content from a file in the custom_prompts directory"""
+        if prompt_file == "(none)" or not prompt_file:
+            return None
+        
+        file_path = os.path.join(prompt_dir, prompt_file)
+        if not os.path.exists(file_path):
+            print(f"⚠️ Prompt file not found: {file_path}")
+            return None
+        
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return f.read().strip()
+        except Exception as e:
+            print(f"⚠️ Error loading prompt file: {e}")
+            return None
+
+    def build_analysis_prompt(self, prompt_file="(none)", custom_prompt=""):
+        """Build the prompt for image analysis - priority: custom_prompt > prompt_file > default"""
+        # Custom prompt string takes highest priority
         if custom_prompt.strip():
             return custom_prompt.strip()
         
+        # Try to load from file
+        file_prompt = self.load_prompt_from_file(prompt_file)
+        if file_prompt:
+            return file_prompt
+        
+        # Fallback to hardcoded default (should rarely be needed now)
         return """Analyze this image in detail and output a JSON object describing what you see. Include any relevant details about:
 
 - Subject(s): People, characters, objects, animals - describe their appearance, clothing, expressions, poses
@@ -224,10 +272,11 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
         
         return zimage_formatted
 
-    def analyze_image(self, images, qwen_model="Qwen3-VL-4B-Instruct", max_tokens=4096,
-                      temperature=0.7, keep_model_loaded=True, include_system_prompt=True,
-                      include_think_block=True, strip_quotes=False, custom_analysis_prompt="",
-                      user_modification="", custom_system_prompt=""):
+    def analyze_image(self, images, qwen_model="Qwen3-VL-4B-Instruct", prompt_file="(none)",
+                      system_prompt_file="(none)", user_mod_file="(none)",
+                      max_tokens=4096, temperature=0.7, keep_model_loaded=True, 
+                      include_system_prompt=True, include_think_block=True, strip_quotes=False, 
+                      custom_analysis_prompt="", user_modification="", custom_system_prompt=""):
         try:
             # Load model
             model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded)
@@ -238,8 +287,14 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
             else:
                 pil_image = self.tensor2pil(images[0])
 
-            # Build prompt
-            prompt = self.build_analysis_prompt(custom_analysis_prompt)
+            # Build prompt (custom_analysis_prompt takes priority over prompt_file)
+            prompt = self.build_analysis_prompt(prompt_file, custom_analysis_prompt)
+            
+            # Load system prompt (custom_system_prompt takes priority over system_prompt_file)
+            system_prompt = custom_system_prompt.strip() if custom_system_prompt.strip() else (self.load_prompt_from_file(system_prompt_file) or "")
+            
+            # Load user modification (user_modification takes priority over user_mod_file)
+            user_mod = user_modification.strip() if user_modification.strip() else (self.load_prompt_from_file(user_mod_file) or "")
 
             # Prepare conversation
             conversation = [{"role": "user", "content": []}]
@@ -324,8 +379,8 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
                 description,
                 include_system=include_system_prompt,
                 include_think=include_think_block,
-                custom_system=custom_system_prompt,
-                user_mod=user_modification
+                custom_system=system_prompt,
+                user_mod=user_mod
             )
 
             # Strip quotes if requested
@@ -350,8 +405,8 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
                     content,
                     include_system=include_system_prompt,
                     include_think=include_think_block,
-                    custom_system=custom_system_prompt,
-                    user_mod=user_modification
+                    custom_system=system_prompt,
+                    user_mod=user_mod
                 )
                 if strip_quotes:
                     zimage_fallback = zimage_fallback.replace('"', '')

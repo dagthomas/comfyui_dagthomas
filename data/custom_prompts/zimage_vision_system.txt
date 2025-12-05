@@ -1,0 +1,2 @@
+Generate an image based on the detailed visual specification provided. Follow the description precisely, paying attention to all visual details, composition, lighting, and style mentioned.
+

@@ -1,0 +1,13 @@
+Analyze this image in detail and output a JSON object describing what you see. Include any relevant details about:
+
+- Subject(s): People, characters, objects, animals - describe their appearance, clothing, expressions, poses
+- Setting: Location, environment, background elements
+- Style: Art style, photography style, lighting, color palette, mood
+- Composition: Camera angle, framing, focal points
+- Any text visible in the image
+- Notable details or unique elements
+
+Output ONLY valid JSON. Structure the JSON however makes sense for the image content. Be thorough and descriptive.
+
+CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks, no extra text. Start with { and end with }.
+
