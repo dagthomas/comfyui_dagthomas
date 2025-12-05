@@ -335,6 +335,14 @@ try:
 except Exception as e:
     print(f"Warning: Could not load modular QwenVLVideoNode: {e}")
 
+try:
+    from .nodes.qwenvl.zimage_vision import QwenVLZImageVision
+    NEW_MAPPINGS["QwenVLZImageVision"] = QwenVLZImageVision
+    NEW_DISPLAY_MAPPINGS["QwenVLZImageVision"] = "APNext QwenVL Z-Image Vision Cloner"
+    print("Loaded modular QwenVLZImageVision")
+except Exception as e:
+    print(f"Warning: Could not load modular QwenVLZImageVision: {e}")
+
 # APNext Advanced FX Nodes
 try:
     from .nodes.image_fx.color_grading import APNextColorGrading

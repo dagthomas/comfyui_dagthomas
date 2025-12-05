@@ -37,6 +37,7 @@ class QwenVLVisionCloner:
                 "max_tokens": ("INT", {"default": 4096, "min": 512, "max": 8192}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
+                "strip_quotes": ("BOOLEAN", {"default": False}),
             },
             "optional": {
                 "custom_prompt": ("STRING", {"multiline": True, "default": ""})
@@ -154,9 +155,10 @@ class QwenVLVisionCloner:
 
     def format_element(self, element):
         """Format a single element from the JSON response"""
-        element_type = element.get("Type", "")
-        description = element.get("Description", "").lower()
-        attributes = element.get("Attributes", {})
+        # Support both snake_case (from JSON prompt) and Title Case (legacy)
+        element_type = element.get("type", element.get("Type", ""))
+        description = element.get("description", element.get("Description", "")).lower()
+        attributes = element.get("attributes", element.get("Attributes", {}))
 
         if element_type.lower() == "object":
             formatted = description
@@ -165,8 +167,8 @@ class QwenVLVisionCloner:
 
         attr_details = []
         for key, value in attributes.items():
-            if value and value.lower() not in ["n/a", "none", "None"]:
-                attr_details.append(f"{key.lower()}: {value.lower()}")
+            if value and str(value).lower() not in ["n/a", "none", "None"]:
+                attr_details.append(f"{key.lower()}: {str(value).lower()}")
 
         if attr_details:
             formatted += f" ({', '.join(attr_details)})"
@@ -176,22 +178,23 @@ class QwenVLVisionCloner:
     def extract_data(self, data):
         """Extract and format data from JSON response"""
         extracted = []
-        extracted.append(data.get("Title", ""))
-        extracted.append(data.get("Artistic Style", ""))
+        # Support both snake_case (from JSON prompt) and Title Case (legacy)
+        extracted.append(data.get("title", data.get("Title", "")))
+        extracted.append(data.get("artistic_style", data.get("Artistic Style", "")))
 
-        color_scheme = data.get("Color Scheme", [])
+        color_scheme = data.get("color_scheme", data.get("Color Scheme", []))
         if color_scheme:
             extracted.append(
                 f"palette ({', '.join(color.lower() for color in color_scheme)})"
             )
 
-        for element in data.get("Elements", []):
+        for element in data.get("elements", data.get("Elements", [])):
             extracted.append(self.format_element(element))
 
-        overall_scene = data.get("Overall Scene", {})
-        extracted.append(overall_scene.get("Theme", ""))
-        extracted.append(overall_scene.get("Setting", ""))
-        extracted.append(overall_scene.get("Lighting", ""))
+        overall_scene = data.get("overall_scene", data.get("Overall Scene", {}))
+        extracted.append(overall_scene.get("theme", overall_scene.get("Theme", "")))
+        extracted.append(overall_scene.get("setting", overall_scene.get("Setting", "")))
+        extracted.append(overall_scene.get("lighting", overall_scene.get("Lighting", "")))
 
         return ", ".join(item for item in extracted if item)
 
@@ -273,7 +276,7 @@ class QwenVLVisionCloner:
                 torch.cuda.empty_cache()
 
     def analyze_images(self, images, fade_percentage=15.0, qwen_model="Qwen3-VL-4B-Instruct",
-                      max_tokens=4096, temperature=0.7, keep_model_loaded=True, custom_prompt=""):
+                      max_tokens=4096, temperature=0.7, keep_model_loaded=True, strip_quotes=False, custom_prompt=""):
         try:
             default_prompt = """You must respond with ONLY valid JSON, nothing else. Analyze the image and output a JSON object:
 
@@ -405,13 +408,20 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
             else:
                 result = self.extract_data(data)
 
+            raw_json = json.dumps(data, indent=2)
+            
+            # Strip quotes if requested (helps avoid text rendering in generated images)
+            if strip_quotes:
+                result = result.replace('"', '')
+                raw_json = raw_json.replace('"', '')
+
             faded_image_tensor = self.pil2tensor(combined_image)
 
             # Clear model if not keeping loaded
             if not keep_model_loaded:
                 self.clear_model()
 
-            return (result, json.dumps(data, indent=2), faded_image_tensor)
+            return (result, raw_json, faded_image_tensor)
 
         except json.JSONDecodeError as e:
             print(f"❌ QwenVL Vision Cloner: Failed to parse JSON response: {e}")
@@ -422,9 +432,10 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
                 print("⚠️ Returning raw text response since JSON parsing failed")
                 faded_image_tensor = self.pil2tensor(combined_image)
                 error_json = json.dumps({"error": "JSON parse failed", "raw_response": content[:1000]}, indent=2)
+                output_content = content.replace('"', '') if strip_quotes else content
                 if not keep_model_loaded:
                     self.clear_model()
-                return (content, error_json, faded_image_tensor)
+                return (output_content, error_json, faded_image_tensor)
 
             error_message = f"Invalid JSON response from model: {str(e)}"
             error_image = Image.new("RGB", (512, 512), color="red")
