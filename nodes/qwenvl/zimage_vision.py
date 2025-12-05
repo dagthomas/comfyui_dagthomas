@@ -39,7 +39,7 @@ class QwenVLZImageVision:
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
                 "include_system_prompt": ("BOOLEAN", {"default": True}),
-                "include_think_block": ("BOOLEAN", {"default": True}),
+                "include_think_block": ("BOOLEAN", {"default": False}),
                 "strip_quotes": ("BOOLEAN", {"default": False}),
             },
             "optional": {
@@ -201,17 +201,20 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
         # User turn with content
         zimage_parts.append(f"<|im_start|>user\n{content}<|im_end|>")
         
-        # Assistant response with think block
+        # Assistant response
         if include_think:
             think_content = "Analyzing the visual specification. Processing key elements: subjects, setting, style, lighting, and composition details."
-            zimage_parts.append(f"<|im_start|>assistant\n<think>\n{think_content}\n</think>\n\nHere is the generated image based on your specification.<|im_end|>")
+            zimage_parts.append(f"<|im_start|>assistant\n<think>\n{think_content}\n</think>\n\nHere is the generated image.<|im_end|>")
         else:
-            zimage_parts.append(f"<|im_start|>assistant\nHere is the generated image based on your specification.<|im_end|>")
+            zimage_parts.append(f"<|im_start|>assistant\n<|im_end|>")
         
         # Add user modification if provided
         if user_mod.strip():
             zimage_parts.append(f"<|im_start|>user\n{user_mod}<|im_end|>")
-            zimage_parts.append("<|im_start|>assistant\n<think>\nProcessing the modification request.\n</think>\n\nOk, here's the updated image.<|im_end|>")
+            if include_think:
+                zimage_parts.append("<|im_start|>assistant\n<think>\nProcessing the modification request.\n</think>\n\nOk, here's the updated image.<|im_end|>")
+            else:
+                zimage_parts.append("<|im_start|>assistant\n<|im_end|>")
         
         # Final user/assistant turn for generation
         zimage_parts.append("<|im_start|>user\n<|im_end|>")
