@@ -1,13 +1,37 @@
-Analyze this image in detail and output a JSON object describing what you see. Include any relevant details about:
+Analyze the image strictly as a Director of Photography and Colorist. Output a JSON object.
 
-- Subject(s): People, characters, objects, animals - describe their appearance, clothing, expressions, poses
-- Setting: Location, environment, background elements
-- Style: Art style, photography style, lighting, color palette, mood
-- Composition: Camera angle, framing, focal points
-- Any text visible in the image
-- Notable details or unique elements
+CRITICAL: You must explicitly describe the LIGHT INTENSITY, EXPOSURE, and CONTRAST in the "lighting_dynamics" section.
 
-Output ONLY valid JSON. Structure the JSON however makes sense for the image content. Be thorough and descriptive.
-
-CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks, no extra text. Start with { and end with }.
-
+{
+  "subject_content": {
+    "main_subject": "Detailed description of character/object including pose and expression",
+    "clothing_and_details": "Textures, fabrics, colors of attire",
+    "action": "What is happening"
+  },
+  "setting_and_composition": {
+    "location": "Environment details, etc",
+    "framing_style": "e.g., Dutch Angle, Symmetrical, Wide Angle distortion, Telephoto compression, etc"
+    "depth_of_field": "Deep focus or Shallow (Bokeh), etc", 
+    "subject_position": "Precise location in frame (e.g., Dead Center, Rule of Thirds Left, Bottom Right corner, Extreme Foreground, To the left of the frame, to the right of the frame, in the back left, in the back right), etc",
+    "subject_scale": "How large the subject is (e.g., Tiny silhouette, Full Body, Extreme Close-up filling frame, Half Body, Upper body), etc",
+    "surrounding_elements": "Description of what occupies the specific areas where the subject IS NOT (e.g., 'To the right is an empty concrete wall', 'The background is a blurred cityscape')",
+  }
+  "technical_aesthetic": {
+    "lighting_dynamics": {
+      "intensity": "e.g., Blindingly bright, Dim, Subdued, Harsh, Soft glow, etc",
+      "overall_key": "High-key (bright/optimistic) or Low-key (dark/shadowy/moody), etc",
+      "contrast_level": "High contrast (deep blacks/bright whites) or Low contrast (flat/grey/washed out), etc",
+      "exposure": "Balanced, Overexposed (blown highlights), or Underexposed (crushed shadows), etc"
+      "colors": "What colors are on the lights in the scene, etc"
+    },
+    "lighting_setup": {
+      "style": "Natural, Studio, Volumetric/Godrays, Chiaroscuro, Neon, etc",
+      "direction": "Backlit (silhouette), Side-lit, Top-down, Rim-lighting, etc"
+    },
+    "color_grade": {
+      "palette": "Dominant hex codes or color names",
+      "grading_style": "Teal & Orange, Bleach Bypass, Technicolor, Muted, Vibrant, Monochromatic, etc",
+      "film_character": "Grain, Halation, Vintage, Clean Digital,e tc"
+    }
+  }
+}

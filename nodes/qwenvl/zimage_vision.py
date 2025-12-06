@@ -60,7 +60,7 @@ class QwenVLZImageVision:
                 "system_prompt_file": (prompt_files, {"default": default_system}),
                 "user_mod_file": (prompt_files, {"default": default_user_mod}),
                 "max_tokens": ("INT", {"default": 4096, "min": 512, "max": 8192}),
-                "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0}),
+                "temperature": ("FLOAT", {"default": 0.5, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
                 "include_system_prompt": ("BOOLEAN", {"default": True}),
                 "include_think_block": ("BOOLEAN", {"default": False}),
@@ -274,7 +274,7 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
 
     def analyze_image(self, images, qwen_model="Qwen3-VL-4B-Instruct", prompt_file="(none)",
                       system_prompt_file="(none)", user_mod_file="(none)",
-                      max_tokens=4096, temperature=0.7, keep_model_loaded=True, 
+                      max_tokens=4096, temperature=0.5, keep_model_loaded=True, 
                       include_system_prompt=True, include_think_block=True, strip_quotes=False, 
                       custom_analysis_prompt="", user_modification="", custom_system_prompt=""):
         try:
@@ -342,6 +342,7 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
             content = tokenizer.decode(outputs[0, input_len:], skip_special_tokens=True).strip()
 
             print(f"✅ Z-Image Vision: Received response ({len(content)} chars)")
+            print(f"📝 Raw response from Qwen model:\n{content}\n{'='*60}")
 
             if not content:
                 print("⚠️ Model returned empty response")
