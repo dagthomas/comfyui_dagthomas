@@ -277,6 +277,55 @@ Analyze video content frame-by-frame.
 
 ---
 
+#### QwenVL Next Scene
+**Display Name:** `APNext QwenVL Next Scene`
+
+Generate cinematic scene transitions locally using QwenVL models. Takes a previous scene description and **1-5 frame images**, then creates natural camera movements, framing evolution, and atmospheric shifts. Multiple frames help the model understand motion/progression.
+
+| Input | Description |
+|-------|-------------|
+| `images` | 1-5 frame images (batch) |
+| `original_prompt` | Previous scene description |
+| `qwen_model` | QwenVL model to use |
+| `prompt_file` | Custom prompt template file |
+| `custom_prompt` | Override with inline prompt (optional) |
+| `max_frames` | Max frames to use from batch (1-5) |
+| `focus_on` | Camera Movement, Framing Evolution, Environmental Reveals, Atmospheric Shifts |
+| `transition_intensity` | Subtle, Moderate, or Dramatic |
+| `keep_model_loaded` | Cache model in memory |
+
+**Returns:** `(next_scene_prompt, short_description)`
+
+**Custom Prompts:** Create your own prompt templates in `data/custom_prompts/`. Use `##ORIGINAL_PROMPT##` as placeholder for the previous scene description. Included templates:
+- `next_scene.txt` - Default detailed cinematography prompt
+- `qwen_next_scene_simple.txt` - Simplified version
+- `qwen_next_scene_video.txt` - Optimized for AI video generation
+
+---
+
+#### QwenVL Frame Prep
+**Display Name:** `APNext QwenVL Frame Prep`
+
+Utility node to prepare multiple images for QwenVL Next Scene. Accepts up to 5 individual images or a batch, scales them to max dimensions, and outputs a batched tensor.
+
+| Input | Description |
+|-------|-------------|
+| `max_width` | Maximum width (default 1024) |
+| `max_height` | Maximum height (default 1024) |
+| `image_1` - `image_5` | Individual image inputs |
+| `image_batch` | Pre-batched images (optional) |
+
+**Returns:** `(images, frame_count)`
+
+---
+
+#### QwenVL Z-Image Vision
+**Display Name:** `APNext QwenVL Z-Image Vision`
+
+Analyzes images and outputs in Z-Image TurnBuilder chat format with `<|im_start|>/<|im_end|>` tokens.
+
+---
+
 ### 🦙 Ollama Nodes (Local LLM)
 
 #### Ollama Node

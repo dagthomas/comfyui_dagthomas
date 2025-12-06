@@ -310,6 +310,20 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.qwenvl.next_scene import QwenVLNextScene
+    NEW_MAPPINGS["QwenVLNextScene"] = QwenVLNextScene
+    NEW_DISPLAY_MAPPINGS["QwenVLNextScene"] = "APNext QwenVL Next Scene"
+except Exception:
+    pass
+
+try:
+    from .nodes.qwenvl.frame_prep import QwenVLFramePrep
+    NEW_MAPPINGS["QwenVLFramePrep"] = QwenVLFramePrep
+    NEW_DISPLAY_MAPPINGS["QwenVLFramePrep"] = "APNext QwenVL Frame Prep"
+except Exception:
+    pass
+
 # APNext Advanced FX Nodes
 try:
     from .nodes.image_fx.color_grading import APNextColorGrading
