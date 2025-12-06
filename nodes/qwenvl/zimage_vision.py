@@ -2,6 +2,7 @@
 # Analyzes images and outputs in Z-Image TurnBuilder chat format
 
 import json
+import re
 import numpy as np
 import torch
 import gc
@@ -244,47 +245,114 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
         
         return "\n".join(lines)
 
-    def format_zimage_output(self, content, include_system=True, include_think=True, 
-                             custom_system="", user_mod=""):
-        """Format content into Z-Image TurnBuilder chat format"""
+    def json_to_zimage_prompt(self, data):
+        """
+        Convert JSON data to Z-Image prompt format.
+        Creates a detailed, comma-separated prompt optimized for Z-Image generation.
+        Format: Subject details, setting/environment, lighting/mood, style, quality boosters
+        """
+        segments = []
         
-        # Build Z-Image formatted output with chat tokens
-        zimage_parts = []
+        # Priority order for building the prompt
+        priority_keys = [
+            # Subject-related
+            'subject', 'subjects', 'character', 'characters', 'person', 'people', 
+            'figure', 'main_subject', 'protagonist', 'portrait',
+            # Appearance
+            'appearance', 'description', 'look', 'features', 'face', 'facial_features',
+            'hair', 'eyes', 'skin', 'body', 'clothing', 'outfit', 'attire', 'accessories',
+            # Action/pose
+            'action', 'pose', 'gesture', 'expression', 'emotion', 'activity',
+            # Setting/environment
+            'setting', 'environment', 'location', 'scene', 'background', 'backdrop',
+            'place', 'surroundings', 'context',
+            # Time/weather
+            'time', 'time_of_day', 'weather', 'season', 'atmosphere',
+            # Lighting
+            'lighting', 'light', 'illumination', 'shadows',
+            # Mood/tone
+            'mood', 'tone', 'feeling', 'vibe', 'ambiance',
+            # Style
+            'style', 'art_style', 'aesthetic', 'genre', 'medium', 'technique',
+            # Composition
+            'composition', 'framing', 'camera', 'camera_angle', 'perspective', 'shot_type',
+            'depth_of_field', 'focal_point',
+            # Colors
+            'colors', 'color_palette', 'palette', 'color_scheme',
+            # Quality/technical
+            'quality', 'resolution', 'detail', 'details', 'technical',
+        ]
         
-        # System prompt
-        if include_system:
-            system_prompt = custom_system.strip() if custom_system.strip() else (
-                "Generate an image based on the detailed visual specification provided. "
-                "Follow the description precisely, paying attention to all visual details, "
-                "composition, lighting, and style mentioned."
-            )
-            zimage_parts.append(f"<|im_start|>system\n{system_prompt}<|im_end|>")
+        def extract_value(val):
+            """Recursively extract string values from nested structures"""
+            if isinstance(val, str):
+                return val.strip()
+            elif isinstance(val, list):
+                parts = []
+                for item in val:
+                    extracted = extract_value(item)
+                    if extracted:
+                        parts.append(extracted)
+                return ", ".join(parts)
+            elif isinstance(val, dict):
+                parts = []
+                for k, v in val.items():
+                    extracted = extract_value(v)
+                    if extracted:
+                        # Include key context for nested dicts
+                        key_readable = k.replace("_", " ")
+                        parts.append(f"{key_readable}: {extracted}")
+                return ", ".join(parts)
+            elif val is not None:
+                return str(val).strip()
+            return ""
         
-        # User turn with content
-        zimage_parts.append(f"<|im_start|>user\n{content}<|im_end|>")
+        if isinstance(data, dict):
+            processed_keys = set()
+            
+            # First pass: process priority keys in order
+            for key in priority_keys:
+                for data_key in data.keys():
+                    if data_key.lower() == key or key in data_key.lower():
+                        if data_key not in processed_keys:
+                            value = extract_value(data[data_key])
+                            if value:
+                                segments.append(value)
+                            processed_keys.add(data_key)
+            
+            # Second pass: process any remaining keys
+            for key, value in data.items():
+                if key not in processed_keys:
+                    extracted = extract_value(value)
+                    if extracted:
+                        segments.append(extracted)
         
-        # Assistant response
-        if include_think:
-            think_content = "Analyzing the visual specification. Processing key elements: subjects, setting, style, lighting, and composition details."
-            zimage_parts.append(f"<|im_start|>assistant\n<think>\n{think_content}\n</think>\n\nHere is the generated image.<|im_end|>")
+        elif isinstance(data, list):
+            for item in data:
+                extracted = extract_value(item)
+                if extracted:
+                    segments.append(extracted)
         else:
-            zimage_parts.append(f"<|im_start|>assistant\n<|im_end|>")
+            segments.append(str(data))
         
-        # Add user modification if provided
-        if user_mod.strip():
-            zimage_parts.append(f"<|im_start|>user\n{user_mod}<|im_end|>")
-            if include_think:
-                zimage_parts.append("<|im_start|>assistant\n<think>\nProcessing the modification request.\n</think>\n\nOk, here's the updated image.<|im_end|>")
-            else:
-                zimage_parts.append("<|im_start|>assistant\n<|im_end|>")
+        # Join all segments with commas
+        prompt = ", ".join(segments)
         
-        # Final user/assistant turn for generation
-        zimage_parts.append("<|im_start|>user\n<|im_end|>")
-        zimage_parts.append("<|im_start|>assistant\n")
+        # Clean up the prompt
+        # Remove duplicate commas and extra spaces
+        prompt = re.sub(r',\s*,', ',', prompt)
+        prompt = re.sub(r'\s+', ' ', prompt)
+        prompt = prompt.strip().strip(',').strip()
         
-        zimage_formatted = "\n\n".join(zimage_parts)
+        # Add quality boosters if not already present
+        quality_terms = ['8k', '4k', 'highly detailed', 'hyper-detailed', 'photorealistic', 
+                        'ultra detailed', 'high resolution', 'hd', 'uhd']
+        has_quality = any(term in prompt.lower() for term in quality_terms)
         
-        return zimage_formatted
+        if not has_quality and len(prompt) > 50:
+            prompt += ", highly detailed, 8K"
+        
+        return prompt
 
     def analyze_image(self, images, qwen_model="Qwen3-VL-4B-Instruct", prompt_file="(none)",
                       system_prompt_file="(none)", user_mod_file="(none)",
@@ -304,12 +372,6 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
             # Build prompt (custom_analysis_prompt takes priority over prompt_file)
             prompt = self.build_analysis_prompt(prompt_file, custom_analysis_prompt)
             print(f"📄 Using prompt file: {prompt_file}")
-            
-            # Load system prompt (custom_system_prompt takes priority over system_prompt_file)
-            system_prompt = custom_system_prompt.strip() if custom_system_prompt.strip() else (self.load_prompt_from_file(system_prompt_file) or "")
-            
-            # Load user modification (user_modification takes priority over user_mod_file)
-            user_mod = user_modification.strip() if user_modification.strip() else (self.load_prompt_from_file(user_mod_file) or "")
 
             # Prepare conversation
             conversation = [{"role": "user", "content": []}]
@@ -389,15 +451,9 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
             
             # Convert JSON to readable description
             description = self.json_to_description(data)
-
-            # Format Z-Image output
-            zimage_formatted = self.format_zimage_output(
-                description,
-                include_system=include_system_prompt,
-                include_think=include_think_block,
-                custom_system=system_prompt,
-                user_mod=user_mod
-            )
+            
+            # Convert JSON to Z-Image prompt format
+            zimage_formatted = self.json_to_zimage_prompt(data)
 
             # Strip quotes if requested
             if strip_quotes:
@@ -409,27 +465,19 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
             if not keep_model_loaded:
                 self.clear_model()
 
-            print(f"✅ Z-Image Vision: Generated description and Z-Image format")
+            print(f"✅ Z-Image Vision: Generated description and Z-Image prompt")
 
             return (zimage_formatted, description, raw_json)
 
         except json.JSONDecodeError as e:
             print(f"❌ Z-Image Vision: Failed to parse JSON: {e}")
             if 'content' in locals() and content:
-                # Return raw content as fallback - still wrap in Z-Image format
-                zimage_fallback = self.format_zimage_output(
-                    content,
-                    include_system=include_system_prompt,
-                    include_think=include_think_block,
-                    custom_system=system_prompt,
-                    user_mod=user_mod
-                )
+                # Return raw content as fallback
                 if strip_quotes:
-                    zimage_fallback = zimage_fallback.replace('"', '')
                     content = content.replace('"', '')
                 if not keep_model_loaded:
                     self.clear_model()
-                return (zimage_fallback, content, json.dumps({"error": str(e), "raw": content[:1000]}, indent=2))
+                return (content, content, json.dumps({"error": str(e), "raw": content[:1000]}, indent=2))
             
             if not keep_model_loaded:
                 self.clear_model()
