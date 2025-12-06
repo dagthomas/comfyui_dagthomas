@@ -25,372 +25,333 @@ try:
     from .nodes.gemini.prompt_enhancer import GeminiPromptEnhancer
     NEW_MAPPINGS["GeminiPromptEnhancer"] = GeminiPromptEnhancer
     NEW_DISPLAY_MAPPINGS["GeminiPromptEnhancer"] = "APNext Gemini Prompt Enhancer"
-except Exception as e:
-    print(f"Warning: Could not load modular GeminiPromptEnhancer: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.gemini.next_scene import GeminiNextScene
     NEW_MAPPINGS["GeminiNextScene"] = GeminiNextScene
     NEW_DISPLAY_MAPPINGS["GeminiNextScene"] = "APNext Gemini Next Scene"
-except Exception as e:
-    print(f"Warning: Could not load modular GeminiNextScene: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.gemini.text_only import GeminiTextOnly
     NEW_MAPPINGS["GeminiTextOnly"] = GeminiTextOnly
     NEW_DISPLAY_MAPPINGS["GeminiTextOnly"] = "APNext Gemini Text Only"
-except Exception as e:
-    print(f"Warning: Could not load modular GeminiTextOnly: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.gemini.custom_vision import GeminiCustomVision
     NEW_MAPPINGS["GeminiCustomVision"] = GeminiCustomVision
     NEW_DISPLAY_MAPPINGS["GeminiCustomVision"] = "APNext Gemini Custom Vision"
-except Exception as e:
-    print(f"Warning: Could not load modular GeminiCustomVision: {e}")
+except Exception:
+    pass
 
 # GPT Nodes
 try:
     from .nodes.gpt.mini_node import GptMiniNode
     NEW_MAPPINGS["GptMiniNode"] = GptMiniNode
     NEW_DISPLAY_MAPPINGS["GptMiniNode"] = "APNext GPT Mini Generator"
-except Exception as e:
-    print(f"Warning: Could not load modular GptMiniNode: {e}")
+except Exception:
+    pass
 
 # MiniCPM Nodes
 try:
     from .nodes.minicpm.video_node import MiniCPMVideoNode
     NEW_MAPPINGS["MiniCPMVideoNode"] = MiniCPMVideoNode
     NEW_DISPLAY_MAPPINGS["MiniCPMVideoNode"] = "APNext MiniCPM Video"
-except Exception as e:
-    print(f"Warning: Could not load modular MiniCPMVideoNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.minicpm.image_node import MiniCPMImageNode
     NEW_MAPPINGS["MiniCPMImageNode"] = MiniCPMImageNode
     NEW_DISPLAY_MAPPINGS["MiniCPMImageNode"] = "APNext MiniCPM Image"
-except Exception as e:
-    print(f"Warning: Could not load modular MiniCPMImageNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.string_utils.mixer import SentenceMixerNode
     NEW_MAPPINGS["SentenceMixerNode"] = SentenceMixerNode
     NEW_DISPLAY_MAPPINGS["SentenceMixerNode"] = "APNext Sentence Mixer"
-    # print("✅ Loaded modular SentenceMixerNode")
-except Exception as e:
-    print(f"Warning: Could not load modular SentenceMixerNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.string_utils.flexible_merger import FlexibleStringMergerNode
     NEW_MAPPINGS["FlexibleStringMergerNode"] = FlexibleStringMergerNode
     NEW_DISPLAY_MAPPINGS["FlexibleStringMergerNode"] = "APNext Flexible String Merger"
-    # print("✅ Loaded modular FlexibleStringMergerNode")
-except Exception as e:
-    print(f"Warning: Could not load modular FlexibleStringMergerNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.string_utils.merger import StringMergerNode
     NEW_MAPPINGS["StringMergerNode"] = StringMergerNode
     NEW_DISPLAY_MAPPINGS["StringMergerNode"] = "APNext String Merger"
-    # print("✅ Loaded modular StringMergerNode")
-except Exception as e:
-    print(f"Warning: Could not load modular StringMergerNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.file_utils.random_integer import RandomIntegerNode
     NEW_MAPPINGS["RandomIntegerNode"] = RandomIntegerNode
     NEW_DISPLAY_MAPPINGS["RandomIntegerNode"] = "APNext Random Integer Generator"
-    # print("✅ Loaded modular RandomIntegerNode")
-except Exception as e:
-    print(f"Warning: Could not load modular RandomIntegerNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.latent_generators.pgsd3_latent import PGSD3LatentGenerator
     NEW_MAPPINGS["PGSD3LatentGenerator"] = PGSD3LatentGenerator
     NEW_DISPLAY_MAPPINGS["PGSD3LatentGenerator"] = "APNext PGSD3LatentGenerator"
-    # print("✅ Loaded modular PGSD3LatentGenerator")
-except Exception as e:
-    print(f"Warning: Could not load modular PGSD3LatentGenerator: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.latent_generators.apn_latent import APNLatent
     NEW_MAPPINGS["APNLatent"] = APNLatent
     NEW_DISPLAY_MAPPINGS["APNLatent"] = "APNext Latent Generator"
-    # print("✅ Loaded modular APNLatent")
-except Exception as e:
-    print(f"Warning: Could not load modular APNLatent: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.prompt_generators.auto_prompter import PromptGenerator
     NEW_MAPPINGS["PromptGenerator"] = PromptGenerator
     NEW_DISPLAY_MAPPINGS["PromptGenerator"] = "Auto Prompter"
-    # print("✅ Loaded modular PromptGenerator")
-except Exception as e:
-    print(f"Warning: Could not load modular PromptGenerator: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.prompt_generators.apnext_nodes import APNextNode
     NEW_MAPPINGS["APNextNode"] = APNextNode
     NEW_DISPLAY_MAPPINGS["APNextNode"] = "APNext Node"
-    # print("✅ Loaded modular APNextNode")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.gpt.vision_cloner import GptVisionCloner
     NEW_MAPPINGS["GptVisionCloner"] = GptVisionCloner
     NEW_DISPLAY_MAPPINGS["GptVisionCloner"] = "APNext GPT Vision Cloner"
-    # print("✅ Loaded modular GptVisionCloner")
-except Exception as e:
-    print(f"Warning: Could not load modular GptVisionCloner: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.gpt.custom_vision import GptCustomVision
     NEW_MAPPINGS["GptCustomVision"] = GptCustomVision
     NEW_DISPLAY_MAPPINGS["GptCustomVision"] = "APNext GPT Custom Vision"
-    # print("✅ Loaded modular GptCustomVision")
-except Exception as e:
-    print(f"Warning: Could not load modular GptCustomVision: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.ollama.node import OllamaNode
     NEW_MAPPINGS["OllamaNode"] = OllamaNode
     NEW_DISPLAY_MAPPINGS["OllamaNode"] = "APNext OllamaNode"
-    # print("✅ Loaded modular OllamaNode")
-except Exception as e:
-    print(f"Warning: Could not load modular OllamaNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.ollama.vision_node import OllamaVisionNode
     NEW_MAPPINGS["OllamaVisionNode"] = OllamaVisionNode
     NEW_DISPLAY_MAPPINGS["OllamaVisionNode"] = "APNext OllamaVision"
-    # print("✅ Loaded modular OllamaVisionNode")
-except Exception as e:
-    print(f"Warning: Could not load modular OllamaVisionNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.phi.model_loader import PhiModelLoader
     NEW_MAPPINGS["PhiModelLoader"] = PhiModelLoader
     NEW_DISPLAY_MAPPINGS["PhiModelLoader"] = "APNext Phi Model Loader"
-    # print("✅ Loaded modular PhiModelLoader")
-except Exception as e:
-    print(f"Warning: Could not load modular PhiModelLoader: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.phi.inference import PhiModelInference
     NEW_MAPPINGS["PhiModelInference"] = PhiModelInference
     NEW_DISPLAY_MAPPINGS["PhiModelInference"] = "APNext Phi Model Inference"
-    # print("✅ Loaded modular PhiModelInference")
-except Exception as e:
-    print(f"Warning: Could not load modular PhiModelInference: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.phi.custom_inference import PhiCustomModelInference
     NEW_MAPPINGS["PhiCustomModelInference"] = PhiCustomModelInference
     NEW_DISPLAY_MAPPINGS["PhiCustomModelInference"] = "APNext Phi Custom Model Inference"
-    # print("✅ Loaded modular PhiCustomModelInference")
-except Exception as e:
-    print(f"Warning: Could not load modular PhiCustomModelInference: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.file_utils.file_reader import FileReaderNode
     NEW_MAPPINGS["FileReaderNode"] = FileReaderNode
     NEW_DISPLAY_MAPPINGS["FileReaderNode"] = "APNext Local random prompt"
-    # print("✅ Loaded modular FileReaderNode")
-except Exception as e:
-    print(f"Warning: Could not load modular FileReaderNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.file_utils.prompt_loader import CustomPromptLoader
     NEW_MAPPINGS["CustomPromptLoader"] = CustomPromptLoader
     NEW_DISPLAY_MAPPINGS["CustomPromptLoader"] = "APNext Custom Prompts"
-    # print("✅ Loaded modular CustomPromptLoader")
-except Exception as e:
-    print(f"Warning: Could not load modular CustomPromptLoader: {e}")
+except Exception:
+    pass
 
 # Universal Generator
 try:
     from .nodes.prompt_generators.universal_generator import APNextGenerator
     NEW_MAPPINGS["APNextGenerator"] = APNextGenerator
     NEW_DISPLAY_MAPPINGS["APNextGenerator"] = "APNext Universal Generator"
-    # print("✅ Loaded modular APNextGenerator")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextGenerator: {e}")
+except Exception:
+    pass
 
 # Universal Vision Cloner
 try:
     from .nodes.prompt_generators.universal_vision_cloner import UniversalVisionCloner
     NEW_MAPPINGS["UniversalVisionCloner"] = UniversalVisionCloner
     NEW_DISPLAY_MAPPINGS["UniversalVisionCloner"] = "APNext Universal Vision Cloner"
-    # print("✅ Loaded modular UniversalVisionCloner")
-except Exception as e:
-    print(f"Warning: Could not load modular UniversalVisionCloner: {e}")
+except Exception:
+    pass
 
 # APNext FX Nodes
 try:
     from .nodes.image_fx.bloom import APNextBloom
     NEW_MAPPINGS["APNextBloom"] = APNextBloom
     NEW_DISPLAY_MAPPINGS["APNextBloom"] = "APNext Bloom FX"
-    # print("✅ Loaded modular APNextBloom")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextBloom: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.sharpen import APNextSharpen
     NEW_MAPPINGS["APNextSharpen"] = APNextSharpen
     NEW_DISPLAY_MAPPINGS["APNextSharpen"] = "APNext Sharpen FX"
-    # print("✅ Loaded modular APNextSharpen")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextSharpen: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.noise import APNextNoise
     NEW_MAPPINGS["APNextNoise"] = APNextNoise
     NEW_DISPLAY_MAPPINGS["APNextNoise"] = "APNext Noise FX"
-    # print("✅ Loaded modular APNextNoise")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextNoise: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.rough import APNextRough
     NEW_MAPPINGS["APNextRough"] = APNextRough
     NEW_DISPLAY_MAPPINGS["APNextRough"] = "APNext Rough FX"
-    # print("✅ Loaded modular APNextRough")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextRough: {e}")
+except Exception:
+    pass
 
 # Grok Nodes
 try:
     from .nodes.grok.text_node import GrokTextNode
     NEW_MAPPINGS["GrokTextNode"] = GrokTextNode
     NEW_DISPLAY_MAPPINGS["GrokTextNode"] = "APNext Grok Text Generator"
-    print("Loaded modular GrokTextNode")
-except Exception as e:
-    print(f"Warning: Could not load modular GrokTextNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.grok.vision_node import GrokVisionNode
     NEW_MAPPINGS["GrokVisionNode"] = GrokVisionNode
     NEW_DISPLAY_MAPPINGS["GrokVisionNode"] = "APNext Grok Vision Analyzer"
-    print("Loaded modular GrokVisionNode")
-except Exception as e:
-    print(f"Warning: Could not load modular GrokVisionNode: {e}")
+except Exception:
+    pass
 
 # Claude Nodes
 try:
     from .nodes.claude.text_node import ClaudeTextNode
     NEW_MAPPINGS["ClaudeTextNode"] = ClaudeTextNode
     NEW_DISPLAY_MAPPINGS["ClaudeTextNode"] = "APNext Claude Text Generator"
-    print("Loaded modular ClaudeTextNode")
-except Exception as e:
-    print(f"Warning: Could not load modular ClaudeTextNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.claude.vision_node import ClaudeVisionNode
     NEW_MAPPINGS["ClaudeVisionNode"] = ClaudeVisionNode
     NEW_DISPLAY_MAPPINGS["ClaudeVisionNode"] = "APNext Claude Vision Analyzer"
-    print("Loaded modular ClaudeVisionNode")
-except Exception as e:
-    print(f"Warning: Could not load modular ClaudeVisionNode: {e}")
+except Exception:
+    pass
 
 # Groq Nodes
 try:
     from .nodes.groq.text_node import GroqTextNode
     NEW_MAPPINGS["GroqTextNode"] = GroqTextNode
     NEW_DISPLAY_MAPPINGS["GroqTextNode"] = "APNext Groq Text Generator"
-    print("Loaded modular GroqTextNode")
-except Exception as e:
-    print(f"Warning: Could not load modular GroqTextNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.groq.vision_node import GroqVisionNode
     NEW_MAPPINGS["GroqVisionNode"] = GroqVisionNode
     NEW_DISPLAY_MAPPINGS["GroqVisionNode"] = "APNext Groq Vision Analyzer"
-    print("Loaded modular GroqVisionNode")
-except Exception as e:
-    print(f"Warning: Could not load modular GroqVisionNode: {e}")
+except Exception:
+    pass
 
 # QwenVL Nodes
 try:
     from .nodes.qwenvl.vision_node import QwenVLVisionNode
     NEW_MAPPINGS["QwenVLVisionNode"] = QwenVLVisionNode
     NEW_DISPLAY_MAPPINGS["QwenVLVisionNode"] = "APNext QwenVL Vision Analyzer"
-    print("Loaded modular QwenVLVisionNode")
-except Exception as e:
-    print(f"Warning: Could not load modular QwenVLVisionNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.qwenvl.vision_cloner import QwenVLVisionCloner
     NEW_MAPPINGS["QwenVLVisionCloner"] = QwenVLVisionCloner
     NEW_DISPLAY_MAPPINGS["QwenVLVisionCloner"] = "APNext QwenVL Vision Cloner"
-    print("Loaded modular QwenVLVisionCloner")
-except Exception as e:
-    print(f"Warning: Could not load modular QwenVLVisionCloner: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.qwenvl.video_node import QwenVLVideoNode
     NEW_MAPPINGS["QwenVLVideoNode"] = QwenVLVideoNode
     NEW_DISPLAY_MAPPINGS["QwenVLVideoNode"] = "APNext QwenVL Video Analyzer"
-    print("Loaded modular QwenVLVideoNode")
-except Exception as e:
-    print(f"Warning: Could not load modular QwenVLVideoNode: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.qwenvl.zimage_vision import QwenVLZImageVision
     NEW_MAPPINGS["QwenVLZImageVision"] = QwenVLZImageVision
     NEW_DISPLAY_MAPPINGS["QwenVLZImageVision"] = "APNext QwenVL Z-Image Vision Cloner"
-    print("Loaded modular QwenVLZImageVision")
-except Exception as e:
-    print(f"Warning: Could not load modular QwenVLZImageVision: {e}")
+except Exception:
+    pass
 
 # APNext Advanced FX Nodes
 try:
     from .nodes.image_fx.color_grading import APNextColorGrading
     NEW_MAPPINGS["APNextColorGrading"] = APNextColorGrading
     NEW_DISPLAY_MAPPINGS["APNextColorGrading"] = "APNext Color Grading FX"
-    # print("✅ Loaded modular APNextColorGrading")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextColorGrading: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.cross_processing import APNextCrossProcessing
     NEW_MAPPINGS["APNextCrossProcessing"] = APNextCrossProcessing
     NEW_DISPLAY_MAPPINGS["APNextCrossProcessing"] = "APNext Cross Processing FX"
-    # print("✅ Loaded modular APNextCrossProcessing")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextCrossProcessing: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.split_toning import APNextSplitToning
     NEW_MAPPINGS["APNextSplitToning"] = APNextSplitToning
     NEW_DISPLAY_MAPPINGS["APNextSplitToning"] = "APNext Split Toning FX"
-    # print("✅ Loaded modular APNextSplitToning")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextSplitToning: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.hdr_tone_mapping import APNextHDRToneMapping
     NEW_MAPPINGS["APNextHDRToneMapping"] = APNextHDRToneMapping
     NEW_DISPLAY_MAPPINGS["APNextHDRToneMapping"] = "APNext HDR Tone Mapping FX"
-    # print("✅ Loaded modular APNextHDRToneMapping")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextHDRToneMapping: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.glitch_art import APNextGlitchArt
     NEW_MAPPINGS["APNextGlitchArt"] = APNextGlitchArt
     NEW_DISPLAY_MAPPINGS["APNextGlitchArt"] = "APNext Glitch Art FX"
-    # print("✅ Loaded modular APNextGlitchArt")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextGlitchArt: {e}")
+except Exception:
+    pass
 
 try:
     from .nodes.image_fx.film_halation import APNextFilmHalation
     NEW_MAPPINGS["APNextFilmHalation"] = APNextFilmHalation
     NEW_DISPLAY_MAPPINGS["APNextFilmHalation"] = "APNext Film Halation FX"
-    # print("✅ Loaded modular APNextFilmHalation")
-except Exception as e:
-    print(f"Warning: Could not load modular APNextFilmHalation: {e}")
+except Exception:
+    pass
 
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}

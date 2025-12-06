@@ -85,10 +85,51 @@ with open(claude_models_file, 'r') as f:
     claude_models_data = json.load(f)
     claude_models = claude_models_data.get('models', [])
 
-qwenvl_models_file = os.path.join(base_dir, "data", "qwenvl_models.json")
-with open(qwenvl_models_file, 'r') as f:
-    qwenvl_models_data = json.load(f)
-    qwenvl_models = qwenvl_models_data.get('models', [])
+def load_qwenvl_models():
+    """Load QwenVL models from JSON file, with optional private models addition."""
+    models = []
+    
+    # Load main models file
+    qwenvl_models_file = os.path.join(base_dir, "data", "qwenvl_models.json")
+    try:
+        with open(qwenvl_models_file, 'r') as f:
+            data = json.load(f)
+            models.extend(data.get('models', []))
+            print(f"Loaded {len(data.get('models', []))} QwenVL models from qwenvl_models.json")
+    except FileNotFoundError:
+        print(f"Warning: qwenvl_models.json not found")
+    except Exception as e:
+        print(f"Warning: Could not load qwenvl_models.json: {e}")
+    
+    # Look for private model files (private_*qwenvl*.json pattern in data folder)
+    data_dir = os.path.join(base_dir, "data")
+    try:
+        for filename in os.listdir(data_dir):
+            # Match files starting with "private_" and containing "qwenvl" (case-insensitive)
+            if filename.startswith("private_") and "qwenvl" in filename.lower() and filename.endswith(".json"):
+                private_file = os.path.join(data_dir, filename)
+                try:
+                    with open(private_file, 'r') as f:
+                        private_data = json.load(f)
+                        private_models = private_data.get('models', [])
+                        # Add models that aren't already in the list
+                        for model in private_models:
+                            if model not in models:
+                                models.append(model)
+                        print(f"Loaded {len(private_models)} private QwenVL models from {filename}")
+                except Exception as e:
+                    print(f"Warning: Could not load {filename}: {e}")
+    except Exception as e:
+        print(f"Warning: Could not scan for private QwenVL model files: {e}")
+    
+    # Fallback if no models loaded
+    if not models:
+        models = ["Qwen3-VL-4B-Instruct", "Qwen3-VL-2B-Instruct"]
+        print("Using fallback QwenVL models")
+    
+    return models
+
+qwenvl_models = load_qwenvl_models()
 
 def load_groq_models_from_file():
     """Load Groq models from JSON file."""

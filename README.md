@@ -647,6 +647,35 @@ Customize available models by editing JSON configuration files in the `data/` fo
 | `groq_models.json` | Groq | Groq model list (text + vision) |
 | `qwenvl_models.json` | QwenVL | Local Qwen vision models |
 
+### QwenVL Models - Adding Private/Custom Models
+
+QwenVL nodes support loading additional models from private configuration files. This allows you to add custom or uncensored models without modifying the main configuration.
+
+**How to add private models:**
+
+1. Create a JSON file in `data/` with a name matching `private_*qwenvl*.json`
+   - Examples: `private_qwenvl_models.json`, `private_uncensored.qwenvl_models.json`
+
+2. Use the same format as `qwenvl_models.json`:
+
+```json
+{
+    "models": [
+        "huihui-ai/Huihui-Qwen3-VL-4B-Instruct-abliterated",
+        "huihui-ai/Huihui-Qwen3-VL-8B-Instruct-abliterated",
+        "another-namespace/custom-model"
+    ]
+}
+```
+
+3. Restart ComfyUI - the models will appear in the QwenVL node dropdowns
+
+**Notes:**
+- Private files are loaded in addition to the main `qwenvl_models.json`
+- Duplicate models are automatically filtered out
+- Supports full HuggingFace repo paths (`namespace/model-name`)
+- Models are downloaded to `ComfyUI/models/LLM/Qwen-VL/` on first use
+
 ### Basic Format
 
 Most model files use a simple array format:

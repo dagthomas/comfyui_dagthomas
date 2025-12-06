@@ -7,7 +7,7 @@ import torch
 import gc
 from pathlib import Path
 from PIL import Image
-from huggingface_hub import snapshot_download
+# huggingface_hub not needed - transformers handles downloads automatically
 from transformers import AutoModelForVision2Seq, AutoProcessor, AutoTokenizer
 
 from ...utils.constants import CUSTOM_CATEGORY, qwenvl_models
@@ -200,24 +200,32 @@ class QwenVLVisionCloner:
 
     @classmethod
     def ensure_model(cls, model_name):
-        """Download model if not present"""
+        """Get model path and cache directory"""
         models_dir = Path(folder_paths.models_dir) / "LLM" / "Qwen-VL"
         models_dir.mkdir(parents=True, exist_ok=True)
 
-        # Map display name to repo ID
-        repo_id = f"Qwen/{model_name}"
-        target = models_dir / model_name
+        # Handle full repo paths (e.g., "huihui-ai/Model-Name") vs simple names (e.g., "Qwen3-VL-4B")
+        if "/" in model_name:
+            repo_id = model_name  # Use as-is
+            folder_name = model_name.replace("/", "--")  # Safe folder name
+        else:
+            repo_id = f"Qwen/{model_name}"  # Default Qwen namespace
+            folder_name = model_name
 
-        if not target.exists():
-            print(f"📥 Downloading {model_name}...")
-            snapshot_download(
-                repo_id=repo_id,
-                local_dir=str(target),
-                ignore_patterns=["*.md", ".git*"],
-            )
-            print(f"✅ Downloaded {model_name}")
+        target = models_dir / folder_name
 
-        return str(target)
+        # Check if model files exist locally (manually placed)
+        if target.exists():
+            safetensors = list(target.glob("*.safetensors"))
+            bins = list(target.glob("*.bin"))
+            config = target / "config.json"
+            if (safetensors or bins) and config.exists():
+                print(f"📁 Using local model: {target}")
+                return str(target), None  # No cache_dir needed for local
+
+        # Return repo_id and cache_dir for downloading to local folder
+        print(f"📥 Will download {repo_id} to {models_dir}")
+        return repo_id, str(models_dir)
 
     @classmethod
     def load_model(cls, model_name, keep_loaded=True):
@@ -232,7 +240,7 @@ class QwenVLVisionCloner:
             cls.clear_model()
 
         # Download/locate model
-        model_path = cls.ensure_model(model_name)
+        model_path, cache_dir = cls.ensure_model(model_name)
 
         print(f"🔄 Loading {model_name}...")
 
@@ -240,17 +248,22 @@ class QwenVLVisionCloner:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-        # Load model
-        model = AutoModelForVision2Seq.from_pretrained(
-            model_path,
-            device_map={"": 0} if device == "cuda" else device,
-            dtype=dtype,
-            attn_implementation="sdpa",
-            use_safetensors=True,
-        ).eval()
+        # Build kwargs - add cache_dir if downloading
+        load_kwargs = {
+            "device_map": {"": 0} if device == "cuda" else device,
+            "dtype": dtype,
+            "attn_implementation": "sdpa",
+            "use_safetensors": True,
+            "trust_remote_code": True,
+        }
+        if cache_dir:
+            load_kwargs["cache_dir"] = cache_dir
 
-        processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
-        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
+        # Load model
+        model = AutoModelForVision2Seq.from_pretrained(model_path, **load_kwargs).eval()
+
+        processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True, cache_dir=cache_dir)
+        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, cache_dir=cache_dir)
 
         # Cache if requested
         if keep_loaded:
