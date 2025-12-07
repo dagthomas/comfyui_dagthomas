@@ -32,6 +32,7 @@ class QwenVLNextScene:
     _cached_processor = None
     _cached_tokenizer = None
     _cached_model_name = None
+    _cached_attn_impl = None
     
     # Default prompt file
     DEFAULT_PROMPT_FILE = "next_scene.txt"
@@ -81,6 +82,7 @@ class QwenVLNextScene:
                 "randomize_each_run": ("BOOLEAN", {"default": True}),
                 "add_scene_prefix": ("BOOLEAN", {"default": True}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
+                "use_flash_attention": ("BOOLEAN", {"default": False}),
             },
             "optional": {
                 "custom_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -140,26 +142,31 @@ class QwenVLNextScene:
         return repo_id, str(models_dir)
 
     @classmethod
-    def load_model(cls, model_name, keep_loaded=True):
+    def load_model(cls, model_name, keep_loaded=True, use_flash_attention=False):
         """Load model with caching support"""
-        if keep_loaded and cls._cached_model is not None and cls._cached_model_name == model_name:
-            print(f"♻️ Using cached {model_name}")
+        attn_impl = "flash_attention_2" if use_flash_attention else "sdpa"
+        
+        # Check if model is already loaded with same attention implementation
+        if (keep_loaded and cls._cached_model is not None and 
+            cls._cached_model_name == model_name and cls._cached_attn_impl == attn_impl):
+            print(f"♻️ Using cached {model_name} (attn: {attn_impl})")
             return cls._cached_model, cls._cached_processor, cls._cached_tokenizer
 
-        if cls._cached_model_name != model_name:
+        # Clear old model if loading a different one or different attention
+        if cls._cached_model_name != model_name or cls._cached_attn_impl != attn_impl:
             cls.clear_model()
 
         model_path, cache_dir = cls.ensure_model(model_name)
-        print(f"🔄 Loading {model_name}...")
+        print(f"🔄 Loading {model_name} with {attn_impl}...")
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        dtype = torch.bfloat16 if use_flash_attention and torch.cuda.is_available() else (torch.float16 if torch.cuda.is_available() else torch.float32)
 
         # Build kwargs - add cache_dir if downloading
         load_kwargs = {
             "device_map": {"": 0} if device == "cuda" else device,
             "dtype": dtype,
-            "attn_implementation": "sdpa",
+            "attn_implementation": attn_impl,
             "use_safetensors": True,
             "trust_remote_code": True,
         }
@@ -176,8 +183,9 @@ class QwenVLNextScene:
             cls._cached_processor = processor
             cls._cached_tokenizer = tokenizer
             cls._cached_model_name = model_name
+            cls._cached_attn_impl = attn_impl
 
-        print(f"✅ Loaded {model_name}")
+        print(f"✅ Loaded {model_name} with {attn_impl}")
         return model, processor, tokenizer
 
     @classmethod
@@ -189,6 +197,7 @@ class QwenVLNextScene:
             cls._cached_processor = None
             cls._cached_tokenizer = None
             cls._cached_model_name = None
+            cls._cached_attn_impl = None
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -321,6 +330,7 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
         randomize_each_run=True,
         add_scene_prefix=True,
         keep_model_loaded=True,
+        use_flash_attention=False,
         custom_prompt="",
         scene_prefix_text="NEW SCENE:",
         focus_on="Automatic",
@@ -355,7 +365,7 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
             print("-"*80)
             
             # Load model
-            model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded)
+            model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded, use_flash_attention)
             
             # Extract frames from the batch
             pil_images = self.extract_frames(images, max_frames)

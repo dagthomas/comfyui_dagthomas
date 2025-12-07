@@ -27,6 +27,7 @@ class QwenVLZImageVision:
     _cached_processor = None
     _cached_tokenizer = None
     _cached_model_name = None
+    _cached_attn_impl = None
     
     # Default prompt file names
     DEFAULT_PROMPT_FILE = "zimage_vision_analysis.txt"
@@ -63,6 +64,7 @@ class QwenVLZImageVision:
                 "max_tokens": ("INT", {"default": 4096, "min": 512, "max": 8192}),
                 "temperature": ("FLOAT", {"default": 0.5, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
+                "use_flash_attention": ("BOOLEAN", {"default": False}),
                 "include_system_prompt": ("BOOLEAN", {"default": True}),
                 "include_think_block": ("BOOLEAN", {"default": False}),
                 "strip_quotes": ("BOOLEAN", {"default": False}),
@@ -124,26 +126,31 @@ class QwenVLZImageVision:
         return repo_id, str(models_dir)
 
     @classmethod
-    def load_model(cls, model_name, keep_loaded=True):
+    def load_model(cls, model_name, keep_loaded=True, use_flash_attention=False):
         """Load model with caching support"""
-        if keep_loaded and cls._cached_model is not None and cls._cached_model_name == model_name:
-            print(f"♻️ Using cached {model_name}")
+        attn_impl = "flash_attention_2" if use_flash_attention else "sdpa"
+        
+        # Check if we can use cached model (same model AND same attention implementation)
+        if (keep_loaded and cls._cached_model is not None and 
+            cls._cached_model_name == model_name and cls._cached_attn_impl == attn_impl):
+            print(f"♻️ Using cached {model_name} (attn: {attn_impl})")
             return cls._cached_model, cls._cached_processor, cls._cached_tokenizer
 
-        if cls._cached_model_name != model_name:
+        # Clear if model or attention implementation changed
+        if cls._cached_model_name != model_name or cls._cached_attn_impl != attn_impl:
             cls.clear_model()
 
         model_path, cache_dir = cls.ensure_model(model_name)
-        print(f"🔄 Loading {model_name}...")
+        print(f"🔄 Loading {model_name} with {attn_impl}...")
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        dtype = torch.bfloat16 if use_flash_attention and torch.cuda.is_available() else (torch.float16 if torch.cuda.is_available() else torch.float32)
 
         # Build kwargs - add cache_dir if downloading
         load_kwargs = {
             "device_map": {"": 0} if device == "cuda" else device,
             "dtype": dtype,
-            "attn_implementation": "sdpa",
+            "attn_implementation": attn_impl,
             "use_safetensors": True,
             "trust_remote_code": True,
         }
@@ -160,8 +167,9 @@ class QwenVLZImageVision:
             cls._cached_processor = processor
             cls._cached_tokenizer = tokenizer
             cls._cached_model_name = model_name
+            cls._cached_attn_impl = attn_impl
 
-        print(f"✅ Loaded {model_name}")
+        print(f"✅ Loaded {model_name} with {attn_impl}")
         return model, processor, tokenizer
 
     @classmethod
@@ -173,6 +181,7 @@ class QwenVLZImageVision:
             cls._cached_processor = None
             cls._cached_tokenizer = None
             cls._cached_model_name = None
+            cls._cached_attn_impl = None
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -356,26 +365,34 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
 
     def analyze_image(self, images, qwen_model="Qwen3-VL-4B-Instruct", prompt_file="(none)",
                       system_prompt_file="(none)", user_mod_file="(none)",
-                      max_tokens=4096, temperature=0.5, keep_model_loaded=True, 
+                      max_tokens=4096, temperature=0.5, keep_model_loaded=True, use_flash_attention=False,
                       include_system_prompt=True, include_think_block=True, strip_quotes=False, 
                       custom_analysis_prompt="", user_modification="", custom_system_prompt=""):
         try:
             # Load model
-            model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded)
+            model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded, use_flash_attention)
 
-            # Get first image
+            # Convert all images to PIL format
+            pil_images = []
             if len(images.shape) == 3:
-                pil_image = self.tensor2pil(images)
+                # Single image (H, W, C)
+                pil_images.append(self.tensor2pil(images))
             else:
-                pil_image = self.tensor2pil(images[0])
+                # Multiple images (B, H, W, C)
+                for i in range(images.shape[0]):
+                    pil_images.append(self.tensor2pil(images[i]))
+            
+            num_images = len(pil_images)
+            print(f"🖼️ Processing {num_images} image(s)")
 
             # Build prompt (custom_analysis_prompt takes priority over prompt_file)
             prompt = self.build_analysis_prompt(prompt_file, custom_analysis_prompt)
             print(f"📄 Using prompt file: {prompt_file}")
 
-            # Prepare conversation
+            # Prepare conversation with all images
             conversation = [{"role": "user", "content": []}]
-            conversation[0]["content"].append({"type": "image", "image": pil_image})
+            for pil_image in pil_images:
+                conversation[0]["content"].append({"type": "image", "image": pil_image})
             conversation[0]["content"].append({"type": "text", "text": prompt})
 
             # Apply chat template
@@ -383,8 +400,8 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
                 conversation, tokenize=False, add_generation_prompt=True
             )
 
-            # Process inputs
-            processed = processor(text=chat, images=[pil_image], return_tensors="pt")
+            # Process inputs with all images
+            processed = processor(text=chat, images=pil_images, return_tensors="pt")
 
             # Move to device
             model_device = next(model.parameters()).device
@@ -393,7 +410,7 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
                 for key, value in processed.items()
             }
 
-            print(f"🔄 Z-Image Vision: Analyzing image with {qwen_model}...")
+            print(f"🔄 Z-Image Vision: Analyzing {num_images} image(s) with {qwen_model}...")
 
             # Generate
             stop_tokens = [tokenizer.eos_token_id]
@@ -427,33 +444,54 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
                     self.clear_model()
                 return ("Error: Empty response", "Error: Empty response", "{}")
 
-            # Extract JSON from response
-            json_str = content
-            if "```json" in content:
-                start = content.find("```json") + 7
-                end = content.find("```", start)
-                if end != -1:
-                    json_str = content[start:end].strip()
-            elif "```" in content:
-                start = content.find("```") + 3
-                end = content.find("```", start)
-                if end != -1:
-                    json_str = content[start:end].strip()
+            # Try to parse as JSON first, otherwise use content as-is
+            data = None
+            
+            # Method 1: Try direct JSON parse
+            try:
+                data = json.loads(content)
+                print(f"✅ Parsed response as JSON directly")
+            except json.JSONDecodeError:
+                pass
+            
+            # Method 2: Try to extract JSON from content (code blocks or embedded)
+            if data is None:
+                json_str = None
+                if "```json" in content:
+                    start = content.find("```json") + 7
+                    end = content.find("```", start)
+                    if end != -1:
+                        json_str = content[start:end].strip()
+                elif "{" in content and "}" in content:
+                    start = content.find("{")
+                    end = content.rfind("}")
+                    if start != -1 and end != -1 and end > start:
+                        json_str = content[start:end+1].strip()
+                
+                if json_str:
+                    try:
+                        data = json.loads(json_str)
+                        print(f"✅ Extracted and parsed JSON from response")
+                    except json.JSONDecodeError:
+                        pass
+            
+            # If JSON found, convert it
+            if data is not None:
+                raw_json = json.dumps(data, indent=2)
+                description = self.json_to_description(data)
+                zimage_formatted = self.json_to_zimage_prompt(data)
             else:
-                start = content.find("{")
-                end = content.rfind("}")
-                if start != -1 and end != -1 and end > start:
-                    json_str = content[start:end+1].strip()
-
-            # Parse JSON
-            data = json.loads(json_str)
-            raw_json = json.dumps(data, indent=2)
-            
-            # Convert JSON to readable description
-            description = self.json_to_description(data)
-            
-            # Convert JSON to Z-Image prompt format
-            zimage_formatted = self.json_to_zimage_prompt(data)
+                # No JSON - use content directly as description/prompt
+                print(f"ℹ️ Using raw content as description (no JSON)")
+                clean_content = content.strip()
+                # Remove thinking blocks if present
+                if "<think>" in clean_content and "</think>" in clean_content:
+                    think_end = clean_content.find("</think>") + 8
+                    clean_content = clean_content[think_end:].strip()
+                
+                zimage_formatted = clean_content
+                description = clean_content
+                raw_json = json.dumps({"raw_response": content}, indent=2)
 
             # Strip quotes if requested
             if strip_quotes:
@@ -469,19 +507,6 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
 
             return (zimage_formatted, description, raw_json)
 
-        except json.JSONDecodeError as e:
-            print(f"❌ Z-Image Vision: Failed to parse JSON: {e}")
-            if 'content' in locals() and content:
-                # Return raw content as fallback
-                if strip_quotes:
-                    content = content.replace('"', '')
-                if not keep_model_loaded:
-                    self.clear_model()
-                return (content, content, json.dumps({"error": str(e), "raw": content[:1000]}, indent=2))
-            
-            if not keep_model_loaded:
-                self.clear_model()
-            return ("JSON parse error", "JSON parse error", "{}")
 
         except Exception as e:
             import traceback

@@ -21,6 +21,7 @@ class QwenVLVisionNode:
     _cached_processor = None
     _cached_tokenizer = None
     _cached_model_name = None
+    _cached_attn_impl = None
 
     def __init__(self):
         pass
@@ -38,6 +39,7 @@ class QwenVLVisionNode:
                 "max_tokens": ("INT", {"default": 512, "min": 64, "max": 2048}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
+                "use_flash_attention": ("BOOLEAN", {"default": False}),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -89,31 +91,34 @@ class QwenVLVisionNode:
         return repo_id, str(models_dir)
 
     @classmethod
-    def load_model(cls, model_name, keep_loaded=True):
+    def load_model(cls, model_name, keep_loaded=True, use_flash_attention=False):
         """Load model with caching support"""
-        # Check if model is already loaded
-        if keep_loaded and cls._cached_model is not None and cls._cached_model_name == model_name:
-            print(f"♻️ Using cached {model_name}")
+        attn_impl = "flash_attention_2" if use_flash_attention else "sdpa"
+        
+        # Check if model is already loaded with same attention implementation
+        if (keep_loaded and cls._cached_model is not None and 
+            cls._cached_model_name == model_name and cls._cached_attn_impl == attn_impl):
+            print(f"♻️ Using cached {model_name} (attn: {attn_impl})")
             return cls._cached_model, cls._cached_processor, cls._cached_tokenizer
 
-        # Clear old model if loading a different one
-        if cls._cached_model_name != model_name:
+        # Clear old model if loading a different one or different attention
+        if cls._cached_model_name != model_name or cls._cached_attn_impl != attn_impl:
             cls.clear_model()
 
         # Download/locate model
         model_path, cache_dir = cls.ensure_model(model_name)
 
-        print(f"🔄 Loading {model_name}...")
+        print(f"🔄 Loading {model_name} with {attn_impl}...")
 
         # Determine device
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+        dtype = torch.bfloat16 if use_flash_attention and torch.cuda.is_available() else (torch.float16 if torch.cuda.is_available() else torch.float32)
 
         # Build kwargs - add cache_dir if downloading
         load_kwargs = {
             "device_map": {"": 0} if device == "cuda" else device,
             "dtype": dtype,
-            "attn_implementation": "sdpa",
+            "attn_implementation": attn_impl,
             "use_safetensors": True,
             "trust_remote_code": True,
         }
@@ -132,8 +137,9 @@ class QwenVLVisionNode:
             cls._cached_processor = processor
             cls._cached_tokenizer = tokenizer
             cls._cached_model_name = model_name
+            cls._cached_attn_impl = attn_impl
 
-        print(f"✅ Loaded {model_name}")
+        print(f"✅ Loaded {model_name} with {attn_impl}")
         return model, processor, tokenizer
 
     @classmethod
@@ -145,6 +151,7 @@ class QwenVLVisionNode:
             cls._cached_processor = None
             cls._cached_tokenizer = None
             cls._cached_model_name = None
+            cls._cached_attn_impl = None
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
@@ -160,6 +167,7 @@ class QwenVLVisionNode:
         max_tokens=512,
         temperature=0.7,
         keep_model_loaded=True,
+        use_flash_attention=False,
         custom_base_prompt="",
         custom_title="",
         override="",
@@ -175,7 +183,7 @@ class QwenVLVisionNode:
                 )
 
             # Load model
-            model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded)
+            model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded, use_flash_attention)
 
             # Prepare conversation
             conversation = [{"role": "user", "content": []}]

@@ -1,0 +1,43 @@
+Analyze the input images. I want you to merge them into one scene using the following logic:
+Take the Character from Image 1: Describe this person in detail (use only "man" or "woman").
+Take the Art Style/Background from Image 2: Apply this aesthetic and setting to the character.
+Final Output Requirements:
+Create a cohesive visual description of this merged scene. Include specific details on:
+Lighting: (e.g., rim lighting, softbox, golden hour)
+Materials: (e.g., fabric textures, skin pores, material of background objects)
+Camera: (e.g., macro shot, wide angle, depth of field)
+The result should read like a high-end photography brief.
+
+
+Here is an example output:
+{
+  "subject_content": {
+    "main_subject": "Detailed description of character/object including pose and expression",
+    "clothing_and_details": "Textures, fabrics, colors of attire",
+    "action": "What is happening"
+  },
+  "setting_and_composition": {
+    "location": "Environment details",
+    "framing": "Wide, Close-up, Dutch angle, Symmetry, etc.",
+    "depth_of_field": "Deep focus or Shallow (Bokeh)"
+  },
+  "technical_aesthetic": {
+    "lighting_dynamics": {
+      "intensity": "e.g., Blindingly bright, Dim, Subdued, Harsh, Soft glow",
+      "overall_key": "High-key (bright/optimistic) or Low-key (dark/shadowy/moody)",
+      "contrast_level": "High contrast (deep blacks/bright whites) or Low contrast (flat/grey/washed out)",
+      "exposure": "Balanced, Overexposed (blown highlights), or Underexposed (crushed shadows)"
+    },
+    "lighting_setup": {
+      "style": "Natural, Studio, Volumetric/Godrays, Chiaroscuro, Neon",
+      "direction": "Backlit (silhouette), Side-lit, Top-down, Rim-lighting"
+    },
+    "color_grade": {
+      "palette": "Dominant hex codes or color names",
+      "grading_style": "Teal & Orange, Bleach Bypass, Technicolor, Muted, Vibrant, Monochromatic",
+      "film_character": "Grain, Halation, Vintage, Clean Digital"
+    }
+  }
+}
+
+CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks, no extra text. Start with { and end with }.
