@@ -94,6 +94,20 @@ except Exception:
     pass
 
 try:
+    from .nodes.string_utils.random_picker import RandomStringPicker
+    NEW_MAPPINGS["RandomStringPicker"] = RandomStringPicker
+    NEW_DISPLAY_MAPPINGS["RandomStringPicker"] = "APNext Random String Picker"
+except Exception:
+    pass
+
+try:
+    from .nodes.string_utils.string_input import StringInput
+    NEW_MAPPINGS["StringInput"] = StringInput
+    NEW_DISPLAY_MAPPINGS["StringInput"] = "APNext String Input"
+except Exception:
+    pass
+
+try:
     from .nodes.file_utils.random_integer import RandomIntegerNode
     NEW_MAPPINGS["RandomIntegerNode"] = RandomIntegerNode
     NEW_DISPLAY_MAPPINGS["RandomIntegerNode"] = "APNext Random Integer Generator"

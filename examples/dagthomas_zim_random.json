@@ -1,0 +1,2715 @@
+{
+  "id": "74bb16b5-d8e4-4ae1-9bee-b6d0efec40b2",
+  "revision": 0,
+  "last_node_id": 56,
+  "last_link_id": 1192,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "VAELoader",
+      "pos": [
+        -1806.8035069519035,
+        321.779900714443
+      ],
+      "size": [
+        393.4595289039903,
+        106.06439674888156
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "VAELoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "CLIPLoader",
+      "pos": [
+        -1819.7388882331497,
+        87.44978558954499
+      ],
+      "size": [
+        411.1470152594716,
+        141.8430703486177
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            2,
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "CLIPLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        "qwen_3_4b.safetensors",
+        "lumina2",
+        "default"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "VAEDecode",
+      "pos": [
+        299.1128656930721,
+        -46.06765788500141
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 7
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            8,
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 22,
+      "type": "CustomPromptLoader",
+      "pos": [
+        -1809.7774176835665,
+        -456.40685070965606
+      ],
+      "size": [
+        225,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "b464965c5606eef4ea91a54744f2845a417c7152",
+        "Node name for S&R": "CustomPromptLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt_file": true
+          },
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "zimage_vision_analysis.txt"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "CustomPromptLoader",
+      "pos": [
+        -1804.309572178261,
+        -352.8717385611105
+      ],
+      "size": [
+        225,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "b464965c5606eef4ea91a54744f2845a417c7152",
+        "Node name for S&R": "CustomPromptLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "prompt_file": true
+          },
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "zimage_vision_system.txt"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "PreviewImage",
+      "pos": [
+        2190.9318593861576,
+        -140.952380675978
+      ],
+      "size": [
+        586.8894707937156,
+        840.6446445753165
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 12,
+      "type": "LatentUpscaleBy",
+      "pos": [
+        1058.5933066195946,
+        17.912752203476426
+      ],
+      "size": [
+        291.38894119972247,
+        122.52641490473707
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LatentUpscaleBy",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        "nearest-exact",
+        1.5
+      ]
+    },
+    {
+      "id": 28,
+      "type": "easy imageScaleDownToSize",
+      "pos": [
+        -1941.7833194169846,
+        -781.7504472518576
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 84
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            85
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-easy-use",
+        "ver": "1.3.4",
+        "Node name for S&R": "easy imageScaleDownToSize",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        1024,
+        true
+      ]
+    },
+    {
+      "id": 25,
+      "type": "LoadImage",
+      "pos": [
+        -2250.3632532773745,
+        -862.9401379970229
+      ],
+      "size": [
+        242.7156099999999,
+        327.5291066666666
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            84
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.68",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "image": true,
+            "upload": true
+          },
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "pasted/image (84).png",
+        "image"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "SeedVR2LoadVAEModel",
+      "pos": [
+        2882.510772061645,
+        341.1408609253073
+      ],
+      "size": [
+        252.866796875,
+        317.3600000000001
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "torch_compile_args",
+          "shape": 7,
+          "type": "TORCH_COMPILE_ARGS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SEEDVR2_VAE",
+          "type": "SEEDVR2_VAE",
+          "links": [
+            94
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "seedvr2_videoupscaler",
+        "ver": "2a873e2f286224bb00c60fe3fb61b88b65258a6d",
+        "Node name for S&R": "SeedVR2LoadVAEModel",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.4.1"
+        }
+      },
+      "widgets_values": [
+        "ema_vae_fp16.safetensors",
+        "cuda:0",
+        true,
+        1024,
+        128,
+        true,
+        1024,
+        128,
+        "false",
+        "cpu",
+        false
+      ]
+    },
+    {
+      "id": 16,
+      "type": "SeedVR2LoadDiTModel",
+      "pos": [
+        2889.2867425206296,
+        74.30093477784811
+      ],
+      "size": [
+        247.6646484375,
+        202
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "torch_compile_args",
+          "shape": 7,
+          "type": "TORCH_COMPILE_ARGS",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SEEDVR2_DIT",
+          "type": "SEEDVR2_DIT",
+          "links": [
+            93
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "seedvr2_videoupscaler",
+        "ver": "2a873e2f286224bb00c60fe3fb61b88b65258a6d",
+        "Node name for S&R": "SeedVR2LoadDiTModel",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.4.1"
+        }
+      },
+      "widgets_values": [
+        "seedvr2_ema_3b-Q4_K_M.gguf",
+        "cuda:0",
+        16,
+        false,
+        "cpu",
+        false,
+        "sdpa"
+      ]
+    },
+    {
+      "id": 29,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -1112.5021568803625,
+        -854.7024336562773
+      ],
+      "size": [
+        502.0319999999997,
+        529.6504324951168
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 88
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "main subject: A man with long, grayish-white hair and blue eyes, wearing a dark, weathered leather jacket with a hood. He has a rugged appearance with visible facial hair and prominent lines on his face. His expression is serious and contemplative, with a direct gaze toward the viewer., clothing and details: The man is wearing a dark, worn leather jacket with a hood, suggesting a rugged or survivalist style. The jacket has visible stitching and a zipper, and the material appears aged and textured. A dark inner garment is visible beneath the jacket., action: The man is standing still, looking directly at the camera with a serious expression., location: An indoor setting with a dark, blurred background. The background features out-of-focus circular lights, suggesting a dimly lit environment like a room with warm lighting., framing: The image is a close-up portrait, focusing on the man's face and upper torso. The framing is tight, emphasizing his facial features and expression., lighting dynamics: intensity: Low light with a strong contrast between light and shadow., overall key: The lighting is focused on the man's face, creating a dramatic effect., contrast level: High contrast, with deep shadows and bright highlights on the skin and hair., lighting setup: style: Soft, directional lighting with a warm tone., direction: The light appears to be coming from the front and slightly to the side, illuminating the man's face while casting shadows on the sides of his face and body., color grade: palette: A dark, earthy color palette dominated by deep browns, grays, and muted tones, with strong contrast between the lit and shadowed areas., grading style: The image has a cinematic color grade with a focus on depth and texture, enhancing the rugged and intense mood., film character: The image has a cinematic, realistic feel with a focus on texture and emotional intensity., highly detailed, 8K"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "QwenVLZImageVision",
+      "pos": [
+        -1556.5686318510725,
+        -844.0145366623752
+      ],
+      "size": [
+        333.33333333333337,
+        500.00000000000006
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 85
+        },
+        {
+          "name": "custom_analysis_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "custom_analysis_prompt"
+          },
+          "link": 36
+        },
+        {
+          "name": "custom_system_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "custom_system_prompt"
+          },
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "zimage_formatted",
+          "type": "STRING",
+          "links": [
+            88
+          ]
+        },
+        {
+          "name": "description",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "raw_json",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "b464965c5606eef4ea91a54744f2845a417c7152",
+        "Node name for S&R": "QwenVLZImageVision",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "qwen_model": true,
+            "prompt_file": true,
+            "system_prompt_file": true,
+            "user_mod_file": true,
+            "max_tokens": true,
+            "temperature": true,
+            "keep_model_loaded": true,
+            "include_system_prompt": true,
+            "include_think_block": true,
+            "strip_quotes": true,
+            "custom_analysis_prompt": true,
+            "user_modification": true,
+            "custom_system_prompt": true
+          },
+          "version": "7.5.2",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Qwen3-VL-2B-Instruct",
+        "(none)",
+        "(none)",
+        "(none)",
+        4096,
+        0.7,
+        true,
+        true,
+        false,
+        false,
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 36,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -2225.42315999636,
+        771.1661686116992
+      ],
+      "size": [
+        309.9281549080506,
+        288.0205156322023
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 836
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.5",
+        "Node name for S&R": "ShowText|pysssss",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "(amateur photo, film grain:1.1), bokeh, photograph of   man broad shoulders, slender body and legs chuckling while shaking head in disbelief,  Iresine plants Tornado scene Hill Heartnut trees Cumulonimbus clouds weather,  Design by Walter Gropius , Concrete architecture House type Space Station House , Igloo building type eclectic interior,  12th century first anglo-afghan war era,  head tilted to the side looking playful with tongue sticking out or smiling mischievously,  wearing knee-high socks accessory, wearing flat cap with short fringe with fade (hairstyle) wearing medieval knight custom outfit,, warm color grading color grading Chromatic adaptation optical effect 8k resolution and 28mm film wide-angle lens and flashback shot and dollying,  nikon coolpix p340 camera device vibrant color grading adox pan 100 film analog film fog photo type photographing aqueduct using sony fe 12-24mm lense glowing radioactivity AND lit by aurora borealis AND metal halide lamps,"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "PreviewImage",
+      "pos": [
+        517.3299108478493,
+        -122.94227109086131
+      ],
+      "size": [
+        458.4299284561739,
+        830.7902358384442
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "PreviewImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 30,
+      "type": "SeedVR2TilingUpscaler",
+      "pos": [
+        3264.997798321429,
+        -107.80992580654434
+      ],
+      "size": [
+        286.080078125,
+        412
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 105
+        },
+        {
+          "name": "dit",
+          "type": "SEEDVR2_DIT",
+          "link": 93
+        },
+        {
+          "name": "vae",
+          "type": "SEEDVR2_VAE",
+          "link": 94
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "moonwhaler/comfyui-seedvr2-tilingupscaler",
+        "ver": "595df014387459f9e070810d6691bed596941bc8",
+        "Node name for S&R": "SeedVR2TilingUpscaler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        476769698,
+        "randomize",
+        2560,
+        512,
+        512,
+        0,
+        32,
+        1024,
+        "Chess",
+        0,
+        "auto",
+        "lab"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "VAEDecode",
+      "pos": [
+        1995.2037844179665,
+        -136.31277118399504
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 18
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            19,
+            105,
+            106,
+            156
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 1,
+      "type": "UNETLoader",
+      "pos": [
+        -1824.9193565298515,
+        -136.25513938923834
+      ],
+      "size": [
+        414.13562507066104,
+        139.12080554713884
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            165,
+            166
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "UNETLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        "z_image_turbo_bf16.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "KSampler",
+      "pos": [
+        1444.5567505685867,
+        -139.40628752172316
+      ],
+      "size": [
+        377.1203204631988,
+        443.36358683492995
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 166
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 13
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 14
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        60,
+        "fixed",
+        8,
+        2,
+        "euler_ancestral",
+        "bong_tangent",
+        0.6
+      ]
+    },
+    {
+      "id": 20,
+      "type": "Image Comparer (rgthree)",
+      "pos": [
+        1030.3565695323916,
+        770.6265385688077
+      ],
+      "size": [
+        1771.2345016384406,
+        1568.128771860849
+      ],
+      "flags": {},
+      "order": 41,
+      "mode": 0,
+      "inputs": [
+        {
+          "dir": 3,
+          "name": "image_a",
+          "type": "IMAGE",
+          "link": 106
+        },
+        {
+          "dir": 3,
+          "name": "image_b",
+          "type": "IMAGE",
+          "link": 28
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "rgthree-comfy",
+        "ver": "1.0.2509092031",
+        "comparer_mode": "Slide",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_plsgq_00381_.png&type=temp&subfolder=&rand=0.6732861927201514"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_plsgq_00382_.png&type=temp&subfolder=&rand=0.9936227223434804"
+          }
+        ]
+      ]
+    },
+    {
+      "id": 42,
+      "type": "PeoplePromptNode",
+      "pos": [
+        -7554.882380941969,
+        126.37660254553057
+      ],
+      "size": [
+        400,
+        348
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 981
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            824
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "PeoplePromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        1102473582342726,
+        "randomize",
+        false,
+        "None",
+        "Random",
+        "None",
+        "Random",
+        "Random",
+        "None"
+      ]
+    },
+    {
+      "id": 47,
+      "type": "FashionPromptNode",
+      "pos": [
+        -3438.853313497633,
+        284.61902038846927
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 834
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            833
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "FashionPromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        794617982439782,
+        "randomize",
+        false,
+        "Random",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "Random",
+        "Random",
+        "Random"
+      ]
+    },
+    {
+      "id": 37,
+      "type": "PhotographyPromptNode",
+      "pos": [
+        -2776.2817200282893,
+        832.3499396783204
+      ],
+      "size": [
+        400,
+        396
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 148
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            836
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "PhotographyPromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        769154269778422,
+        "randomize",
+        false,
+        "Random",
+        "Random",
+        "Random",
+        "Multiple Random",
+        "Random",
+        "Random",
+        "Multiple Random",
+        "None"
+      ]
+    },
+    {
+      "id": 44,
+      "type": "RandomStringPicker",
+      "pos": [
+        -7041.298272753596,
+        -20.97682659687537
+      ],
+      "size": [
+        287.4166015625,
+        102
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string1",
+          "type": "STRING",
+          "link": 823
+        },
+        {
+          "name": "string2",
+          "type": "STRING",
+          "link": 824
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            841
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "RandomStringPicker",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        745329391160552,
+        "randomize"
+      ]
+    },
+    {
+      "id": 41,
+      "type": "ArchitecturePromptNode",
+      "pos": [
+        -6018.455938555139,
+        134.7318792893859
+      ],
+      "size": [
+        400,
+        540
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 983
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            978
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "ArchitecturePromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        842819111599729,
+        "randomize",
+        false,
+        "Random",
+        "Random",
+        "None",
+        "None",
+        "Random",
+        "None",
+        "Random",
+        "Random",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "id": 53,
+      "type": "StringInput",
+      "pos": [
+        -8094.764497375347,
+        -88.43623157176694
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            980,
+            981
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "StringInput"
+      },
+      "widgets_values": [
+        "(amateur photo, film grain:1.1), bokeh, photograph of ",
+        " "
+      ]
+    },
+    {
+      "id": 31,
+      "type": "ScenePromptNode",
+      "pos": [
+        -6683.918955109288,
+        -79.11625829279255
+      ],
+      "size": [
+        400,
+        348
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 841
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            983,
+            984
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "ScenePromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        265072116269752,
+        "randomize",
+        false,
+        "Random",
+        "Random",
+        "Random",
+        "None",
+        "Random",
+        "Random"
+      ]
+    },
+    {
+      "id": 45,
+      "type": "PeoplePromptNode",
+      "pos": [
+        -7560.089797188541,
+        -289.86858444292324
+      ],
+      "size": [
+        400,
+        348
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 980
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            823
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "PeoplePromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        1014955854335552,
+        "randomize",
+        false,
+        "None",
+        "None",
+        "Random",
+        "Random",
+        "Random",
+        "None"
+      ]
+    },
+    {
+      "id": 54,
+      "type": "StringInput",
+      "pos": [
+        -6024.654832708765,
+        -142.190354002462
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 984
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            982
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "StringInput"
+      },
+      "widgets_values": [
+        "",
+        " "
+      ]
+    },
+    {
+      "id": 51,
+      "type": "RandomStringPicker",
+      "pos": [
+        -5431.278629847402,
+        2.4858471892679415
+      ],
+      "size": [
+        287.4166015625,
+        102
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string1",
+          "type": "STRING",
+          "link": 982
+        },
+        {
+          "name": "string2",
+          "type": "STRING",
+          "link": 978
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            985,
+            990
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "RandomStringPicker",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        14259539798786,
+        "randomize"
+      ]
+    },
+    {
+      "id": 55,
+      "type": "RandomStringPicker",
+      "pos": [
+        -4527.049631588619,
+        -23.766771859395014
+      ],
+      "size": [
+        287.4166015625,
+        102
+      ],
+      "flags": {},
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string1",
+          "type": "STRING",
+          "link": 986
+        },
+        {
+          "name": "string2",
+          "type": "STRING",
+          "link": 991
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            992
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        },
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "RandomStringPicker"
+      },
+      "widgets_values": [
+        586495820109386,
+        "randomize"
+      ]
+    },
+    {
+      "id": 38,
+      "type": "TimePromptNode",
+      "pos": [
+        -5066.550405571203,
+        36.6890994574992
+      ],
+      "size": [
+        400,
+        300
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 990
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            991
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "TimePromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        929283596451078,
+        "randomize",
+        false,
+        "Random",
+        "None",
+        "Random",
+        "None"
+      ]
+    },
+    {
+      "id": 56,
+      "type": "StringInput",
+      "pos": [
+        -5073.2991018238645,
+        -262.4855141625389
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 985
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            986
+          ]
+        }
+      ],
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        },
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "StringInput"
+      },
+      "widgets_values": [
+        "",
+        " "
+      ]
+    },
+    {
+      "id": 32,
+      "type": "PosesPromptNode",
+      "pos": [
+        -4146.077911891112,
+        -20.094880987473807
+      ],
+      "size": [
+        400,
+        252
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 992
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            829,
+            834
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "PosesPromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        94387981467278,
+        "randomize",
+        false,
+        "Random",
+        "Random"
+      ]
+    },
+    {
+      "id": 33,
+      "type": "FashionPromptNode",
+      "pos": [
+        -3434.2070134339524,
+        -215.2523420706817
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 829
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            832
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "FashionPromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        634773260422652,
+        "randomize",
+        false,
+        "Random",
+        "None",
+        "None",
+        "Random",
+        "Random",
+        "Random",
+        "None",
+        "None",
+        "None"
+      ]
+    },
+    {
+      "id": 46,
+      "type": "RandomStringPicker",
+      "pos": [
+        -2890.264470474998,
+        158.26484806307508
+      ],
+      "size": [
+        287.4166015625,
+        102
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string1",
+          "type": "STRING",
+          "link": 832
+        },
+        {
+          "name": "string2",
+          "type": "STRING",
+          "link": 833
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            835
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "85cb13f29f87c4f64603f79275d25b5b3a939f8d",
+        "Node name for S&R": "RandomStringPicker",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        754195073517798,
+        "randomize"
+      ]
+    },
+    {
+      "id": 35,
+      "type": "CinematicPromptNode",
+      "pos": [
+        -2482.6743631078893,
+        141.50484629197524
+      ],
+      "size": [
+        400,
+        444
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string",
+          "shape": 7,
+          "type": "STRING",
+          "link": 835
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            112
+          ]
+        },
+        {
+          "name": "random",
+          "type": "STRING",
+          "links": [
+            148
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui_dagthomas",
+        "ver": "3328948491efa8f21c0cf88344e14e9b5164962f",
+        "Node name for S&R": "CinematicPromptNode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.5.2"
+        }
+      },
+      "widgets_values": [
+        "",
+        ",",
+        519615115974254,
+        "randomize",
+        false,
+        "None",
+        "Random",
+        "Random",
+        "None",
+        "Random",
+        "None",
+        "Random",
+        "Random",
+        "Random",
+        "Random"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "SaveImage",
+      "pos": [
+        3608.8920928879506,
+        -135.03583369076662
+      ],
+      "size": [
+        1058.986818254898,
+        1293.0642173875492
+      ],
+      "flags": {},
+      "order": 42,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 156
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        "image Z/latent upscale/1.1"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        -1016.7404061173715,
+        -101.33626113020011
+      ],
+      "size": [
+        367.84214787598785,
+        126.07018417968982
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        832,
+        1216,
+        1
+      ]
+    },
+    {
+      "id": 4,
+      "type": "KSampler",
+      "pos": [
+        -565.3196082301063,
+        93.87933604001742
+      ],
+      "size": [
+        270,
+        262
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 165
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 3
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 4
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            7,
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        60,
+        "fixed",
+        8,
+        2,
+        "euler_ancestral",
+        "bong_tangent",
+        1
+      ]
+    },
+    {
+      "id": 5,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -1215.9412356096386,
+        83.27151487686443
+      ],
+      "size": [
+        555.9229704345889,
+        180.42330410157058
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 2
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 112
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            3,
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        "A cinematic, sun-drenched portrait of a blonde woman leaning casually against a classic red convertible parked near a beachside promenade. The setting evokes a warm California summer afternoon, with soft golden-hour light creating a nostalgic glow across her skin and hair. Palm trees stand tall and slightly out of focus in the background, giving a dreamy, vintage coastal ambiance.\n\nThe woman wears a fitted white crop-top with red trim around the sleeves and collar, decorated with a small colorful retro graphic across the chest. She pairs it with high-waisted athletic shorts in bright red with yellow piping, giving the outfit a 1970s–early-80s sporty aesthetic. Her blonde hair is voluminous, slightly tousled, and glowing from the sun, enhancing the retro Americana vibe.\n\nThe visual style is soft, filmic, and warm—shot with shallow depth of field, creamy bokeh, and a subtle grain emulating Kodak Portra or vintage 35mm film. Colors are vibrant yet natural, dominated by reds, yellows, and sun-washed neutrals. Composition focuses on the model from the waist up, framed at a slight angle to show both her pose and the car’s interior. Mood is playful, nostalgic, and effortlessly confident."
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -1208.8117493425493,
+        319.3383375941878
+      ],
+      "size": [
+        504.81270041505763,
+        133.57200661621914
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            4,
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.2.1"
+        }
+      },
+      "widgets_values": [
+        ""
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 8,
+      "type": "Anything Everywhere",
+      "pos": [
+        -1673.6469309405013,
+        495.6867125697867
+      ],
+      "size": [
+        236.16277457276115,
+        46.07018417968993
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "color_on": "#FF6E6E",
+          "label": "VAE",
+          "name": "anything",
+          "shape": 7,
+          "type": "VAE",
+          "link": 6
+        },
+        {
+          "label": "anything",
+          "name": "anything11",
+          "type": "*",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "cg-use-everywhere",
+        "ver": "7.2.1",
+        "Node name for S&R": "Anything Everywhere",
+        "ue_properties": {
+          "version": "7.2.1",
+          "group_restricted": 0,
+          "color_restricted": 0,
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "title_regex": null,
+          "input_regex": null,
+          "group_regex": null,
+          "repeated_type_rule": 0,
+          "string_to_combo": 0,
+          "next_input_index": 11
+        }
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      2,
+      2,
+      0,
+      5,
+      0,
+      "CLIP"
+    ],
+    [
+      3,
+      5,
+      0,
+      4,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      4,
+      6,
+      0,
+      4,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      5,
+      7,
+      0,
+      4,
+      3,
+      "LATENT"
+    ],
+    [
+      6,
+      3,
+      0,
+      8,
+      0,
+      "VAE"
+    ],
+    [
+      7,
+      4,
+      0,
+      9,
+      0,
+      "LATENT"
+    ],
+    [
+      8,
+      9,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      2,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      13,
+      5,
+      0,
+      11,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      14,
+      6,
+      0,
+      11,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      16,
+      4,
+      0,
+      12,
+      0,
+      "LATENT"
+    ],
+    [
+      17,
+      12,
+      0,
+      11,
+      3,
+      "LATENT"
+    ],
+    [
+      18,
+      11,
+      0,
+      13,
+      0,
+      "LATENT"
+    ],
+    [
+      19,
+      13,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      28,
+      9,
+      0,
+      20,
+      1,
+      "IMAGE"
+    ],
+    [
+      36,
+      22,
+      0,
+      24,
+      1,
+      "STRING"
+    ],
+    [
+      37,
+      23,
+      0,
+      24,
+      2,
+      "STRING"
+    ],
+    [
+      84,
+      25,
+      0,
+      28,
+      0,
+      "IMAGE"
+    ],
+    [
+      85,
+      28,
+      0,
+      24,
+      0,
+      "IMAGE"
+    ],
+    [
+      88,
+      24,
+      0,
+      29,
+      0,
+      "STRING"
+    ],
+    [
+      93,
+      16,
+      0,
+      30,
+      1,
+      "SEEDVR2_DIT"
+    ],
+    [
+      94,
+      15,
+      0,
+      30,
+      2,
+      "SEEDVR2_VAE"
+    ],
+    [
+      105,
+      13,
+      0,
+      30,
+      0,
+      "IMAGE"
+    ],
+    [
+      106,
+      13,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      112,
+      35,
+      0,
+      5,
+      1,
+      "STRING"
+    ],
+    [
+      148,
+      35,
+      1,
+      37,
+      0,
+      "STRING"
+    ],
+    [
+      156,
+      13,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      165,
+      1,
+      0,
+      4,
+      0,
+      "MODEL"
+    ],
+    [
+      166,
+      1,
+      0,
+      11,
+      0,
+      "MODEL"
+    ],
+    [
+      823,
+      45,
+      0,
+      44,
+      0,
+      "STRING"
+    ],
+    [
+      824,
+      42,
+      0,
+      44,
+      1,
+      "STRING"
+    ],
+    [
+      829,
+      32,
+      0,
+      33,
+      0,
+      "STRING"
+    ],
+    [
+      832,
+      33,
+      0,
+      46,
+      0,
+      "STRING"
+    ],
+    [
+      833,
+      47,
+      0,
+      46,
+      1,
+      "STRING"
+    ],
+    [
+      834,
+      32,
+      0,
+      47,
+      0,
+      "STRING"
+    ],
+    [
+      835,
+      46,
+      0,
+      35,
+      0,
+      "STRING"
+    ],
+    [
+      836,
+      37,
+      0,
+      36,
+      0,
+      "STRING"
+    ],
+    [
+      841,
+      44,
+      0,
+      31,
+      0,
+      "STRING"
+    ],
+    [
+      978,
+      41,
+      0,
+      51,
+      1,
+      "STRING"
+    ],
+    [
+      980,
+      53,
+      0,
+      45,
+      0,
+      "STRING"
+    ],
+    [
+      981,
+      53,
+      0,
+      42,
+      0,
+      "STRING"
+    ],
+    [
+      982,
+      54,
+      0,
+      51,
+      0,
+      "STRING"
+    ],
+    [
+      983,
+      31,
+      0,
+      41,
+      0,
+      "STRING"
+    ],
+    [
+      984,
+      31,
+      0,
+      54,
+      1,
+      "STRING"
+    ],
+    [
+      985,
+      51,
+      0,
+      56,
+      0,
+      "STRING"
+    ],
+    [
+      986,
+      56,
+      0,
+      55,
+      0,
+      "STRING"
+    ],
+    [
+      990,
+      51,
+      0,
+      38,
+      0,
+      "STRING"
+    ],
+    [
+      991,
+      38,
+      0,
+      55,
+      1,
+      "STRING"
+    ],
+    [
+      992,
+      55,
+      0,
+      32,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "TEXT TO IMAGE",
+      "bounding": [
+        -1834.9193565298515,
+        -215.35502641007503,
+        2851.800644602038,
+        1260.9050078453465
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "LATENT UPSCALE",
+      "bounding": [
+        1048.5933066195946,
+        -213.00628752172315,
+        1786.0842995634418,
+        931.5456760952799
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "UPSCALE",
+      "bounding": [
+        2855.086816373165,
+        -206.29992005163703,
+        1882.750536868712,
+        1407.5797520734586
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "workflowRendererVersion": "LG",
+    "ue_links": [
+      {
+        "downstream": 9,
+        "downstream_slot": 1,
+        "upstream": "3",
+        "upstream_slot": 0,
+        "controller": 8,
+        "type": "VAE"
+      },
+      {
+        "downstream": 13,
+        "downstream_slot": 1,
+        "upstream": "3",
+        "upstream_slot": 0,
+        "controller": 8,
+        "type": "VAE"
+      }
+    ],
+    "ds": {
+      "scale": 0.5131581182307086,
+      "offset": [
+        583.4790157804653,
+        574.4568433132987
+      ]
+    },
+    "links_added_by_ue": [
+      1191,
+      1192
+    ],
+    "frontendVersion": "1.33.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
