@@ -83,8 +83,14 @@ class APNextNode:
 
     def load_json_data(self):
         data = {}
+        # Check if this is a dynamically created subclass with _subcategory
+        if not hasattr(self, '_subcategory'):
+            return data
+            
+        # Get the main package directory (go up 3 levels: apnext_nodes.py -> prompt_generators -> nodes -> comfyui_dagthomas)
+        package_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         category_path = os.path.join(
-            os.path.dirname(__file__), "data", "next", self._subcategory.lower()
+            package_dir, "data", "next", self._subcategory.lower()
         )
         if os.path.exists(category_path):
             for file in os.listdir(category_path):
@@ -159,10 +165,14 @@ class APNextNode:
         if separator:
             modified_prompt = f"{modified_prompt}{separator}"
 
-        # Construct random output, including 'string' if it exists
+        # Construct random output, including 'string' and 'prompt' if they exist
         random_output = ""
         if string:
             random_output += string
+        if prompt:
+            if random_output:
+                random_output += " "
+            random_output += prompt
         if random_additions:
             if random_output:
                 random_output += " "
