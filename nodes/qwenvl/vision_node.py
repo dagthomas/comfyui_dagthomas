@@ -2,6 +2,7 @@
 
 import os
 import base64
+import random
 import numpy as np
 from io import BytesIO
 from PIL import Image
@@ -40,6 +41,8 @@ class QwenVLVisionNode:
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
                 "use_flash_attention": ("BOOLEAN", {"default": False}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
+                "randomize_each_run": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -168,11 +171,25 @@ class QwenVLVisionNode:
         temperature=0.7,
         keep_model_loaded=True,
         use_flash_attention=False,
+        seed=-1,
+        randomize_each_run=True,
         custom_base_prompt="",
         custom_title="",
         override="",
     ):
         try:
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                current_seed = 12345
+            else:
+                current_seed = seed
+            
+            random.seed(current_seed)
+            torch.manual_seed(current_seed)
+            print(f"🎲 Using seed: {current_seed}")
+
             # Build prompt
             if override:
                 prompt_text = override

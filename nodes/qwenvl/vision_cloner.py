@@ -2,6 +2,7 @@
 
 import os
 import json
+import random
 import numpy as np
 import torch
 import gc
@@ -40,6 +41,8 @@ class QwenVLVisionCloner:
                 "keep_model_loaded": ("BOOLEAN", {"default": True}),
                 "use_flash_attention": ("BOOLEAN", {"default": False}),
                 "strip_quotes": ("BOOLEAN", {"default": False}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
+                "randomize_each_run": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "custom_prompt": ("STRING", {"multiline": True, "default": ""})
@@ -297,8 +300,20 @@ class QwenVLVisionCloner:
 
     def analyze_images(self, images, fade_percentage=15.0, qwen_model="Qwen3-VL-4B-Instruct",
                       max_tokens=4096, temperature=0.7, keep_model_loaded=True, use_flash_attention=False, 
-                      strip_quotes=False, custom_prompt=""):
+                      strip_quotes=False, seed=-1, randomize_each_run=True, custom_prompt=""):
         try:
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                current_seed = 12345
+            else:
+                current_seed = seed
+            
+            random.seed(current_seed)
+            torch.manual_seed(current_seed)
+            print(f"🎲 Using seed: {current_seed}")
+
             default_prompt = """You must respond with ONLY valid JSON, nothing else. Analyze the image and output a JSON object:
 
 {

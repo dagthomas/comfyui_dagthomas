@@ -3,6 +3,7 @@
 
 import json
 import re
+import random
 import numpy as np
 import torch
 import gc
@@ -68,6 +69,8 @@ class QwenVLZImageVision:
                 "include_system_prompt": ("BOOLEAN", {"default": True}),
                 "include_think_block": ("BOOLEAN", {"default": False}),
                 "strip_quotes": ("BOOLEAN", {"default": False}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
+                "randomize_each_run": ("BOOLEAN", {"default": True}),
             },
             "optional": {
                 "custom_analysis_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -366,9 +369,21 @@ CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks,
     def analyze_image(self, images, qwen_model="Qwen3-VL-4B-Instruct", prompt_file="(none)",
                       system_prompt_file="(none)", user_mod_file="(none)",
                       max_tokens=4096, temperature=0.5, keep_model_loaded=True, use_flash_attention=False,
-                      include_system_prompt=True, include_think_block=True, strip_quotes=False, 
+                      include_system_prompt=True, include_think_block=True, strip_quotes=False,
+                      seed=-1, randomize_each_run=True,
                       custom_analysis_prompt="", user_modification="", custom_system_prompt=""):
         try:
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                current_seed = 12345
+            else:
+                current_seed = seed
+            
+            random.seed(current_seed)
+            torch.manual_seed(current_seed)
+            print(f"🎲 Using seed: {current_seed}")
             # Load model
             model, processor, tokenizer = self.load_model(qwen_model, keep_model_loaded, use_flash_attention)
 

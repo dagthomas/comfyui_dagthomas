@@ -1,6 +1,7 @@
 # QwenVL Video Analyzer Node
 
 import os
+import random
 import numpy as np
 import torch
 import gc
@@ -67,6 +68,8 @@ class QwenVLVideoNode:
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.1, "max": 1.0, "tooltip": "Sampling temperature (lower = more focused)"}),
                 "keep_model_loaded": ("BOOLEAN", {"default": True, "tooltip": "Keep model in memory for faster subsequent runs"}),
                 "use_flash_attention": ("BOOLEAN", {"default": False, "tooltip": "Use Flash Attention 2 for better speed and memory (requires flash-attn package)"}),
+                "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff, "tooltip": "Random seed (-1 for random)"}),
+                "randomize_each_run": ("BOOLEAN", {"default": True, "tooltip": "Generate new seed each run when seed is -1"}),
             },
             "optional": {
                 "video": ("VIDEO,IMAGE", {"tooltip": "Connect VIDEO from LoadVideo node or IMAGE batch"}),
@@ -490,10 +493,24 @@ class QwenVLVideoNode:
         temperature=0.7,
         keep_model_loaded=True,
         use_flash_attention=False,
+        seed=-1,
+        randomize_each_run=True,
         video=None,
         custom_prompt="",
     ):
         try:
+            # Handle seed for randomization
+            if randomize_each_run and seed == -1:
+                current_seed = random.randint(0, 0xffffffffffffffff)
+            elif seed == -1:
+                current_seed = 12345
+            else:
+                current_seed = seed
+            
+            random.seed(current_seed)
+            torch.manual_seed(current_seed)
+            print(f"🎲 Using seed: {current_seed}")
+
             # Determine video source and extract frames
             frames_pil = None
             frames_tensor = None
