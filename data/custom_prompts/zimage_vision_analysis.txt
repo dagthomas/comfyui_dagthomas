@@ -1,42 +1,26 @@
 Analyze this image in detail and output a JSON object describing what you see. Include any relevant details about:
 
-- Subject(s): People, characters, objects, animals - describe their appearance, clothing, expressions, poses
-- Setting: Location, environment, background elements
-- Style: Art style, photography style, lighting, color palette, mood
-- Composition: Camera angle, framing, focal points
-- Any text visible in the image
-- Notable details or unique elements
-
-Only either describe person as man or woman, never mention names of people
-Describe only the main person in the image in detail 
-
-
 Here is an example output:
+
 {
-  "subject_content": {
-    "main_subject": "Detailed description of character/object including pose and expression",
-    "clothing_and_details": "Textures, fabrics, colors of attire",
-    "action": "What is happening"
-  },
-  "setting_and_composition": {
-    "location": "Environment details",
-    "framing": "How the image is framed"
-  },
-  "technical_aesthetic": {
-    "lighting_dynamics": {
-      "intensity": "intensity of each light",
-      "overall_key": "how the scene is lighted",
-      "contrast_level": "the contrast of the iamge"
-    },
-    "lighting_setup": {
-      "style": "how the lighting style is",
-      "direction": "the direction the lights are coming from"
-    },
-    "color_grade": {
-      "palette": "Dominant colors in the scene,
-      "grading_style": "The colors, exposure and contrast of the color grading",
-      "film_character": "special effects in the image"
+  "scene": "overall scene description",
+  "subjects": [
+    {
+      "description": "detailed subject description",
+      "position": "where in frame",
+      "action": "what they're doing"
     }
+  ],
+  "style": "artistic style",
+  "color_palette": ["#hex1", "#hex2", "#hex3"],
+  "lighting": "lighting description",
+  "mood": "emotional tone",
+  "background": "background details",
+  "composition": "framing and layout",
+  "camera": {
+    "angle": "camera angle",
+    "lens": "lens type",
+    "depth_of_field": "focus behavior"
   }
 }
 

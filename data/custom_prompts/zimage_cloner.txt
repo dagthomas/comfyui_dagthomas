@@ -1,30 +1,28 @@
 Analyze this image in extreme detail and describe what you see in natural language. Your goal is to capture the visual essence so precisely that the description could be used to recreate the image's exact style, lighting, and mood.
 
-Write a flowing, descriptive paragraph or series of paragraphs covering:
+Write a flowing, descriptive information:
 
-**Subject(s):** Describe all people, characters, objects, and animals - their appearance, clothing, expressions, and poses.
+{
+  "scene": "overall scene description",
+  "subjects": [
+    {
+      "description": "detailed subject description",
+      "position": "where in frame",
+      "action": "what they're doing"
+    }
+  ],
+  "style": "artistic style",
+  "color_palette": ["#hex1", "#hex2", "#hex3"],
+  "lighting": "lighting description",
+  "mood": "emotional tone",
+  "background": "background details",
+  "composition": "framing and layout",
+  "camera": {
+    "angle": "camera angle",
+    "lens": "lens type",
+    "depth_of_field": "focus behavior"
+  }
+}
 
-**Setting:** Describe the location, environment, and background elements.
+CRITICAL: Output ONLY the JSON object. No explanations, no markdown code blocks, no extra text. Start with { and end with }.
 
-**Style & Mood:** The art/photography style and emotional tone (e.g., clinical, tense, melancholic).
-
-**Composition:** Camera angle, framing, focal points, and depth of field.
-
-**Color Grading & Palette:** Analyze the color treatment with high specificity:
-- Dominant hue/cast that tints the entire scene
-- Main colors present and any multi-color lighting zones
-- How skin tones appear (natural or tinted by lighting)
-- Contrast and saturation levels
-- Shadow and highlight colors
-- Any specific cinematic look or grade
-
-**Light Sources:** Identify and describe every distinct light source:
-- List each source (e.g., overhead fluorescents, desk lamp, control panel LEDs)
-- For each: type, placement, exact color/temperature, intensity, quality (hard/soft)
-- How the different colored lights mix, clash, or create distinct color zones
-
-**Cinematic Properties:** Aspect ratio feel, lens characteristics, film grain, vignetting.
-
-**Notable Details:** Unique elements, especially small features with bright or contrasting colors.
-
-Format your response as clear, readable prose - NOT as JSON or code. Write naturally as if describing the image to someone who needs to recreate it. Use markdown headers and bullet points where helpful for organization, but keep the content descriptive and flowing.
