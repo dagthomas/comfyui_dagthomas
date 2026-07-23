@@ -1,8 +1,5 @@
 # comfyui_dagthomas
 
-### 您可以在这里找到中文信息
-[plugin.aix.ink](https://plugin.aix.ink/archives/comfyui-dagthomas)
-
 **Advanced Prompt Generation & Multi-Model AI Integration for ComfyUI**
 
 A comprehensive suite of nodes for ComfyUI featuring multi-provider LLM support (OpenAI, Gemini, Claude, Grok, Groq, QwenVL), local model inference (Phi, MiniCPM, Ollama), professional image effects, and advanced prompt generation tools.
