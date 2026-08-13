@@ -2,12 +2,12 @@
 
 import os
 import random
-import google.generativeai as genai
 from openai import OpenAI
 import anthropic
 import httpx
 
 from ...utils.constants import CUSTOM_CATEGORY, gpt_models, gemini_models, grok_models, claude_models, groq_models
+from ...utils.gemini_client import get_gemini_client, gemini_generate
 
 
 class APNextGenerator:
@@ -22,6 +22,7 @@ class APNextGenerator:
         self.grok_client = None
         self.claude_client = None
         self.groq_client = None
+        self.gemini_client = None
         self.gemini_configured = False
 
     @classmethod
@@ -177,37 +178,16 @@ Generate a prompt that would create compelling, high-quality images. Be specific
                 api_key = os.environ.get("GEMINI_API_KEY")
                 if not api_key:
                     raise ValueError("GEMINI_API_KEY environment variable not set")
-                genai.configure(api_key=api_key)
+                self.gemini_client = get_gemini_client(api_key)
                 self.gemini_configured = True
-            
+
             # Extract model name (remove "gemini:" prefix)
             gemini_model = model_name.replace("gemini:", "")
-            
-            safety_settings = [
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_NONE",
-                },
-            ]
 
             # Use EXACTLY the same pattern as your working nodes - no generation_config
-            model = genai.GenerativeModel(gemini_model, safety_settings=safety_settings)
-
             print(f"🔄 Sending to Gemini model: {gemini_model}")
-            response = model.generate_content(prompt)
-            
+            response = gemini_generate(self.gemini_client, gemini_model, prompt)
+
             print("📥 Gemini response received!")
             
             # EXACT same pattern as your working GeminiTextOnly node

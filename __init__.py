@@ -381,6 +381,30 @@ try:
 except Exception:
     pass
 
+# Resolution Planning Nodes
+try:
+    # H3 Resolution Planner - original node and algorithm by gabbo
+    from .nodes.resolution.h3_resolution_planner import H3ResolutionPlannerCropOnly
+    NEW_MAPPINGS["H3ResolutionPlannerCropOnly"] = H3ResolutionPlannerCropOnly
+    NEW_DISPLAY_MAPPINGS["H3ResolutionPlannerCropOnly"] = "APNext H3 Resolution Planner (Crop Only) - by gabbo"
+except Exception:
+    pass
+
+# MiniMax-H3 Prompt Nodes
+try:
+    from .nodes.h3.base_prompt_writer import H3BasePromptWriter
+    NEW_MAPPINGS["H3BasePromptWriter"] = H3BasePromptWriter
+    NEW_DISPLAY_MAPPINGS["H3BasePromptWriter"] = "APNext H3 Prompt Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.ref_prompt_writer import H3RefPromptWriter
+    NEW_MAPPINGS["H3RefPromptWriter"] = H3RefPromptWriter
+    NEW_DISPLAY_MAPPINGS["H3RefPromptWriter"] = "APNext H3 Reference Prompt Writer"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}

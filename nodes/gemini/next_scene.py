@@ -6,9 +6,13 @@ import random
 import torch
 import numpy as np
 from PIL import Image
-import google.generativeai as genai
 
 from ...utils.constants import CUSTOM_CATEGORY, gemini_models
+from ...utils.gemini_client import (
+    get_gemini_client,
+    gemini_generate,
+    gemini_finished_normally,
+)
 
 
 class GeminiNextScene:
@@ -26,8 +30,8 @@ class GeminiNextScene:
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
         if not self.gemini_api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
-        genai.configure(api_key=self.gemini_api_key)
-        
+        self.client = get_gemini_client(self.gemini_api_key)
+
         # Load the custom prompt template
         prompt_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "custom_prompts", "next_scene.txt")
         try:
@@ -188,30 +192,12 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
             }
             full_prompt += f"\n\nINTENSITY: {intensity_map[transition_intensity]}"
 
-            # Configure safety settings to allow creative content
-            safety_settings = [
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_NONE",
-                },
-            ]
+            # Safety filters are set to BLOCK_NONE by the shared helper so
+            # creative content is allowed through.
+            response = gemini_generate(
+                self.client, gemini_model, [full_prompt, pil_image]
+            )
 
-            model = genai.GenerativeModel(gemini_model, safety_settings=safety_settings)
-
-            response = model.generate_content([full_prompt, pil_image])
-            
             # Check if response was blocked
             if not response.candidates:
                 print("⚠️  WARNING: Gemini returned no candidates!")
@@ -219,7 +205,7 @@ CRITICAL: OUTPUT ONLY THE FINISHED "NEXT SCENE:" PROMPT - NO explanations or pre
                 fallback_text = "The camera pulls back to reveal more of the surrounding environment, as lighting shifts to create a different mood and atmosphere."
                 result = f"{scene_prefix_text} {fallback_text}" if add_scene_prefix else fallback_text
                 short_description = result
-            elif response.candidates[0].finish_reason != 1:  # 1 = STOP (normal completion)
+            elif not gemini_finished_normally(response.candidates[0]):
                 print(f"⚠️  WARNING: Response did not complete normally. Finish reason: {response.candidates[0].finish_reason}")
                 print("Checking safety ratings...")
                 

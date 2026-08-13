@@ -1,0 +1,378 @@
+# Shared helpers for the MiniMax-H3 prompt writer nodes
+#
+# The system prompts are the official MiniMax guides shipped verbatim under
+# data/h3/, so the model is steered by the real spec rather than a paraphrase:
+#   data/h3/guide_base_en.md  - VIDEO_PROMPT_WRITING_GUIDE_base_en.md (T2VA/I2VA/FL2VA/L2VA)
+#   data/h3/guide_ref_en.md   - VIDEO_PROMPT_WRITING_GUIDE_ref_en.md  (full-reference mode)
+#
+# Source: https://huggingface.co/MiniMaxAI/MiniMax-H3/tree/main/docs
+
+import os
+import re
+
+_DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    "data",
+    "h3",
+)
+
+_guide_cache = {}
+
+
+def load_guide(name):
+    """
+    Read (and cache) one of the shipped H3 guides from data/h3/.
+
+    Only a bare `.md` filename is accepted, so the lookup can never escape the
+    guide directory even if a caller later wires this to a node widget.
+    """
+    safe_name = os.path.basename(name)
+    if safe_name != name or not safe_name.endswith(".md"):
+        raise ValueError(
+            f"H3 guide name must be a bare .md filename inside data/h3, got: {name!r}"
+        )
+
+    if safe_name in _guide_cache:
+        return _guide_cache[safe_name]
+
+    path = os.path.join(_DATA_DIR, safe_name)
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            text = handle.read()
+    except Exception as exc:
+        raise FileNotFoundError(
+            f"Could not read the H3 prompt guide at {path}: {exc}"
+        )
+
+    _guide_cache[safe_name] = text
+    return text
+
+
+# ----------------------------------------------------------------------
+# Vocabulary lifted from section 4.3 of the base guide
+# ----------------------------------------------------------------------
+
+AUTO = "Auto"
+
+CAMERA_MOTIONS = [
+    AUTO,
+    "Static Shot",
+    "Zoom In",
+    "Zoom Out",
+    "Push In",
+    "Pull Out",
+    "Pan Left",
+    "Pan Right",
+    "Truck Left",
+    "Truck Right",
+    "Tilt Up",
+    "Tilt Down",
+    "Pedestal Up",
+    "Pedestal Down",
+    "Arc Shot",
+    "Tracking Shot",
+    "Shake Slightly",
+    "Shake Strongly",
+    "POV",
+    "Roll Clockwise",
+    "Roll Counterclockwise",
+]
+
+# "medium amplitude and normal speed are usually omitted" - guide 4.3
+CAMERA_AMPLITUDES = [AUTO, "with small amplitude", "medium (omit)", "with large amplitude"]
+CAMERA_SPEEDS = [AUTO, "at slow speed", "normal (omit)", "at fast speed"]
+
+VISUAL_STYLES = [
+    AUTO,
+    "Cinematic",
+    "live-action",
+    "2D-animated",
+    "3D CG",
+    "claymation",
+    "watercolor",
+    "vintage film",
+]
+
+SHOT_PLANS = [AUTO, "Single shot", "Two shots", "Three shots", "Four shots"]
+
+_SHOT_COUNTS = {
+    "Single shot": 1,
+    "Two shots": 2,
+    "Three shots": 3,
+    "Four shots": 4,
+}
+
+CUT_STYLES = [
+    AUTO,
+    "the camera cuts to",
+    "the shot cuts to",
+    "the shot transitions to",
+    "the shot changes to",
+    "the shot switches to",
+]
+
+
+def camera_directive(motion, amplitude, speed):
+    """
+    Turn the three camera widgets into one instruction line, honouring the
+    guide's rule that medium amplitude and normal speed are left unwritten.
+    """
+    if motion == AUTO:
+        return (
+            "Camera motion: choose motion types that suit the action, and write them as "
+            "natural English inside the shot (motion type, plus amplitude and speed only "
+            "when meaningful). Do not stack them as labels at the end of a sentence."
+        )
+
+    parts = [motion]
+    if amplitude != AUTO and not amplitude.startswith("medium"):
+        parts.append(amplitude)
+    if speed != AUTO and not speed.startswith("normal"):
+        parts.append(speed)
+
+    phrase = " ".join(parts)
+    return (
+        f"Camera motion: the primary camera movement is `{phrase}`. Express it as natural "
+        "English action inside the shot rather than as a trailing label. Additional shots "
+        "may use other motion types when the action calls for it."
+    )
+
+
+def shot_directive(shot_plan, duration_seconds):
+    """Instruction covering shot count and cut-time formatting."""
+    duration = f"{duration_seconds:.2f}"
+
+    if shot_plan == AUTO:
+        count_rule = (
+            "Choose the shot count that fits the action. Prefer a single shot unless a cut "
+            "genuinely introduces new information about the subject, space, state, viewpoint or time."
+        )
+    else:
+        count = _SHOT_COUNTS[shot_plan]
+        count_rule = (
+            f"Use exactly {count} shot{'s' if count > 1 else ''}."
+            if count > 1
+            else "Use exactly 1 shot."
+        )
+
+    return (
+        f"{count_rule} The effective video duration is {duration} seconds. [Shot 1] carries no "
+        f"timestamp; every later shot opens with a strictly increasing cut time in `[Shot N] At "
+        f"MM:SS.mmm, ...` form that falls inside {duration} seconds."
+    )
+
+
+def toggle_directives(
+    include_dialogue,
+    include_on_screen_text,
+    include_soundscape,
+    include_non_diegetic_music,
+    dialogue_language,
+):
+    """Feature switches shared by both writer nodes."""
+    lines = []
+
+    if include_dialogue:
+        lines.append(
+            f"Dialogue: include spoken lines. Give each vocal source a stable (S1)/(S2) ID and "
+            f"wrap only the spoken words in <d>[{dialogue_language}] ...</d>, keeping the "
+            f"identifying phrase, action and delivery outside the <d> block."
+        )
+    else:
+        lines.append(
+            "Dialogue: no character speaks, sings, or delivers a voiceover. Do not emit any "
+            "(Sx) speaker IDs or <d> blocks."
+        )
+
+    if include_on_screen_text:
+        lines.append(
+            'On-screen text: signs, banners, labels or subtitles that are actually visible go in '
+            'English double quotation marks, verbatim and untranslated.'
+        )
+    else:
+        lines.append("On-screen text: keep the frame free of readable signs, banners, labels or subtitles.")
+
+    if include_soundscape:
+        lines.append(
+            "overall_soundscape: 1-4 English sentences in one paragraph covering ambience, "
+            "physical action sounds and non-verbal human sounds. Do not repeat dialogue or "
+            "singing here."
+        )
+    else:
+        lines.append("overall_soundscape: output exactly `N/A`.")
+
+    if include_non_diegetic_music:
+        lines.append(
+            "non_diegetic_music: 1-3 English sentences on instrumentation, tempo, rhythm and "
+            "dynamic change. No abstract mood words and no explanation of emotional function."
+        )
+    else:
+        lines.append("non_diegetic_music: output exactly `N/A`.")
+
+    return lines
+
+
+# ----------------------------------------------------------------------
+# Wildness
+# ----------------------------------------------------------------------
+
+# Bands are (upper_bound_inclusive, label, directive, number_of_random_elements).
+_WILDNESS_BANDS = (
+    (
+        15,
+        "Conservative",
+        "Stay literal. Render only what the input actually implies, adding just enough "
+        "concrete detail to make the timeline filmable. No invented events, no surreal "
+        "flourishes, no unmotivated camera tricks.",
+        0,
+    ),
+    (
+        40,
+        "Grounded",
+        "Stay believable, but direct it properly. Choose expressive framing, motivated "
+        "lighting and small human behaviour that enrich the input without changing what "
+        "it is about.",
+        0,
+    ),
+    (
+        65,
+        "Bold",
+        "Make strong authorial choices. Heightened lighting, striking compositions, "
+        "expressive camera work and one memorable visual idea are welcome, as long as the "
+        "scene still obeys ordinary physics.",
+        1,
+    ),
+    (
+        85,
+        "Wild",
+        "Break realism on purpose. Surreal juxtapositions, impossible transitions and "
+        "dreamlike logic are encouraged. The result must still be a coherent, shootable "
+        "timeline rather than a list of random images.",
+        2,
+    ),
+    (
+        100,
+        "Unhinged",
+        "Go fully unhinged. Reality is negotiable: scale, gravity, continuity and material "
+        "behaviour can all misbehave. Commit hard to the strangeness, and still deliver a "
+        "timeline a video model can actually follow, shot by shot.",
+        3,
+    ),
+)
+
+# Concrete, filmable weirdness. Each is a visual event, not a mood word.
+UNHINGED_ELEMENTS = [
+    "gravity reverses for a single object while everything else stays put",
+    "the subject's shadow moves a beat out of sync with the subject",
+    "a mirror or reflective surface shows something that is not in the room",
+    "one material behaves like another - stone flows, cloth turns molten, water holds an edge",
+    "an impossible scale shift: something small becomes enormous, or the reverse",
+    "the environment breathes, expanding and contracting like a slow lung",
+    "weather that belongs outdoors happens indoors",
+    "a doorway or window opens onto a completely different biome",
+    "the subject multiplies into synchronized copies that share one motion",
+    "everyone in the background freezes while the subject keeps moving",
+    "the floor turns to water and nobody reacts to it",
+    "practical lights pulse in time with a rhythm no one on screen can hear",
+    "the camera passes straight through a solid surface",
+    "time stutters: one action repeats half a beat before continuing",
+    "the scene briefly rewinds, then resumes forward",
+    "ordinary objects swarm and move as a single organism",
+    "the horizon tilts past vertical while the subject stays upright",
+    "an out-of-place animal crosses frame with complete confidence",
+    "the set reveals itself as a miniature, then becomes full scale again",
+    "colour drains from everything except one object",
+    "the colour palette inverts for a single beat",
+    "a texture spreads across the frame like frost, converting whatever it touches",
+    "the subject walks and the background scrolls the wrong way",
+    "objects rearrange themselves the instant the camera looks away",
+    "a second, older version of the scene bleeds through as a double exposure",
+    "the light source is physically present and can be picked up",
+    "rain falls upward into the sky",
+    "the subject's clothing changes between one cut and the next without comment",
+    "a hallway extends further the longer the camera pushes down it",
+    "sound arrives visibly, distorting the air before it is heard",
+    "the frame edge becomes a physical wall the subject can lean on",
+    "one object stays perfectly sharp while everything else smears into motion",
+    "the ground tessellates into moving tiles",
+    "a crowd moves in perfect unison as if choreographed by accident",
+    "the subject steps out of frame and immediately re-enters from the opposite side",
+    "smoke or steam holds a solid shape long after it should disperse",
+    "the scene is briefly lit as if from underwater",
+    "an object falls upward off the table and settles on the ceiling",
+    "the subject's reflection stays behind when they walk away",
+    "a season changes across a single continuous shot",
+]
+
+
+def wildness_directive(wildness, rng):
+    """
+    Map the 0-100 wildness slider onto a creative-latitude instruction, plus a
+    seeded selection of concrete unhinged elements once the slider is high enough.
+    """
+    wildness = max(0, min(100, int(wildness)))
+
+    for upper, label, directive, element_count in _WILDNESS_BANDS:
+        if wildness <= upper:
+            break
+
+    lines = [f"Creative latitude ({label}, wildness {wildness}/100): {directive}"]
+
+    if element_count and UNHINGED_ELEMENTS:
+        picks = rng.sample(UNHINGED_ELEMENTS, min(element_count, len(UNHINGED_ELEMENTS)))
+        joined = "; ".join(picks)
+        lines.append(
+            f"Weave in {'this element' if len(picks) == 1 else 'these elements'} and make "
+            f"{'it' if len(picks) == 1 else 'them'} land as real, visible events on the "
+            f"timeline: {joined}."
+        )
+
+    return lines, label
+
+
+# ----------------------------------------------------------------------
+# Output parsing
+# ----------------------------------------------------------------------
+
+
+def strip_code_fence(text):
+    """Unwrap a ```...``` block if the model wrapped its whole answer in one."""
+    stripped = text.strip()
+    if not stripped.startswith("```"):
+        return stripped
+
+    lines = stripped.splitlines()
+    if len(lines) < 2:
+        return stripped
+
+    lines = lines[1:]
+    if lines and lines[-1].strip().startswith("```"):
+        lines = lines[:-1]
+
+    return "\n".join(lines).strip()
+
+
+def extract_section(text, field, all_fields):
+    """
+    Pull one `field:` section out of an H3 prompt, stopping at the next known
+    field label or at the end of the text. Returns "" when the field is absent.
+
+    Handles both layouts the guides use: a value on the same line as the label
+    (base mode) and a value starting on the next line (full-reference mode).
+    """
+    others = [re.escape(f) for f in all_fields if f != field]
+    # The end-of-text alternative matters for the final section, which has no
+    # following label to stop at.
+    stop = (
+        r"(?=^[ \t]*(?:" + "|".join(others) + r")[ \t]*:|\Z)"
+        if others
+        else r"(?=\Z)"
+    )
+
+    pattern = re.compile(
+        r"^[ \t]*" + re.escape(field) + r"[ \t]*:(.*?)" + stop,
+        re.DOTALL | re.MULTILINE,
+    )
+    match = pattern.search(text)
+
+    return match.group(1).strip() if match else ""

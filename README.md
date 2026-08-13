@@ -488,6 +488,113 @@ Optimized latent generation for Stable Diffusion 3 pipelines.
 
 ---
 
+### 📏 Resolution Planning
+
+#### H3 Resolution Planner (Crop Only)
+**Display Name:** `APNext H3 Resolution Planner (Crop Only) - by gabbo`
+
+> Original node and algorithm by **gabbo**. Ported into this pack with the planning logic unchanged.
+
+Plans a two-stage *generate → upscale* resolution pair and center-crops the input image to the **exact** aspect ratio of that plan, so nothing in the chain has to resample or pad. Step sizes are chosen so both stages always land on clean multiples of 32:
+
+| Upscale | Stage 1 steps | Stage 2 steps |
+|---------|---------------|---------------|
+| `2x`    | 32            | 64            |
+| `1.5x`  | 64            | 96            |
+
+| Input | Description |
+|-------|-------------|
+| `image` | Source image; only its dimensions drive the plan |
+| `resolution_mode` | `target_megapixels`, `max_stage1_from_input`, `max_final_from_input` |
+| `stage1_megapixels` | Target stage 1 size in MP (0.05–4.00). `target_megapixels` mode only |
+| `upscale_mode` | `2x` or `1.5x` |
+| `max_crop_percent` | Max share of input area croppable (0–25%). The two `max_*` modes only; falls back to the least-lossy candidate if nothing fits |
+
+**Modes**
+- `target_megapixels` — hits the requested stage 1 megapixels while staying as close as possible to the input aspect ratio.
+- `max_stage1_from_input` — largest stage 1 the input can feed natively within the crop budget.
+- `max_final_from_input` — largest stage 2 (final) the input can feed natively within the crop budget.
+
+**Returns:** `(cropped_image, stage1_width, stage1_height, stage2_width, stage2_height, upscale_factor, plan_info)`
+
+`plan_info` is a human-readable summary of the chosen plan:
+
+```
+mode: target_megapixels @ 2x
+input: 1920x1080
+crop: 1917x1065 at (1,7) - 1.54% of area removed
+aspect: 9:5
+stage 1: 864x480 (0.40 MP)
+stage 2: 1728x960 (1.58 MP)
+```
+
+---
+
+### 🎥 MiniMax-H3 Prompt Nodes
+
+Both nodes take a **short idea, an image, or both** and expand it into a complete, spec-compliant MiniMax-H3 video prompt. The official MiniMax writing guides ship verbatim in `data/h3/` and are used as the system prompt, so the model follows the real spec rather than a paraphrase — edit those files to tune behaviour globally.
+
+Any provider works: `auto-detect` picks the first of Claude → GPT → Gemini → Grok → Groq that has an API key set. When an image is connected it is sent as vision input, so the model describes the frame itself instead of you writing the description.
+
+#### APNext H3 Prompt Writer
+**Display Name:** `APNext H3 Prompt Writer`
+
+Writes the base format — `integrated_multimodal_description`, `overall_soundscape`, `non_diegetic_music` — per [VIDEO_PROMPT_WRITING_GUIDE_base_en.md](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md).
+
+| Input | Description |
+|-------|-------------|
+| `idea` | Your short prompt or image description — the thing being expanded |
+| `task_type` | `T2VA` (text only), `I2VA` (first frame), `FL2VA` (first + last), `L2VA` (last frame). Non-T2VA emits the exact reference-alignment instruction line |
+| `duration_seconds` | Drives cut times and the `S.SS` value in the alignment line |
+| `shot_plan` | Auto, or force 1–4 shots |
+| `visual_style` | Auto, or one of the guide's styles (`Cinematic`, `live-action`, `2D-animated`, `3D CG`, `claymation`, `watercolor`, `vintage film`) |
+| `wildness` | **0 = literal, 100 = fully unhinged.** See below |
+| `camera_motion` / `camera_amplitude` / `camera_speed` | The guide's full camera vocabulary. Medium amplitude and normal speed are omitted from the output, as the spec requires |
+| `include_dialogue` | Off ⇒ no `(Sx)` IDs and no `<d>` blocks at all |
+| `dialogue_language` | Language tag written inside `<d>[...]</d>` |
+| `include_on_screen_text` | Whether readable signs/banners/subtitles appear |
+| `include_soundscape` / `include_non_diegetic_music` | Off writes `N/A` into that field |
+| `model`, `temperature`, `seed` | Provider selection and sampling |
+| `image` *(optional)* | Reference frame(s), sent as vision input |
+| `extra_instructions` *(optional)* | Free-form extra direction |
+
+**Returns:** `(h3_prompt, integrated_multimodal_description, overall_soundscape, non_diegetic_music, model_used)` — the full prompt plus each field split out for separate wiring.
+
+---
+
+#### APNext H3 Reference Prompt Writer
+**Display Name:** `APNext H3 Reference Prompt Writer`
+
+Writes the six-section full-reference format per [VIDEO_PROMPT_WRITING_GUIDE_ref_en.md](https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_ref_en.md). Shares every option above, plus:
+
+| Input | Description |
+|-------|-------------|
+| `task_type` | The `[bracketed]` summary prefix: `keyframe completion`, `reference generation`, `video editing`, `video continuation`, `audio reuse`, `audio reference`. Auto lets the model combine them with ` + ` |
+| `reference_role` | How attached images get labelled: auto, `<Subject N>`, standalone `<Picture N>`, style-only, or storyboard |
+| `word_target` | Target length of `detailed_description` (guide recommends 350–500) |
+| `image_1` … `image_4` *(optional)* | Up to four reference images, in label order |
+| `reference_notes` *(optional)* | Per-reference notes, one per line — also how you describe video/audio references you can't attach |
+
+**Returns:** `(h3_prompt, subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music, model_used)`
+
+---
+
+#### The `wildness` slider
+
+One dial from conservative to unhinged. Above 40 it also injects concrete surreal **events** (not mood words) drawn from a 40-entry pool — selection is driven by `seed`, so the same seed gives the same weirdness.
+
+| Range | Band | Behaviour | Random elements |
+|-------|------|-----------|-----------------|
+| 0–15 | Conservative | Strictly literal, no invented events | 0 |
+| 16–40 | Grounded | Believable, well-directed embellishment | 0 |
+| 41–65 | Bold | Strong authorial choices, physics still holds | 1 |
+| 66–85 | Wild | Surreal juxtapositions, dreamlike logic | 2 |
+| 86–100 | Unhinged | Scale, gravity and continuity all negotiable | 3 |
+
+Injected elements are filmable, e.g. *"the subject's shadow moves a beat out of sync"*, *"a doorway opens onto a completely different biome"*, *"rain falls upward into the sky"*.
+
+---
+
 ### 🎲 Prompt Generators
 
 #### Auto Prompter
@@ -815,20 +922,22 @@ Example workflows are available in the `examples/` directory:
 ## 📋 Requirements
 
 ```
-Pillow>=10.4.0
-requests>=2.32.5
-openai>=1.44.0
-blend-modes>=2.1.0
-huggingface_hub>=0.34.0
-color_matcher>=0.5.0
+openai>=2.54.0,<3.0.0
+anthropic>=0.121.0
+google-genai>=2.18.0
+httpx>=0.28.1
+huggingface_hub[hf_xet]>=0.34.0
 chardet>=5.2.0
-google-generativeai>=0.7.2
-anthropic
-transformers>=4.40.0
-decord>=0.6.0
-scipy>=1.10.0
-tqdm>=4.67.1
 ```
+
+Anything ComfyUI already ships in its own `requirements.txt` — `Pillow`, `requests`, `transformers`, `scipy`, `tqdm`, `numpy`, `torch` — is deliberately **not** repeated, since re-pinning it only risks downgrading the base install.
+
+Two constraints worth knowing about:
+
+- **`openai` is capped below 3.0.** v3 switched to HTTPX2 and stopped shipping `httpx`; the GPT/Grok/Groq nodes pass an `httpx.Client` as `http_client=`, which v3 rejects.
+- **Gemini uses `google-genai`, not `google-generativeai`.** The legacy SDK hard-pinned `google-ai-generativelanguage==0.6.15`, which forced `protobuf<6` and dragged grpcio into the ComfyUI environment. The current SDK needs neither.
+
+`decord` is listed but commented out: it is unmaintained and not numpy-2 safe, and the QwenVL/MiniCPM video nodes fall back to OpenCV automatically. Uncomment it in `requirements.txt` if you specifically want decord-based frame decoding.
 
 ---
 

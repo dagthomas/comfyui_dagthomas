@@ -6,9 +6,9 @@ import random
 import torch
 import numpy as np
 from PIL import Image
-import google.generativeai as genai
 
 from ...utils.constants import CUSTOM_CATEGORY, gemini_models
+from ...utils.gemini_client import get_gemini_client, gemini_generate
 from ...utils.image_utils import tensor2pil, pil2tensor
 
 
@@ -17,7 +17,7 @@ class GeminiCustomVision:
         self.gemini_api_key = os.environ.get("GEMINI_API_KEY")
         if not self.gemini_api_key:
             raise ValueError("GEMINI_API_KEY environment variable is not set")
-        genai.configure(api_key=self.gemini_api_key)
+        self.client = get_gemini_client(self.gemini_api_key)
 
     @classmethod
     def INPUT_TYPES(s):
@@ -140,28 +140,9 @@ class GeminiCustomVision:
 
             combined_image = self.fade_images(pil_images, fade_percentage)
 
-            safety_settings = [
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_NONE",
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_NONE",
-                },
-            ]
-
-            model = genai.GenerativeModel(gemini_model, safety_settings=safety_settings)
-
-            response = model.generate_content([full_prompt, combined_image])
+            response = gemini_generate(
+                self.client, gemini_model, [full_prompt, combined_image]
+            )
 
             result = response.text
 

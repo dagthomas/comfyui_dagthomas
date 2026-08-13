@@ -19,12 +19,11 @@ except ImportError:
     OpenAI = None
 
 # Gemini imports (optional)
-try:
-    import google.generativeai as genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    GEMINI_AVAILABLE = False
-    genai = None
+from ...utils.gemini_client import (
+    GEMINI_AVAILABLE,
+    get_gemini_client,
+    gemini_generate,
+)
 
 # Anthropic imports (optional)
 try:
@@ -49,6 +48,7 @@ class UniversalVisionCloner:
         self.openai_client = None
         self.grok_client = None
         self.claude_client = None
+        self.gemini_client = None
         self.gemini_configured = False
 
     @classmethod
@@ -127,7 +127,7 @@ class UniversalVisionCloner:
             if not OPENAI_AVAILABLE:
                 missing_deps.append("openai library")
             if not GEMINI_AVAILABLE:
-                missing_deps.append("google-generativeai library")
+                missing_deps.append("google-genai library")
             if not ANTHROPIC_AVAILABLE:
                 missing_deps.append("anthropic library")
             
@@ -401,31 +401,24 @@ class UniversalVisionCloner:
         """Analyze image using Google Gemini"""
         try:
             if not GEMINI_AVAILABLE:
-                raise ValueError("Google Generative AI library not available. Install with: pip install google-generativeai")
-            
+                raise ValueError("google-genai library not available. Install with: pip install google-genai")
+
             # Lazy initialization of Gemini
             if not self.gemini_configured:
                 api_key = os.environ.get("GEMINI_API_KEY")
                 if not api_key:
                     raise ValueError("GEMINI_API_KEY environment variable not set")
-                genai.configure(api_key=api_key)
+                self.gemini_client = get_gemini_client(api_key)
                 self.gemini_configured = True
-            
+
             # Extract model name (remove "gemini:" prefix)
             gemini_model = model_name.replace("gemini:", "")
-            
-            safety_settings = [
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-                {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-            ]
 
-            model = genai.GenerativeModel(gemini_model, safety_settings=safety_settings)
-            
             print(f"🔄 Sending to Gemini vision model: {gemini_model}")
-            response = model.generate_content([prompt, image])
-            
+            response = gemini_generate(
+                self.gemini_client, gemini_model, [prompt, image]
+            )
+
             print("📥 Gemini vision response received!")
             result = response.text
             print(f"📝 Response length: {len(result)} characters")

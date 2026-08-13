@@ -1,14 +1,29 @@
-Pillow==10.4.0
-requests==2.32.5
-openai==1.44.0
-blend-modes==2.1.0
-huggingface_hub>=0.34.0
-color_matcher==0.5.0
-chardet==5.2.0
-google-generativeai==0.7.2
-anthropic
-transformers>=4.40.0
-decord>=0.6.0
-scipy>=1.10.0
-tqdm>=4.67.1
-huggingface_hub[hf_xet]
+# comfyui_dagthomas
+#
+# Anything ComfyUI already declares in its own requirements.txt is deliberately
+# NOT repeated here: Pillow, requests, transformers, scipy, tqdm, numpy, torch.
+# Re-pinning them only risks downgrading the versions the base install ships.
+
+# --- LLM / API SDKs ---
+# openai 3.x switched to httpx2 and no longer accepts the httpx.Client we pass
+# as http_client=, so stay on 2.x until the nodes are migrated.
+openai>=2.54.0,<3.0.0
+anthropic>=0.121.0
+# Current Gemini SDK. The legacy `google-generativeai` package was dropped
+# because it hard-pinned google-ai-generativelanguage==0.6.15, which forced
+# protobuf<6 and pulled grpcio into the ComfyUI env. This one needs neither.
+google-genai>=2.18.0
+# Imported directly by the GPT / Grok / Groq nodes, not just via the SDKs.
+httpx>=0.28.1
+
+# --- model hub ---
+huggingface_hub[hf_xet]>=0.34.0
+
+# --- misc ---
+chardet>=5.2.0
+
+# --- optional ---
+# decord (Qwen-VL / MiniCPM video nodes) is unmaintained since 2022 and is not
+# numpy-2 safe; those nodes fall back to opencv automatically. Uncomment only if
+# you specifically want decord-based frame decoding.
+# decord>=0.6.0
