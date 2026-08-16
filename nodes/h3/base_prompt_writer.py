@@ -8,15 +8,17 @@ import random
 
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
-from ...utils.llm_router import AUTO_DETECT, call_llm, list_all_models
+from ...utils.llm_router import AUTO_DETECT, call_llm, is_interrupt, list_all_models
 from .common import (
     AUTO,
     CAMERA_AMPLITUDES,
     CAMERA_MOTIONS,
     CAMERA_SPEEDS,
+    DIALOGUE_LANGUAGES,
     SHOT_PLANS,
     VISUAL_STYLES,
     camera_directive,
+    resolve_dialogue_language,
     extract_section,
     load_guide,
     shot_directive,
@@ -85,9 +87,13 @@ class H3BasePromptWriter:
                     "default": True,
                     "tooltip": "Off means no (Sx) speaker IDs and no <d> blocks at all.",
                 }),
-                "dialogue_language": ("STRING", {
+                "dialogue_language": (DIALOGUE_LANGUAGES, {
                     "default": "English",
-                    "tooltip": "Language tag written inside <d>[...]</d>.",
+                    "tooltip": (
+                        "The language the characters actually speak, and the tag written inside "
+                        "<d>[...]</d>. Auto lets the model pick one that fits the setting. Pick "
+                        "Custom (or just fill in custom_dialogue_language) for anything not listed."
+                    ),
                 }),
                 "include_on_screen_text": ("BOOLEAN", {"default": False}),
                 "include_soundscape": ("BOOLEAN", {
@@ -102,9 +108,10 @@ class H3BasePromptWriter:
                     "default": AUTO_DETECT,
                     "tooltip": (
                         "Which LLM writes the prompt. auto-detect picks the first provider with an "
-                        "API key set, falling back to a running local server. Models found on local "
-                        "servers (ollama:, lmstudio:, local:) are listed at the bottom - start the "
-                        "server and refresh the ComfyUI page to pick up new ones."
+                        "API key set, then the Claude Code CLI, then a running local server. "
+                        "claudecode: entries use your Claude Code login instead of an API key; "
+                        "ollama:/lmstudio:/local: entries are whatever your local servers were "
+                        "serving when the page loaded."
                     ),
                 }),
                 "temperature": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.05}),
@@ -118,6 +125,13 @@ class H3BasePromptWriter:
                     "multiline": True,
                     "default": "",
                     "tooltip": "Free-form extra direction appended to the request.",
+                }),
+                "custom_dialogue_language": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Any language or dialect not in the dropdown, e.g. 'Norwegian (Bergen "
+                        "dialect)' or 'Latin'. Overrides the dropdown when filled in."
+                    ),
                 }),
                 "model_override": ("STRING", {
                     "default": "",
@@ -308,12 +322,17 @@ class H3BasePromptWriter:
         seed,
         image=None,
         extra_instructions="",
+        custom_dialogue_language="",
         model_override="",
         local_base_url="",
     ):
         try:
             if not idea.strip() and image is None:
                 raise ValueError("Provide an idea, an image, or both.")
+
+            dialogue_language = resolve_dialogue_language(
+                dialogue_language, custom_dialogue_language
+            )
 
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
@@ -369,6 +388,9 @@ class H3BasePromptWriter:
             )
 
         except Exception as exc:
+            # A cancelled queue must stop the run, not become an error string.
+            if is_interrupt(exc):
+                raise
             print(f"❌ H3 Prompt Writer error: {exc}")
             import traceback
 

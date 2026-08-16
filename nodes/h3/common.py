@@ -102,6 +102,73 @@ _SHOT_COUNTS = {
     "Four shots": 4,
 }
 
+# ----------------------------------------------------------------------
+# Dialogue language
+# ----------------------------------------------------------------------
+
+DIALOGUE_AUTO = "Auto (match the setting)"
+DIALOGUE_CUSTOM = "Custom (use custom_dialogue_language)"
+
+# The language the characters actually speak. The name picked here is also what
+# goes inside the <d>[...]</d> tag, so it is written the way the guide writes it.
+DIALOGUE_LANGUAGES = [
+    DIALOGUE_AUTO,
+    "English",
+    "Norwegian",
+    "Swedish",
+    "Danish",
+    "Finnish",
+    "Icelandic",
+    "German",
+    "Dutch",
+    "French",
+    "Spanish",
+    "Portuguese",
+    "Italian",
+    "Polish",
+    "Czech",
+    "Romanian",
+    "Hungarian",
+    "Greek",
+    "Russian",
+    "Ukrainian",
+    "Turkish",
+    "Arabic",
+    "Hebrew",
+    "Persian",
+    "Hindi",
+    "Bengali",
+    "Urdu",
+    "Chinese",
+    "Cantonese",
+    "Japanese",
+    "Korean",
+    "Thai",
+    "Vietnamese",
+    "Indonesian",
+    "Malay",
+    "Filipino",
+    "Swahili",
+    DIALOGUE_CUSTOM,
+]
+
+
+def resolve_dialogue_language(choice, custom=""):
+    """
+    Turn the dropdown (plus its free-text companion) into a language name.
+
+    Returns None for "let the model decide", which the dialogue directive turns
+    into an instruction to pick a language that fits the scene. A non-empty
+    custom value always wins, so dialects and unlisted languages still work.
+    """
+    custom = (custom or "").strip()
+    if custom:
+        return custom
+    if not choice or choice in (DIALOGUE_AUTO, DIALOGUE_CUSTOM):
+        return None
+    return choice
+
+
 CUT_STYLES = [
     AUTO,
     "the camera cuts to",
@@ -173,10 +240,25 @@ def toggle_directives(
     lines = []
 
     if include_dialogue:
+        if dialogue_language:
+            # Naming the language twice is deliberate: the tag alone leaves weaker
+            # models writing English lines under a foreign label.
+            spoken = (
+                f"Dialogue: include spoken lines, and write the spoken words themselves in "
+                f"{dialogue_language}. Do not write them in English and label them "
+                f"{dialogue_language}, and do not append a translation. Tag each block as "
+                f"<d>[{dialogue_language}] ...</d>."
+            )
+        else:
+            spoken = (
+                "Dialogue: include spoken lines. Choose the language that genuinely fits the "
+                "setting and characters, write every spoken line in it, and name that same "
+                "language inside the tag: <d>[Language] ...</d>. Do not append a translation."
+            )
+
         lines.append(
-            f"Dialogue: include spoken lines. Give each vocal source a stable (S1)/(S2) ID and "
-            f"wrap only the spoken words in <d>[{dialogue_language}] ...</d>, keeping the "
-            f"identifying phrase, action and delivery outside the <d> block."
+            f"{spoken} Give each vocal source a stable (S1)/(S2) ID, and keep the identifying "
+            "phrase, action and delivery outside the <d> block and in English."
         )
     else:
         lines.append(

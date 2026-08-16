@@ -44,6 +44,16 @@ except ImportError:
     httpx = None
 
 from .gemini_client import GEMINI_AVAILABLE, get_gemini_client, gemini_generate
+from .claude_code import (
+    CLAUDE_CODE_MODELS,
+    is_available as claude_code_available,
+    is_interrupt,
+    run_claude_code,
+)
+
+# Claude Code runs through the locally installed CLI and its own login, so it
+# needs no API key here.
+CLAUDE_CODE_PROVIDER = "claudecode"
 
 
 # Provider prefix -> (env var names, OpenAI-compatible base url or None)
@@ -217,6 +227,13 @@ def list_local_models(refresh=False):
     return list(found)
 
 
+def list_claude_code_models():
+    """`claudecode:` entries, but only when the CLI is actually installed."""
+    if not claude_code_available():
+        return []
+    return [f"{CLAUDE_CODE_PROVIDER}:{m}" for m in CLAUDE_CODE_MODELS]
+
+
 def list_all_models():
     """Every selectable model string, auto-detect first and local servers last."""
     return (
@@ -226,6 +243,7 @@ def list_all_models():
         + [f"gemini:{m}" for m in gemini_models]
         + [f"grok:{m}" for m in grok_models]
         + [f"groq:{m}" for m in groq_models]
+        + list_claude_code_models()
         + list_local_models()
     )
 
@@ -235,6 +253,11 @@ def auto_detect_model():
     for env_names, model in _AUTO_DETECT_ORDER:
         if _first_env(env_names):
             return model
+
+    # A logged-in Claude Code CLI is a working credential too, and a cheaper one
+    # for anyone on a subscription seat.
+    if claude_code_available():
+        return f"{CLAUDE_CODE_PROVIDER}:sonnet"
 
     local = list_local_models()
     if local:
@@ -486,8 +509,23 @@ def call_llm(
         if not GEMINI_AVAILABLE:
             raise ImportError("google-genai is not installed. Install it with: pip install google-genai")
         text = _call_gemini(model, user_prompt, system_prompt, images, temperature, max_tokens)
+    elif provider == CLAUDE_CODE_PROVIDER:
+        # The CLI owns sampling, so temperature, seed and max_tokens do not apply.
+        result = run_claude_code(
+            user_prompt,
+            system_prompt=system_prompt,
+            images=images,
+            model=model,
+            timeout=int(os.environ.get("APNEXT_CLAUDE_CODE_TIMEOUT", "600")),
+            on_progress=lambda note: print(f"   ↳ {note}"),
+        )
+        print(
+            f"🤖 Claude Code | {model} | {result['duration_ms'] / 1000:.1f}s | "
+            f"${result['cost_usd']:.4f} | session {result['session_id'][:8]}"
+        )
+        text = result["text"]
     else:
-        known = ["claude", "gemini"] + list(_OPENAI_COMPATIBLE) + list(_LOCAL_PROVIDERS)
+        known = ["claude", "gemini", CLAUDE_CODE_PROVIDER] + list(_OPENAI_COMPATIBLE) + list(_LOCAL_PROVIDERS)
         raise ValueError(
             f"Unknown provider '{provider}' in model '{model_name}'. Prefix the model "
             f"with one of: {', '.join(known)} - e.g. 'ollama:qwen3:8b'."

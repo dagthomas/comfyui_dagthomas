@@ -390,11 +390,40 @@ try:
 except Exception:
     pass
 
+# Claude Code CLI
+try:
+    from .nodes.claude_code.node import ClaudeCodeNode
+    NEW_MAPPINGS["ClaudeCodeNode"] = ClaudeCodeNode
+    NEW_DISPLAY_MAPPINGS["ClaudeCodeNode"] = "APNext Claude Code"
+except Exception:
+    pass
+
 # MiniMax-H3 Prompt Nodes
 try:
     from .nodes.h3.base_prompt_writer import H3BasePromptWriter
     NEW_MAPPINGS["H3BasePromptWriter"] = H3BasePromptWriter
     NEW_DISPLAY_MAPPINGS["H3BasePromptWriter"] = "APNext H3 Prompt Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_base_writer import H3ClaudeCodeBaseWriter
+    NEW_MAPPINGS["H3ClaudeCodeBaseWriter"] = H3ClaudeCodeBaseWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeBaseWriter"] = "APNext H3 Claude Code Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_ref_writer import H3ClaudeCodeRefWriter
+    NEW_MAPPINGS["H3ClaudeCodeRefWriter"] = H3ClaudeCodeRefWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeRefWriter"] = "APNext H3 Claude Code Reference Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_refiner import H3ClaudeCodeRefiner
+    NEW_MAPPINGS["H3ClaudeCodeRefiner"] = H3ClaudeCodeRefiner
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeRefiner"] = "APNext H3 Claude Code Refiner"
 except Exception:
     pass
 

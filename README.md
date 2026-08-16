@@ -530,11 +530,54 @@ stage 2: 1728x960 (1.58 MP)
 
 ---
 
+### 🤖 Claude Code Node
+
+Runs prompts through the [Claude Code](https://claude.com/claude-code) CLI installed on the machine, using **its** login. Nothing to configure in ComfyUI: if `claude` is on PATH and you have run it once to log in, it works. Install it, or point `CLAUDE_CODE_PATH` at the binary. No API key, no key field, no per-node authorisation step.
+
+Why bother when there is already a `claude:` provider? Because this one uses your **subscription seat instead of API billing**, and because it is agentic — it can search the web and read files while it writes.
+
+**Subscription, not API.** The node hides `ANTHROPIC_API_KEY` from the CLI (`use_subscription`, on by default) so the call authenticates with your Claude Code login. Usage then counts against your plan's rolling window — the CLI reports it as `rateLimitType: five_hour` — rather than being metered as API spend. The `cost=$…` figure in the `info` output is the CLI's estimate of *equivalent* API cost, not a charge. Heavy batches can still exhaust the window, and the node prints a clear warning when the limit is reached.
+
+Under the hood it speaks Claude Code's bidirectional streaming protocol (`--input-format stream-json --output-format stream-json`), so images go inline as base64 blocks, progress appears in the ComfyUI console while the model works, and the process is killed the moment you cancel the queue.
+
+#### APNext Claude Code
+**Display Name:** `APNext Claude Code`
+
+| Input | Description |
+|-------|-------------|
+| `prompt` | What to ask |
+| `model` | `sonnet`, `opus`, `haiku`, `fable`, or `default` (whatever the CLI is set to) |
+| `enable_research` | Lets it use WebSearch, WebFetch, Glob, Grep and Read while answering. Off = answers from the prompt alone. **Reaches the internet when on** |
+| `use_subscription` | Hides `ANTHROPIC_API_KEY` from the CLI so your login is used. Off bills the API key instead |
+| `timeout_seconds` | Give research runs room — 600s default |
+| `seed` | Claude Code has no seed; this only controls ComfyUI caching. `-1` re-runs every queue |
+| `image` *(optional)* | Reference frame(s), written to a scratch folder and read by the CLI |
+| `system_prompt` *(optional)* | Replaces Claude Code's own system prompt |
+| `resume_session_id` *(optional)* | Feed a previous node's `session_id` to continue that conversation |
+| `working_dir` *(optional)* | Run inside a real folder so it can read those files. Empty = throwaway scratch folder |
+
+**Returns:** `(text, session_id, info)` — `info` carries model, duration, turns and cost.
+
+**Refinement chains.** Wire `session_id` into a second node's `resume_session_id` and it keeps the whole conversation, images included: node 1 writes the prompt, node 2 says *"make shot 2 wilder and cut the dialogue"* without re-sending any of it.
+
+**Notes and limits**
+
+- **No `temperature`, `seed` or `max_tokens`.** The CLI owns sampling. Vary the prompt to vary the output.
+- **Slower than an API call** — 5–30s typical, longer with research on, because it is a full agent loop.
+- **More tokens per call.** Claude Code carries its own tool preamble (~35k cached tokens), so a call costs more than hitting the API directly with the same prompt. The subscription seat is the trade.
+- **Your `~/.claude/CLAUDE.md`, skills and hooks are deliberately ignored** (`--setting-sources ""`). A personal "always apply Go best practices" rule has no business rewriting a video prompt.
+- **No tools at all by default.** Images need none — they are sent inline. Only `enable_research` grants any, and only the read-only set. `Bash`, `Write` and `Edit` are never granted.
+- **Cancelling the queue kills the CLI** instead of leaving it running against your quota.
+
+---
+
 ### 🎥 MiniMax-H3 Prompt Nodes
 
 Both nodes take a **short idea, an image, or both** and expand it into a complete, spec-compliant MiniMax-H3 video prompt. The official MiniMax writing guides ship verbatim in `data/h3/` and are used as the system prompt, so the model follows the real spec rather than a paraphrase — edit those files to tune behaviour globally.
 
-Any provider works — cloud or local. `auto-detect` picks the first of Claude → GPT → Gemini → Grok → Groq that has an API key set, and falls back to a running local server when none do. When an image is connected it is sent as vision input, so the model describes the frame itself instead of you writing the description.
+Any provider works — cloud, local, or the Claude Code CLI. `auto-detect` picks the first of Claude → GPT → Gemini → Grok → Groq that has an API key set, then the Claude Code CLI, then a running local server. When an image is connected it is sent as vision input, so the model describes the frame itself instead of you writing the description.
+
+**Claude Code.** Pick `claudecode:sonnet` (or `opus` / `haiku`) in the `model` dropdown and the prompt is written by your locally installed Claude Code CLI, using its own login — no API key in ComfyUI, and the work counts against your Claude Code subscription seat rather than API billing. Images are handed over as real files for the CLI to read, so vision works exactly as it does with the other providers. The entries only appear when the CLI is installed. See [Claude Code Node](#-claude-code-node) for the details and the standalone node.
 
 **Local models.** Any OpenAI-compatible server works: Ollama, LM Studio, vLLM, llama.cpp server, LocalAI, TabbyAPI, text-generation-webui. Whatever is running when the ComfyUI page loads is listed at the bottom of the `model` dropdown as `ollama:…`, `lmstudio:…` or `local:…` — start a server or pull a new model, refresh the page, and it appears (no ComfyUI restart). Use a vision-capable model, e.g. `ollama:qwen3-vl:8b`, if you want to connect images.
 
@@ -561,7 +604,8 @@ Writes the base format — `integrated_multimodal_description`, `overall_soundsc
 | `wildness` | **0 = literal, 100 = fully unhinged.** See below |
 | `camera_motion` / `camera_amplitude` / `camera_speed` | The guide's full camera vocabulary. Medium amplitude and normal speed are omitted from the output, as the spec requires |
 | `include_dialogue` | Off ⇒ no `(Sx)` IDs and no `<d>` blocks at all |
-| `dialogue_language` | Language tag written inside `<d>[...]</d>` |
+| `dialogue_language` | What the characters actually speak — 36 languages, or `Auto` to let the model pick one that fits the setting |
+| `custom_dialogue_language` *(optional)* | Anything not in the list — `Norwegian (Bergen dialect)`, `Latin`. Overrides the dropdown |
 | `include_on_screen_text` | Whether readable signs/banners/subtitles appear |
 | `include_soundscape` / `include_non_diegetic_music` | Off writes `N/A` into that field |
 | `model`, `temperature`, `seed` | Provider selection and sampling — cloud models plus any local server that answered |
@@ -588,6 +632,50 @@ Writes the six-section full-reference format per [VIDEO_PROMPT_WRITING_GUIDE_ref
 | `reference_notes` *(optional)* | Per-reference notes, one per line — also how you describe video/audio references you can't attach |
 
 **Returns:** `(h3_prompt, subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music, model_used)`
+
+---
+
+#### H3 × Claude Code
+
+Three nodes that write H3 through the local Claude Code CLI instead of an API key. They inherit every rule from the writers above — same guides, same camera vocabulary, same wildness bands — and swap `model`/`temperature` for the CLI's own controls. Use these instead of picking `claudecode:` in the dropdown when you want research or refinement; the dropdown is fine for a plain one-shot.
+
+| Node | Display name | Writes |
+|------|--------------|--------|
+| Base | `APNext H3 Claude Code Writer` | The base format (T2VA / I2VA / FL2VA / L2VA) |
+| Reference | `APNext H3 Claude Code Reference Writer` | The six-section full-reference rewrite |
+| Refiner | `APNext H3 Claude Code Refiner` | A revision of an existing prompt |
+
+Shared inputs on all three: `model` (sonnet/opus/haiku/fable/default), `research`, `use_subscription`, `timeout_seconds`, `seed`, plus optional `working_dir`. The writers also take `resume_session_id`. Both writers return `session_id` and `info` in place of `model_used`.
+
+**`research`** sends Claude Code to the web before it writes — how the real location looks, period-correct wardrobe, how the light behaves there, how the physical event actually unfolds — and folds what it finds in as concrete visual detail. It is instructed never to cite anything or add commentary, so the output stays a clean H3 prompt.
+
+**The refiner** is the reason sessions matter. Wire a writer's `session_id` into it and describe the change in plain language — *"use two shots instead of one, and set it at night"*. Resuming means the guide, the reference images and the model's own reasoning are still in context, so it edits surgically rather than rewriting from scratch, and you send only the instruction. Leave `session_id` empty and it still works, re-sending the prompt with the matching guide; it auto-detects which format it is looking at. Its 10 outputs cover both formats, and fields the format does not use come back empty.
+
+```
+[Load Image] ──► [H3 Claude Code Writer] ──h3_prompt──► [Preview as Text]
+                          └──session_id──► [H3 Claude Code Refiner] ──► [Preview as Text]
+                                             instruction: "make shot 2 wilder"
+```
+
+---
+
+#### Dialogue, `<d>` tags and language
+
+`<d>[English] …</d>` in the output is not stray markup — it is how H3 marks **spoken audio**, and the guide requires it. The speaker's identifying phrase, `(S1)` ID, action and delivery stay *outside* the tag; only the language tag and the words actually said go inside:
+
+```
+the young, gravel-voiced warrior (S1) grits his teeth and shouts:
+<d>[English] Stand still, you overgrown worm!</d>
+```
+
+Strip the tags before generating and H3 will treat those words as narration to depict rather than speech to voice.
+
+- **Don't want speech at all?** `include_dialogue` → off. No `<d>` blocks, no `(Sx)` IDs.
+- **Want another language?** Pick it in `dialogue_language`. The characters then genuinely speak it — the node instructs the model to write the lines in that language rather than write English and label it otherwise, which matters for smaller local models that would happily do the latter.
+- **`Auto`** picks a language that fits the scene: *"two market traders haggle over spices in old Cairo"* comes back in Egyptian colloquial Arabic.
+- **`custom_dialogue_language`** takes anything the dropdown lacks, dialects included — `Norwegian (Bergen dialect)` yields `<d>[Norwegian (Bergen dialect)] Det kjem til å regne heile dagen, du.</d>`.
+
+Narration, action and camera language always stay English; only the spoken words change.
 
 ---
 
@@ -960,6 +1048,7 @@ Two constraints worth knowing about:
 | OpenAI GPT | ✅ | ✅ | ❌ | ❌ |
 | Google Gemini | ✅ | ✅ | ✅ | ❌ |
 | Anthropic Claude | ✅ | ✅ | ❌ | ❌ |
+| Claude Code CLI | ✅ | ✅ | ❌ | ⚙️ local CLI, own login |
 | xAI Grok | ✅ | ✅ | ❌ | ❌ |
 | Groq | ✅ | ✅ | ❌ | ❌ |
 | QwenVL | ✅ | ✅ | ✅ | ✅ |
