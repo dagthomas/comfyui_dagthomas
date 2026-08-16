@@ -534,7 +534,17 @@ stage 2: 1728x960 (1.58 MP)
 
 Both nodes take a **short idea, an image, or both** and expand it into a complete, spec-compliant MiniMax-H3 video prompt. The official MiniMax writing guides ship verbatim in `data/h3/` and are used as the system prompt, so the model follows the real spec rather than a paraphrase — edit those files to tune behaviour globally.
 
-Any provider works: `auto-detect` picks the first of Claude → GPT → Gemini → Grok → Groq that has an API key set. When an image is connected it is sent as vision input, so the model describes the frame itself instead of you writing the description.
+Any provider works — cloud or local. `auto-detect` picks the first of Claude → GPT → Gemini → Grok → Groq that has an API key set, and falls back to a running local server when none do. When an image is connected it is sent as vision input, so the model describes the frame itself instead of you writing the description.
+
+**Local models.** Any OpenAI-compatible server works: Ollama, LM Studio, vLLM, llama.cpp server, LocalAI, TabbyAPI, text-generation-webui. Whatever is running when the ComfyUI page loads is listed at the bottom of the `model` dropdown as `ollama:…`, `lmstudio:…` or `local:…` — start a server or pull a new model, refresh the page, and it appears (no ComfyUI restart). Use a vision-capable model, e.g. `ollama:qwen3-vl:8b`, if you want to connect images.
+
+| Prefix | Default URL | Env override |
+|--------|-------------|--------------|
+| `ollama:` | `http://localhost:11434/v1` | `OLLAMA_BASE_URL`, `OLLAMA_HOST` |
+| `lmstudio:` | `http://localhost:1234/v1` | `LMSTUDIO_BASE_URL` |
+| `local:` | `http://localhost:8000/v1` | `LOCAL_LLM_BASE_URL` |
+
+The optional `local_base_url` input points a single node somewhere else (a LAN box, a different port) — `192.168.1.10:11434` is enough, the scheme and `/v1` are filled in. The optional `model_override` input takes an exact `provider:model` string and wins over the dropdown, which is how you reach a model the dropdown has not discovered, e.g. `ollama:qwen3:8b`. Set `APNEXT_LOCAL_LLM_DISCOVERY=0` to skip the local probe entirely.
 
 #### APNext H3 Prompt Writer
 **Display Name:** `APNext H3 Prompt Writer`
@@ -554,9 +564,11 @@ Writes the base format — `integrated_multimodal_description`, `overall_soundsc
 | `dialogue_language` | Language tag written inside `<d>[...]</d>` |
 | `include_on_screen_text` | Whether readable signs/banners/subtitles appear |
 | `include_soundscape` / `include_non_diegetic_music` | Off writes `N/A` into that field |
-| `model`, `temperature`, `seed` | Provider selection and sampling |
+| `model`, `temperature`, `seed` | Provider selection and sampling — cloud models plus any local server that answered |
 | `image` *(optional)* | Reference frame(s), sent as vision input |
 | `extra_instructions` *(optional)* | Free-form extra direction |
+| `model_override` *(optional)* | Exact `provider:model` string, beats the dropdown — e.g. `ollama:qwen3:8b` |
+| `local_base_url` *(optional)* | Where the local server lives, e.g. `192.168.1.10:11434`. Empty = the default for the prefix |
 
 **Returns:** `(h3_prompt, integrated_multimodal_description, overall_soundscape, non_diegetic_music, model_used)` — the full prompt plus each field split out for separate wiring.
 
@@ -952,8 +964,11 @@ Two constraints worth knowing about:
 | Groq | ✅ | ✅ | ❌ | ❌ |
 | QwenVL | ✅ | ✅ | ✅ | ✅ |
 | Ollama | ✅ | ✅ | ❌ | ✅ |
+| LM Studio / vLLM / llama.cpp | ✅ | ✅ | ❌ | ✅ |
 | MiniCPM | ✅ | ✅ | ✅ | ✅ |
 | Phi-3.5 | ✅ | ✅ | ❌ | ✅ |
+
+Ollama and the other OpenAI-compatible servers are selectable directly in the H3 prompt writers via the `ollama:` / `lmstudio:` / `local:` prefixes — see [MiniMax-H3 Prompt Nodes](#-minimax-h3-prompt-nodes). Vision depends on the loaded model being multimodal.
 
 ---
 

@@ -100,7 +100,12 @@ class H3BasePromptWriter:
                 }),
                 "model": (list_all_models(), {
                     "default": AUTO_DETECT,
-                    "tooltip": "Which LLM writes the prompt. auto-detect picks the first provider with an API key set.",
+                    "tooltip": (
+                        "Which LLM writes the prompt. auto-detect picks the first provider with an "
+                        "API key set, falling back to a running local server. Models found on local "
+                        "servers (ollama:, lmstudio:, local:) are listed at the bottom - start the "
+                        "server and refresh the ComfyUI page to pick up new ones."
+                    ),
                 }),
                 "temperature": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.05}),
                 "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
@@ -113,6 +118,22 @@ class H3BasePromptWriter:
                     "multiline": True,
                     "default": "",
                     "tooltip": "Free-form extra direction appended to the request.",
+                }),
+                "model_override": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Exact provider:model string, used instead of the dropdown when filled in. "
+                        "Handy for a local model the dropdown has not discovered, e.g. "
+                        "'ollama:qwen3:8b', 'lmstudio:qwen/qwen3-8b' or 'local:my-model'."
+                    ),
+                }),
+                "local_base_url": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Where to reach the local server, e.g. 'http://192.168.1.10:11434'. Empty "
+                        "uses the default for the chosen prefix: ollama 11434, lmstudio 1234, "
+                        "local 8000. Ignored by the cloud providers."
+                    ),
                 }),
             },
         }
@@ -287,6 +308,8 @@ class H3BasePromptWriter:
         seed,
         image=None,
         extra_instructions="",
+        model_override="",
+        local_base_url="",
     ):
         try:
             if not idea.strip() and image is None:
@@ -325,13 +348,14 @@ class H3BasePromptWriter:
             )
 
             text, resolved_model = call_llm(
-                model,
+                model_override.strip() or model,
                 user_prompt,
                 system_prompt=self._build_system_prompt(),
                 images=images,
                 temperature=temperature,
                 seed=current_seed,
                 max_tokens=4000,
+                base_url=local_base_url.strip() or None,
             )
 
             prompt = strip_code_fence(text)

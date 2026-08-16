@@ -104,7 +104,15 @@ class H3RefPromptWriter:
                 "include_on_screen_text": ("BOOLEAN", {"default": False}),
                 "include_soundscape": ("BOOLEAN", {"default": True}),
                 "include_non_diegetic_music": ("BOOLEAN", {"default": True}),
-                "model": (list_all_models(), {"default": AUTO_DETECT}),
+                "model": (list_all_models(), {
+                    "default": AUTO_DETECT,
+                    "tooltip": (
+                        "Which LLM writes the rewrite. auto-detect picks the first provider with an "
+                        "API key set, falling back to a running local server. Models found on local "
+                        "servers (ollama:, lmstudio:, local:) are listed at the bottom - start the "
+                        "server and refresh the ComfyUI page to pick up new ones."
+                    ),
+                }),
                 "temperature": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.05}),
                 "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
             },
@@ -119,6 +127,22 @@ class H3RefPromptWriter:
                     "tooltip": "Optional per-reference notes, one per line, e.g. 'Image 1: the woman, keep her cardigan'. Also use this to describe video or audio references you cannot attach.",
                 }),
                 "extra_instructions": ("STRING", {"multiline": True, "default": ""}),
+                "model_override": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Exact provider:model string, used instead of the dropdown when filled in. "
+                        "Handy for a local model the dropdown has not discovered, e.g. "
+                        "'ollama:qwen3:8b', 'lmstudio:qwen/qwen3-8b' or 'local:my-model'."
+                    ),
+                }),
+                "local_base_url": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Where to reach the local server, e.g. 'http://192.168.1.10:11434'. Empty "
+                        "uses the default for the chosen prefix: ollama 11434, lmstudio 1234, "
+                        "local 8000. Ignored by the cloud providers."
+                    ),
+                }),
             },
         }
 
@@ -328,6 +352,8 @@ class H3RefPromptWriter:
         image_4=None,
         reference_notes="",
         extra_instructions="",
+        model_override="",
+        local_base_url="",
     ):
         try:
             images = []
@@ -371,13 +397,14 @@ class H3RefPromptWriter:
             )
 
             text, resolved_model = call_llm(
-                model,
+                model_override.strip() or model,
                 user_prompt,
                 system_prompt=self._build_system_prompt(),
                 images=images or None,
                 temperature=temperature,
                 seed=current_seed,
                 max_tokens=6000,
+                base_url=local_base_url.strip() or None,
             )
 
             prompt = strip_code_fence(text)
