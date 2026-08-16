@@ -10,9 +10,10 @@ import gc
 from pathlib import Path
 from PIL import Image
 # huggingface_hub not needed - transformers handles downloads automatically
-from transformers import AutoModelForVision2Seq, AutoProcessor, AutoTokenizer
+from transformers import AutoProcessor, AutoTokenizer
 
 from ...utils.constants import CUSTOM_CATEGORY, qwenvl_models, prompt_dir
+from ...utils.transformers_compat import load_vision_model
 import folder_paths
 import os
 
@@ -160,7 +161,7 @@ class QwenVLZImageVision:
         if cache_dir:
             load_kwargs["cache_dir"] = cache_dir
 
-        model = AutoModelForVision2Seq.from_pretrained(model_path, **load_kwargs).eval()
+        model = load_vision_model(model_path, **load_kwargs).eval()
 
         processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True, cache_dir=cache_dir)
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True, cache_dir=cache_dir)

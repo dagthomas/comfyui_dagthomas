@@ -49,10 +49,10 @@ _OPENAI_COMPATIBLE = {
 
 # Preference order used by auto-detect, with the fallback model for each.
 _AUTO_DETECT_ORDER = (
-    (("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"), "claude:claude-sonnet-4.5"),
-    (("OPENAI_API_KEY",), "gpt:gpt-4o"),
-    (("GEMINI_API_KEY",), "gemini:gemini-2.5-flash"),
-    (("XAI_API_KEY", "GROK_API_KEY"), "grok:grok-beta"),
+    (("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"), "claude:claude-sonnet-5"),
+    (("OPENAI_API_KEY",), "gpt:gpt-5.6"),
+    (("GEMINI_API_KEY",), "gemini:gemini-3.7-flash"),
+    (("XAI_API_KEY", "GROK_API_KEY"), "grok:grok-4.6"),
     (("GROQ_API_KEY",), "groq:llama-3.3-70b-versatile"),
 )
 

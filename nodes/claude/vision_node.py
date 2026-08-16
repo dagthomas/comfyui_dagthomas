@@ -29,7 +29,7 @@ class ClaudeVisionNode:
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
                 "poster": ("BOOLEAN", {"default": False}),
-                "claude_model": (claude_models, {"default": "claude-sonnet-4.5"}),
+                "claude_model": (claude_models, {"default": "claude-sonnet-5"}),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -62,7 +62,7 @@ class ClaudeVisionNode:
         compress,
         compression_level,
         poster,
-        claude_model="claude-sonnet-4.5",
+        claude_model="claude-sonnet-5",
         custom_base_prompt="",
         custom_title="",
         override="",

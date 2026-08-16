@@ -56,16 +56,16 @@ class UniversalVisionCloner:
         # Combine available vision models from all providers
         vision_models = ["auto-detect"]
         
-        # Add GPT vision models
-        vision_models += [f"gpt:{model}" for model in gpt_models if "vision" in model.lower() or "4o" in model.lower() or "4-turbo" in model.lower()]
-        
+        # Every current GPT, Gemini, Grok and Claude model accepts image input,
+        # so no per-provider vision filtering is needed.
+        vision_models += [f"gpt:{model}" for model in gpt_models]
+
         # Add Gemini models (all have vision)
         vision_models += [f"gemini:{model}" for model in gemini_models]
-        
-        # Add Grok vision models
-        grok_vision_models = ["grok-2-vision-1212", "grok-4-0709", "grok-4-fast-reasoning", "grok-4-fast-non-reasoning"]
-        vision_models += [f"grok:{model}" for model in grok_models if model in grok_vision_models]
-        
+
+        # Add Grok models
+        vision_models += [f"grok:{model}" for model in grok_models]
+
         # Add Claude models (all have vision)
         vision_models += [f"claude:{model}" for model in claude_models]
         
@@ -115,13 +115,13 @@ class UniversalVisionCloner:
         """Auto-detect the best available vision model"""
         # Check available API keys in order of preference (best vision models first)
         if ANTHROPIC_AVAILABLE and (os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY")):
-            return "claude:claude-sonnet-4.5"
+            return "claude:claude-sonnet-5"
         elif OPENAI_AVAILABLE and (os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY")):
-            return "grok:grok-2-vision-1212"
+            return "grok:grok-4.6"
         elif OPENAI_AVAILABLE and os.environ.get("OPENAI_API_KEY"):
-            return "gpt:gpt-4o"
+            return "gpt:gpt-5.6"
         elif GEMINI_AVAILABLE and os.environ.get("GEMINI_API_KEY"):
-            return "gemini:gemini-2.5-flash"
+            return "gemini:gemini-3.7-flash"
         else:
             missing_deps = []
             if not OPENAI_AVAILABLE:

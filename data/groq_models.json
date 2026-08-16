@@ -4,19 +4,16 @@
         "llama-3.1-8b-instant",
         "groq/compound",
         "groq/compound-mini",
-        "meta-llama/llama-4-maverick-17b-128e-instruct",
-        "meta-llama/llama-4-scout-17b-16e-instruct",
-        "moonshotai/kimi-k2-instruct",
-        "moonshotai/kimi-k2-instruct-0905",
         "openai/gpt-oss-120b",
         "openai/gpt-oss-20b",
-        "qwen/qwen3-32b",
-        "allam-2-7b"
+        "qwen/qwen3.6-27b",
+        "minimaxai/minimax-m2.7"
     ],
     "vision_models": [
+        "qwen/qwen3.6-27b",
         "meta-llama/llama-4-scout-17b-16e-instruct",
         "meta-llama/llama-4-maverick-17b-128e-instruct"
     ],
     "source": "manual_configuration",
-    "note": "Edit this file to add/remove models. Text models are for text generation, vision models support image analysis."
+    "note": "Fallback list used when GROQ_API_KEY is unset (otherwise the live /models API wins). Edit this file to add/remove models. Text models are for text generation, vision models support image analysis."
 }

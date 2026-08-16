@@ -73,15 +73,15 @@ class APNextGenerator:
         """Auto-detect the best available model"""
         # Check available API keys in order of preference
         if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("CLAUDE_API_KEY"):
-            return "claude:claude-sonnet-4.5"
+            return "claude:claude-sonnet-5"
         elif os.environ.get("XAI_API_KEY") or os.environ.get("GROK_API_KEY"):
-            return "grok:grok-beta"
+            return "grok:grok-4.6"
         elif os.environ.get("GROQ_API_KEY"):
             return "groq:llama-3.3-70b-versatile"
         elif os.environ.get("GEMINI_API_KEY"):
-            return "gemini:gemini-2.5-flash"
+            return "gemini:gemini-3.7-flash"
         elif os.environ.get("OPENAI_API_KEY"):
-            return "gpt:gpt-4o-mini"
+            return "gpt:gpt-5-mini"
         else:
             raise ValueError("No API keys found. Please set one of: ANTHROPIC_API_KEY, XAI_API_KEY, GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY")
 

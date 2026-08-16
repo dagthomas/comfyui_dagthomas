@@ -39,7 +39,8 @@ class GrokVisionNode:
                 "compress": ("BOOLEAN", {"default": False}),
                 "compression_level": (["soft", "medium", "hard"],),
                 "poster": ("BOOLEAN", {"default": False}),
-                "grok_model": (["grok-2-vision-1212", "grok-4-0709", "grok-4-fast-reasoning", "grok-4-fast-non-reasoning"], {"default": "grok-2-vision-1212"}),
+                # Every current Grok text model accepts image input, so use the shared list.
+                "grok_model": (grok_models, {"default": "grok-4.6"}),
             },
             "optional": {
                 "custom_base_prompt": ("STRING", {"multiline": True, "default": ""}),
@@ -72,7 +73,7 @@ class GrokVisionNode:
         compress,
         compression_level,
         poster,
-        grok_model="grok-2-vision-1212",
+        grok_model="grok-4.6",
         custom_base_prompt="",
         custom_title="",
         override="",
