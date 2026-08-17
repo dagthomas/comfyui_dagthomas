@@ -458,3 +458,112 @@ def extract_section(text, field, all_fields):
     match = pattern.search(text)
 
     return match.group(1).strip() if match else ""
+
+
+# ---------------------------------------------------------------------------
+# Reference images
+# ---------------------------------------------------------------------------
+
+# ComfyUI's "MiniMax H3 Reference to Video" node accepts up to nine reference
+# images and numbers them in connection order. The writers mirror that: attached
+# image k is <Picture k> in the prompt, and is handed back out on the matching
+# image_k output so the same tensors can feed the video node in the same order.
+MAX_REFERENCE_IMAGES = 9
+
+REFERENCE_IMAGE_NAMES = tuple(f"image_{i}" for i in range(1, MAX_REFERENCE_IMAGES + 1))
+
+
+def reference_image_inputs():
+    """Optional IMAGE sockets image_1..image_9. Keep them last so the UI can autogrow."""
+    return {
+        name: ("IMAGE", {
+            "tooltip": (
+                f"Reference image {i}: <Picture {i}> in the prompt. Connect the same image "
+                f"to image_{i} on the MiniMax H3 Reference to Video node, or use this node's "
+                f"image_{i} output."
+            ),
+        })
+        for i, name in enumerate(REFERENCE_IMAGE_NAMES, 1)
+    }
+
+
+def reference_image_outputs():
+    """Pass-through IMAGE outputs, same names and order as the inputs."""
+    return ("IMAGE",) * MAX_REFERENCE_IMAGES, REFERENCE_IMAGE_NAMES
+
+
+# ----------------------------------------------------------------------
+# Typed references for the base writers
+# ----------------------------------------------------------------------
+#
+# The base format has no <Picture N> for anything but keyframes, so a photo of
+# the hero, the location or a prop can only reach the video model as words.
+# These sockets say what each picture is FOR, so the writer knows what to
+# describe and what to ignore.
+
+TYPED_REFERENCE_KINDS = (
+    ("subject", 3, (
+        "Subject {i}: a person, creature or character. Only WHO they are carries over - face, "
+        "hair, build, wardrobe, distinctive marks. The photo's backdrop, light and framing are "
+        "ignored; the scene comes from your idea. The video model never sees this image."
+    )),
+    ("scenery", 3, (
+        "Scenery {i}: a location or environment. Its architecture, terrain, light, weather, "
+        "palette and mood become the setting, described in words. People in it are ignored."
+    )),
+    ("object", 3, (
+        "Object {i}: a prop, product, vehicle or costume piece to depict faithfully - shape, "
+        "colour, material, markings. Where it is in the photo is ignored."
+    )),
+)
+
+TYPED_REFERENCE_NAMES = tuple(
+    f"{kind}_{i}" for kind, count, _ in TYPED_REFERENCE_KINDS for i in range(1, count + 1)
+)
+
+
+def typed_reference_inputs():
+    """Optional IMAGE sockets subject_1..3, scenery_1..3, object_1..3."""
+    inputs = {}
+    for kind, count, tooltip in TYPED_REFERENCE_KINDS:
+        for i in range(1, count + 1):
+            inputs[f"{kind}_{i}"] = ("IMAGE", {"tooltip": tooltip.format(i=i)})
+    return inputs
+
+
+def collect_typed_references(slots, to_pil):
+    """
+    Connected typed references as (label, PIL image), in socket order, e.g.
+    ("Subject 1", img). Only the first frame of each input counts. Numbering is
+    per kind and follows connection order, so a gap (subject_1 + subject_3)
+    still yields Subject 1 and Subject 2.
+    """
+    picked = []
+    for kind, count, _ in TYPED_REFERENCE_KINDS:
+        n = 0
+        for i in range(1, count + 1):
+            tensor = slots.get(f"{kind}_{i}")
+            if tensor is None:
+                continue
+            n += 1
+            picked.append((f"{kind.capitalize()} {n}", to_pil(tensor[0])))
+    return picked
+
+
+def collect_reference_images(tensors, to_pil):
+    """
+    Attached images in slot order as (slot_number, PIL image).
+
+    Only the first frame of each input acts as that reference. Empty slots
+    between connected ones are reported, since the video node numbers by
+    connection order and would count differently.
+    """
+    picked = [(i, to_pil(t[0])) for i, t in enumerate(tensors, 1) if t is not None]
+    if picked and picked[-1][0] != len(picked):
+        used = ", ".join(f"image_{i}" for i, _ in picked)
+        print(
+            f"⚠️  H3 reference images have a gap ({used}). The prompt numbers them "
+            f"<Picture 1>..<Picture {len(picked)}> in that order; wire the video node "
+            "the same way, or fill the slots without gaps."
+        )
+    return picked

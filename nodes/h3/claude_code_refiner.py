@@ -15,6 +15,8 @@ from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
 from .base_prompt_writer import H3BasePromptWriter
 from .claude_code_support import (
+    BASE_SKILLS,
+    REF_SKILLS,
     claude_code_inputs,
     directions_with_research,
     run_h3_claude_code,
@@ -121,6 +123,7 @@ class H3ClaudeCodeRefiner:
         instruction,
         model,
         research,
+        director,
         use_subscription,
         timeout_seconds,
         seed,
@@ -177,6 +180,8 @@ class H3ClaudeCodeRefiner:
                 timeout_seconds,
                 session_id,
                 working_dir,
+                director,
+                skills=REF_SKILLS if self._is_reference_format(h3_prompt) else BASE_SKILLS,
             )
 
             prompt = strip_code_fence(text)

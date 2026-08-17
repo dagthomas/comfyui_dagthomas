@@ -41,6 +41,24 @@ _FIELDS = (
 )
 
 
+def warn_if_images_unused(task_type, image_count, reference_count=0):
+    """
+    Say out loud when the images will not become <Picture N>: T2VA never labels a
+    picture, and typed references never do regardless of task type.
+    """
+    if image_count and task_type.startswith("T2VA"):
+        print(
+            f"⚠️  H3 task_type is T2VA, so the {image_count} image(s) on `image` are context "
+            "only and no <Picture 1> will appear. Pick I2VA / L2VA / FL2VA to use one as a "
+            "keyframe, or move it to a subject/scenery/object socket to have it described."
+        )
+    if reference_count and not image_count and not task_type.startswith("T2VA"):
+        print(
+            f"ℹ️  Only typed references are attached ({reference_count}); nothing is on `image` "
+            f"to align, so the prompt is written as T2VA even though task_type is {task_type}."
+        )
+
+
 class H3BasePromptWriter:
     """
     APNext H3 Prompt Writer
@@ -119,7 +137,12 @@ class H3BasePromptWriter:
             },
             "optional": {
                 "image": ("IMAGE", {
-                    "tooltip": "Reference frame(s). Sent to the model as vision input so it can describe them itself.",
+                    "tooltip": (
+                        "Reference frame(s), sent to the model as vision input. I2VA: the first "
+                        "frame. L2VA: the last frame. FL2VA: batch both (frame 0 = first, last = "
+                        "last). The first_frame / last_frame outputs hand them back for the H3 "
+                        "video node."
+                    ),
                 }),
                 "extra_instructions": ("STRING", {
                     "multiline": True,
@@ -152,13 +175,15 @@ class H3BasePromptWriter:
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING")
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "IMAGE", "IMAGE")
     RETURN_NAMES = (
         "h3_prompt",
         "integrated_multimodal_description",
         "overall_soundscape",
         "non_diegetic_music",
         "model_used",
+        "first_frame",
+        "last_frame",
     )
     FUNCTION = "write"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
@@ -210,6 +235,96 @@ class H3BasePromptWriter:
             "image (preceding state -> transition path -> gradual convergence -> landing)."
         )
 
+    def _reference_rule(self, image_count, references):
+        """
+        The typed references (subject / scenery / object) and how to use each.
+        `references` is the ordered list of labels, e.g. ["Subject 1", "Scenery 1"].
+        They are attached AFTER the `image` batch, so their attachment numbers
+        start at image_count + 1. Returns "" when there are none.
+        """
+        if not references:
+            return ""
+
+        how = {
+            "Subject": (
+                "identity only. Describe the person/creature/character precisely and "
+                "repeatably in [Shot 1] - species/gender/age impression, face, hair, skin, "
+                "build, wardrobe with colours and materials, accessories, distinctive marks - "
+                "and keep it identical in every shot. IGNORE the photo's backdrop, location, "
+                "lighting, weather, camera angle and framing; the scene comes from the idea "
+                "and the other references."
+            ),
+            "Scenery": (
+                "setting only. Describe the place - architecture or terrain, materials, light "
+                "direction and quality, weather, time of day, palette, mood, spatial layout - "
+                "as the world the video happens in. IGNORE any people in it."
+            ),
+            "Object": (
+                "a prop to depict faithfully - shape, colour, material, markings, scale. "
+                "IGNORE where it sits in the photo; place it where the idea needs it."
+            ),
+        }
+        mapping = ", ".join(
+            f"attached image {offset} = {label}"
+            for offset, label in enumerate(references, image_count + 1)
+        )
+        kinds_present = []
+        for label in references:
+            kind = label.split()[0]
+            if kind not in kinds_present:
+                kinds_present.append(kind)
+        rules = "\n".join(f"   - {kind}: {how[kind]}" for kind in kinds_present)
+
+        return (
+            "Typed references. The video model NEVER sees these pictures - your words are all "
+            "it gets - so put what matters into text, and never write an alignment line or a "
+            f"<Picture N> label for them. {mapping}.\n{rules}"
+        )
+
+    def _image_mapping_rule(self, task_type, image_count):
+        """
+        Which attached image plays which role. The base format knows at most two
+        keyframes (FL2VA); every further image is visual context, never a
+        <Picture N>. Returns "" when nothing is attached.
+        """
+        if image_count <= 0:
+            return ""
+
+        if task_type.startswith("T2VA"):
+            keyframes = (
+                "In T2VA no image is a keyframe: treat every attached image as visual "
+                "context to describe from (characters, wardrobe, location, palette, mood), "
+                "with no alignment line and no <Picture N> labels."
+            )
+        elif task_type.startswith("FL2VA"):
+            keyframes = (
+                "Image 1 is <Picture 1>, the exact opening frame; image 2 is <Picture 2>, the "
+                "exact final frame."
+            )
+        elif task_type.startswith("L2VA"):
+            keyframes = "Image 1 is <Picture 1>, the exact final frame."
+        else:
+            keyframes = "Image 1 is <Picture 1>, the exact opening frame."
+
+        extras = ""
+        keyframe_count = 0 if task_type.startswith("T2VA") else (2 if task_type.startswith("FL2VA") else 1)
+        if image_count > keyframe_count and keyframe_count:
+            span = (
+                f"Image {image_count} is a supporting reference"
+                if image_count == keyframe_count + 1
+                else f"Images {keyframe_count + 1}-{image_count} are supporting references"
+            )
+            extras = (
+                f" {span} only "
+                "(a character sheet, a location, a lookbook, a prop): use them to keep "
+                "identity, wardrobe, colours and setting consistent, but never label them "
+                "<Picture N> and never treat them as frames of the video."
+            )
+
+        return (
+            f"Attached images ({image_count}, numbered in the order given): {keyframes}{extras}"
+        )
+
     def _build_system_prompt(self):
         guide = load_guide("guide_base_en.md")
         return (
@@ -248,17 +363,42 @@ class H3BasePromptWriter:
         include_soundscape,
         include_non_diegetic_music,
         extra_instructions,
-        has_image,
+        image_count,
         rng,
+        references=(),
     ):
-        directives = [self._instruction_rule(task_type, duration_seconds)]
+        # `image_count` is how many keyframe/context images sit on `image`
+        # (older callers pass a bool; True means one). `references` lists the
+        # typed subject/scenery/object labels attached after them.
+        image_count = int(image_count)
+        references = list(references or [])
+        has_image = image_count > 0
+        has_refs = bool(references)
+        # Nothing on `image` means nothing to align: references alone are T2VA.
+        effective_task = task_type if has_image or not has_refs else TASK_TYPES[0]
+
+        directives = [self._instruction_rule(effective_task, duration_seconds)]
+        mapping = self._image_mapping_rule(task_type, image_count)
+        if mapping:
+            directives.append(mapping)
+        reference_rule = self._reference_rule(image_count, references)
+        if reference_rule:
+            directives.append(reference_rule)
         directives.append(shot_directive(shot_plan, duration_seconds))
 
         if visual_style == AUTO:
+            if has_image:
+                style_hint = " and the attached image"
+            elif has_refs:
+                style_hint = (
+                    " (a subject reference does not dictate style - only the subject carries "
+                    "over; a scenery reference may)"
+                )
+            else:
+                style_hint = ""
             directives.append(
-                "Visual style: choose one that fits the idea"
-                + (" and the attached image" if has_image else "")
-                + ", and state it at the start of [Shot 1]."
+                f"Visual style: choose one that fits the idea{style_hint}, and state it at "
+                "the start of [Shot 1]."
             )
         else:
             directives.append(
@@ -286,12 +426,26 @@ class H3BasePromptWriter:
 
         if has_image:
             source = (
-                "The attached image(s) are the reference frames. Read them directly: derive "
-                "style, subjects, clothing, colours, key objects and spatial relationships "
-                "from what you actually see, and keep them consistent."
+                "The attached image(s) are the reference frames, in order. Read them "
+                "directly: derive style, subjects, clothing, colours, key objects and spatial "
+                "relationships from what you actually see, and keep them consistent."
             )
+            if has_refs:
+                source += (
+                    f" The last {len(references)} attached image(s) are typed references "
+                    "(see the constraints), not frames."
+                )
             if idea.strip():
                 source += f"\n\nThe user also wrote:\n{idea.strip()}"
+        elif has_refs:
+            source = (
+                "The attached images are typed references - who is in the video, where it "
+                "happens, what props appear - and nothing more. Look closely and put each one "
+                "into words so the video model can reproduce it from text alone; the story, "
+                "action and everything not covered by a reference come from the user's idea."
+            )
+            if idea.strip():
+                source += f"\n\nThe user's idea:\n{idea.strip()}"
         else:
             source = f"The user's idea:\n{idea.strip()}"
 
@@ -326,6 +480,9 @@ class H3BasePromptWriter:
         model_override="",
         local_base_url="",
     ):
+        # Frame 0 and the final frame of the batch go back out, so the H3 video
+        # node's first_frame / last_frame can be wired straight from this node.
+        frames = (image[0:1], image[-1:]) if image is not None else (None, None)
         try:
             if not idea.strip() and image is None:
                 raise ValueError("Provide an idea, an image, or both.")
@@ -357,9 +514,10 @@ class H3BasePromptWriter:
                 include_soundscape,
                 include_non_diegetic_music,
                 extra_instructions,
-                images is not None,
+                len(images) if images else 0,
                 rng,
             )
+            warn_if_images_unused(task_type, len(images) if images else 0)
 
             print(
                 f"🎬 H3 Prompt Writer | {task_type} | {duration_seconds:.2f}s | "
@@ -385,7 +543,7 @@ class H3BasePromptWriter:
                 extract_section(prompt, "overall_soundscape", _FIELDS),
                 extract_section(prompt, "non_diegetic_music", _FIELDS),
                 resolved_model,
-            )
+            ) + frames
 
         except Exception as exc:
             # A cancelled queue must stop the run, not become an error string.
@@ -396,4 +554,4 @@ class H3BasePromptWriter:
 
             print(traceback.format_exc())
             error_message = f"Error occurred while writing the H3 prompt: {exc}"
-            return (error_message, error_message, "", "", "error")
+            return (error_message, error_message, "", "", "error") + frames

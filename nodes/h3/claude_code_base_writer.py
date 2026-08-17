@@ -10,7 +10,7 @@ import random
 from ...utils.claude_code import is_interrupt
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
-from .base_prompt_writer import TASK_TYPES, H3BasePromptWriter, _FIELDS
+from .base_prompt_writer import TASK_TYPES, H3BasePromptWriter, _FIELDS, warn_if_images_unused
 from .claude_code_support import (
     claude_code_inputs,
     claude_code_optional_inputs,
@@ -25,9 +25,11 @@ from .common import (
     DIALOGUE_LANGUAGES,
     SHOT_PLANS,
     VISUAL_STYLES,
+    collect_typed_references,
     extract_section,
     resolve_dialogue_language,
     strip_code_fence,
+    typed_reference_inputs,
 )
 
 
@@ -92,7 +94,12 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
 
         optional = {
             "image": ("IMAGE", {
-                "tooltip": "Reference frame(s), sent inline to the CLI as vision input.",
+                "tooltip": (
+                    "Keyframe(s) the video model will actually get. I2VA: the first frame. "
+                    "L2VA: the last frame. FL2VA: batch both (frame 0 = first, last = last). "
+                    "In T2VA it is context only. For a picture that should merely be DESCRIBED "
+                    "- a character, a place, a prop - use the subject/scenery/object sockets."
+                ),
             }),
             "extra_instructions": ("STRING", {"multiline": True, "default": ""}),
             "custom_dialogue_language": ("STRING", {
@@ -104,10 +111,13 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
             }),
         }
         optional.update(claude_code_optional_inputs())
+        # Typed references: pictures the writer describes in words. The video
+        # model never sees them, so any size goes and none becomes <Picture N>.
+        optional.update(typed_reference_inputs())
 
         return {"required": required, "optional": optional}
 
-    RETURN_TYPES = ("STRING",) * 6
+    RETURN_TYPES = ("STRING",) * 6 + ("IMAGE", "IMAGE")
     RETURN_NAMES = (
         "h3_prompt",
         "integrated_multimodal_description",
@@ -115,6 +125,8 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
         "non_diegetic_music",
         "session_id",
         "info",
+        "first_frame",
+        "last_frame",
     )
     FUNCTION = "write_with_claude_code"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
@@ -145,6 +157,7 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
         include_non_diegetic_music,
         model,
         research,
+        director,
         use_subscription,
         timeout_seconds,
         seed,
@@ -153,10 +166,16 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
         custom_dialogue_language="",
         resume_session_id="",
         working_dir="",
+        **reference_slots,
     ):
+        # Frame 0 and the final frame of the `image` batch go back out, so the H3
+        # video node's first_frame / last_frame can be wired straight from here.
+        # Typed references never go to the video node, only to the writer.
+        frames = (image[0:1], image[-1:]) if image is not None else (None, None)
+        references = collect_typed_references(reference_slots, tensor2pil)
         try:
-            if not idea.strip() and image is None:
-                raise ValueError("Provide an idea, an image, or both.")
+            if not idea.strip() and image is None and not references:
+                raise ValueError("Provide an idea, an image, a reference, or some of each.")
 
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language
@@ -165,7 +184,8 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
 
-            images = [tensor2pil(frame) for frame in image] if image is not None else None
+            keyframes = [tensor2pil(frame) for frame in image] if image is not None else []
+            images = (keyframes + [pil for _, pil in references]) or None
 
             user_prompt, wild_label = self._build_user_prompt(
                 idea,
@@ -183,14 +203,19 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
                 include_soundscape,
                 include_non_diegetic_music,
                 directions_with_research(extra_instructions, research),
-                images is not None,
+                len(keyframes),
                 rng,
+                references=[label for label, _ in references],
             )
+            warn_if_images_unused(task_type, len(keyframes), len(references))
 
             print(
-                f"🎬 H3 Claude Code Writer | {task_type} | {duration_seconds:.2f}s | "
+                f"🎬 H3 Claude Code Writer | {task_type} | {len(keyframes)} keyframe image(s) | "
+                f"refs: {', '.join(label for label, _ in references) or 'none'} | "
+                f"{duration_seconds:.2f}s | "
                 f"wildness {wildness} ({wild_label}) | research "
-                f"{'on' if research else 'off'} | seed {current_seed}"
+                f"{'on' if research else 'off'} | director "
+                f"{'on' if director else 'off'} | seed {current_seed}"
             )
 
             text, session_id, info = run_h3_claude_code(
@@ -203,6 +228,7 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
                 timeout_seconds,
                 resume_session_id,
                 working_dir,
+                director,
             )
 
             prompt = strip_code_fence(text)
@@ -214,7 +240,7 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
                 extract_section(prompt, "non_diegetic_music", _FIELDS),
                 session_id,
                 info,
-            )
+            ) + frames
 
         except Exception as exc:
             # A cancelled queue must stop the run, not become an error string.
@@ -225,4 +251,4 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
 
             print(traceback.format_exc())
             message = f"Error occurred while writing the H3 prompt: {exc}"
-            return (message, message, "", "", "", "error")
+            return (message, message, "", "", "", "error") + frames

@@ -628,26 +628,52 @@ Writes the six-section full-reference format per [VIDEO_PROMPT_WRITING_GUIDE_ref
 | `task_type` | The `[bracketed]` summary prefix: `keyframe completion`, `reference generation`, `video editing`, `video continuation`, `audio reuse`, `audio reference`. Auto lets the model combine them with ` + ` |
 | `reference_role` | How attached images get labelled: auto, `<Subject N>`, standalone `<Picture N>`, style-only, or storyboard |
 | `word_target` | Target length of `detailed_description` (guide recommends 350–500) |
-| `image_1` … `image_4` *(optional)* | Up to four reference images, in label order |
+| `image_1` … `image_9` *(optional)* | Up to nine reference images — the same limit as ComfyUI's *MiniMax H3 Reference to Video* node. Sockets grow as you connect them: plug in `image_1` and `image_2` appears |
 | `reference_notes` *(optional)* | Per-reference notes, one per line — also how you describe video/audio references you can't attach |
 
-**Returns:** `(h3_prompt, subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music, model_used)`
+**Returns:** `(h3_prompt, subject_definitions, summary, retention_analysis, detailed_description, overall_soundscape, non_diegetic_music, model_used, image_1 … image_9)`
+
+Attached image *k* **is** `<Picture k>` in the prompt, and it comes straight back out on the `image_k` output. Wire those outputs into the H3 video node's `image_1 … image_9` and the numbering in the prompt and the numbering the video model sees can never drift apart. The base writers do the same with `first_frame` / `last_frame`: frame 0 and the last frame of whatever you connected to `image` come back out for the video node's first/last-frame sockets.
 
 ---
 
 #### H3 × Claude Code
 
-Three nodes that write H3 through the local Claude Code CLI instead of an API key. They inherit every rule from the writers above — same guides, same camera vocabulary, same wildness bands — and swap `model`/`temperature` for the CLI's own controls. Use these instead of picking `claudecode:` in the dropdown when you want research or refinement; the dropdown is fine for a plain one-shot.
+Four nodes that write H3 through the local Claude Code CLI instead of an API key. They inherit every rule from the writers above — same guides, same camera vocabulary, same wildness bands — and swap `model`/`temperature` for the CLI's own controls. Use these instead of picking `claudecode:` in the dropdown when you want research or refinement; the dropdown is fine for a plain one-shot.
 
 | Node | Display name | Writes |
 |------|--------------|--------|
 | Base | `APNext H3 Claude Code Writer` | The base format (T2VA / I2VA / FL2VA / L2VA) |
 | Reference | `APNext H3 Claude Code Reference Writer` | The six-section full-reference rewrite |
 | Refiner | `APNext H3 Claude Code Refiner` | A revision of an existing prompt |
+| Continue | `APNext H3 Claude Code Continue Writer` | The prompt for the *next* clip, from the last frames of the previous one |
 
-Shared inputs on all three: `model` (sonnet/opus/haiku/fable/default), `research`, `use_subscription`, `timeout_seconds`, `seed`, plus optional `working_dir`. The writers also take `resume_session_id`. Both writers return `session_id` and `info` in place of `model_used`.
+Shared inputs on all four: `model` (sonnet/opus/haiku/fable/default), `research`, `director`, `use_subscription`, `timeout_seconds`, `seed`, plus optional `working_dir`. The writers also take `resume_session_id`. Both writers return `session_id` and `info` in place of `model_used`.
+
+**`director`** (on by default) loads the **H3 director skills** that ship in `data/h3/skills/`. Each is a Claude Code-style `SKILL.md` — short instructions always in context — plus a `references/` library opened on demand with the Read tool. They are written around how these nodes work (the node's task type, duration, shot plan, camera, dialogue toggles and wildness band are treated as decisions already made; attached image *k* is `<Picture k>`; the exact field labels the node parses), so they complement the numbered directives instead of second-guessing them.
+
+| Skill | Loaded by | Always in context | Read on demand |
+|-------|-----------|-------------------|----------------|
+| `h3-prompt-director` | all three | obeying the node's directives, output boundary, timeline & continuity, speech / `<d>` tags, soundscape vs music, resumed-session revisions, silent validation | prompt grammar, edge cases, quick examples, H3/ComfyUI facts |
+| `h3-base-format` | Writer, Refiner (base) | the three-field contract, verbatim I2VA / FL2VA / L2VA alignment lines, how the `image` batch maps to first/last frame | T2VA gold examples, keyframe gold examples, condensed official guide |
+| `h3-ref2va` | Reference Writer, Refiner (ref) | six-section contract, `image_1..9` → `<Picture 1..9>`, what each `reference_role` means, roles, retention vocabulary, HOW-vs-WHAT | Ref2VA gold examples, full-reference guide, video style-transfer lab |
+| `h3-style-craft` | all three | expanding `visual_style` into observable craft, one pack per layer, translating named references, animation timing without frame-rate claims, wildness scaling | style picker, pack catalogue, style anchors, temporal animation techniques |
+
+The node grants read access to `data/h3/skills` with `--add-dir`, so it works with an empty `working_dir` and without touching your own Claude settings. The official MiniMax guide stays authoritative for format; the skills add craft. Edit a `SKILL.md` or drop new `.md` files into a `references/` folder to tune behaviour, and any of the four folders can be symlinked into `~/.claude/skills/` for interactive use.
 
 **`research`** sends Claude Code to the web before it writes — how the real location looks, period-correct wardrobe, how the light behaves there, how the physical event actually unfolds — and folds what it finds in as concrete visual detail. It is instructed never to cite anything or add commentary, so the output stays a clean H3 prompt.
+
+**Images on the Claude Code Writer.** The `image` socket carries the **keyframes** — the picture(s) the video model will actually get, per `task_type`: **I2VA** → `<Picture 1>` first frame; **L2VA** → `<Picture 1>` last frame; **FL2VA** → batch two, frame 0 = `<Picture 1>`, last = `<Picture 2>`; **T2VA** → context only, no `<Picture N>` (the node prints a warning). `first_frame` / `last_frame` hand them back for the H3 video node.
+
+Nine **typed reference sockets** — `subject_1..3`, `scenery_1..3`, `object_1..3` — take pictures that should only be *described*. The video model never sees them; Claude puts what matters into words and ignores the rest:
+
+| Socket | Carries over | Ignored |
+|--------|--------------|---------|
+| `subject_N` | who they are — face, hair, build, wardrobe, marks; described precisely in `[Shot 1]` and kept identical across shots | the photo's backdrop, light, framing, mood — the scene comes from your idea |
+| `scenery_N` | the place — architecture/terrain, light, weather, palette, layout, as the setting | any people in the picture |
+| `object_N` | a prop/product — shape, colour, material, markings, scale | where it sits in the photo |
+
+Any sizes mix freely; numbering follows connection order per kind. With references but nothing on `image`, the prompt is written as T2VA whatever `task_type` says (there is nothing to align), and the node says so. Typical use: a character sheet on `subject_1`, a location photo on `scenery_1`, *“she walks into the bar and orders”* as the idea.
 
 **The refiner** is the reason sessions matter. Wire a writer's `session_id` into it and describe the change in plain language — *"use two shots instead of one, and set it at night"*. Resuming means the guide, the reference images and the model's own reasoning are still in context, so it edits surgically rather than rewriting from scratch, and you send only the instruction. Leave `session_id` empty and it still works, re-sending the prompt with the matching guide; it auto-detects which format it is looking at. Its 10 outputs cover both formats, and fields the format does not use come back empty.
 
@@ -655,6 +681,14 @@ Shared inputs on all three: `model` (sonnet/opus/haiku/fable/default), `research
 [Load Image] ──► [H3 Claude Code Writer] ──h3_prompt──► [Preview as Text]
                           └──session_id──► [H3 Claude Code Refiner] ──► [Preview as Text]
                                              instruction: "make shot 2 wilder"
+```
+
+**The continue writer** chains clips. Wire the decoded frames of a generated clip into `frames`; it keeps the last `frame_count` frames, `frame_stride` apart (default 4 frames, one every 6 — the final frame is always included), and shows them to Claude Code together with the `previous_prompt` and your `idea` for what happens next. It writes an **I2VA** prompt for a new clip of `duration_seconds` where the last frame is `<Picture 1>` at 0.00 s, and hands that frame back out as `first_frame` for the video node; the sampled frames come out as `context_frames` so you can preview what it saw. The earlier frames are context only — they show which way the camera and the action were moving, so the continuation does not reverse a pan or freeze mid-swing. Switch `continuation_mode` to **T2VA** to cut to a new scene of the same story instead of continuing seamlessly. Feed it the previous node's `session_id` (the writer's, or the previous Continue Writer's) and Claude Code still has every prompt and frame so far in context, so characters, speaker IDs and the soundscape stay consistent over a long chain; without it, paste every prompt so far into `previous_prompt`, oldest first. Same directive set as the base writer (shot plan, style, camera, dialogue toggles, wildness), with `visual_style` Auto meaning *keep the previous clip's look*.
+
+```
+[H3 Claude Code Writer] ──h3_prompt──► [MiniMax H3 video] ──► [Decode] ──frames──► [H3 Claude Code Continue Writer] ──h3_prompt──► [MiniMax H3 video]
+          └──h3_prompt───────────────────────────────────────────────previous_prompt──┘        └──first_frame──────────────────────────────┘
+          └──session_id──────────────────────────────────────────────resume_session_id┘
 ```
 
 ---

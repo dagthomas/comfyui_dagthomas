@@ -434,6 +434,13 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.prompt_preview import H3PromptPreview
+    NEW_MAPPINGS["H3PromptPreview"] = H3PromptPreview
+    NEW_DISPLAY_MAPPINGS["H3PromptPreview"] = "APNext H3 Prompt Preview"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}
@@ -441,4 +448,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS
 print(f"Loaded {len(NEW_MAPPINGS)} modular nodes, {len(DYNAMIC_MAPPINGS)} dynamic nodes")
 print(f"Total: {len(NODE_CLASS_MAPPINGS)} nodes available")
 
-__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS']
+WEB_DIRECTORY = "./web"
+
+__all__ = ['NODE_CLASS_MAPPINGS', 'NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']

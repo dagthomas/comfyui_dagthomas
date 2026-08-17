@@ -270,14 +270,17 @@ def run_claude_code(
     resume_session_id=None,
     use_subscription=True,
     on_progress=None,
+    add_dirs=None,
 ):
     """
     Run one headless Claude Code turn and return its result plus telemetry.
 
     `images` is a list of PIL images, sent inline. `tools` is an explicit
-    allow-list; None grants nothing. `on_progress` is called with short status
-    strings while the turn runs. Raises ClaudeCodeError on failure, and lets a
-    ComfyUI cancellation propagate as an interrupt.
+    allow-list; None grants nothing. `add_dirs` are extra directories the
+    granted tools may read (`--add-dir`), on top of the working directory.
+    `on_progress` is called with short status strings while the turn runs.
+    Raises ClaudeCodeError on failure, and lets a ComfyUI cancellation
+    propagate as an interrupt.
     """
     cli = find_cli()
     if not cli:
@@ -318,6 +321,10 @@ def run_claude_code(
         # A headless run cannot answer a permission prompt; without this the
         # tool call is denied and the model answers blind.
         args += ["--permission-mode", "dontAsk"]
+
+    for extra in add_dirs or []:
+        if extra and os.path.isdir(extra):
+            args += ["--add-dir", extra]
 
     if resume_session_id:
         args += ["--resume", resume_session_id]

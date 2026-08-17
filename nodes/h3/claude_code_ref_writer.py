@@ -10,6 +10,7 @@ from ...utils.claude_code import is_interrupt
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
 from .claude_code_support import (
+    REF_SKILLS,
     claude_code_inputs,
     claude_code_optional_inputs,
     directions_with_research,
@@ -23,7 +24,10 @@ from .common import (
     DIALOGUE_LANGUAGES,
     SHOT_PLANS,
     VISUAL_STYLES,
+    collect_reference_images,
     extract_section,
+    reference_image_inputs,
+    reference_image_outputs,
     resolve_dialogue_language,
     strip_code_fence,
 )
@@ -99,10 +103,6 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
         })
 
         optional = {
-            "image_1": ("IMAGE",),
-            "image_2": ("IMAGE",),
-            "image_3": ("IMAGE",),
-            "image_4": ("IMAGE",),
             "reference_notes": ("STRING", {
                 "multiline": True,
                 "default": "",
@@ -118,10 +118,13 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
             }),
         }
         optional.update(claude_code_optional_inputs())
+        # Image sockets last, so the front-end can grow and trim them at the tail.
+        optional.update(reference_image_inputs())
 
         return {"required": required, "optional": optional}
 
-    RETURN_TYPES = ("STRING",) * 9
+    _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
+    RETURN_TYPES = ("STRING",) * 9 + _IMAGE_OUTPUT_TYPES
     RETURN_NAMES = (
         "h3_prompt",
         "subject_definitions",
@@ -132,7 +135,7 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
         "non_diegetic_music",
         "session_id",
         "info",
-    )
+    ) + _IMAGE_OUTPUT_NAMES
     FUNCTION = "write_with_claude_code"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -164,29 +167,26 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
         include_non_diegetic_music,
         model,
         research,
+        director,
         use_subscription,
         timeout_seconds,
         seed,
-        image_1=None,
-        image_2=None,
-        image_3=None,
-        image_4=None,
         reference_notes="",
         extra_instructions="",
         custom_dialogue_language="",
         resume_session_id="",
         working_dir="",
+        **image_slots,
     ):
+        # The same tensors go back out on image_1..image_9 so the video node
+        # can be wired from this node and numbering can never drift.
+        passthrough = tuple(image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
         try:
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language
             )
 
-            images = []
-            for tensor in (image_1, image_2, image_3, image_4):
-                if tensor is not None:
-                    # Only the first frame of each input acts as that reference.
-                    images.append(tensor2pil(tensor[0]))
+            images = [pil for _, pil in collect_reference_images(passthrough, tensor2pil)]
 
             if not idea.strip() and not images and not reference_notes.strip():
                 raise ValueError("Provide an idea, at least one reference image, or reference notes.")
@@ -220,7 +220,8 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
             print(
                 f"🎬 H3 Claude Code Reference Writer | {len(images)} image(s) | "
                 f"{duration_seconds:.2f}s | wildness {wildness} ({wild_label}) | "
-                f"research {'on' if research else 'off'} | seed {current_seed}"
+                f"research {'on' if research else 'off'} | director "
+                f"{'on' if director else 'off'} | seed {current_seed}"
             )
 
             text, session_id, info = run_h3_claude_code(
@@ -233,6 +234,8 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
                 timeout_seconds,
                 resume_session_id,
                 working_dir,
+                director,
+                skills=REF_SKILLS,
             )
 
             prompt = strip_code_fence(text)
@@ -247,7 +250,7 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
                 extract_section(prompt, "non_diegetic_music", _FIELDS),
                 session_id,
                 info,
-            )
+            ) + passthrough
 
         except Exception as exc:
             # A cancelled queue must stop the run, not become an error string.
@@ -258,4 +261,4 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
 
             print(traceback.format_exc())
             message = f"Error occurred while writing the H3 reference prompt: {exc}"
-            return (message, message, "", "", "", "", "", "", "error")
+            return (message, message, "", "", "", "", "", "", "error") + passthrough

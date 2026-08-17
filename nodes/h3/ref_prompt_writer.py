@@ -1,7 +1,7 @@
 # APNext H3 Reference Prompt Writer
 #
 # Writes a MiniMax-H3 full-reference rewrite (six sections) from a short idea
-# plus up to four reference images, using the official full-reference guide.
+# plus up to nine reference images, using the official full-reference guide.
 
 import random
 
@@ -17,9 +17,12 @@ from .common import (
     SHOT_PLANS,
     VISUAL_STYLES,
     camera_directive,
+    collect_reference_images,
     resolve_dialogue_language,
     extract_section,
     load_guide,
+    reference_image_inputs,
+    reference_image_outputs,
     shot_directive,
     strip_code_fence,
     toggle_directives,
@@ -127,10 +130,6 @@ class H3RefPromptWriter:
                 "seed": ("INT", {"default": -1, "min": -1, "max": 0xffffffffffffffff}),
             },
             "optional": {
-                "image_1": ("IMAGE",),
-                "image_2": ("IMAGE",),
-                "image_3": ("IMAGE",),
-                "image_4": ("IMAGE",),
                 "reference_notes": ("STRING", {
                     "multiline": True,
                     "default": "",
@@ -160,10 +159,13 @@ class H3RefPromptWriter:
                         "local 8000. Ignored by the cloud providers."
                     ),
                 }),
+                # Image sockets last, so the front-end can grow and trim them at the tail.
+                **reference_image_inputs(),
             },
         }
 
-    RETURN_TYPES = ("STRING",) * 8
+    _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
+    RETURN_TYPES = ("STRING",) * 8 + _IMAGE_OUTPUT_TYPES
     RETURN_NAMES = (
         "h3_prompt",
         "subject_definitions",
@@ -173,7 +175,7 @@ class H3RefPromptWriter:
         "overall_soundscape",
         "non_diegetic_music",
         "model_used",
-    )
+    ) + _IMAGE_OUTPUT_NAMES
     FUNCTION = "write"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -221,7 +223,11 @@ class H3RefPromptWriter:
             listing = ", ".join(f"image {i}" for i in range(1, image_count + 1))
             base = (
                 f"{image_count} reference image(s) are attached in order ({listing}). Read them "
-                "directly and define them in subject_definitions."
+                "directly and define them in subject_definitions. Attached image k IS "
+                "<Picture k>: the same numbering the ComfyUI H3 video node uses for its "
+                "reference images in connection order. Whenever a definition draws on an "
+                "attached image, cite it as <Picture k> with that exact number; never renumber, "
+                "skip, or merge pictures."
             )
 
             if reference_role.startswith("Auto"):
@@ -363,26 +369,22 @@ class H3RefPromptWriter:
         model,
         temperature,
         seed,
-        image_1=None,
-        image_2=None,
-        image_3=None,
-        image_4=None,
         reference_notes="",
         extra_instructions="",
         custom_dialogue_language="",
         model_override="",
         local_base_url="",
+        **image_slots,
     ):
+        # The same tensors go back out on image_1..image_9 so the video node
+        # can be wired from this node and numbering can never drift.
+        passthrough = tuple(image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
         try:
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language
             )
 
-            images = []
-            for tensor in (image_1, image_2, image_3, image_4):
-                if tensor is not None:
-                    # Only the first frame of each input acts as that reference.
-                    images.append(tensor2pil(tensor[0]))
+            images = [pil for _, pil in collect_reference_images(passthrough, tensor2pil)]
 
             if not idea.strip() and not images and not reference_notes.strip():
                 raise ValueError("Provide an idea, at least one reference image, or reference notes.")
@@ -440,7 +442,7 @@ class H3RefPromptWriter:
                 extract_section(prompt, "overall_soundscape", _FIELDS),
                 extract_section(prompt, "non_diegetic_music", _FIELDS),
                 resolved_model,
-            )
+            ) + passthrough
 
         except Exception as exc:
             # A cancelled queue must stop the run, not become an error string.
@@ -451,4 +453,4 @@ class H3RefPromptWriter:
 
             print(traceback.format_exc())
             error_message = f"Error occurred while writing the H3 reference prompt: {exc}"
-            return (error_message, error_message, "", "", "", "", "", "error")
+            return (error_message, error_message, "", "", "", "", "", "error") + passthrough
