@@ -81,8 +81,7 @@ function characterLabel(charNode) {
   const w = charNode.widgets?.find((x) => x.name === "character");
   const label = typeof w?.value === "string" ? w.value : "";
   if (customText && !label.startsWith(RANDOM_PREFIX)) {
-    const head = customText.split(/?
-/)[0];
+    const head = customText.split(/\r?\n/)[0];
     const c = head.match(/^(.*?)(?: \(played by .*?\))? from /) || head.match(/^([^:]+):/);
     return c ? c[1].trim() : head.slice(0, 40);
   }

@@ -51,3 +51,41 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3LLMBackend": "APNext H3 LLM Backend (Ollama / local / API)",
     "H3ClaudeCodeMusicVideoWriter": "APNext H3 Music Video Writer",
 }
+
+# ---------------------------------------------------------------------------
+# Simple vs advanced form. Everything not listed here is hidden behind the
+# node's "Show advanced inputs" toggle (ComfyUI frontend). Autogrow sockets
+# (context_N, image_N, cast_N) and the llm socket always stay visible.
+# ---------------------------------------------------------------------------
+from .common import with_advanced_inputs  # noqa: E402
+
+_TYPED_REFS = tuple(f"{k}_{i}" for k in ("subject", "scenery", "object") for i in (1, 2, 3))
+_CREATIVE = ("visual_style", "include_dialogue", "dialogue_language")
+_CC = ("model", "seed")
+
+with_advanced_inputs(H3BasePromptWriter,
+    ("idea", "task_type", "duration_seconds", *_CREATIVE, "model", "seed", "image", "extra_instructions"))
+with_advanced_inputs(H3RefPromptWriter,
+    ("idea", "task_type", "reference_role", "duration_seconds", *_CREATIVE, "model", "seed", "reference_notes", "extra_instructions"))
+with_advanced_inputs(H3ClaudeCodeBaseWriter,
+    ("idea", "task_type", "duration_seconds", *_CREATIVE, *_CC, "image", "extra_instructions"),
+    also_advanced=_TYPED_REFS)
+with_advanced_inputs(H3ClaudeCodeRefWriter,
+    ("idea", "task_type", "reference_role", "duration_seconds", *_CREATIVE, *_CC, "reference_notes", "extra_instructions"))
+with_advanced_inputs(H3ClaudeCodeContinueWriter,
+    ("frames", "idea", "continuation_mode", "duration_seconds", *_CREATIVE, *_CC, "previous_prompt", "extra_instructions"))
+with_advanced_inputs(H3ClaudeCodeRefiner,
+    ("h3_prompt", "instruction", *_CC, "session_id", "image"))
+with_advanced_inputs(H3ClaudeCodeScenesWriter,
+    ("idea", "scene_count", "duration_mode", "continuity_mode", "scene_duration", *_CREATIVE, *_CC,
+     "image", "wardrobe", "locations", "extra_instructions"),
+    also_advanced=_TYPED_REFS)
+with_advanced_inputs(H3ClaudeCodeCrossoverWriter,
+    ("direction", "extra_cast", "scene_count", "duration_mode", "continuity_mode", "scene_duration",
+     "visual_style", "dialogue_language", *_CC, "wardrobe", "locations", "extra_instructions", "image_notes"))
+with_advanced_inputs(H3ClaudeCodeMusicVideoWriter,
+    ("audio", "direction", "lyrics", "performance_mode", "segment_mode", "max_segment_seconds",
+     "visual_style", "dialogue_language", *_CC, "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes"))
+with_advanced_inputs(H3LLMBackend, ("model", "model_name"))
+with_advanced_inputs(H3ScenesJoin, ("images", "crossfade_frames", "audio", "replace_audio"))
+with_advanced_inputs(H3ScenesToChainPlan, ("scenes", "durations", "prompt_prefix"))

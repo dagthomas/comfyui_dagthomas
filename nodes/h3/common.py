@@ -640,3 +640,54 @@ def collect_reference_images(tensors, to_pil):
             "the same way, or fill the slots without gaps."
         )
     return picked
+
+
+# ----------------------------------------------------------------------
+# "Show advanced inputs": ComfyUI hides inputs whose options carry
+# `advanced: True` behind a per-node toggle. The H3 nodes keep a short
+# "simple" form and put everything else behind that toggle.
+
+_NEVER_ADVANCED_PREFIXES = ("context_", "image_", "cast_")
+
+
+def mark_advanced(input_types, simple, *, also_advanced=()):
+    """
+    Return a copy of an INPUT_TYPES dict where every required/optional entry
+    that is not in `simple` (and not an autogrow socket) carries
+    `advanced: True`. Entries named in `also_advanced` are forced advanced even
+    when they are sockets.
+    """
+    out = {}
+    for group, entries in input_types.items():
+        if group not in ("required", "optional") or not isinstance(entries, dict):
+            out[group] = entries
+            continue
+        new = {}
+        for name, spec in entries.items():
+            if not isinstance(spec, tuple):
+                spec = (spec,)
+            typ = spec[0]
+            opts = dict(spec[1]) if len(spec) > 1 and isinstance(spec[1], dict) else {}
+            is_socket = not isinstance(typ, list) and typ not in ("STRING", "INT", "FLOAT", "BOOLEAN") or opts.get("forceInput")
+            forced = name in also_advanced
+            if (
+                (name not in simple and not name.startswith(_NEVER_ADVANCED_PREFIXES) and name != "llm"
+                 and (not is_socket or forced))
+                or forced
+            ):
+                opts["advanced"] = True
+            new[name] = (typ, opts) if (opts or len(spec) > 1) else (typ,)
+        out[group] = new
+    return out
+
+
+def with_advanced_inputs(cls, simple, also_advanced=()):
+    """Wrap cls.INPUT_TYPES so every non-simple input is marked advanced."""
+    orig = cls.INPUT_TYPES.__func__ if hasattr(cls.INPUT_TYPES, "__func__") else cls.INPUT_TYPES
+
+    @classmethod
+    def INPUT_TYPES(kls):
+        return mark_advanced(orig(kls), set(simple), also_advanced=set(also_advanced))
+
+    cls.INPUT_TYPES = INPUT_TYPES
+    return cls

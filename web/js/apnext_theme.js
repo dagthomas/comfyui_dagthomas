@@ -75,9 +75,9 @@ function dotGrid() {
     c.height = 22;
     const g = c.getContext("2d");
     g.clearRect(0, 0, 22, 22);
-    g.fillStyle = "#2b2b33";
+    g.fillStyle = "#33323a";
     g.beginPath();
-    g.arc(11, 11, 1.0, 0, Math.PI * 2);
+    g.arc(11, 11, 1.1, 0, Math.PI * 2);
     g.fill();
     return c.toDataURL("image/png");
   } catch (e) {
@@ -117,15 +117,15 @@ function buildPalette() {
       },
       litegraph_base: {
         BACKGROUND_IMAGE: dotGrid(),
-        CLEAR_BACKGROUND_COLOR: "rgba(15, 15, 15, 0)", // transparent: the glows live on the canvas element
-        NODE_TITLE_COLOR: "#f4f1ec",
-        NODE_SELECTED_TITLE_COLOR: C.accent,
+        CLEAR_BACKGROUND_COLOR: C.bg,
+        NODE_TITLE_COLOR: "#ffffff",
+        NODE_SELECTED_TITLE_COLOR: "#ffffff",
         NODE_TEXT_COLOR: C.textDim,
         NODE_TEXT_HIGHLIGHT_COLOR: C.text,
         NODE_DEFAULT_COLOR: C.panel,
         NODE_DEFAULT_BGCOLOR: C.panel,
         NODE_DEFAULT_BOXCOLOR: C.borderLight,
-        NODE_DEFAULT_SHAPE: 2,
+        NODE_DEFAULT_SHAPE: 4, // CARD: rounded header corners, square body
         NODE_BOX_OUTLINE_COLOR: C.accent,
         NODE_BYPASS_BGCOLOR: C.mauve,
         NODE_ERROR_COLOUR: "#d07070",
@@ -171,7 +171,7 @@ function buildPalette() {
 const STYLE_ID = "apnext-graphgen-style";
 const FONT_LINK_ID = "apnext-graphgen-fonts";
 const CSS = `
-html.apnext-graphgen {
+:is(html, body).apnext-graphgen {
   --p-font-family: ${FONT_SANS};
   --apnext-font-display: ${FONT_DISPLAY};
   --apnext-font-mono: ${FONT_MONO};
@@ -190,50 +190,89 @@ html.apnext-graphgen {
   --p-text-color: ${C.text};
   --p-text-muted-color: ${C.textDim};
 }
-html.apnext-graphgen #graph-canvas,
-html.apnext-graphgen .graph-canvas-container,
-html.apnext-graphgen canvas.litegraph {
-  background-color: ${C.bg} !important;
-  background-image:
-    radial-gradient(52% 48% at 8% 2%, rgba(212,165,116,0.09), transparent 70%),
-    radial-gradient(48% 44% at 100% 100%, rgba(232,180,184,0.08), transparent 72%),
-    radial-gradient(40% 38% at 78% 6%, rgba(201,184,150,0.06), transparent 70%) !important;
+/* ---- ComfyUI "Nodes 2.0" (Vue-rendered nodes): dark body, coloured header, white bold title,
+        square corners except the header, square inputs ---- */
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] {
+  --component-node-background: ${C.panel} !important;
+  --node-component-header-surface: ${C.panel};
+  border-radius: 8px 8px 0 0 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
 }
-html.apnext-graphgen body,
-html.apnext-graphgen .p-component,
-html.apnext-graphgen .comfy-menu,
-html.apnext-graphgen .litegraph,
-html.apnext-graphgen .litegraph * {
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] > *:not([data-testid^="node-header"]) { border-radius: 0 !important; }
+:is(html, body).apnext-graphgen [data-testid^="node-header-"],
+:is(html, body).apnext-graphgen [data-testid^="node-header-"] span,
+:is(html, body).apnext-graphgen [data-testid^="node-header-"] input,
+:is(html, body).apnext-graphgen [data-testid^="node-header-"] [contenteditable] {
+  color: #ffffff !important; font-weight: 700 !important; font-family: ${FONT_SANS};
+}
+:is(html, body).apnext-graphgen [data-testid^="node-header-"] { position: relative; }
+:is(html, body).apnext-graphgen [data-testid^="node-header-"]::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; pointer-events: none;
+  background: rgba(212,165,116,0.85);
+}
+@supports (backdrop-filter: brightness(1)) {
+  :is(html, body).apnext-graphgen [data-testid^="node-header-"]::after {
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: brightness(2.2) saturate(1.8);
+  }
+}
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] input:not([type="checkbox"]):not([type="range"]),
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] textarea,
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] select,
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] .p-inputtext,
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] .p-select,
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] .p-inputnumber,
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] .p-textarea,
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] [class*="rounded-lg"]:not([class*="rounded-full"]),
+:is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] [class*="rounded-md"]:not([class*="rounded-full"]) {
+  border-radius: 2px !important;
+}
+:is(html, body).apnext-graphgen body,
+:is(html, body).apnext-graphgen .p-component,
+:is(html, body).apnext-graphgen .comfy-menu,
+:is(html, body).apnext-graphgen .litegraph,
+:is(html, body).apnext-graphgen .litegraph * {
   font-family: ${FONT_SANS};
   -webkit-font-smoothing: antialiased;
 }
-html.apnext-graphgen code, html.apnext-graphgen pre, html.apnext-graphgen textarea.comfy-multiline-input,
-html.apnext-graphgen .apnext-h3-vars { font-family: ${FONT_MONO}; }
-html.apnext-graphgen .comfy-multiline-input,
-html.apnext-graphgen .comfy-multiline-input textarea {
+:is(html, body).apnext-graphgen code, :is(html, body).apnext-graphgen pre, :is(html, body).apnext-graphgen textarea.comfy-multiline-input,
+:is(html, body).apnext-graphgen .apnext-h3-vars { font-family: ${FONT_MONO}; }
+:is(html, body).apnext-graphgen .comfy-multiline-input,
+:is(html, body).apnext-graphgen .comfy-multiline-input textarea {
   background: ${C.panel} !important; color: ${C.text} !important;
-  border: 1px solid ${C.border} !important; border-radius: 8px !important;
+  border: 1px solid ${C.border} !important; border-radius: 2px !important;
 }
-html.apnext-graphgen .comfy-multiline-input:focus-within { border-color: ${C.accent} !important; }
-html.apnext-graphgen .p-panel, html.apnext-graphgen .side-tool-bar-container,
-html.apnext-graphgen .comfyui-menu, html.apnext-graphgen .actionbar,
-html.apnext-graphgen .p-dialog, html.apnext-graphgen .p-popover, html.apnext-graphgen .p-menu,
-html.apnext-graphgen .p-tieredmenu, html.apnext-graphgen .p-contextmenu, html.apnext-graphgen .litecontextmenu {
+:is(html, body).apnext-graphgen .comfy-multiline-input:focus-within { border-color: ${C.accent} !important; }
+:is(html, body).apnext-graphgen .p-panel, :is(html, body).apnext-graphgen .side-tool-bar-container,
+:is(html, body).apnext-graphgen .comfyui-menu, :is(html, body).apnext-graphgen .actionbar,
+:is(html, body).apnext-graphgen .p-dialog, :is(html, body).apnext-graphgen .p-popover, :is(html, body).apnext-graphgen .p-menu,
+:is(html, body).apnext-graphgen .p-tieredmenu, :is(html, body).apnext-graphgen .p-contextmenu, :is(html, body).apnext-graphgen .litecontextmenu {
   background: ${C.panel} !important; color: ${C.text} !important; border-color: ${C.border} !important;
 }
-html.apnext-graphgen .litecontextmenu .litemenu-entry { color: ${C.text} !important; }
-html.apnext-graphgen .litecontextmenu .litemenu-entry:hover,
-html.apnext-graphgen .litemenu-entry.submenu:hover { background: ${C.border} !important; color: ${C.accent} !important; }
-html.apnext-graphgen .p-button, html.apnext-graphgen .comfyui-button { border-radius: 8px; }
-html.apnext-graphgen .p-button.p-button-primary, html.apnext-graphgen .comfyui-queue-button .p-button {
+:is(html, body).apnext-graphgen .litecontextmenu .litemenu-entry { color: ${C.text} !important; }
+:is(html, body).apnext-graphgen .litecontextmenu .litemenu-entry:hover,
+:is(html, body).apnext-graphgen .litemenu-entry.submenu:hover { background: ${C.border} !important; color: ${C.accent} !important; }
+:is(html, body).apnext-graphgen .p-button, :is(html, body).apnext-graphgen .comfyui-button, :is(html, body).apnext-graphgen .p-inputtext,
+:is(html, body).apnext-graphgen .p-select, :is(html, body).apnext-graphgen .p-textarea, :is(html, body).apnext-graphgen .p-dialog,
+:is(html, body).apnext-graphgen .p-panel, :is(html, body).apnext-graphgen .p-popover, :is(html, body).apnext-graphgen .apnext-h3,
+:is(html, body).apnext-graphgen .apnext-h3-vars, :is(html, body).apnext-graphgen .apnext-h3-ac { border-radius: 2px !important; }
+:is(html, body).apnext-graphgen .p-button.p-button-primary, :is(html, body).apnext-graphgen .comfyui-queue-button .p-button {
   background: ${C.accent} !important; border-color: ${C.accent} !important; color: #1a1510 !important;
 }
-html.apnext-graphgen .p-button.p-button-primary:hover { background: ${C.accent2} !important; border-color: ${C.accent2} !important; }
-html.apnext-graphgen .p-toast-message, html.apnext-graphgen .p-inputtext, html.apnext-graphgen .p-select,
-html.apnext-graphgen .p-inputnumber-input, html.apnext-graphgen .p-textarea {
+:is(html, body).apnext-graphgen .p-button.p-button-primary:hover { background: ${C.accent2} !important; border-color: ${C.accent2} !important; }
+:is(html, body).apnext-graphgen .p-toast-message, :is(html, body).apnext-graphgen .p-inputtext, :is(html, body).apnext-graphgen .p-select,
+:is(html, body).apnext-graphgen .p-inputnumber-input, :is(html, body).apnext-graphgen .p-textarea {
   background: ${C.panel2} !important; color: ${C.text} !important; border-color: ${C.border} !important;
 }
-html.apnext-graphgen h1, html.apnext-graphgen h2, html.apnext-graphgen .p-dialog-title { font-family: ${FONT_DISPLAY}; letter-spacing: 0.01em; }
+:is(html, body).apnext-graphgen h1, :is(html, body).apnext-graphgen h2, :is(html, body).apnext-graphgen .p-dialog-title { font-family: ${FONT_DISPLAY}; letter-spacing: 0.01em; }
+:is(html, body).apnext-graphgen h1, :is(html, body).apnext-graphgen h2, :is(html, body).apnext-graphgen h3, :is(html, body).apnext-graphgen h4,
+:is(html, body).apnext-graphgen .p-dialog-title, :is(html, body).apnext-graphgen .p-panel-header, :is(html, body).apnext-graphgen .p-accordion-header,
+:is(html, body).apnext-graphgen .p-tabview-nav-link, :is(html, body).apnext-graphgen .p-tab, :is(html, body).apnext-graphgen .side-bar-panel .title,
+:is(html, body).apnext-graphgen .comfyui-menu .p-menubar-item-label, :is(html, body).apnext-graphgen .apnext-h3-title,
+:is(html, body).apnext-graphgen .apnext-h3 .h3-header, :is(html, body).apnext-graphgen .node-title, :is(html, body).apnext-graphgen .lg-node-title,
+:is(html, body).apnext-graphgen [class*="node-header"] [class*="title"], :is(html, body).apnext-graphgen [class*="NodeHeader"] {
+  color: #ffffff !important; font-weight: 700 !important;
+}
 `;
 
 function ensureFonts() {
@@ -249,18 +288,36 @@ function ensureFonts() {
   } catch (e) { /* offline: fall back to system fonts */ }
 }
 
+const chrome = { on: false, observer: null };
+
+function assertChromeClass() {
+  if (!chrome.on) return;
+  const html = document.documentElement;
+  if (!html.classList.contains("apnext-graphgen")) html.classList.add("apnext-graphgen");
+  if (document.body && !document.body.classList.contains("apnext-graphgen")) document.body.classList.add("apnext-graphgen");
+  if (!document.getElementById(STYLE_ID)) {
+    const st = document.createElement("style");
+    st.id = STYLE_ID;
+    st.textContent = CSS;
+    document.head.appendChild(st);
+  }
+}
+
 function applyChrome(on) {
+  chrome.on = on;
   if (on) {
-    if (!document.getElementById(STYLE_ID)) {
-      const st = document.createElement("style");
-      st.id = STYLE_ID;
-      st.textContent = CSS;
-      document.head.appendChild(st);
-    }
+    assertChromeClass();
     ensureFonts();
-    document.documentElement.classList.add("apnext-graphgen");
+    if (!chrome.observer && typeof MutationObserver !== "undefined") {
+      // ComfyUI's theme code may rewrite <html class="..."> wholesale; put ours back
+      chrome.observer = new MutationObserver(() => assertChromeClass());
+      chrome.observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+      if (document.body) chrome.observer.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    }
   } else {
     document.documentElement.classList.remove("apnext-graphgen");
+    document.body?.classList.remove("apnext-graphgen");
+    if (chrome.observer) { chrome.observer.disconnect(); chrome.observer = null; }
   }
 }
 
@@ -270,12 +327,64 @@ function applyChrome(on) {
 
 const saved = { font: null, radius: null, applied: false };
 
+// The node defaults every node without its own colour uses. Re-asserted each
+// background frame while the theme is on (cheap equality checks), so nothing a
+// later palette load or another extension sets can drift the look.
+const THEME_LG = () => ({
+  NODE_TITLE_COLOR: "#ffffff",
+  NODE_SELECTED_TITLE_COLOR: "#ffffff",
+  NODE_TEXT_COLOR: C.textDim,
+  NODE_TEXT_HIGHLIGHT_COLOR: C.text,
+  NODE_DEFAULT_COLOR: C.panel,
+  NODE_DEFAULT_BGCOLOR: C.panel,
+  NODE_DEFAULT_BOXCOLOR: C.borderLight,
+  NODE_DEFAULT_SHAPE: 4, // CARD: only the header corners are rounded
+  NODE_BOX_OUTLINE_COLOR: C.accent,
+  WIDGET_BGCOLOR: C.panel2,
+  WIDGET_OUTLINE_COLOR: C.border,
+  WIDGET_TEXT_COLOR: C.text,
+  WIDGET_SECONDARY_TEXT_COLOR: C.textDim,
+  LINK_COLOR: C.accent,
+  CONNECTING_LINK_COLOR: C.accent2,
+});
+const VUE_NODE_VARS = {
+  "--component-node-background": C.panel,
+  "--node-component-header-surface": C.panel,
+  "--node-component-header": "#ffffff",
+  "--node-component-header-icon": C.borderLight,
+  "--component-node-widget-background": C.panel2,
+  "--component-node-foreground": C.text,
+  "--component-node-border": C.border,
+};
+
+function assertThemeColors() {
+  const LG = window.LiteGraph;
+  if (!LG) return;
+  for (const [k, v] of Object.entries(THEME_LG())) if (LG[k] !== v) LG[k] = v;
+  const cv = app.canvas;
+  if (cv) {
+    if (cv.node_title_color !== "#ffffff") cv.node_title_color = "#ffffff";
+    if (cv.default_link_color !== C.accent) cv.default_link_color = C.accent;
+  }
+}
+
+function applyVueNodeVars(on) {
+  const st = document.documentElement?.style;
+  if (!st) return;
+  for (const [k, v] of Object.entries(VUE_NODE_VARS)) {
+    if (on) st.setProperty(k, v); else st.removeProperty(k);
+  }
+}
+
 function applyLiteGraphLook(on) {
+  applyVueNodeVars(on);
   const LG = window.LiteGraph;
   if (!LG) return;
   if (on && !saved.applied) {
     saved.font = LG.NODE_FONT;
     saved.radius = LG.ROUND_RADIUS;
+    saved.titleColor = LG.NODE_TITLE_COLOR;
+    saved.selectedTitleColor = LG.NODE_SELECTED_TITLE_COLOR;
     LG.NODE_FONT = FONT_SANS;
     LG.ROUND_RADIUS = 8; // graphgen rounded-lg
     saved.applied = true;
@@ -284,6 +393,11 @@ function applyLiteGraphLook(on) {
     LG.ROUND_RADIUS = saved.radius ?? 8;
     saved.applied = false;
   }
+  // headers: bold + white on every node while the theme is on (the palette sets the
+  // colour too, but a later palette load must not dim it)
+  patchTitleFont();
+  ggState.boldTitles = on;
+  if (on) assertThemeColors();
   app.canvas?.setDirty?.(true, true);
 }
 
@@ -534,6 +648,7 @@ const WIRE_GRAVITY = "gravity";
 const WIRE_STYLES = [WIRE_DEFAULT, WIRE_BEZIER, WIRE_SMOOTHSTEP, WIRE_STEP, WIRE_STRAIGHT, WIRE_CABLE, WIRE_GRAVITY];
 const WIRE_COMBO = [WIRE_DEFAULT, WIRE_BEZIER, WIRE_SMOOTHSTEP, WIRE_STEP, WIRE_STRAIGHT, WIRE_CABLE]; // gravity is its own toggle
 const S_GRAVITY_ON = "APNext.Theme.GravityWires";
+const themeState = { on: false };
 
 const wireState = { style: WIRE_DEFAULT, patched: false };
 
@@ -728,6 +843,8 @@ function patchLinkRenderer() {
     LGC.prototype.drawBackCanvas = function () {
       rope.frame++;
       cable.frame++;
+      if (themeState.on) { assertThemeColors(); assertChromeClass(); }
+      if (sparks.on) { try { watchLinks(this); } catch (err) { console.warn("[APNext sparks] watch failed:", err); } }
       const r = origBack.apply(this, arguments);
       if (rope.frame % 30 === 0) { rope.prune(); cable.prune(); }
       return r;
@@ -853,13 +970,14 @@ function patchNodeRecolor() {
   if (!LGC?.prototype?.drawNode) return;
   const origDrawNode = LGC.prototype.drawNode;
   LGC.prototype.drawNode = function (node, ctx) {
-    if (!recolorState.on || !node || (!node.color && !node.bgcolor) || node.properties?.apnext_autocolor) {
+    if (!recolorState.on || !node || (!node.color && !node.bgcolor)) {
       return origDrawNode.apply(this, arguments);
     }
     const c = node.color, bg = node.bgcolor;
     try {
-      if (c) node.color = botanical(c, "title");
-      if (bg) node.bgcolor = botanical(bg, "body");
+      // header keeps (a botanical version of) its hue; the body is always the dark panel
+      if (c && !node.properties?.apnext_autocolor) node.color = botanical(c, "title");
+      if (bg) node.bgcolor = C.panel;
       return origDrawNode.apply(this, arguments);
     } finally {
       node.color = c;
@@ -919,89 +1037,141 @@ const hlState = { on: true, patched: false };
 
 function dragSources(canvas) {
   // [{type, node, toInputs}] for every link currently being dragged
-  const lc = canvas.linkConnector;
   const out = [];
-  if (!lc || !lc.isConnecting) return out;
-  const toInputs = lc.state?.connectingTo === "input";
-  for (const rl of lc.renderLinks || []) {
-    const slot = rl.fromSlot;
-    if (!slot) continue;
-    out.push({ type: slot.type, node: rl.node, toInputs });
+  const lc = canvas?.linkConnector;
+  if (lc?.isConnecting) {
+    const toInputs = lc.state?.connectingTo === "input";
+    for (const rl of lc.renderLinks || []) {
+      const slot = rl.fromSlot;
+      if (!slot) continue;
+      out.push({ type: slot.type, node: rl.node, toInputs });
+    }
+  } else if (Array.isArray(canvas?.connecting_links) && canvas.connecting_links.length) {
+    for (const cl of canvas.connecting_links) {
+      const slot = cl.output || cl.input;
+      if (!slot) continue;
+      out.push({ type: slot.type, node: cl.node, toInputs: !!cl.output });
+    }
   }
   return out;
 }
 
-function patchHighlight() {
-  if (hlState.patched) return;
-  const LGC = window.LGraphCanvas || app.canvas?.constructor;
-  if (!LGC?.prototype?.drawNode) return;
-  const orig = LGC.prototype.drawNode;
-  LGC.prototype.drawNode = function (node, ctx) {
-    const r = orig.apply(this, arguments);
-    if (!hlState.on || !node) return r;
-    const LG = window.LiteGraph;
-    const sources = dragSources(this);
-    if (!sources.length || !LG) return r;
-    const slots = [];
+// slots that could take the dragged link(s): [{x, y, taken}] in graph space
+function highlightTargets(canvas) {
+  const LG = window.LiteGraph;
+  const sources = dragSources(canvas);
+  if (!sources.length || !LG) return [];
+  const out = [];
+  for (const node of canvas.graph?._nodes || []) {
+    if (!node || node.flags?.collapsed) continue;
     for (const src of sources) {
       if (src.node === node) continue;
       if (src.toInputs) {
         (node.inputs || []).forEach((inp, i) => {
-          if (inp && LG.isValidConnection(src.type, inp.type)) slots.push([true, i, inp.link != null]);
+          if (!inp || !LG.isValidConnection(src.type, inp.type)) return;
+          if (inp.widget && inp.link == null && !inp.pos) return; // hidden widget sockets
+          let p = null;
+          try { p = node.getInputPos(i); } catch (e) { p = null; }
+          if (p) out.push({ x: p[0], y: p[1], taken: inp.link != null });
         });
       } else {
         (node.outputs || []).forEach((outp, i) => {
-          if (outp && LG.isValidConnection(outp.type, src.type)) slots.push([false, i, false]);
+          if (!outp || !LG.isValidConnection(outp.type, src.type)) return;
+          let p = null;
+          try { p = node.getOutputPos(i); } catch (e) { p = null; }
+          if (p) out.push({ x: p[0], y: p[1], taken: false });
         });
       }
     }
-    if (!slots.length) return r;
-    const t = (performance.now() % 1000) / 1000;
-    const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
-    // sizes in SCREEN pixels, so the rings stay readable when zoomed out
-    const k = 1 / Math.max(0.15, this.ds?.scale ?? 1);
-    const rCore = (10 + pulse * 3) * k;
-    const rHalo = (18 + pulse * 10) * k;
-    ctx.save();
-    for (const [isInput, i, taken] of slots) {
-      const p = isInput ? node.getInputPos(i) : node.getOutputPos(i);
-      if (!p) continue;
-      const x = p[0] - node.pos[0], y = p[1] - node.pos[1];
-      const rgb = taken ? "232,180,184" : "212,165,116";
-      // soft halo that breathes outward
-      const grad = ctx.createRadialGradient(x, y, rCore * 0.6, x, y, rHalo);
-      grad.addColorStop(0, `rgba(${rgb},${0.45 - 0.2 * pulse})`);
-      grad.addColorStop(1, `rgba(${rgb},0)`);
-      ctx.beginPath();
-      ctx.arc(x, y, rHalo, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-      // solid core ring
-      ctx.beginPath();
-      ctx.arc(x, y, rCore, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${rgb},${0.22 + 0.18 * pulse})`;
-      ctx.fill();
-      ctx.lineWidth = 3 * k;
-      ctx.strokeStyle = `rgba(${rgb},${0.85 + 0.15 * pulse})`;
-      ctx.stroke();
-      // thin white inner ring for contrast on any node colour
-      ctx.beginPath();
-      ctx.arc(x, y, rCore - 2.5 * k, 0, Math.PI * 2);
-      ctx.lineWidth = 1 * k;
-      ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.3 * pulse})`;
-      ctx.stroke();
-    }
-    ctx.restore();
-    // keep pulsing while the drag lasts
-    this.setDirty(true, false);
-    return r;
+  }
+  return out;
+}
+
+function drawHighlightOverlay(ctx) {
+  if (!hlState.on) return false;
+  const canvas = app.canvas;
+  const targets = highlightTargets(canvas);
+  if (!targets.length) return false;
+  const t = (performance.now() % 1000) / 1000;
+  const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
+  const rCore = 10 + pulse * 3;
+  const rHalo = 18 + pulse * 10;
+  for (const tg of targets) {
+    const [x, y] = graphToScreen(tg.x, tg.y);
+    const rgb = tg.taken ? "232,180,184" : "212,165,116";
+    const grad = ctx.createRadialGradient(x, y, rCore * 0.6, x, y, rHalo);
+    grad.addColorStop(0, `rgba(${rgb},${0.45 - 0.2 * pulse})`);
+    grad.addColorStop(1, `rgba(${rgb},0)`);
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, rHalo, 0, Math.PI * 2);
+    ctx.fillStyle = grad;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x, y, rCore, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${rgb},${0.22 + 0.18 * pulse})`;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = `rgba(${rgb},${0.85 + 0.15 * pulse})`;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, y, rCore - 2.5, 0, Math.PI * 2);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.3 * pulse})`;
+    ctx.stroke();
+  }
+  return true;
+}
+
+// The dragged link takes its source slot's type colour instead of LiteGraph's
+// single CONNECTING_LINK_COLOR, so what you drag looks like what you will get.
+const dragColor = { patched: false, on: false };
+function patchDragLinkColor() {
+  if (dragColor.patched) return;
+  const LGC = window.LGraphCanvas || app.canvas?.constructor;
+  const LG = window.LiteGraph;
+  if (!LGC?.prototype?._drawConnectingLinks || !LG) return;
+  const orig = LGC.prototype._drawConnectingLinks;
+  LGC.prototype._drawConnectingLinks = function (ctx) {
+    if (!dragColor.on) return orig.apply(this, arguments);
+    const rl = this.linkConnector?.renderLinks?.[0];
+    const type = rl?.fromSlot?.type;
+    const col = type && type !== "*" && type !== -1
+      ? (this.default_connection_color_byType?.[type] || LGC.link_type_colors?.[type])
+      : null;
+    if (!col) return orig.apply(this, arguments);
+    const saved = LG.CONNECTING_LINK_COLOR;
+    LG.CONNECTING_LINK_COLOR = col;
+    try { return orig.apply(this, arguments); } finally { LG.CONNECTING_LINK_COLOR = saved; }
   };
-  hlState.patched = true;
+  dragColor.patched = true;
 }
 
 function applyHighlight(on) {
-  if (on) patchHighlight();
-  hlState.on = on && hlState.patched;
+  hlState.on = !!on;
+  hlState.patched = true;
+  if (on) { ensureOverlayLoop(); armDragWatch(); patchDragLinkColor(); }
+  dragColor.on = !!on && dragColor.patched;
+}
+
+// one rAF loop drives the overlay while there is something to show: a drag in
+// progress or live sparks. It is armed by pointerdown / a spark and stops by itself.
+const overlayLoop = { raf: 0, armed: false };
+function ensureOverlayLoop() {
+  if (overlayLoop.raf) return;
+  overlayLoop.raf = requestAnimationFrame(overlayTick);
+}
+function overlayTick() {
+  overlayLoop.raf = 0;
+  let busy = false;
+  try { busy = drawOverlayFrame(); } catch (err) { console.warn("[APNext overlay] draw failed:", err); }
+  if (busy) overlayLoop.raf = requestAnimationFrame(overlayTick);
+}
+function armDragWatch() {
+  if (overlayLoop.armed) return;
+  overlayLoop.armed = true;
+  document.addEventListener("pointerdown", () => ensureOverlayLoop(), true);
+  document.addEventListener("pointermove", () => { if (dragSources(app.canvas).length) ensureOverlayLoop(); }, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -1009,69 +1179,121 @@ function applyHighlight(on) {
 // made (graphgen's Sparks.svelte, drawn on the front canvas).
 // ---------------------------------------------------------------------------
 
-const sparks = { list: [], raf: 0, patched: false, on: true, listening: new WeakSet() };
+const sparks = { list: [], raf: 0, patched: false, on: true, listening: new WeakSet(), overlay: null, octx: null };
+
+function sparksOverlay() {
+  // a fixed, pointer-transparent canvas on <body> that tracks the graph canvas
+  // rect - above every layer (classic canvas or the Vue node layer)
+  const base = app.canvas?.canvas;
+  if (!base) return null;
+  let ov = sparks.overlay;
+  if (!ov || !ov.isConnected) {
+    ov = document.createElement("canvas");
+    ov.id = "apnext-sparks-overlay";
+    Object.assign(ov.style, { position: "fixed", pointerEvents: "none", zIndex: "2147483000", left: "0", top: "0" });
+    document.body.appendChild(ov);
+    sparks.overlay = ov;
+    sparks.octx = ov.getContext("2d");
+  }
+  const r = base.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  if (ov.width !== Math.round(w * dpr) || ov.height !== Math.round(h * dpr)) {
+    ov.width = Math.round(w * dpr);
+    ov.height = Math.round(h * dpr);
+    ov.style.width = w + "px";
+    ov.style.height = h + "px";
+  }
+  if (ov._l !== r.left || ov._t !== r.top) {
+    ov.style.transform = `translate(${r.left}px, ${r.top}px)`;
+    ov._l = r.left; ov._t = r.top;
+  }
+  return ov;
+}
+
+function graphToScreen(x, y) {
+  const ds = app.canvas?.ds;
+  if (!ds) return [x, y];
+  if (typeof ds.convertOffsetToCanvas === "function") return ds.convertOffsetToCanvas([x, y]);
+  return [(x + ds.offset[0]) * ds.scale, (y + ds.offset[1]) * ds.scale];
+}
 
 function spawnSparks(x, y, color) {
+  // x, y in GRAPH space; particles move in screen pixels so they read the same at any zoom
   const now = performance.now();
-  const k = 1 / Math.max(0.15, app.canvas?.ds?.scale ?? 1); // canvas px per screen px
+  if (sparks.last && now - sparks.last.t < 150 && Math.abs(sparks.last.x - x) < 2 && Math.abs(sparks.last.y - y) < 2) return;
+  sparks.last = { t: now, x, y };
+  console.debug("[APNext sparks] burst", x.toFixed(0), y.toFixed(0), "overlay:", !!sparksOverlay());
   for (let i = 0; i < 26; i++) {
     const ang = Math.random() * Math.PI * 2;
-    const speed = (70 + Math.random() * 190) * k; // ~ screen px / s
+    const speed = 70 + Math.random() * 190; // screen px / s
     sparks.list.push({
-      x, y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed - 40 * k,
-      born: now, life: 500 + Math.random() * 400, size: (1.8 + Math.random() * 2.4) * k,
-      color: color || C.accent, k,
+      x, y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed - 40,
+      born: now, life: 500 + Math.random() * 400, size: 1.8 + Math.random() * 2.4, color: color || C.accent,
     });
   }
-  // one expanding ring so the connect reads even from far out
-  sparks.list.push({ x, y, vx: 0, vy: 0, born: now, life: 520, size: 0, ring: true, color: color || C.accent, k });
-  if (!sparks.raf) sparks.raf = requestAnimationFrame(tickSparks);
+  sparks.list.push({ x, y, vx: 0, vy: 0, born: now, life: 520, size: 0, ring: true, color: color || C.accent });
+  ensureOverlayLoop();
 }
 
-function tickSparks() {
-  sparks.raf = 0;
+// one frame of the overlay: clear, then highlight rings + sparks. Returns true
+// while there is still something animating.
+function drawOverlayFrame() {
+  const ov = sparksOverlay();
+  const ctx = sparks.octx;
+  if (!ov || !ctx) return false;
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, ov.width, ov.height);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const now = performance.now();
   sparks.list = sparks.list.filter((p) => now - p.born < p.life);
-  app.canvas?.setDirty?.(true, false);
-  if (sparks.list.length) sparks.raf = requestAnimationFrame(tickSparks);
+  let busy = false;
+  if (hlState.on && drawHighlightOverlay(ctx)) busy = true;
+  if (sparks.on && sparks.list.length) { drawSparksInto(ctx, now); busy = true; }
+  return busy;
 }
 
-function drawSparks(canvas, ctx) {
-  if (!sparks.list.length) return;
-  const now = performance.now();
-  const ds = canvas.ds;
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+function drawSparksInto(ctx, now) {
   for (const p of sparks.list) {
     const age = (now - p.born) / 1000;
-    const k = 1 - (now - p.born) / p.life;
+    const life = 1 - (now - p.born) / p.life;
+    if (life <= 0) continue;
+    const [sx, sy] = graphToScreen(p.x, p.y);
     if (p.ring) {
-      const sx = (p.x + ds.offset[0]) * ds.scale, sy = (p.y + ds.offset[1]) * ds.scale;
-      ctx.globalAlpha = Math.max(0, k) * 0.9;
+      ctx.globalAlpha = life * 0.9;
       ctx.strokeStyle = p.color;
-      ctx.lineWidth = 3 * (0.4 + 0.6 * k);
+      ctx.lineWidth = 3 * (0.4 + 0.6 * life);
       ctx.beginPath();
-      ctx.arc(sx, sy, 6 + (1 - k) * 38, 0, Math.PI * 2); // screen px
+      ctx.arc(sx, sy, 6 + (1 - life) * 38, 0, Math.PI * 2);
       ctx.stroke();
       continue;
     }
-    const x = p.x + p.vx * age, y = p.y + p.vy * age + 120 * (p.k || 1) * age * age; // a little gravity
-    const sx = (x + ds.offset[0]) * ds.scale, sy = (y + ds.offset[1]) * ds.scale;
-    ctx.globalAlpha = Math.max(0, k);
+    const x = sx + p.vx * age, y = sy + p.vy * age + 120 * age * age;
+    ctx.globalAlpha = life;
     ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(sx, sy, Math.max(1.2, p.size * ds.scale * (0.6 + 0.4 * k)), 0, Math.PI * 2);
+    ctx.arc(x, y, Math.max(1.2, p.size * (0.6 + 0.4 * life)), 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.restore();
+  ctx.globalAlpha = 1;
 }
 
 function linkEndpoint(link) {
+  // graph-space position of the target input
   const graph = app.canvas?.graph;
   const node = graph?.getNodeById?.(link.target_id);
   if (!node) return null;
-  const p = node.getInputPos?.(link.target_slot);
-  return p ? [p[0], p[1]] : null;
+  let p = null;
+  try { p = node.getInputPos?.(link.target_slot); } catch (e) { p = null; }
+  const nx = node.pos?.[0] ?? 0, ny = node.pos?.[1] ?? 0, nw = node.size?.[0] ?? 200;
+  if (!p) return [nx, ny];
+  let [x, y] = p;
+  // some layouts report slot positions relative to the node; detect and fix
+  if (x < nx - 40 || x > nx + nw + 40) { x += nx; y += ny; }
+  // with graphgen slot tabs the visible port sits on the node edge, not 10px in
+  if (ggState.on && !node.flags?.collapsed) x = nx;
+  return [x, y];
 }
 
 function patchSparks() {
@@ -1081,10 +1303,7 @@ function patchSparks() {
   const orig = LGC.prototype.drawFrontCanvas;
   LGC.prototype.drawFrontCanvas = function () {
     const r = orig.apply(this, arguments);
-    if (sparks.on) {
-      try { drawSparks(this, this.ctx); } catch (e) { /* ignore */ }
-      listenForLinks(this);
-    }
+    if (sparks.on) listenForLinks(this);
     return r;
   };
   sparks.patched = true;
@@ -1096,20 +1315,82 @@ function listenForLinks(canvas) {
   sparks.listening.add(lc);
   lc.events.addEventListener("link-created", (e) => {
     if (!sparks.on) return;
-    const link = e?.detail;
-    if (!link) return;
-    const p = linkEndpoint(link);
-    if (!p) return;
-    const LGC = window.LGraphCanvas || app.canvas?.constructor;
-    const color = link.color || (LGC?.link_type_colors && LGC.link_type_colors[link.type]) || C.accent;
-    spawnSparks(p[0], p[1], color);
+    try {
+      const link = e?.detail?.link || e?.detail;
+      if (!link || link.target_id === undefined) { console.debug("[APNext sparks] link-created without a link payload", e?.detail); return; }
+      const p = linkEndpoint(link);
+      if (!p) return;
+      const LGC = window.LGraphCanvas || app.canvas?.constructor;
+      const color = link.color || (LGC?.link_type_colors && LGC.link_type_colors[link.type]) || C.accent;
+      spawnSparks(p[0], p[1], color);
+    } catch (err) {
+      console.warn("[APNext sparks] failed:", err);
+    }
   });
 }
 
+function listenForGraphLinks() {
+  // second source: LGraph-level "link-created"-ish signals are not uniform across
+  // versions, so also watch onConnectionChange of the root graph
+  const g = app.canvas?.graph;
+  if (!g || sparks.listening.has(g)) return;
+  sparks.listening.add(g);
+  const prev = g.onConnectionChange;
+  g.onConnectionChange = function (node, link) {
+    try {
+      if (sparks.on && link && link.target_id !== undefined && !sparks.seen?.has(link.id)) {
+        sparks.seen = sparks.seen || new Set();
+        sparks.seen.add(link.id);
+        setTimeout(() => sparks.seen.delete(link.id), 500);
+        const p = linkEndpoint(link);
+        if (p) {
+          const LGC = window.LGraphCanvas || app.canvas?.constructor;
+          spawnSparks(p[0], p[1], link.color || (LGC?.link_type_colors && LGC.link_type_colors[link.type]) || C.accent);
+        }
+      }
+    } catch (err) { /* ignore */ }
+    return prev?.apply(this, arguments);
+  };
+}
+
+// Renderer-independent trigger: diff the graph's link table every background
+// frame (it is redrawn whenever links change). New ids -> burst. Bulk arrivals
+// (workflow load, paste, undo) are ignored.
+const linkWatch = { known: null, graph: null };
+
+function watchLinks(canvas) {
+  const graph = canvas?.graph;
+  if (!graph) return;
+  const table = graph._links ?? graph.links;
+  if (!table) return;
+  const ids = [];
+  if (table instanceof Map) for (const k of table.keys()) ids.push(k);
+  else for (const k in table) ids.push(k);
+  if (linkWatch.graph !== graph || !linkWatch.known) {
+    linkWatch.graph = graph;
+    linkWatch.known = new Set(ids.map(String));
+    return;
+  }
+  const current = new Set(ids.map(String));
+  const fresh = ids.filter((id) => !linkWatch.known.has(String(id)));
+  linkWatch.known = current;
+  if (!fresh.length || fresh.length > 3 || !sparks.on) return;
+  for (const id of fresh) {
+    const link = table instanceof Map ? table.get(id) ?? table.get(Number(id)) : table[id];
+    if (!link || link.target_id === undefined) continue;
+    const p = linkEndpoint(link);
+    if (!p) continue;
+    const LGC = window.LGraphCanvas || canvas.constructor;
+    const color = link.color || (LGC?.link_type_colors && LGC.link_type_colors[link.type]) || C.accent;
+    console.debug("[APNext sparks] new link", id, "→ burst at", p[0].toFixed(0), p[1].toFixed(0));
+    spawnSparks(p[0], p[1], color);
+  }
+}
+
 function applySparks(on) {
-  if (on) patchSparks();
+  if (on) { patchSparks(); patchLinkRenderer(); listenForLinks(app.canvas || {}); listenForGraphLinks(); }
   sparks.on = on && sparks.patched;
-  if (!on) sparks.list = [];
+  if (!on) { sparks.list = []; if (sparks.overlay) sparks.overlay.remove(); sparks.overlay = null; }
 }
 
 // ---------------------------------------------------------------------------
@@ -1152,8 +1433,14 @@ function isOurs(nodeData) {
 
 function colorCodeNode(node) {
   if (!colorCodeState.on || !node) return;
-  if (node.color || node.bgcolor) return; // user (or a saved workflow) already chose
   const { color } = familyColors(node.type || node.comfyClass || "");
+  if (node.properties?.apnext_autocolor) {
+    // ours from an earlier session: refresh to the header-only scheme
+    node.color = color;
+    delete node.bgcolor;
+    return;
+  }
+  if (node.color || node.bgcolor) return; // user (or a saved workflow) already chose
   node.color = color;
   node.properties = node.properties || {};
   node.properties.apnext_autocolor = true;
@@ -1188,7 +1475,7 @@ function applyColorCode(on) {
 // ---------------------------------------------------------------------------
 
 const S_GGNODES = "APNext.Theme.GraphgenNodes";
-const ggState = { on: false, shapePatched: false, slotPatched: false, fontPatched: false, savedTitleSize: null };
+const ggState = { on: false, shapePatched: false, slotPatched: false, fontPatched: false, savedTitleSize: null, boldTitles: false };
 
 function hexToRgba(hex, a) {
   const c = parseColor(hex);
@@ -1199,6 +1486,15 @@ function hexToRgba(hex, a) {
 // own (botanical-mapped) title colour when coloured, else its first output's
 // link colour, else the border colour
 function nodeHue(node) {
+  const key = (node.properties?.apnext_autocolor ? "A" : "") + (node.color || "") + "|" + (node.outputs?.[0]?.type || "");
+  if (node._apnextHueKey === key && node._apnextHue) return node._apnextHue;
+  const hue = nodeHueCompute(node);
+  node._apnextHueKey = key;
+  node._apnextHue = hue;
+  return hue;
+}
+
+function nodeHueCompute(node) {
   if (node.properties?.apnext_autocolor) return familySwatch(node.type || "");
   const LGC = window.LGraphCanvas;
   if (node.color) {
@@ -1239,16 +1535,16 @@ function patchNodeShape() {
       ctx.fillStyle = hexToRgba(hue, 0.12);
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(x, y + titleH - 0.5);
-      ctx.lineTo(x + w, y + titleH - 0.5);
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = mix(hue, C.border, 0.35);
+      ctx.moveTo(x, y + titleH - 1);
+      ctx.lineTo(x + w, y + titleH - 1);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = mix(hue, "#ffffff", 0.22);
       ctx.stroke();
     }
     // 1px panel border around the whole box (selection outline is drawn by LiteGraph)
     if (!selected) {
       ctx.beginPath();
-      ctx.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, collapsed ? radius : radius);
+      ctx.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, collapsed ? radius : [radius, radius, 0, 0]);
       ctx.lineWidth = 1;
       ctx.strokeStyle = C.border;
       ctx.stroke();
@@ -1273,7 +1569,7 @@ function patchTitleFont() {
     configurable: true,
     get() {
       const f = origGet.call(this);
-      return ggState.on ? `600 ${f}` : f;
+      return (ggState.on || ggState.boldTitles) ? `700 ${f}` : f;
     },
   });
   ggState.fontPatched = true;
@@ -1388,6 +1684,8 @@ async function applyAll() {
     applyChrome(theme);
     applyLiteGraphLook(theme);
     await applyPalette(theme);
+    if (theme) patchLinkRenderer(); // hosts the background-pass hook
+    themeState.on = theme;
     applyNodeRecolor(theme && settingGet(S_RECOLOR) !== false);
     applyGraphgenNodes(theme && settingGet(S_GGNODES) !== false);
     applyWires(currentWires());
