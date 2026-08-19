@@ -18,6 +18,13 @@
 import random
 
 from ...utils.claude_code import is_interrupt
+from ...utils.apnext_context import (
+    build_context,
+    context_hidden_inputs,
+    context_inputs,
+    context_summary,
+    with_context,
+)
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
 from .base_prompt_writer import H3BasePromptWriter, _FIELDS
@@ -35,6 +42,7 @@ from .common import (
     DIALOGUE_LANGUAGES,
     SHOT_PLANS,
     VISUAL_STYLES,
+    resolve_visual_style,
     camera_directive,
     extract_section,
     resolve_dialogue_language,
@@ -125,7 +133,10 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
             "shot_plan": (SHOT_PLANS, {"default": AUTO}),
             "visual_style": (VISUAL_STYLES, {
                 "default": AUTO,
-                "tooltip": "Auto keeps the style of the previous clip, which is almost always what you want.",
+                "tooltip": (
+                    "Auto keeps the style of the previous clip, which is almost always what you want. "
+                    "The list is the guide's styles plus the APNext Cinematic vocabulary (film stock, grading, aesthetics); pick Custom and fill in custom_visual_style to write your own."
+                ),
             }),
             "wildness": ("INT", {
                 "default": 25, "min": 0, "max": 100, "step": 1,
@@ -174,6 +185,13 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
                     "dialect)' or 'Latin'. Overrides the dropdown when filled in."
                 ),
             }),
+            "custom_visual_style": ("STRING", {
+                "default": "",
+                "tooltip": (
+                    "Any visual style not in the dropdown, e.g. 'hand-painted cel animation' or "
+                    "'Kodak Vision3 500T, anamorphic'. Overrides the dropdown when filled in."
+                ),
+            }),
             "resume_session_id": ("STRING", {
                 "default": "",
                 "tooltip": (
@@ -191,7 +209,9 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
             }),
         }
 
-        return {"required": required, "optional": optional}
+        optional.update(context_inputs())
+
+        return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
     RETURN_TYPES = ("STRING",) * 6 + ("IMAGE", "IMAGE")
     RETURN_NAMES = (
@@ -383,9 +403,12 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
         previous_prompt="",
         extra_instructions="",
         custom_dialogue_language="",
+        custom_visual_style="",
         resume_session_id="",
         working_dir="",
+        **context_slots,
     ):
+        context_text, context_entries = build_context(context_slots, target="the next clip")
         indices = select_last_frames(frames, frame_count, frame_stride)
         context = frames[indices]
         first_frame = frames[-1:]
@@ -393,6 +416,7 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language
             )
+            visual_style = resolve_visual_style(visual_style, custom_visual_style)
 
             resuming = bool(resume_session_id.strip())
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
@@ -421,6 +445,8 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
                 directions_with_research(extra_instructions, research),
                 rng,
             )
+
+            user_prompt = with_context(user_prompt, context_text)
 
             print(
                 f"🎬 H3 Claude Code Continue Writer | {continuation_mode.split(' ')[0]} | "

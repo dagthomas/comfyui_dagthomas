@@ -9,6 +9,13 @@
 # text into their `idea` or `extra_instructions`. The H3 writers can also target
 # Claude Code directly by picking a `claudecode:` entry in their model dropdown.
 
+from ...utils.apnext_context import (
+    build_context,
+    context_hidden_inputs,
+    context_inputs,
+    context_summary,
+    with_context,
+)
 from ...utils.claude_code import (
     CLAUDE_CODE_MODELS,
     RESEARCH_TOOLS,
@@ -101,7 +108,9 @@ class ClaudeCodeNode:
                         "throwaway scratch folder, which is the safe default."
                     ),
                 }),
+                **context_inputs(),
             },
+            "hidden": context_hidden_inputs(),
         }
 
     RETURN_TYPES = ("STRING", "STRING", "STRING")
@@ -130,9 +139,11 @@ class ClaudeCodeNode:
         system_prompt=DEFAULT_SYSTEM_PROMPT,
         resume_session_id="",
         working_dir="",
+        **context_slots,
     ):
+        context_text, context_entries = build_context(context_slots, target="the answer")
         try:
-            if not prompt.strip() and image is None:
+            if not prompt.strip() and image is None and not context_entries:
                 raise ValueError("Provide a prompt, an image, or both.")
 
             if not find_cli():
@@ -146,11 +157,11 @@ class ClaudeCodeNode:
 
             print(
                 f"🤖 Claude Code | {model} | {len(images) if images else 0} image(s) | "
-                f"research {'on' if enable_research else 'off'}"
+                f"research {'on' if enable_research else 'off'} | context: {context_summary(context_entries)}"
             )
 
             result = run_claude_code(
-                prompt.strip(),
+                with_context(prompt.strip(), context_text),
                 system_prompt=system_prompt.strip() or None,
                 images=images,
                 model=model,

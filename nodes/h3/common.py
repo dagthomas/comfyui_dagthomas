@@ -7,6 +7,7 @@
 #
 # Source: https://huggingface.co/MiniMaxAI/MiniMax-H3/tree/main/docs
 
+import json
 import os
 import re
 
@@ -82,16 +83,70 @@ CAMERA_MOTIONS = [
 CAMERA_AMPLITUDES = [AUTO, "with small amplitude", "medium (omit)", "with large amplitude"]
 CAMERA_SPEEDS = [AUTO, "at slow speed", "normal (omit)", "at fast speed"]
 
-VISUAL_STYLES = [
-    AUTO,
+VISUAL_STYLE_CUSTOM = "Custom (use custom_visual_style)"
+
+# The guide's own examples first ...
+_GUIDE_VISUAL_STYLES = [
     "Cinematic",
     "live-action",
+    "Live-action, 35mm cinematic film aesthetic",
     "2D-animated",
     "3D CG",
     "claymation",
     "watercolor",
     "vintage film",
 ]
+
+# ... then the APNext Cinematic vocabulary (data/next/cinematic/*.json), so the
+# same looks the APNext Cinematic node emits can be picked straight from the
+# dropdown. Film stock / format, grading and the big aesthetics list are the
+# ones that read as a *style*; genre, directors, movies and shot types steer
+# better through the context sockets.
+_APNEXT_CINEMATIC_DIR = os.path.join(os.path.dirname(_DATA_DIR), "next", "cinematic")
+_APNEXT_VISUAL_STYLE_FILES = ("film_type", "color_grading", "aesthetics")
+
+
+def _apnext_cinematic_items(name):
+    path = os.path.join(_APNEXT_CINEMATIC_DIR, f"{name}.json")
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            items = json.load(fh).get("items", [])
+    except (OSError, ValueError):
+        return []
+    return [str(item).strip() for item in items if str(item).strip()]
+
+
+def _build_visual_styles():
+    styles = [AUTO, VISUAL_STYLE_CUSTOM]
+    seen = {s.lower() for s in styles}
+    for source in [_GUIDE_VISUAL_STYLES] + [
+        _apnext_cinematic_items(name) for name in _APNEXT_VISUAL_STYLE_FILES
+    ]:
+        for item in source:
+            if item.lower() not in seen:
+                seen.add(item.lower())
+                styles.append(item)
+    return styles
+
+
+VISUAL_STYLES = _build_visual_styles()
+
+
+def resolve_visual_style(choice, custom=""):
+    """
+    Turn the visual_style dropdown (plus its free-text companion) into the
+    style string the prompt builders expect.
+
+    A non-empty custom value always wins, so anything can be typed in. "Custom"
+    with an empty text box, like an empty choice, falls back to AUTO so the
+    model derives the style itself.
+    """
+    custom = (custom or "").strip()
+    if custom:
+        return custom
+    if not choice or choice == VISUAL_STYLE_CUSTOM:
+        return AUTO
+    return choice
 
 SHOT_PLANS = [AUTO, "Single shot", "Two shots", "Three shots", "Four shots"]
 

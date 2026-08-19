@@ -428,6 +428,13 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.claude_code_continue_writer import H3ClaudeCodeContinueWriter
+    NEW_MAPPINGS["H3ClaudeCodeContinueWriter"] = H3ClaudeCodeContinueWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeContinueWriter"] = "APNext H3 Claude Code Continue Writer"
+except Exception:
+    pass
+
+try:
     from .nodes.h3.ref_prompt_writer import H3RefPromptWriter
     NEW_MAPPINGS["H3RefPromptWriter"] = H3RefPromptWriter
     NEW_DISPLAY_MAPPINGS["H3RefPromptWriter"] = "APNext H3 Reference Prompt Writer"
@@ -438,6 +445,41 @@ try:
     from .nodes.h3.prompt_preview import H3PromptPreview
     NEW_MAPPINGS["H3PromptPreview"] = H3PromptPreview
     NEW_DISPLAY_MAPPINGS["H3PromptPreview"] = "APNext H3 Prompt Preview"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.characters import H3Characters
+    NEW_MAPPINGS["H3Characters"] = H3Characters
+    NEW_DISPLAY_MAPPINGS["H3Characters"] = "APNext H3 Characters"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_crossover_writer import H3ClaudeCodeCrossoverWriter
+    NEW_MAPPINGS["H3ClaudeCodeCrossoverWriter"] = H3ClaudeCodeCrossoverWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeCrossoverWriter"] = "APNext H3 Crossover Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_scenes_writer import H3ClaudeCodeScenesWriter
+    NEW_MAPPINGS["H3ClaudeCodeScenesWriter"] = H3ClaudeCodeScenesWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeScenesWriter"] = "APNext H3 Claude Code Scenes Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.scene_pick import H3ScenePick
+    NEW_MAPPINGS["H3ScenePick"] = H3ScenePick
+    NEW_DISPLAY_MAPPINGS["H3ScenePick"] = "APNext H3 Scene Pick"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.scenes_to_chain_plan import H3ScenesToChainPlan
+    NEW_MAPPINGS["H3ScenesToChainPlan"] = H3ScenesToChainPlan
+    NEW_DISPLAY_MAPPINGS["H3ScenesToChainPlan"] = "APNext H3 Scenes → Contex Loop Plan"
 except Exception:
     pass
 

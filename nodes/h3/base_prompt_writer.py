@@ -6,6 +6,13 @@
 
 import random
 
+from ...utils.apnext_context import (
+    build_context,
+    context_hidden_inputs,
+    context_inputs,
+    context_summary,
+    with_context,
+)
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
 from ...utils.llm_router import AUTO_DETECT, call_llm, is_interrupt, list_all_models
@@ -17,6 +24,7 @@ from .common import (
     DIALOGUE_LANGUAGES,
     SHOT_PLANS,
     VISUAL_STYLES,
+    resolve_visual_style,
     camera_directive,
     resolve_dialogue_language,
     extract_section,
@@ -89,7 +97,10 @@ class H3BasePromptWriter:
                 "shot_plan": (SHOT_PLANS, {"default": AUTO}),
                 "visual_style": (VISUAL_STYLES, {
                     "default": AUTO,
-                    "tooltip": "Style stated at the start of [Shot 1]. Auto derives it from the idea or the attached image.",
+                    "tooltip": (
+                        "Style stated at the start of [Shot 1]. Auto derives it from the idea or the attached image. "
+                        "The list is the guide's styles plus the APNext Cinematic vocabulary (film stock, grading, aesthetics); pick Custom and fill in custom_visual_style to write your own."
+                    ),
                 }),
                 "wildness": ("INT", {
                     "default": 25, "min": 0, "max": 100, "step": 1,
@@ -156,6 +167,13 @@ class H3BasePromptWriter:
                         "dialect)' or 'Latin'. Overrides the dropdown when filled in."
                     ),
                 }),
+                "custom_visual_style": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Any visual style not in the dropdown, e.g. 'hand-painted cel animation' or "
+                        "'Kodak Vision3 500T, anamorphic'. Overrides the dropdown when filled in."
+                    ),
+                }),
                 "model_override": ("STRING", {
                     "default": "",
                     "tooltip": (
@@ -172,7 +190,9 @@ class H3BasePromptWriter:
                         "local 8000. Ignored by the cloud providers."
                     ),
                 }),
+                **context_inputs(),
             },
+            "hidden": context_hidden_inputs(),
         }
 
     RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "IMAGE", "IMAGE")
@@ -477,19 +497,24 @@ class H3BasePromptWriter:
         image=None,
         extra_instructions="",
         custom_dialogue_language="",
+        custom_visual_style="",
         model_override="",
         local_base_url="",
+        **context_slots,
     ):
         # Frame 0 and the final frame of the batch go back out, so the H3 video
         # node's first_frame / last_frame can be wired straight from this node.
         frames = (image[0:1], image[-1:]) if image is not None else (None, None)
+        context_text, context_entries = build_context(context_slots)
         try:
-            if not idea.strip() and image is None:
+            if not idea.strip() and image is None and not context_entries:
                 raise ValueError("Provide an idea, an image, or both.")
 
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language
             )
+
+            visual_style = resolve_visual_style(visual_style, custom_visual_style)
 
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
@@ -517,10 +542,12 @@ class H3BasePromptWriter:
                 len(images) if images else 0,
                 rng,
             )
+            user_prompt = with_context(user_prompt, context_text)
             warn_if_images_unused(task_type, len(images) if images else 0)
 
             print(
                 f"🎬 H3 Prompt Writer | {task_type} | {duration_seconds:.2f}s | "
+                f"context: {context_summary(context_entries)} | "
                 f"wildness {wildness} ({wild_label}) | seed {current_seed}"
             )
 

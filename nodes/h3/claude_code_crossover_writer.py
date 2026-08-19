@@ -1,0 +1,438 @@
+# APNext H3 Crossover Writer
+#
+# Takes a cast of characters (from H3 Characters nodes or typed by hand) plus
+# the user's steer, and has the local Claude Code CLI write 1-10 crossover
+# scenes in the four-section MiniMax-H3 T2VA layout (subject_definitions /
+# integrated_multimodal_description / overall_soundscape / non_diegetic_music).
+#
+# The scenes come back as a ComfyUI list, one prompt per element, with a
+# matching list of durations, so a video node downstream renders every scene in
+# one queue. H3ScenePick pulls a single scene out of that list.
+
+import random
+import re
+
+from ...utils.claude_code import is_interrupt
+from ...utils.apnext_context import (
+    build_context,
+    context_hidden_inputs,
+    context_inputs,
+    context_summary,
+    with_context,
+)
+from ...utils.constants import CUSTOM_CATEGORY
+from .claude_code_support import (
+    CORE_SKILL,
+    claude_code_inputs,
+    claude_code_optional_inputs,
+    directions_with_research,
+    run_h3_claude_code,
+)
+from .common import (
+    AUTO,
+    VISUAL_STYLES,
+    resolve_visual_style,
+    DIALOGUE_LANGUAGES,
+    load_guide,
+    resolve_dialogue_language,
+    wildness_directive,
+)
+from .scenes_support import (
+    WARDROBE_TOOLTIP,
+    wardrobe_directive,
+    CONTINUITY_MODES,
+    DURATION_MODES,
+    MAX_SCENES,
+    chain_system_block,
+    continuity_directive,
+    duration_directive,
+    envelope_contract,
+    parse_scenes,
+    scenes_to_text,
+)
+
+CROSSOVER_SKILLS = (CORE_SKILL, "h3-crossover", "h3-style-craft")
+
+MAX_CAST_SOCKETS = 4
+CAST_SOCKETS = tuple(f"cast_{i}" for i in range(1, MAX_CAST_SOCKETS + 1))
+
+SHOTS_PER_SCENE = [AUTO, "1", "2", "3", "4"]
+
+_SCENE_FIELDS = (
+    "subject_definitions",
+    "integrated_multimodal_description",
+    "overall_soundscape",
+    "non_diegetic_music",
+)
+
+
+def parse_cast(*blocks):
+    """Merge cast blocks into unique, non-empty lines in first-seen order."""
+    seen = set()
+    cast = []
+    for block in blocks:
+        for line in (block or "").splitlines():
+            line = line.strip().lstrip("-*• ").strip()
+            if not line:
+                continue
+            # Tolerate lines already carrying a <Subject N> tag.
+            line = re.sub(r"^<Subject\s+\d+>\s*", "", line, flags=re.IGNORECASE)
+            key = line.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            cast.append(line)
+    return cast
+
+
+class H3ClaudeCodeCrossoverWriter:
+    """
+    APNext H3 Crossover Writer
+
+    Writes 1-10 crossover scenes for a given cast with the local Claude Code CLI,
+    following the production rules distilled from rendered crossover movies.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        required = {
+            "direction": ("STRING", {
+                "multiline": True,
+                "default": "",
+                "tooltip": (
+                    "Your steer for the AI: premise, tone, genre, where it happens, what "
+                    "must happen, running gags, who should clash. Free text - this is the "
+                    "creative brief the scenes are built from."
+                ),
+            }),
+            "extra_cast": ("STRING", {
+                "multiline": True,
+                "default": "",
+                "tooltip": (
+                    "Extra cast typed by hand, one per line, ideally as "
+                    "`Character (played by Actor) from Show`. Merged with the cast sockets."
+                ),
+            }),
+            "scene_count": ("INT", {
+                "default": 3, "min": 1, "max": MAX_SCENES,
+                "tooltip": "How many scenes to write. Each becomes one element of the scenes list.",
+            }),
+            "duration_mode": (DURATION_MODES, {"default": DURATION_MODES[0]}),
+            "continuity_mode": (CONTINUITY_MODES, {
+                "default": CONTINUITY_MODES[0],
+                "tooltip": (
+                    "Independent clips: each scene is its own T2V clip with hard cuts. "
+                    "Continuous chain: scenes are written for C2V / motion-context chaining "
+                    "(Contex Loop, Add Guide, Motion Context) - scene N+1 opens on scene N's "
+                    "last frame, one continuous take, speaker hand-off beats, rotating closers."
+                ),
+            }),
+            "scene_duration": ("FLOAT", {
+                "default": 15.0, "min": 5.0, "max": 20.0, "step": 0.5,
+                "tooltip": (
+                    "Seconds per scene in Fixed mode. Also the fallback if Claude omits a "
+                    "duration in Vary mode. Cut timecodes are spread across this length."
+                ),
+            }),
+            "shots_per_scene": (SHOTS_PER_SCENE, {
+                "default": AUTO,
+                "tooltip": "Shots per scene. Auto lets Claude choose 2-3 to fit the duration.",
+            }),
+            "visual_style": (VISUAL_STYLES, {
+                "default": "Live-action, 35mm cinematic film aesthetic",
+                "tooltip": (
+                    "Opens every [Shot 1]; kept identical across the run for continuity. The "
+                    "list is the guide's styles plus the APNext Cinematic vocabulary (film "
+                    "stock, grading, aesthetics); Custom uses custom_visual_style, Auto lets "
+                    "Claude pick one that suits the cast."
+                ),
+            }),
+            "dialogue_language": (DIALOGUE_LANGUAGES, {"default": "English"}),
+            "wildness": ("INT", {
+                "default": 35, "min": 0, "max": 100, "step": 1,
+                "tooltip": "0 = grounded and faithful to each show, 100 = fully unhinged. Above 40 seeds surreal events.",
+            }),
+        }
+        required.update(claude_code_inputs())
+        required["seed"] = ("INT", {
+            "default": -1, "min": -1, "max": 0xffffffffffffffff,
+            "tooltip": "Seeds the surreal picks and controls caching. -1 re-runs every queue.",
+        })
+
+        optional = {
+            name: ("STRING", {
+                "forceInput": True,
+                "tooltip": (
+                    "A cast line or block from an H3 Characters node (its `cast` output). "
+                    "Chain several Characters nodes or use several sockets."
+                ),
+            })
+            for name in CAST_SOCKETS
+        }
+        optional["custom_dialogue_language"] = ("STRING", {"default": ""})
+        optional["custom_visual_style"] = ("STRING", {
+            "default": "",
+            "tooltip": (
+                "Any visual style not in the dropdown, e.g. 'hand-painted cel animation' or "
+                "'Kodak Vision3 500T, anamorphic'. Overrides the dropdown when filled in."
+            ),
+        })
+        optional["wardrobe"] = ("STRING", {"multiline": True, "default": "", "tooltip": WARDROBE_TOOLTIP})
+        optional["extra_instructions"] = ("STRING", {"multiline": True, "default": ""})
+        optional.update(claude_code_optional_inputs())
+        optional.update(context_inputs())
+
+        return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
+
+    RETURN_TYPES = ("STRING", "FLOAT", "STRING", "STRING", "STRING", "INT", "STRING", "STRING")
+    RETURN_NAMES = (
+        "scenes",
+        "durations",
+        "scenes_text",
+        "synopsis",
+        "cast",
+        "scene_count",
+        "session_id",
+        "info",
+    )
+    OUTPUT_IS_LIST = (True, True, False, False, False, False, False, False)
+    FUNCTION = "write_scenes"
+    CATEGORY = f"{CUSTOM_CATEGORY}/H3"
+    DESCRIPTION = (
+        "Writes 1-10 MiniMax-H3 crossover scenes for a cast of characters with the local "
+        "Claude Code CLI. `scenes` and `durations` are lists (one element per scene) so a "
+        "video node downstream renders them all; use H3 Scene Pick to grab one."
+    )
+
+    @classmethod
+    def IS_CHANGED(cls, seed=-1, **kwargs):
+        return float("nan") if seed == -1 else seed
+
+    # ------------------------------------------------------------------
+    # Prompt construction
+    # ------------------------------------------------------------------
+
+    def _build_system_prompt(self, continuity_mode=CONTINUITY_MODES[0]):
+        base_guide = load_guide("guide_base_en.md")
+        crossover_guide = load_guide("guide_crossover_en.md")
+        return (
+            "You are a MiniMax-H3 crossover screenwriter and prompt engineer. You are "
+            "given a cast of characters from different shows and films and a creative brief, "
+            "and you write a short run of self-contained scenes in which those characters "
+            "meet, each scene as a complete production-ready H3 T2VA prompt.\n\n"
+            "Two documents follow. The official guide is authoritative for grammar, camera "
+            "vocabulary, timestamps, speaker IDs and <d> blocks. The crossover rules are "
+            "authoritative for the four-section scene layout, subject binding, silence "
+            "mandates, pacing and story flow across scenes.\n\n"
+            "=== BEGIN MINIMAX-H3 VIDEO PROMPT WRITING GUIDE ===\n"
+            f"{base_guide}\n"
+            "=== END MINIMAX-H3 VIDEO PROMPT WRITING GUIDE ===\n\n"
+            "=== BEGIN MINIMAX-H3 CROSSOVER SCENE RULES ===\n"
+            f"{crossover_guide}\n"
+            "=== END MINIMAX-H3 CROSSOVER SCENE RULES ==="
+            + chain_system_block(continuity_mode) + "\n\n"
+            + envelope_contract(_SCENE_FIELDS) + "\n"
+            "- The synopsis block also carries `Cast:` with one line per character and why "
+            "they are there.\n"
+            "- Use the character, actor and show strings exactly as given.\n"
+            "- Write everything in English except dialogue, which uses the requested language "
+            "inside the <d>[...] tag."
+        )
+
+    def _build_user_prompt(
+        self,
+        cast,
+        direction,
+        scene_count,
+        duration_mode,
+        continuity_mode,
+        scene_duration,
+        shots_per_scene,
+        visual_style,
+        dialogue_language,
+        wildness,
+        extra_instructions,
+        rng,
+        wardrobe="",
+    ):
+        lines = ["CAST (use these strings verbatim in subject_definitions):"]
+        lines += [f"- {c}" for c in cast]
+        lines.append("")
+        lines.append("CREATIVE BRIEF FROM THE USER:")
+        lines.append(direction.strip() or "(none - invent a premise that fits this cast)")
+        lines.append("")
+        lines.append("DIRECTIVES:")
+        lines.append(
+            f"- Write exactly {scene_count} scene{'s' if scene_count != 1 else ''}, "
+            f"numbered 01 to {scene_count:02d}, forming one continuous story with "
+            "hand-offs between adjacent scenes."
+        )
+        lines.append(f"- {duration_directive(duration_mode, scene_duration)}")
+        lines.append(f"- {continuity_directive(continuity_mode)}")
+        if shots_per_scene == AUTO:
+            lines.append("- Use 2-3 shots per scene, varying the pattern between scenes.")
+        else:
+            lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
+        if visual_style == AUTO:
+            lines.append(
+                "- Visual style: choose one concrete style that suits this cast (e.g. "
+                "`Live-action, 35mm cinematic film aesthetic`), open every [Shot 1] with it "
+                "followed by lighting, time of day and setting, and keep it identical across "
+                "the run."
+            )
+        else:
+            lines.append(
+                f"- Visual style: open every [Shot 1] with `{visual_style.strip()}` followed by "
+                "lighting, time of day and setting; keep it identical across the run."
+            )
+        if dialogue_language:
+            lines.append(
+                f"- Dialogue language: {dialogue_language}. Every <d> tag reads "
+                f"`<d>[{dialogue_language} in Character's voice from Show] ...</d>`."
+            )
+        else:
+            lines.append(
+                "- Dialogue language: pick one that fits the setting and use it consistently "
+                "in every <d> tag."
+            )
+        lines.append(f"- {wardrobe_directive(wardrobe)}")
+        lines.append(
+            "- Every listed character appears at least once across the run (unless the brief "
+            "says otherwise); introduce them with an on-screen reason to be there and stagger "
+            "arrivals rather than crowding scene 01. Max 3 people visible in one shot."
+        )
+        lines.append(
+            "- The character with the most dialogue in a scene is <Subject 1> in that scene."
+        )
+        wild_lines, wild_label = wildness_directive(wildness, rng)
+        lines += [f"- {w}" for w in wild_lines]
+        extra = (extra_instructions or "").strip()
+        if extra:
+            lines.append("")
+            lines.append("EXTRA INSTRUCTIONS:")
+            lines.append(extra)
+        lines.append("")
+        lines.append(
+            "Now write the synopsis block and the scene envelopes, and nothing else."
+        )
+        return "\n".join(lines), wild_label
+
+    # ------------------------------------------------------------------
+    # Execution
+    # ------------------------------------------------------------------
+
+    def write_scenes(
+        self,
+        direction,
+        extra_cast,
+        scene_count,
+        duration_mode,
+        continuity_mode,
+        scene_duration,
+        shots_per_scene,
+        visual_style,
+        dialogue_language,
+        wildness,
+        model,
+        research,
+        director,
+        use_subscription,
+        timeout_seconds,
+        seed,
+        custom_dialogue_language="",
+        custom_visual_style="",
+        wardrobe="",
+        extra_instructions="",
+        resume_session_id="",
+        working_dir="",
+        **cast_slots,
+    ):
+        context_text, context_entries = build_context(cast_slots, target="the scenes")
+        cast = parse_cast(*(cast_slots.get(name) for name in CAST_SOCKETS), extra_cast)
+        cast_text = "\n".join(cast)
+        try:
+            if not cast:
+                raise ValueError(
+                    "No cast. Wire an H3 Characters `cast` output into cast_1 or type "
+                    "characters into extra_cast."
+                )
+
+            dialogue_language = resolve_dialogue_language(
+                dialogue_language, custom_dialogue_language
+            )
+            visual_style = resolve_visual_style(visual_style, custom_visual_style)
+            current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
+            rng = random.Random(current_seed)
+
+            user_prompt, wild_label = self._build_user_prompt(
+                cast,
+                direction,
+                scene_count,
+                duration_mode,
+                continuity_mode,
+                scene_duration,
+                shots_per_scene,
+                visual_style,
+                dialogue_language,
+                wildness,
+                directions_with_research(extra_instructions, research),
+                rng,
+                wardrobe=wardrobe,
+            )
+            user_prompt = with_context(user_prompt, context_text)
+
+            print(
+                f"🎬 H3 Crossover Writer | {len(cast)} cast | {scene_count} scene(s) | "
+                f"context: {context_summary(context_entries)} | "
+                f"{duration_mode.split(' ')[0].lower()} {scene_duration:.1f}s | "
+                f"{'chain' if continuity_mode == CONTINUITY_MODES[1] else 'independent'} | "
+                f"wildness {wildness} ({wild_label}) | research {'on' if research else 'off'} | "
+                f"director {'on' if director else 'off'} | seed {current_seed}"
+            )
+
+            text, session_id, info = run_h3_claude_code(
+                self._build_system_prompt(continuity_mode),
+                user_prompt,
+                None,
+                model,
+                research,
+                use_subscription,
+                timeout_seconds,
+                resume_session_id,
+                working_dir,
+                director,
+                skills=CROSSOVER_SKILLS,
+            )
+
+            synopsis, parsed = parse_scenes(text, scene_duration)
+            if not parsed:
+                raise ValueError("Claude Code returned no scenes.")
+            if len(parsed) != scene_count:
+                print(
+                    f"⚠️ H3 Crossover Writer: asked for {scene_count} scene(s), parsed {len(parsed)}."
+                )
+
+            scenes = [p for _, _, p in parsed]
+            durations = [d for _, d, _ in parsed]
+            scenes_text = scenes_to_text(synopsis, parsed)
+
+            return (
+                scenes,
+                durations,
+                scenes_text,
+                synopsis,
+                cast_text,
+                len(scenes),
+                session_id,
+                info,
+            )
+
+        except Exception as exc:
+            if is_interrupt(exc):
+                raise
+            print(f"❌ H3 Crossover Writer error: {exc}")
+            import traceback
+
+            print(traceback.format_exc())
+            message = f"Error occurred while writing crossover scenes: {exc}"
+            return ([message], [float(scene_duration)], message, "", cast_text, 0, "", "error")

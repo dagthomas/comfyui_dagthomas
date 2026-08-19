@@ -5,6 +5,13 @@
 
 import random
 
+from ...utils.apnext_context import (
+    build_context,
+    context_hidden_inputs,
+    context_inputs,
+    context_summary,
+    with_context,
+)
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
 from ...utils.llm_router import AUTO_DETECT, call_llm, is_interrupt, list_all_models
@@ -16,6 +23,7 @@ from .common import (
     DIALOGUE_LANGUAGES,
     SHOT_PLANS,
     VISUAL_STYLES,
+    resolve_visual_style,
     camera_directive,
     collect_reference_images,
     resolve_dialogue_language,
@@ -91,7 +99,10 @@ class H3RefPromptWriter:
                 "shot_plan": (SHOT_PLANS, {"default": AUTO}),
                 "visual_style": (VISUAL_STYLES, {
                     "default": AUTO,
-                    "tooltip": "In full-reference mode the style is stated in one or two sentences BEFORE [Shot 1].",
+                    "tooltip": (
+                        "In full-reference mode the style is stated in one or two sentences BEFORE [Shot 1]. "
+                        "The list is the guide's styles plus the APNext Cinematic vocabulary (film stock, grading, aesthetics); pick Custom and fill in custom_visual_style to write your own."
+                    ),
                 }),
                 "wildness": ("INT", {
                     "default": 25, "min": 0, "max": 100, "step": 1,
@@ -143,6 +154,13 @@ class H3RefPromptWriter:
                         "dialect)' or 'Latin'. Overrides the dropdown when filled in."
                     ),
                 }),
+                "custom_visual_style": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Any visual style not in the dropdown, e.g. 'hand-painted cel animation' or "
+                        "'Kodak Vision3 500T, anamorphic'. Overrides the dropdown when filled in."
+                    ),
+                }),
                 "model_override": ("STRING", {
                     "default": "",
                     "tooltip": (
@@ -159,9 +177,11 @@ class H3RefPromptWriter:
                         "local 8000. Ignored by the cloud providers."
                     ),
                 }),
+                **context_inputs(),
                 # Image sockets last, so the front-end can grow and trim them at the tail.
                 **reference_image_inputs(),
             },
+            "hidden": context_hidden_inputs(),
         }
 
     _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
@@ -372,21 +392,24 @@ class H3RefPromptWriter:
         reference_notes="",
         extra_instructions="",
         custom_dialogue_language="",
+        custom_visual_style="",
         model_override="",
         local_base_url="",
         **image_slots,
     ):
         # The same tensors go back out on image_1..image_9 so the video node
         # can be wired from this node and numbering can never drift.
+        context_text, context_entries = build_context(image_slots)
         passthrough = tuple(image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
         try:
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language
             )
+            visual_style = resolve_visual_style(visual_style, custom_visual_style)
 
             images = [pil for _, pil in collect_reference_images(passthrough, tensor2pil)]
 
-            if not idea.strip() and not images and not reference_notes.strip():
+            if not idea.strip() and not images and not reference_notes.strip() and not context_entries:
                 raise ValueError("Provide an idea, at least one reference image, or reference notes.")
 
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
@@ -415,8 +438,11 @@ class H3RefPromptWriter:
                 rng,
             )
 
+            user_prompt = with_context(user_prompt, context_text)
+
             print(
                 f"🎬 H3 Reference Prompt Writer | {len(images)} image(s) | "
+                f"context: {context_summary(context_entries)} | "
                 f"{duration_seconds:.2f}s | wildness {wildness} ({wild_label}) | seed {current_seed}"
             )
 

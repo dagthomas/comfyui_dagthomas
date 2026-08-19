@@ -600,7 +600,7 @@ Writes the base format — `integrated_multimodal_description`, `overall_soundsc
 | `task_type` | `T2VA` (text only), `I2VA` (first frame), `FL2VA` (first + last), `L2VA` (last frame). Non-T2VA emits the exact reference-alignment instruction line |
 | `duration_seconds` | Drives cut times and the `S.SS` value in the alignment line |
 | `shot_plan` | Auto, or force 1–4 shots |
-| `visual_style` | Auto, or one of the guide's styles (`Cinematic`, `live-action`, `2D-animated`, `3D CG`, `claymation`, `watercolor`, `vintage film`) |
+| `visual_style` | Auto, one of the guide's styles (`Cinematic`, `live-action`, `2D-animated`, `3D CG`, `claymation`, `watercolor`, `vintage film`), or anything from the APNext Cinematic vocabulary (film stock/format, colour grading, the aesthetics list). Pick **Custom** and type your own in `custom_visual_style` - a filled-in custom box always wins over the dropdown |
 | `wildness` | **0 = literal, 100 = fully unhinged.** See below |
 | `camera_motion` / `camera_amplitude` / `camera_speed` | The guide's full camera vocabulary. Medium amplitude and normal speed are omitted from the output, as the spec requires |
 | `include_dialogue` | Off ⇒ no `(Sx)` IDs and no `<d>` blocks at all |
@@ -690,6 +690,93 @@ Any sizes mix freely; numbering follows connection order per kind. With referenc
           └──h3_prompt───────────────────────────────────────────────previous_prompt──┘        └──first_frame──────────────────────────────┘
           └──session_id──────────────────────────────────────────────resume_session_id┘
 ```
+
+#### APNext context sockets (all writer nodes)
+
+Every H3 writer — `APNext H3 Prompt Writer`, `APNext H3 Reference Prompt Writer`, all the Claude Code H3 nodes (Writer, Reference Writer, Refiner, Continue Writer, Crossover Writer, Scenes Writer) and the generic `APNext Claude Code` node — has `context_1..context_8` sockets (they grow as you connect them). Wire any other APNext node into them: **Time, Scene, Poses, Plots, Feelings, Cinematic, Photography, Science, Geography, Architecture, Fashion, People, Interaction, Stuff, Vehicle, Typography, Brands, Art/Artist, Keywords, Video Game, Human, Character**, or `H3 Characters` (`cast`) and another writer's `h3_prompt`.
+
+The node looks up which node type feeds each socket (via ComfyUI's hidden graph inputs), labels the socket in the UI (`context: time`), and hands the model a block like:
+
+```
+CONTEXT FROM CONNECTED APNEXT NODES
+1. [time] from APNext Time (fields: eras=Victorian, time (Random))
+   Input: Victorian era, dusk,
+   Use it as: Period, era, decade or time of day. Make it visible: period-correct wardrobe, props, ... State the time of day in every shot's opening line ...
+2. [feelings] from APNext Feelings (fields: creepy (Multiple Random))
+   Input: a creeping dread, flickering candles,
+   Use it as: Emotional tone. Express it through performance, delivery, body language, lighting ... not by naming the emotion.
+```
+
+The per-kind instructions live in `utils/apnext_context.py` (`CATEGORY_GUIDANCE`) — edit them to change how a category steers the scene. Unknown sources are passed through as generic context. Example workflows: `examples/h3/h3_context_claude_code.json` and `h3_context_ollama_qwen.json` (same sockets on the plain writer with `model_override = ollama:qwen3:8b`).
+
+#### APNext H3 Characters
+**Display Name:** `APNext H3 Characters`
+
+A lookup node for the character reference set. It reads `data/h3/characters.tsv` (`Relative File Path`, `Character / Subject Name`, `Real Actor / Actress`, `Franchise / Show`) and outputs the pieces as separate strings plus a ready-made cast line.
+
+| Input | Description |
+|-------|-------------|
+| `character` | Dropdown of every unique `Character — Actor (Franchise)` entry, or `🎲 random` |
+| `franchise_filter` | Only used with random: restrict the pool to one franchise/show |
+| `seed` | Drives the random pick, so it stays stable per queue |
+| `cast_in` *(optional)* | Cast lines from an upstream Characters node; this node's line is appended, so several chain into one cast list |
+
+| Output | Description |
+|--------|-------------|
+| `character` / `actor` / `franchise` | The three columns (franchise verbatim, including any appended look description) |
+| `file_path` | The reference clip's relative path |
+| `cast` | `Character (played by Actor) from Show` — the `subject_definitions:` form, with anything chained through `cast_in` above it |
+
+Edit the TSV to add or remove entries; duplicates (same character, actor and franchise) are collapsed automatically.
+
+#### APNext H3 Crossover Writer
+**Display Name:** `APNext H3 Crossover Writer`
+
+Takes a cast (from `H3 Characters` nodes, or typed by hand) and your steer, and has the local Claude Code CLI write **1–10 crossover scenes** — characters from different shows sharing one story — each a complete four-section T2VA prompt (`subject_definitions:` / `integrated_multimodal_description:` / `overall_soundscape:` / `non_diegetic_music:`). The rules come from `data/h3/guide_crossover_en.md`, distilled from rendered crossover productions: actor pinning, `<Subject 1>` speaker binding, silence mandates, `not in frame` isolation, positioned two-shots, no dead air, grounded entrances, hand-offs between scenes. No title cards are written unless you ask.
+
+| Input | Description |
+|-------|-------------|
+| `direction` | Your creative brief: premise, tone, where it happens, what must happen, who should clash |
+| `extra_cast` | Extra characters typed by hand, one per line |
+| `cast_1..cast_4` *(optional)* | `cast` outputs from Characters nodes (chain several through `cast_in`, or use several sockets) |
+| `scene_count` | 1–10 scenes |
+| `duration_mode` / `scene_duration` | Fixed length per scene, or let Claude pace each scene 5–15 s (`scene_duration` is the fallback) |
+| `continuity_mode` | **Independent clips** (each scene its own T2V clip, hard cuts, `already speaking` openers) or **Continuous chain** — scenes written for C2V / motion-context chaining per `data/h3/guide_chain_en.md`: scene N+1 opens on scene N's last frame, one continuous take with no `the shot cuts to`, a 2 s silent hand-off before a *new* speaker's first line, outgoing person kept as a tagged subject, rotating moving closers, one lighting string |
+| `shots_per_scene`, `visual_style`, `dialogue_language`, `wildness` | Same meaning as on the other writers |
+| `wardrobe` *(optional)* | Wardrobe lock, one line per character (`Sheldon: brown corduroy jacket over a green Flash T-shirt, khakis`), copied word-for-word into every scene. Empty = Claude fixes one outfit per character in the synopsis's `Wardrobe:` lines and repeats it in every scene. The Scenes Writer has the same input |
+| `model`, `research`, `director`, `use_subscription`, `timeout_seconds`, `seed` | The Claude Code block; `director` loads the `h3-crossover` skill with verified gold examples |
+
+| Output | Description |
+|--------|-------------|
+| `scenes` **(list)** | One prompt per scene — a downstream video node runs once per element |
+| `durations` **(list)** | The matching seconds per scene; wire into your frame-count math |
+| `scenes_text` | All scenes with `=== SCENE NN | duration: S.S ===` envelopes, for preview/saving |
+| `synopsis`, `cast`, `scene_count`, `session_id`, `info` | Story summary, the merged cast, how many scenes parsed, and the Claude Code session for the refiner |
+
+#### APNext H3 Claude Code Scenes Writer
+**Display Name:** `APNext H3 Claude Code Scenes Writer`
+
+The Claude Code prompt writer, but for a run of scenes: one idea in, **1–10 consecutive T2VA prompts** out in the base three-field format, each with its own duration, forming one continuous story. Same director skills, camera vocabulary, dialogue toggles and wildness bands as `APNext H3 Claude Code Writer`. Optional `image` and `subject_/scenery_/object_` sockets are described into every scene for consistency (nothing becomes `<Picture N>`). Has the same `continuity_mode` switch (independent clips vs continuous chain). Outputs mirror the crossover writer: `scenes` and `durations` are lists.
+
+#### APNext H3 Scene Pick
+**Display Name:** `APNext H3 Scene Pick`
+
+Collapses a `scenes` list to one element by `index` (0-based, clamped) and returns that scene, its `duration`, the resolved `index` and the list `count`. Fix the writer's seed, then step the index to render scenes one at a time.
+
+```
+[H3 Characters] ─cast─► [H3 Characters] ─cast─► [H3 Crossover Writer] ─scenes (list)──► [MiniMax H3 video]   (renders every scene)
+                                                                      └─durations (list)─► [duration → frames]
+                                                                      └─scenes_text──────► [H3 Prompt Preview]
+
+[H3 Crossover Writer] ─scenes/durations─► [H3 Scene Pick index=2] ─scene/duration─► [MiniMax H3 video]   (renders one)
+```
+
+#### APNext H3 Scenes → Contex Loop Plan
+**Display Name:** `APNext H3 Scenes → Contex Loop Plan`
+
+For **continuity across scenes** (the last frames and audio of scene N carried into scene N+1). Converts the `scenes` / `durations` lists into the plan JSON that [ComfyUI-MiniMaxH3-Contex-Loop](https://github.com/ethanfel/ComfyUI-MiniMaxH3-Contex-Loop)'s `MiniMax H3 Contex Loop Plan` node accepts on `plan_json_input` (`shots[]` with `id`, `prompt`, `duration_seconds`, `seed`, plus optional `prompt_prefix` and `defaults.steps`). That pack's loop body then renders every scene in order with the previous tail as motion/audio context, checkpoints and final assembly. Alternatives for one-scene-per-run chains: core `MiniMaxH3AddGuide`, `ComfyUI-H3-Motion-Context`, or this repo's `APNext H3 Claude Code Continue Writer` (last frame → I2VA first frame).
+
+Example workflows in `examples/h3/`: `h3_crossover_batch.json` (render every scene in one queue), `h3_crossover_pick_one.json` (Scene Pick + incrementing index, one scene per run), `h3_scenes_batch.json`, `h3_scenes_pick_one.json`, and `h3_crossover_contex_chain.json` — the Contex-Loop *T2V – Normal* example with the crossover writer in continuous-chain mode feeding `Scenes → Contex Loop Plan` into `plan_json_input`, so the whole run renders scene after scene with the previous tail carried forward.
 
 ---
 

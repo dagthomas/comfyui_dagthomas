@@ -11,6 +11,13 @@
 import random
 
 from ...utils.claude_code import is_interrupt
+from ...utils.apnext_context import (
+    build_context,
+    context_hidden_inputs,
+    context_inputs,
+    context_summary,
+    with_context,
+)
 from ...utils.constants import CUSTOM_CATEGORY
 from ...utils.image_utils import tensor2pil
 from .base_prompt_writer import H3BasePromptWriter
@@ -82,8 +89,9 @@ class H3ClaudeCodeRefiner:
             }),
             "working_dir": ("STRING", {"default": ""}),
         }
+        optional.update(context_inputs())
 
-        return {"required": required, "optional": optional}
+        return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
     RETURN_TYPES = ("STRING",) * 10
     RETURN_NAMES = (
@@ -130,7 +138,9 @@ class H3ClaudeCodeRefiner:
         session_id="",
         image=None,
         working_dir="",
+        **context_slots,
     ):
+        context_text, context_entries = build_context(context_slots, target="the revised prompt")
         try:
             if not instruction.strip():
                 raise ValueError("Describe what to change in `instruction`.")
@@ -164,8 +174,10 @@ class H3ClaudeCodeRefiner:
                     "request implies and leave the rest intact. Output only the prompt."
                 )
 
+            user_prompt = with_context(user_prompt, context_text)
+
             print(
-                f"🎬 H3 Claude Code Refiner | "
+                f"🎬 H3 Claude Code Refiner | context: {context_summary(context_entries)} | "
                 f"{'resuming ' + session_id.strip()[:8] if resuming else 'fresh session'} | "
                 f"research {'on' if research else 'off'}"
             )

@@ -21,6 +21,8 @@ const CSS = `
   flex-direction: column;
   width: 100%;
   height: 100%;
+  max-height: 100%;
+  min-height: 0;
   box-sizing: border-box;
   background: #16181d;
   border: 1px solid #2c3038;
@@ -33,6 +35,7 @@ const CSS = `
 }
 .apnext-h3-bar {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
@@ -75,8 +78,12 @@ const CSS = `
 .apnext-h3-bar button:hover { background: #313847; }
 .apnext-h3-bar button.apnext-ok { background: #1f4d34; border-color: #2f7a52; }
 .apnext-h3-body {
-  flex: 1;
+  /* min-height: 0 lets the flex item shrink below its content height, so a
+     short node scrolls the prompt instead of clipping it. */
+  flex: 1 1 0;
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 8px 10px 10px;
   white-space: pre-wrap;
   word-break: break-word;
@@ -86,6 +93,7 @@ const CSS = `
 .apnext-h3-body::selection, .apnext-h3-body *::selection { background: #3d5a99; color: #fff; }
 .apnext-h3-empty { color: #6b7280; font-style: italic; }
 .apnext-h3-meta {
+  flex: 0 0 auto;
   margin-top: 0;
   padding-top: 5px;
   border-top: 1px dashed #2c3038;
