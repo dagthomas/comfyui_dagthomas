@@ -178,32 +178,6 @@
       ]
     },
     {
-      "id": 1902,
-      "type": "Note",
-      "pos": [
-        -2112,
-        -1344
-      ],
-      "size": [
-        1248,
-        320
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "PROMPT SOURCE / ATTRIBUTION",
-      "properties": {
-        "Node name for S&R": "Note"
-      },
-      "widgets_values": [
-        "PROMPT SOURCE / ATTRIBUTION\n\nScene 1 is reproduced verbatim from a MiniMax H3 prompt shared by 🦙rishappi in Banodoco's #minimax_h3_chatter on August 11, 2026:\nhttps://discord.com/channels/1076117621407223829/1532625331960152124/1536689209761599608\n\nScene 2 is a new continuation written for this repository example using the same three-section H3 T2VA structure. The continuation is not attributed to the original author.\n\nThe generation graph uses ComfyUI's core MiniMaxH3ImageToVideo node with both image inputs intentionally disconnected, which is its T2VA route. The recursive disk-backed Plan, context, review, recovery, and assembly nodes come from this pack."
-      ],
-      "color": "#432f66",
-      "bgcolor": "rgba(24,24,27,.9)"
-    },
-    {
       "id": 1930,
       "type": "MiniMaxH3ChainScenePromptEditor",
       "pos": [
@@ -244,30 +218,6 @@
       "widgets_values": [],
       "color": "#1f1f48",
       "bgcolor": "rgba(24,24,27,.9)"
-    },
-    {
-      "id": 1906,
-      "type": "Note",
-      "pos": [
-        -3008,
-        -1088
-      ],
-      "size": [
-        736,
-        1152
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "T2VA PROMPT FORMAT",
-      "properties": {},
-      "widgets_values": [
-        "T2VA PROMPT FORMAT\n\nT2VA begins directly with these three fields in this exact order—there is no Picture alignment instruction:\n\nintegrated_multimodal_description: [Shot 1] Describe visible style, composition, subjects, actions, camera movement, dialogue, and synchronized diegetic events.\n\noverall_soundscape: Summarize ambience, physical sounds, and non-verbal human sounds.\n\nnon_diegetic_music: Describe audience-only music, or use N/A.\n\nFor a chained continuation, explicitly continue the incoming pose, action phase, camera position and motion, lighting, environment, object states, ambience, and speaker identity. Do not re-establish or reset the shot unless a cut is intentional."
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
     },
     {
       "id": 1914,
@@ -1639,32 +1589,6 @@
       "bgcolor": "rgba(24,24,27,.9)"
     },
     {
-      "id": 1932,
-      "type": "Note",
-      "pos": [
-        1568,
-        544
-      ],
-      "size": [
-        896,
-        1184
-      ],
-      "flags": {},
-      "order": 24,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "T2V NORMAL — HOW TO USE",
-      "properties": {
-        "Node name for S&R": "Note"
-      },
-      "widgets_values": [
-        "T2V NORMAL — QUICK START\n\nThis is the standard node-level authoring workflow. It uses Scene Prompt Editor and no Plan Studio.\n\n1. Both first_frame and last_frame are intentionally disconnected: this is T2VA.\n2. Edit the two prompts in Scene Prompt Editor, then queue.\n3. Review Gate can approve, retry the edited prompt, reroll, or stop with a partial video.\n4. Final Assemble joins accepted segments and preserves generated audio.\n\nTIMING\nEach requested 10-second scene is 243 raw H3 frames. Scene 2 repeats 22 context frames, so delivery is 243 + (243 - 22) = 464 frames = 19.333 seconds at 24 fps.\n\nBLENDING\nPlan carries 22 frames of motion context and uses video_blend_frames = 0, so the repeated context is trimmed at a hard boundary without an additional visual crossfade. Generated audio remains frame-locked and is not crossfaded."
-      ],
-      "color": "#432f66",
-      "bgcolor": "rgba(24,24,27,.9)"
-    },
-    {
       "id": 1700,
       "type": "MiniMaxH3ChainPlan",
       "pos": [
@@ -1891,32 +1815,6 @@
       },
       "widgets_values": [],
       "color": "#59451e",
-      "bgcolor": "rgba(24,24,27,.9)"
-    },
-    {
-      "id": 1901,
-      "type": "Note",
-      "pos": [
-        5152,
-        736
-      ],
-      "size": [
-        832,
-        320
-      ],
-      "flags": {},
-      "order": 41,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "RECOVERY / ASSEMBLE LATER",
-      "properties": {
-        "Node name for S&R": "Note"
-      },
-      "widgets_values": [
-        "The two amber recovery nodes are MUTED by default.\n\nIf all segments finished but final assembly did not, mute the main green Assemble node, enable both recovery nodes, and queue. They validate every SHA-256 checkpoint pair and assemble without rerendering the completed clips.\n\nFor an interrupted generation, leave recovery muted and set Loop Start's start_clip to the first unfinished clip."
-      ],
-      "color": "#432f66",
       "bgcolor": "rgba(24,24,27,.9)"
     },
     {
