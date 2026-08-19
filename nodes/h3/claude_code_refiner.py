@@ -26,8 +26,11 @@ from .claude_code_support import (
     REF_SKILLS,
     claude_code_inputs,
     directions_with_research,
+    local_llm_inputs,
+    local_llm_options,
     run_h3_claude_code,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import extract_section, strip_code_fence
 from .ref_prompt_writer import H3RefPromptWriter
 
@@ -89,6 +92,7 @@ class H3ClaudeCodeRefiner:
             }),
             "working_dir": ("STRING", {"default": ""}),
         }
+        optional.update(local_llm_inputs())
         optional.update(context_inputs())
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
@@ -138,8 +142,14 @@ class H3ClaudeCodeRefiner:
         session_id="",
         image=None,
         working_dir="",
+        llm=None,
         **context_slots,
     ):
+        template_vars, template_summary = collect_template_vars(context_slots)
+        instruction, = expand_all(
+            template_vars, instruction,
+        )
+        log_template_vars(template_vars, template_summary, instruction)
         context_text, context_entries = build_context(context_slots, target="the revised prompt")
         try:
             if not instruction.strip():
@@ -194,6 +204,7 @@ class H3ClaudeCodeRefiner:
                 working_dir,
                 director,
                 skills=REF_SKILLS if self._is_reference_format(h3_prompt) else BASE_SKILLS,
+                local=local_llm_options(llm),
             )
 
             prompt = strip_code_fence(text)

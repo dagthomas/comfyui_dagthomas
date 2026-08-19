@@ -26,9 +26,13 @@ from .claude_code_support import (
     CORE_SKILL,
     claude_code_inputs,
     claude_code_optional_inputs,
+    local_llm_inputs,
+    local_llm_options,
     directions_with_research,
     run_h3_claude_code,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
+from .characters import cast_line_name, split_cast_line
 from .common import (
     AUTO,
     VISUAL_STYLES,
@@ -43,7 +47,11 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
+    LOCATIONS_TOOLTIP,
+    enforce_continuity,
+    locations_directive,
     wardrobe_directive,
     CONTINUITY_MODES,
     DURATION_MODES,
@@ -72,7 +80,11 @@ _SCENE_FIELDS = (
 
 
 def parse_cast(*blocks):
-    """Merge cast blocks into unique, non-empty lines in first-seen order."""
+    """
+    Merge cast blocks into unique, non-empty lines in first-seen order. A
+    `| wardrobe: ...` suffix (H3 Characters with a wardrobe) is stripped here;
+    cast_wardrobe() collects those suffixes as lock lines.
+    """
     seen = set()
     cast = []
     for block in blocks:
@@ -82,12 +94,43 @@ def parse_cast(*blocks):
                 continue
             # Tolerate lines already carrying a <Subject N> tag.
             line = re.sub(r"^<Subject\s+\d+>\s*", "", line, flags=re.IGNORECASE)
+            line, _ = split_cast_line(line)
             key = line.lower()
             if key in seen:
                 continue
             seen.add(key)
             cast.append(line)
     return cast
+
+
+def cast_wardrobe(*blocks):
+    """`Name: anchors` lock lines carried on cast lines (H3 Characters `wardrobe`)."""
+    locks = []
+    seen = set()
+    for block in blocks:
+        for line in (block or "").splitlines():
+            line = line.strip().lstrip("-*• ").strip()
+            head, anchors = split_cast_line(line)
+            if not anchors:
+                continue
+            name = cast_line_name(head)
+            if name.lower() in seen:
+                continue
+            seen.add(name.lower())
+            locks.append(f"{name}: {anchors}")
+    return locks
+
+
+def merge_wardrobe(user_wardrobe, cast_locks):
+    """User-typed wardrobe lines win over cast-carried ones for the same name."""
+    lines = [l.strip() for l in (user_wardrobe or "").splitlines() if l.strip()]
+    have = {l.split(":", 1)[0].strip().lower() for l in lines if ":" in l}
+    for lock in cast_locks:
+        name = lock.split(":", 1)[0].strip().lower()
+        if name not in have:
+            lines.append(lock)
+            have.add(name)
+    return "\n".join(lines)
 
 
 class H3ClaudeCodeCrossoverWriter:
@@ -183,6 +226,7 @@ class H3ClaudeCodeCrossoverWriter:
             ),
         })
         optional["wardrobe"] = ("STRING", {"multiline": True, "default": "", "tooltip": WARDROBE_TOOLTIP})
+        optional["enforce_wardrobe"] = ("BOOLEAN", {"default": True, "tooltip": ENFORCE_WARDROBE_TOOLTIP})
         optional["extra_instructions"] = ("STRING", {"multiline": True, "default": ""})
         optional["image_notes"] = ("STRING", {
             "multiline": True,
@@ -194,6 +238,8 @@ class H3ClaudeCodeCrossoverWriter:
             ),
         })
         optional.update(claude_code_optional_inputs())
+        optional["locations"] = ("STRING", {"multiline": True, "default": "", "tooltip": LOCATIONS_TOOLTIP})
+        optional.update(local_llm_inputs())
         optional.update(context_inputs())
         # Image sockets last, so the front-end can grow and trim them at the tail.
         optional.update(reference_image_inputs())
@@ -227,6 +273,28 @@ class H3ClaudeCodeCrossoverWriter:
     @classmethod
     def IS_CHANGED(cls, seed=-1, **kwargs):
         return float("nan") if seed == -1 else seed
+
+    # ------------------------------------------------------------------
+    # Wardrobe verification (one repair turn in the same session)
+    # ------------------------------------------------------------------
+
+    def _enforce_wardrobe(
+        self, enabled, synopsis, parsed, scene_count, scene_duration, session_id,
+        info, model, use_subscription, timeout_seconds, working_dir, director,
+        continuity_mode, local=None,
+    ):
+        """Wardrobe + location lock check with one shared repair turn (scenes_support)."""
+        def repair(prompt):
+            text, _, repair_info = run_h3_claude_code(
+                self._build_system_prompt(continuity_mode), prompt,
+                None, model, False, use_subscription, timeout_seconds,
+                session_id, working_dir, director, skills=CROSSOVER_SKILLS, local=local,
+            )
+            return text, repair_info
+
+        return enforce_continuity(
+            enabled, synopsis, parsed, scene_count, scene_duration, session_id, info, repair,
+        )
 
     # ------------------------------------------------------------------
     # Prompt construction
@@ -283,6 +351,7 @@ class H3ClaudeCodeCrossoverWriter:
         wardrobe="",
         image_labels=(),
         image_notes="",
+        locations="",
     ):
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast]
@@ -340,6 +409,7 @@ class H3ClaudeCodeCrossoverWriter:
                 lines.append("- Picture notes from the user:")
                 lines.extend(f"    {n.strip()}" for n in notes.splitlines() if n.strip())
         lines.append(f"- {wardrobe_directive(wardrobe)}")
+        lines.append(f"- {locations_directive(locations)}")
         lines.append(
             "- Every listed character appears at least once across the run (unless the brief "
             "says otherwise); introduce them with an on-screen reason to be there and stagger "
@@ -386,10 +456,13 @@ class H3ClaudeCodeCrossoverWriter:
         custom_dialogue_language="",
         custom_visual_style="",
         wardrobe="",
+        enforce_wardrobe=True,
         extra_instructions="",
         image_notes="",
         resume_session_id="",
         working_dir="",
+        locations="",
+        llm=None,
         **cast_slots,
     ):
         # The same tensors go back out on image_1..image_9 so the video node
@@ -398,9 +471,16 @@ class H3ClaudeCodeCrossoverWriter:
         references = collect_reference_images(passthrough, tensor2pil)
         images = [downscale_for_vision(pil) for _, pil in references] or None
         image_labels = tuple(range(1, len(references) + 1))
+        template_vars, template_summary = collect_template_vars(cast_slots)
+        direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style, locations = expand_all(
+            template_vars, direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style, locations
+        )
+        log_template_vars(template_vars, template_summary, direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(cast_slots, target="the scenes")
-        cast = parse_cast(*(cast_slots.get(name) for name in CAST_SOCKETS), extra_cast)
+        cast_blocks = [cast_slots.get(name) for name in CAST_SOCKETS] + [extra_cast]
+        cast = parse_cast(*cast_blocks)
         cast_text = "\n".join(cast)
+        wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
         try:
             if not cast:
                 raise ValueError(
@@ -431,6 +511,7 @@ class H3ClaudeCodeCrossoverWriter:
                 wardrobe=wardrobe,
                 image_labels=image_labels,
                 image_notes=image_notes,
+                locations=locations,
             )
             user_prompt = with_context(user_prompt, context_text)
 
@@ -444,6 +525,7 @@ class H3ClaudeCodeCrossoverWriter:
                 f"director {'on' if director else 'off'} | seed {current_seed}"
             )
 
+            local = local_llm_options(llm)
             text, session_id, info = run_h3_claude_code(
                 self._build_system_prompt(continuity_mode),
                 user_prompt,
@@ -456,6 +538,7 @@ class H3ClaudeCodeCrossoverWriter:
                 working_dir,
                 director,
                 skills=CROSSOVER_SKILLS,
+                local=local,
             )
 
             synopsis, parsed = parse_scenes(text, scene_duration)
@@ -465,6 +548,12 @@ class H3ClaudeCodeCrossoverWriter:
                 print(
                     f"⚠️ H3 Crossover Writer: asked for {scene_count} scene(s), parsed {len(parsed)}."
                 )
+
+            synopsis, parsed, info = self._enforce_wardrobe(
+                enforce_wardrobe, synopsis, parsed, scene_count, scene_duration,
+                session_id, info, model, use_subscription, timeout_seconds,
+                working_dir, director, continuity_mode, local=local,
+            )
 
             scenes = [p for _, _, p in parsed]
             durations = [d for _, d, _ in parsed]

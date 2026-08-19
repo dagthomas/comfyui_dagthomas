@@ -36,6 +36,7 @@ from .common import (
     toggle_directives,
     wildness_directive,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 
 TASK_TYPES = [
     "Auto (decide from the references)",
@@ -399,6 +400,11 @@ class H3RefPromptWriter:
     ):
         # The same tensors go back out on image_1..image_9 so the video node
         # can be wired from this node and numbering can never drift.
+        template_vars, template_summary = collect_template_vars(image_slots)
+        idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style = expand_all(
+            template_vars, idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style
+        )
+        log_template_vars(template_vars, template_summary, idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(image_slots)
         passthrough = tuple(image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
         try:

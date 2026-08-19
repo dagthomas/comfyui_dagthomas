@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 163,
-  "last_link_id": 317,
+  "last_node_id": 164,
+  "last_link_id": 325,
   "nodes": [
     {
       "id": 119,
@@ -100,7 +100,7 @@
         70
       ],
       "flags": {},
-      "order": 20,
+      "order": 18,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -134,7 +134,7 @@
         60
       ],
       "flags": {},
-      "order": 21,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -218,7 +218,7 @@
         90
       ],
       "flags": {},
-      "order": 22,
+      "order": 20,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -243,66 +243,6 @@
       }
     },
     {
-      "id": 131,
-      "type": "ComfyMathExpression",
-      "pos": [
-        -1450,
-        5940
-      ],
-      "size": [
-        225,
-        0
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "a",
-          "name": "values.a",
-          "type": "FLOAT,INT,BOOLEAN",
-          "link": 311
-        },
-        {
-          "label": "b",
-          "name": "values.b",
-          "shape": 7,
-          "type": "FLOAT,INT,BOOLEAN",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": []
-        },
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [
-            275
-          ]
-        },
-        {
-          "name": "BOOL",
-          "type": "BOOLEAN",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ComfyMathExpression"
-      },
-      "widgets_values": [
-        "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
-      ],
-      "widgets_values_named": {
-        "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
-      }
-    },
-    {
       "id": 136,
       "type": "MiniMaxH3ReferenceToVideo",
       "pos": [
@@ -314,7 +254,7 @@
         354
       ],
       "flags": {},
-      "order": 17,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
@@ -365,7 +305,7 @@
           "name": "ref_audios.ref_audio_0",
           "shape": 7,
           "type": "AUDIO",
-          "link": null
+          "link": 324
         },
         {
           "name": "prompt",
@@ -373,7 +313,7 @@
           "widget": {
             "name": "prompt"
           },
-          "link": 316
+          "link": 321
         },
         {
           "name": "width",
@@ -397,7 +337,7 @@
           "widget": {
             "name": "length"
           },
-          "link": 275
+          "link": 323
         }
       ],
       "outputs": [
@@ -489,7 +429,7 @@
         114
       ],
       "flags": {},
-      "order": 16,
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
@@ -531,7 +471,7 @@
         130
       ],
       "flags": {},
-      "order": 23,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -575,7 +515,7 @@
         317.984375
       ],
       "flags": {},
-      "order": 18,
+      "order": 16,
       "mode": 0,
       "inputs": [
         {
@@ -632,7 +572,7 @@
         978.625
       ],
       "flags": {},
-      "order": 28,
+      "order": 26,
       "mode": 0,
       "inputs": [
         {
@@ -674,19 +614,19 @@
         110
       ],
       "flags": {},
-      "order": 27,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 300
+          "link": 317
         },
         {
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
-          "link": 293
+          "link": 318
         }
       ],
       "outputs": [
@@ -722,7 +662,7 @@
         140
       ],
       "flags": {},
-      "order": 24,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -784,7 +724,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 26,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -825,7 +765,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 25,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
@@ -864,7 +804,7 @@
         170
       ],
       "flags": {},
-      "order": 12,
+      "order": 11,
       "mode": 0,
       "showAdvanced": false,
       "inputs": [],
@@ -913,13 +853,13 @@
         818
       ],
       "flags": {},
-      "order": 19,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
           "name": "text",
           "type": "STRING",
-          "link": 317
+          "link": 322
         },
         {
           "name": "image_1",
@@ -948,53 +888,21 @@
     },
     {
       "id": 157,
-      "type": "PrimitiveFloat",
+      "type": "H3Characters",
       "pos": [
         -1490,
-        5480
+        5600
       ],
       "size": [
-        270,
-        70
+        330,
+        130
       ],
       "flags": {},
       "order": 7,
       "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": [
-            311
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PrimitiveFloat"
-      },
-      "widgets_values": [
-        15.0
-      ],
-      "title": "Float (Duration)"
-    },
-    {
-      "id": 158,
-      "type": "TimePromptNode",
-      "pos": [
-        -1490,
-        5600
-      ],
-      "size": [
-        330,
-        242
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
       "inputs": [
         {
-          "name": "string",
+          "name": "cast_in",
           "type": "STRING",
           "shape": 7,
           "link": null
@@ -1002,286 +910,192 @@
       ],
       "outputs": [
         {
-          "name": "prompt",
+          "name": "character",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "actor",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "franchise",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
           "type": "STRING",
           "links": [
-            312
+            320
           ]
         },
         {
-          "name": "random",
+          "name": "wardrobe",
           "type": "STRING",
-          "links": []
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "TimePromptNode",
+        "Node name for S&R": "H3Characters",
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "",
-        ",",
-        1,
+        "✏️ custom (type in custom_character)",
+        "(all)",
+        0,
         "fixed",
-        false,
-        "None",
-        "None",
-        "Random",
-        "Random"
+        "Lena: a singer in her early 30s, platinum pixie cut, sharp cheekbones",
+        "red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings"
       ],
-      "title": "APNext Time",
-      "color": "#233",
-      "bgcolor": "#355"
+      "title": "H3 Characters — custom performer + wardrobe",
+      "color": "#232",
+      "bgcolor": "#353"
     },
     {
-      "id": 159,
-      "type": "ScenePromptNode",
+      "id": 161,
+      "type": "MarkdownNote",
       "pos": [
         -1490,
-        5850
+        6160
       ],
       "size": [
-        330,
-        294
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "string",
-          "type": "STRING",
-          "shape": 7,
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "prompt",
-          "type": "STRING",
-          "links": [
-            313
-          ]
-        },
-        {
-          "name": "random",
-          "type": "STRING",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ScenePromptNode",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        "",
-        ",",
-        2,
-        "fixed",
-        false,
-        "None",
-        "None",
-        "Random",
-        "None",
-        "None",
-        "Random"
-      ],
-      "title": "APNext Scene",
-      "color": "#233",
-      "bgcolor": "#355"
-    },
-    {
-      "id": 160,
-      "type": "FeelingsPromptNode",
-      "pos": [
-        -1490,
-        6120
-      ],
-      "size": [
-        330,
-        242
+        700,
+        260
       ],
       "flags": {},
       "order": 10,
       "mode": 0,
-      "inputs": [
-        {
-          "name": "string",
-          "type": "STRING",
-          "shape": 7,
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "prompt",
-          "type": "STRING",
-          "links": [
-            314
-          ]
-        },
-        {
-          "name": "random",
-          "type": "STRING",
-          "links": []
-        }
-      ],
+      "inputs": [],
+      "outputs": [],
       "properties": {
-        "Node name for S&R": "FeelingsPromptNode",
-        "cnr_id": "comfyui_dagthomas"
+        "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "",
-        ",",
-        3,
-        "fixed",
-        false,
-        "None",
-        "None",
-        "None",
-        "Random"
+        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece; **H3 Scenes Join** stitches the clips and puts the song back under them.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails."
       ],
-      "title": "APNext Feelings",
-      "color": "#233",
-      "bgcolor": "#355"
-    },
-    {
-      "id": 161,
-      "type": "CinematicPromptNode",
-      "pos": [
-        -1490,
-        6340
-      ],
-      "size": [
-        330,
-        398
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "string",
-          "type": "STRING",
-          "shape": 7,
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "prompt",
-          "type": "STRING",
-          "links": [
-            315
-          ]
-        },
-        {
-          "name": "random",
-          "type": "STRING",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CinematicPromptNode",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        "",
-        ",",
-        4,
-        "fixed",
-        false,
-        "None",
-        "None",
-        "None",
-        "None",
-        "Random",
-        "None",
-        "None",
-        "None",
-        "None",
-        "Random"
-      ],
-      "title": "APNext Cinematic",
-      "color": "#233",
-      "bgcolor": "#355"
+      "title": "How this works",
+      "color": "#222",
+      "bgcolor": "#000"
     },
     {
       "id": 162,
-      "type": "H3ClaudeCodeBaseWriter",
+      "type": "H3ScenesJoin",
       "pos": [
-        -1100,
-        5600
+        833.3203937926853,
+        4918.833697770201
       ],
       "size": [
-        420,
-        760
+        300,
+        150
       ],
       "flags": {},
-      "order": 14,
+      "order": 0,
       "mode": 0,
       "inputs": [
         {
-          "name": "image",
+          "name": "images",
           "type": "IMAGE",
-          "shape": 7,
-          "link": null
+          "link": 300
         },
         {
-          "name": "idea",
-          "type": "STRING",
-          "widget": {
-            "name": "idea"
-          },
-          "link": null
+          "name": "audio",
+          "type": "AUDIO",
+          "shape": 7,
+          "link": 293
         },
         {
-          "name": "context_1",
-          "type": "STRING",
-          "shape": 7,
-          "link": 312
+          "name": "replace_audio",
+          "type": "AUDIO",
+          "link": 325,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            317
+          ]
         },
         {
-          "name": "context_2",
-          "type": "STRING",
-          "shape": 7,
-          "link": 313
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            318
+          ]
         },
         {
-          "name": "context_3",
-          "type": "STRING",
-          "shape": 7,
-          "link": 314
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
         },
         {
-          "name": "context_4",
-          "type": "STRING",
-          "shape": 7,
-          "link": 315
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3ScenesJoin",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        0,
+        "resize to first scene"
+      ],
+      "title": "H3 Scenes Join — all scenes → one video"
+    },
+    {
+      "id": 163,
+      "type": "H3ClaudeCodeMusicVideoWriter",
+      "pos": [
+        -1110,
+        5600
+      ],
+      "size": [
+        520,
+        1180
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 319
         },
         {
-          "name": "context_5",
+          "name": "cast_1",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": 320,
+          "shape": 7
         },
         {
-          "name": "context_6",
+          "name": "cast_2",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": null,
+          "shape": 7
         },
         {
-          "name": "context_7",
+          "name": "cast_3",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": null,
+          "shape": 7
         },
         {
-          "name": "context_8",
+          "name": "cast_4",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": null,
+          "shape": 7
         },
         {
           "name": "llm",
@@ -1290,55 +1104,7 @@
           "shape": 7
         },
         {
-          "name": "subject_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "subject_2",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "subject_3",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "scenery_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "scenery_2",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "scenery_3",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "object_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "object_2",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "object_3",
+          "name": "image_1",
           "type": "IMAGE",
           "link": null,
           "shape": 7
@@ -1346,68 +1112,134 @@
       ],
       "outputs": [
         {
-          "name": "h3_prompt",
+          "name": "scenes",
           "type": "STRING",
           "links": [
-            316,
-            317
+            321
           ]
         },
         {
-          "name": "integrated_multimodal_description",
-          "type": "STRING",
-          "links": []
+          "name": "durations",
+          "type": "FLOAT",
+          "links": null
         },
         {
-          "name": "overall_soundscape",
-          "type": "STRING",
-          "links": []
+          "name": "lengths",
+          "type": "INT",
+          "links": [
+            323
+          ]
         },
         {
-          "name": "non_diegetic_music",
+          "name": "audio_segments",
+          "type": "AUDIO",
+          "links": [
+            324
+          ]
+        },
+        {
+          "name": "segment_table",
           "type": "STRING",
-          "links": []
+          "links": null
+        },
+        {
+          "name": "scenes_text",
+          "type": "STRING",
+          "links": [
+            322
+          ]
+        },
+        {
+          "name": "synopsis",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "song_seconds",
+          "type": "FLOAT",
+          "links": null
         },
         {
           "name": "session_id",
           "type": "STRING",
-          "links": []
+          "links": null
         },
         {
           "name": "info",
           "type": "STRING",
-          "links": []
+          "links": null
         },
         {
-          "name": "first_frame",
+          "name": "image_1",
           "type": "IMAGE",
-          "links": []
+          "links": null
         },
         {
-          "name": "last_frame",
+          "name": "image_2",
           "type": "IMAGE",
-          "links": []
+          "links": null
+        },
+        {
+          "name": "image_3",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_4",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_5",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_6",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_7",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_8",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_9",
+          "type": "IMAGE",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeBaseWriter",
+        "Node name for S&R": "H3ClaudeCodeMusicVideoWriter",
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "A detective walks into a room and realises the person waiting for them is not who they expected.",
-        "T2VA (text only)",
+        "Neon-lit rooftop at night in the rain; Lena performs to camera with the city behind her. Verses: intimate handheld close-ups. Chorus: wide, the whole rooftop lit by a giant pink billboard, rain in the backlight. A single red umbrella is the recurring motif.",
+        "[0:00] (intro - instrumental)\n[0:12] I walked the wire in the rain\n[0:18] counting every light below\n[0:24] you said the city keeps our names\n[0:30] but the city doesn't know\n[Chorus]\n[0:36] So hold me in the neon\n[0:42] hold me till the morning\n[0:48] we were never leaving\n[0:54] only falling slow",
+        "Performance (the singer lip-syncs the lyrics on camera)",
+        "Auto (cut on the music)",
         15.0,
+        5.2,
         "Auto",
-        "Auto",
-        30,
-        "Auto",
-        "Auto",
-        "Auto",
-        true,
+        "Live-action, 35mm cinematic film aesthetic",
         "English",
-        false,
-        true,
-        true,
+        45,
         "sonnet",
         false,
         true,
@@ -1419,37 +1251,49 @@
         "",
         "",
         "",
+        "",
+        true,
+        "",
+        "",
+        "",
         ""
       ],
-      "title": "APNext H3 Claude Code Writer",
-      "color": "#223",
-      "bgcolor": "#335"
+      "title": "H3 Music Video Writer"
     },
     {
-      "id": 163,
-      "type": "MarkdownNote",
+      "id": 164,
+      "type": "LoadAudio",
       "pos": [
-        -1100,
-        6400
+        -1490,
+        5450
       ],
       "size": [
-        700,
-        240
+        315,
+        124
       ],
       "flags": {},
-      "order": 15,
+      "order": 0,
       "mode": 0,
       "inputs": [],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            319,
+            325
+          ]
+        }
+      ],
       "properties": {
-        "Node name for S&R": "MarkdownNote"
+        "Node name for S&R": "LoadAudio"
       },
       "widgets_values": [
-        "### APNext context -> Claude Code writer\nAPNext **Time / Scene / Feelings / Cinematic** feed the writer's `context_N` sockets. The writer sees which node each socket comes from and hands Claude a labelled block with per-kind instructions (time -> period wardrobe/props/light; scene -> setting; feelings -> performance & tone; cinematic -> style/camera/grade). Sockets grow as you connect them - any APNext node works (Poses, Plots, Science, Geography, Architecture, Fashion, ...), plus H3 Characters `cast`."
+        "song.mp3",
+        null,
+        null
       ],
-      "title": "How this works",
-      "color": "#222",
-      "bgcolor": "#000"
+      "title": "Load the song"
     }
   ],
   "links": [
@@ -1542,14 +1386,6 @@
       "VAE"
     ],
     [
-      275,
-      131,
-      1,
-      136,
-      11,
-      "INT"
-    ],
-    [
       276,
       115,
       0,
@@ -1617,7 +1453,7 @@
       293,
       121,
       0,
-      146,
+      162,
       1,
       "AUDIO"
     ],
@@ -1633,65 +1469,81 @@
       300,
       122,
       0,
+      162,
+      0,
+      "IMAGE"
+    ],
+    [
+      317,
+      162,
+      0,
       146,
       0,
       "IMAGE"
     ],
     [
-      311,
+      318,
+      162,
+      1,
+      146,
+      1,
+      "AUDIO"
+    ],
+    [
+      319,
+      164,
+      0,
+      163,
+      0,
+      "AUDIO"
+    ],
+    [
+      320,
       157,
-      0,
-      131,
-      0,
-      "FLOAT"
-    ],
-    [
-      312,
-      158,
-      0,
-      162,
-      2,
-      "STRING"
-    ],
-    [
-      313,
-      159,
-      0,
-      162,
-      3,
-      "STRING"
-    ],
-    [
-      314,
-      160,
-      0,
-      162,
       4,
+      163,
+      1,
       "STRING"
     ],
     [
-      315,
-      161,
-      0,
-      162,
-      5,
-      "STRING"
-    ],
-    [
-      316,
-      162,
+      321,
+      163,
       0,
       136,
       8,
       "STRING"
     ],
     [
-      317,
-      162,
-      0,
+      322,
+      163,
+      5,
       153,
       0,
       "STRING"
+    ],
+    [
+      323,
+      163,
+      2,
+      136,
+      11,
+      "INT"
+    ],
+    [
+      324,
+      163,
+      3,
+      136,
+      7,
+      "AUDIO"
+    ],
+    [
+      325,
+      164,
+      0,
+      162,
+      2,
+      "AUDIO"
     ]
   ],
   "groups": [

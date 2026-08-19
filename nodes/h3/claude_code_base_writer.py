@@ -21,9 +21,12 @@ from .base_prompt_writer import TASK_TYPES, H3BasePromptWriter, _FIELDS, warn_if
 from .claude_code_support import (
     claude_code_inputs,
     claude_code_optional_inputs,
+    local_llm_inputs,
+    local_llm_options,
     directions_with_research,
     run_h3_claude_code,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
     CAMERA_AMPLITUDES,
@@ -129,6 +132,7 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
             }),
         }
         optional.update(claude_code_optional_inputs())
+        optional.update(local_llm_inputs())
         # Typed references: pictures the writer describes in words. The video
         # model never sees them, so any size goes and none becomes <Picture N>.
         optional.update(typed_reference_inputs())
@@ -186,12 +190,18 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
         custom_visual_style="",
         resume_session_id="",
         working_dir="",
+        llm=None,
         **reference_slots,
     ):
         # Frame 0 and the final frame of the `image` batch go back out, so the H3
         # video node's first_frame / last_frame can be wired straight from here.
         # Typed references never go to the video node, only to the writer.
         frames = (image[0:1], image[-1:]) if image is not None else (None, None)
+        template_vars, template_summary = collect_template_vars(reference_slots)
+        idea, extra_instructions, custom_dialogue_language, custom_visual_style = expand_all(
+            template_vars, idea, extra_instructions, custom_dialogue_language, custom_visual_style
+        )
+        log_template_vars(template_vars, template_summary, idea, extra_instructions, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(reference_slots)
         references = collect_typed_references(reference_slots, tensor2pil)
         try:
@@ -254,6 +264,7 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
                 resume_session_id,
                 working_dir,
                 director,
+                local=local_llm_options(llm),
             )
 
             prompt = strip_code_fence(text)

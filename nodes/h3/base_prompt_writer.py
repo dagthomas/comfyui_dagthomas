@@ -34,6 +34,7 @@ from .common import (
     toggle_directives,
     wildness_directive,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 
 TASK_TYPES = [
     "T2VA (text only)",
@@ -505,6 +506,11 @@ class H3BasePromptWriter:
         # Frame 0 and the final frame of the batch go back out, so the H3 video
         # node's first_frame / last_frame can be wired straight from this node.
         frames = (image[0:1], image[-1:]) if image is not None else (None, None)
+        template_vars, template_summary = collect_template_vars(context_slots)
+        idea, extra_instructions, custom_dialogue_language, custom_visual_style = expand_all(
+            template_vars, idea, extra_instructions, custom_dialogue_language, custom_visual_style
+        )
+        log_template_vars(template_vars, template_summary, idea, extra_instructions, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(context_slots)
         try:
             if not idea.strip() and image is None and not context_entries:

@@ -589,6 +589,12 @@ Any provider works — cloud, local, or the Claude Code CLI. `auto-detect` picks
 
 The optional `local_base_url` input points a single node somewhere else (a LAN box, a different port) — `192.168.1.10:11434` is enough, the scheme and `/v1` are filled in. The optional `model_override` input takes an exact `provider:model` string and wins over the dropdown, which is how you reach a model the dropdown has not discovered, e.g. `ollama:qwen3:8b`. Set `APNEXT_LOCAL_LLM_DISCOVERY=0` to skip the local probe entirely.
 
+**Writing the Claude Code H3 nodes with Ollama instead (APNext H3 LLM Backend).** The six Claude Code H3 nodes (Claude Code Writer, Reference Writer, Refiner, Continue Writer, Crossover Writer, Scenes Writer) default to the Claude Code CLI, but each has an optional `llm` socket. Drop an **`APNext H3 LLM Backend (Ollama / local / API)`** node, pick a model (the dropdown lists every `ollama:` / `lmstudio:` / `local:` model your servers were serving at page load, the cloud API models, or `custom` with a free `model_name` such as `qwen3:8b`), optionally set `base_url`, `temperature`, `max_tokens`, and drag its `llm` output into any number of H3 nodes — they then write with that model through the shared LLM router. The node's own `model` dropdown also lists the discovered local models directly, so a quick switch needs no extra node. What changes off-CLI: `research` is ignored (no web tools), the `director` skills are pasted into the system prompt (turn on `inline_skill_references` on the backend node to paste their whole reference library too — much better prompts, needs a big context window: raise Ollama's `num_ctx`), and `session_id` / `resume_session_id` still work through a text-only local session kept under ComfyUI's temp folder (a Claude Code session id cannot be resumed with a local model and vice versa — the error says so). Everything else — wardrobe/location locks and their repair turn, template variables, outputs — is identical.
+
+**Template variables in the text boxes.** Every H3 writer expands `{variables}` in its free-text inputs (`idea`, `direction`, `extra_instructions`, `wardrobe`, `locations`, `image_notes`, `extra_cast`, `instruction`, custom style/language) from what is wired into the node, before the text is sent to the model: `{character1}` `{actor1}` `{franchise1}` `{cast1}` for the first H3 Characters node feeding the node (numbered in socket order — `cast_1` sockets first, then `context_1..8`; chained `cast_in` characters count oldest-first), `{characters}` ("A, B and C"), `{cast}` (every cast line), and `{context_1}` / `{cast_1}` for the raw text on a socket. So `{character1} barges into {character2}'s kitchen` works with two Characters nodes connected. A read-only **`{vars}`** strip under each writer's inputs lists what is currently available (click a chip to copy it), typing `{` in any multiline text box pops up an autocomplete of those variables (keep typing to filter, ↑/↓, Enter/Tab or click to insert, Esc to dismiss), and the console prints what was available and used on every run. Chained Characters nodes (A → `cast_in` of B → `cast_1`) give `{character1}` = A and `{character2}` = B; Characters nodes on separate sockets number in socket order. Unknown `{names}` are left as they are.
+
+**Graphgen look + wire styles (optional).** `Settings → APNext → Graphgen theme` (also in the top menu under *APNext* and the canvas right-click menu) restyles ComfyUI like [graphgen](X:/KODE/graphgen): the *Dark Botanical* palette (warm near-black, tan accent, dusty-pink highlight, muted botanical port colours — installed as a normal custom colour palette named *APNext Graphgen*), graphgen's canvas (22 px dot grid over fixed tan / pink / gold corner glows), IBM Plex Sans / Cormorant / JetBrains Mono, and — with *Graphgen node look* on — graphgen's node shell: rounded-lg box with a 1 px panel border, a header that carries the node's hue as a faint tint plus a hued bottom border (body stays neutral), white semibold title text, and port tabs pinned to the node edge that extend outward when connected or hovered instead of circles; with *Recolour coloured nodes & groups* (on by default) every node or group that carries its own colour — right-click → Colors, or packs that pre-colour their nodes — is drawn in the nearest botanical hue and the node-colour menu swatches become botanical, so the whole canvas matches; *Off* restores the previous palette, font, radius and the original node colours (they are never modified, only drawn differently). **Wire style** is a separate setting with graphgen's edge styles: *ComfyUI default*, *Bezier*, *Smooth step*, *Step*, *Straight* and *Cable* (a springy wire that sags and wobbles after a drag — `cable.svelte.ts`); **Gravity wires** (a hanging verlet rope — `rope.svelte.ts`; `Wire slack` / `weight` / `segments` tune it) is its own on/off toggle that overrides the wire style, off by default. When a physics style is not selected its simulation is fully stopped (no loop, no extra redraws); when selected it sleeps as soon as nothing moves. The APNext panels (H3 Prompt Preview, `{vars}` strip, autocomplete, thumbnails) use the Dark Botanical colours by default, theme on or off. Three canvas helpers live under `Settings → APNext → Canvas helpers`, all on by default and independent of the theme: **Highlight drop targets** (while you drag a link, every slot that can take it pulses with a ring — pink when it is already connected and would be replaced; works from outputs and from inputs), **Connect sparks** (a particle burst in the link's colour at the input when a connection is made — graphgen's Sparks), and **Colour-code APNext nodes** (every node of this pack gets a family colour in the palette hues: sage writers, rose Characters, pink LLM Backend — the same pink as the `llm` link —, slate previews, gold scene utilities, mauve context generators, teal vision/caption nodes, terracotta the rest; only nodes you have not coloured yourself, and turning it off removes them again).
+
 #### APNext H3 Prompt Writer
 **Display Name:** `APNext H3 Prompt Writer`
 
@@ -716,16 +722,19 @@ A lookup node for the character reference set. It reads `data/h3/characters.tsv`
 
 | Input | Description |
 |-------|-------------|
-| `character` | Dropdown of every unique `Character — Actor (Franchise)` entry, or `🎲 random` |
+| `character` | Dropdown of every unique `Character — Actor (Franchise)` entry, `🎲 random`, or `✏️ custom` (describe your own in `custom_character`) |
 | `franchise_filter` | Only used with random: restrict the pool to one franchise/show |
 | `seed` | Drives the random pick, so it stays stable per queue |
+| `custom_character` *(optional)* | Your own character, free text; used with `✏️ custom` (or whenever filled in). `Lena: a middle-aged woman with a limp and a silver bob` keeps `Lena` as the name the writers and `{characterN}` use; `Name (played by Actor) from Show` also works |
+| `wardrobe` *(optional)* | This character's wardrobe lock: 3–5 exact anchors, comma separated. It travels with the cast line (`… | wardrobe: …`) into the Crossover / Music Video writers, which merge it into their wardrobe lock and copy it word-for-word into every shot — so the outfit lives with the character, not the writer. A line typed into the writer's own `wardrobe` box for the same name wins |
 | `cast_in` *(optional)* | Cast lines from an upstream Characters node; this node's line is appended, so several chain into one cast list |
 
 | Output | Description |
 |--------|-------------|
 | `character` / `actor` / `franchise` | The three columns (franchise verbatim, including any appended look description) |
 | `file_path` | The reference clip's relative path |
-| `cast` | `Character (played by Actor) from Show` — the `subject_definitions:` form, with anything chained through `cast_in` above it |
+| `cast` | `Character (played by Actor) from Show` (+ ` | wardrobe: …` when set) — the `subject_definitions:` form, with anything chained through `cast_in` above it |
+| `wardrobe` | The wardrobe text, passed through |
 
 Edit the TSV to add or remove entries; duplicates (same character, actor and franchise) are collapsed automatically.
 
@@ -743,7 +752,9 @@ Takes a cast (from `H3 Characters` nodes, or typed by hand) and your steer, and 
 | `duration_mode` / `scene_duration` | Fixed length per scene, or let Claude pace each scene 5–15 s (`scene_duration` is the fallback) |
 | `continuity_mode` | **Independent clips** (each scene its own T2V clip, hard cuts, `already speaking` openers) or **Continuous chain** — scenes written for C2V / motion-context chaining per `data/h3/guide_chain_en.md`: scene N+1 opens on scene N's last frame, one continuous take with no `the shot cuts to`, a 2 s silent hand-off before a *new* speaker's first line, outgoing person kept as a tagged subject, rotating moving closers, one lighting string |
 | `shots_per_scene`, `visual_style`, `dialogue_language`, `wildness` | Same meaning as on the other writers |
-| `wardrobe` *(optional)* | Wardrobe lock, one line per character (`Sheldon: brown corduroy jacket over a green Flash T-shirt, khakis`), copied word-for-word into every scene. Empty = Claude fixes one outfit per character in the synopsis's `Wardrobe:` lines and repeats it in every scene. The Scenes Writer has the same input |
+| `wardrobe` *(optional)* | Wardrobe lock, one line per character (`Sheldon: dark-brown corduroy jacket, forest-green cotton T-shirt, small silver ring in the LEFT nostril`), copied word-for-word into **every shot** the character is on screen in. Empty = Claude fixes one outfit per character in the synopsis's `Wardrobe:` lines and repeats it. Anchors are exact phrases — precise colour + material + garment, accessories and marks with their side — no synonyms, nothing extra, nothing dropped. The Scenes Writer has the same input |
+| `locations` *(optional)* | Location lock, one line per recurring place (`Sheldon's living room: beige three-seat sofa facing a wall-mounted TV on the LEFT, tall bookshelf of comics behind it, bay window with white blinds on the RIGHT, warm tungsten floor lamp in the far corner`), copied word-for-word into the first shot of **every scene set there**, so the same room looks the same in every scene. Empty = the model names each place used in more than one scene and fixes 3–6 anchors in the synopsis's `Locations:` lines, then repeats them. Anchors are fixed features with colour/material and position (LEFT/RIGHT from the main camera side), openings, surfaces and practical light — no synonyms (`sofa` never becomes `couch`), nothing dropped or moved. The Scenes Writer has the same input |
+| `enforce_wardrobe` *(optional, default on)* | After writing, the node parses the synopsis `Wardrobe:` and `Locations:` lines and checks that every shot a character is on screen in restates all of their anchors verbatim (off-screen mentions don't count), and that every scene set in a locked place restates all of that place's anchors. Any miss triggers one combined repair turn in the same session; the result is in `info` (`wardrobe: ok (2 locked) | locations: ok (1 locked)` / `repaired 6 -> 0`) and the console lists each miss |
 | `image_1..image_9` *(optional)* | Reference images, `<Picture 1>..<Picture N>` in connection order. Downscaled copies go to Claude so it can recognise who/what each picture is (add `image_notes` like `Image 1: Sheldon`, `Image 3: the diner`); pictured characters are bound to their picture in `subject_definitions` and the wardrobe lock is taken from the picture. The originals come back out on the matching `image_N` outputs — wire them to the same slots on *MiniMax H3 Reference to Video* |
 | `model`, `research`, `director`, `use_subscription`, `timeout_seconds`, `seed` | The Claude Code block; `director` loads the `h3-crossover` skill with verified gold examples |
 
@@ -760,6 +771,41 @@ Takes a cast (from `H3 Characters` nodes, or typed by hand) and your steer, and 
 
 The Claude Code prompt writer, but for a run of scenes: one idea in, **1–10 consecutive T2VA prompts** out in the base three-field format, each with its own duration, forming one continuous story. Same director skills, camera vocabulary, dialogue toggles and wildness bands as `APNext H3 Claude Code Writer`. Optional `image` and `subject_/scenery_/object_` sockets are described into every scene for consistency (nothing becomes `<Picture N>`). Has the same `continuity_mode` switch (independent clips vs continuous chain). Outputs mirror the crossover writer: `scenes` and `durations` are lists.
 
+#### APNext H3 Music Video Writer
+**Display Name:** `APNext H3 Music Video Writer`
+
+Turns a **song** into a whole music video. The node cuts the audio into consecutive pieces no longer than H3 renders in one clip (5–15 s), choosing the cut points on the music — onsets, energy steps, section changes, and (with timed lyrics) right before a lyric line — with every piece length snapped to H3's frame grid (5 + 17k frames at 24 fps) so each rendered clip is exactly as long as its audio slice and the stitched video never drifts. It then writes **one scene per piece** (four-section H3 prompt): the piece is `<Audio 1>`, reused 1:1 as the clip's soundtrack; in *Performance* mode the singer lip-syncs the piece's lyric lines on camera (`<Subject 1> sings <d>[English] exact line</d> in sync with <Audio 1>`), *Narrative* mode answers the lyric with pictures, *Mixed* alternates; quiet pieces get long intimate shots, loud/peak pieces more cuts and the chorus look. Long songs are written in chunks of 6 scenes that continue one session (same synopsis, wardrobe and location locks).
+
+| Input | Description |
+|-------|-------------|
+| `audio` | The song (Load Audio) |
+| `direction` | The concept: performer, place, look, arc, motifs, what the chorus looks like |
+| `lyrics` | One line per line. `[0:15] line`, `0:15 line` or LRC `[00:15.20] line` make the sync exact; `[Chorus]`-style tags are kept; untimed lines are spread evenly (approximate). Empty = instrumental |
+| `performance_mode` | Performance / Narrative / Mixed |
+| `segment_mode`, `max_segment_seconds`, `min_segment_seconds` | *Auto* cuts on the music inside the allowed range, *Fixed* takes the longest allowed piece each time, *Lyric lines* tries hardest to cut before a line |
+| `shots_per_scene`, `visual_style`, `dialogue_language` (lyric language), `wildness` | As on the other writers |
+| `cast_1..4`, `extra_cast` | The performer(s): H3 Characters (`✏️ custom` + `wardrobe` is made for this) or typed lines such as `Lena: a singer in her 30s with a platinum pixie cut` |
+| `wardrobe`, `locations`, `enforce_wardrobe` | Locks as on the Crossover Writer (cast-carried wardrobe is merged in). For runs of more than 6 scenes the locks are checked and reported but not re-emitted |
+| `image_1..9`, `image_notes` | Reference pictures (the performer's face, the place); passed through to the video node |
+| Claude Code block, `llm` | As on the other writers; an `APNext H3 LLM Backend` makes it run on Ollama |
+
+| Output | Description |
+|--------|-------------|
+| `scenes` **(list)** | One prompt per piece → the H3 video node's `prompt` |
+| `durations` **(list)** / `lengths` **(list)** | Seconds / H3 frame counts per piece → `length` (no math node needed) |
+| `audio_segments` **(list)** | The matching AUDIO slice per piece → `ref_audio_1` (`<Audio 1>`) |
+| `segment_table` | The cut list: `01  0:00.00 – 0:15.08  (15.08s, 362 frames)  energy: peak  lyrics: …` |
+| `scenes_text`, `synopsis`, `cast`, `scene_count`, `song_seconds`, `session_id`, `info`, `image_N` | As on the Crossover Writer |
+
+```
+[Load Audio] ─AUDIO─┬─► [H3 Music Video Writer] ─scenes/lengths/audio_segments─► [MiniMax H3 Reference to Video] … [VAE Decode]
+                    │                                                                                                │
+                    └─────────────────────────── replace_audio ──► [H3 Scenes Join] ◄─ IMAGE list ───────────────────┘
+                                                                        └─► [Create Video] ─► [Save Video]   (one music video)
+```
+
+`examples/h3/h3_music_video.json` is this graph end to end (song → pieces → clips → one video with the original track).
+
 #### APNext H3 Scene Pick
 **Display Name:** `APNext H3 Scene Pick`
 
@@ -773,12 +819,27 @@ Collapses a `scenes` list to one element by `index` (0-based, clamped) and retur
 [H3 Crossover Writer] ─scenes/durations─► [H3 Scene Pick index=2] ─scene/duration─► [MiniMax H3 video]   (renders one)
 ```
 
+#### APNext H3 Prompt Preview
+**Display Name:** `APNext H3 Prompt Preview`
+
+Output node that renders any H3 prompt colour-coded (`<Subject N>`, `<Picture N>`, `<Video N>`, `<Audio N>`, `<d>` dialogue, `[Shot N]`, speaker IDs, section headers, camera vocabulary) with a Copy button, and passes the text through. Connect the reference images to `image_1..image_9` and a small thumbnail of each appears in a strip above the prompt and inline next to every `<Picture N>` tag (click to enlarge; pictures not referenced in the text are marked *(unused)*). The **Thumbs** button in the panel bar toggles the thumbnails on/off; the choice is saved with the node.
+
+#### APNext H3 Scenes Join
+**Display Name:** `APNext H3 Scenes Join`
+
+In the batch workflows ComfyUI renders every scene as its own clip (one `Save Video` per list element). Drop this node between the per-scene `VAE Decode` / `VAE Decode Audio` and a single `Create Video` → `Save Video` to get **one continuous video** of all scenes instead. Takes the per-scene `IMAGE` (and optional `AUDIO`) lists, concatenates frames in order and joins the audio tracks (sample rate / channel count unified to the first scene), outputs one `images` batch + one `audio` track plus `frame_count` / `scene_count`. `crossfade_frames` blends the cut between scenes (0 = hard cut); `size_mismatch` resizes stray scenes to the first scene's resolution or errors; `replace_audio` swaps the joined per-scene audio for one track of your own (the original song from the Music Video Writer). `h3_scenes_batch.json` and `h3_crossover_batch.json` ship with it wired in; for true scene-to-scene continuity use the Contex Loop route below.
+
+```
+[per-scene VAE Decode] ─IMAGE list─► [H3 Scenes Join] ─images/audio─► [Create Video] ─► [Save Video]   (one file)
+[per-scene VAE Decode Audio] ─AUDIO list─┘
+```
+
 #### APNext H3 Scenes → Contex Loop Plan
 **Display Name:** `APNext H3 Scenes → Contex Loop Plan`
 
 For **continuity across scenes** (the last frames and audio of scene N carried into scene N+1). Converts the `scenes` / `durations` lists into the plan JSON that [ComfyUI-MiniMaxH3-Contex-Loop](https://github.com/ethanfel/ComfyUI-MiniMaxH3-Contex-Loop)'s `MiniMax H3 Contex Loop Plan` node accepts on `plan_json_input` (`shots[]` with `id`, `prompt`, `duration_seconds`, `seed`, plus optional `prompt_prefix` and `defaults.steps`). That pack's loop body then renders every scene in order with the previous tail as motion/audio context, checkpoints and final assembly. Alternatives for one-scene-per-run chains: core `MiniMaxH3AddGuide`, `ComfyUI-H3-Motion-Context`, or this repo's `APNext H3 Claude Code Continue Writer` (last frame → I2VA first frame).
 
-Example workflows in `examples/h3/`: `h3_crossover_batch.json` (render every scene in one queue), `h3_crossover_pick_one.json` (Scene Pick + incrementing index, one scene per run), `h3_scenes_batch.json`, `h3_scenes_pick_one.json`, and `h3_crossover_contex_chain.json` — the Contex-Loop *T2V – Normal* example with the crossover writer in continuous-chain mode feeding `Scenes → Contex Loop Plan` into `plan_json_input`, so the whole run renders scene after scene with the previous tail carried forward.
+Example workflows in `examples/h3/`: `h3_crossover_batch.json` (render every scene in one queue, stitched by `H3 Scenes Join` into one video), `h3_crossover_pick_one.json` (Scene Pick + incrementing index, one scene per run), `h3_scenes_batch.json` (every scene rendered then stitched by `H3 Scenes Join` into one video), `h3_scenes_pick_one.json`, `h3_music_video.json` (song → H3 Music Video Writer → clips → one video with the original track), and `h3_crossover_contex_chain.json` — the Contex-Loop *T2V – Normal* example with the crossover writer in continuous-chain mode feeding `Scenes → Contex Loop Plan` into `plan_json_input`, so the whole run renders scene after scene with the previous tail carried forward. Every example has an **H3 Prompt Preview** wired to the writer's prompt / scenes text output so the generated prompt is visible on the canvas.
 
 ---
 

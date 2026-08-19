@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 160,
-  "last_link_id": 316,
+  "last_node_id": 161,
+  "last_link_id": 317,
   "nodes": [
     {
       "id": 119,
@@ -920,6 +920,12 @@
           "name": "text",
           "type": "STRING",
           "link": 316
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -930,7 +936,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3PromptPreview"
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         ""
@@ -967,6 +974,66 @@
             "name": "idea"
           },
           "link": null
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "subject_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "subject_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "subject_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "scenery_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "scenery_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "scenery_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "object_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "object_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "object_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -989,7 +1056,9 @@
         {
           "name": "scenes_text",
           "type": "STRING",
-          "links": []
+          "links": [
+            317
+          ]
         },
         {
           "name": "synopsis",
@@ -1013,7 +1082,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeScenesWriter"
+        "Node name for S&R": "H3ClaudeCodeScenesWriter",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "A courier on a hoverbike races a thunderstorm across a neon megacity to deliver a birthday cake before midnight.",
@@ -1042,6 +1112,8 @@
         "",
         "",
         "",
+        "",
+        true,
         "",
         "",
         ""
@@ -1113,7 +1185,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ScenePick"
+        "Node name for S&R": "H3ScenePick",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         0
@@ -1182,6 +1255,47 @@
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 161,
+      "type": "H3PromptPreview",
+      "pos": [
+        -1010,
+        5600
+      ],
+      "size": [
+        520,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 317
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [],
+      "title": "H3 Prompt Preview"
     }
   ],
   "links": [
@@ -1414,6 +1528,14 @@
       158,
       0,
       153,
+      0,
+      "STRING"
+    ],
+    [
+      317,
+      157,
+      2,
+      161,
       0,
       "STRING"
     ]

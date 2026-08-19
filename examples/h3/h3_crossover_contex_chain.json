@@ -1,8 +1,8 @@
 {
   "id": "c0b8422a-84d4-44f8-91ce-31c68a9a119e",
   "revision": 0,
-  "last_node_id": 1949,
-  "last_link_id": 90,
+  "last_node_id": 1950,
+  "last_link_id": 91,
   "nodes": [
     {
       "id": 1,
@@ -1866,16 +1866,24 @@
           "links": [
             86
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Tony Soprano — James Gandolfini (The Sopranos)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1930,16 +1938,24 @@
           "links": [
             87
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Sheldon Cooper — Jim Parsons (The Big Bang Theory)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1983,6 +1999,18 @@
           "type": "STRING",
           "shape": 7,
           "link": null
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -2005,7 +2033,9 @@
         {
           "name": "scenes_text",
           "type": "STRING",
-          "links": []
+          "links": [
+            91
+          ]
         },
         {
           "name": "synopsis",
@@ -2079,7 +2109,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeCrossoverWriter"
+        "Node name for S&R": "H3ClaudeCodeCrossoverWriter",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Sheldon has been assigned as Tony Soprano's court-mandated therapist while Dr. Melfi is on leave. One session, one couch, Tony's patience running out. Keep it in the same room; end with Tony leaving.",
@@ -2101,6 +2132,8 @@
         "randomize",
         "",
         "",
+        "",
+        true,
         "",
         "",
         "",
@@ -2161,7 +2194,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ScenesToChainPlan"
+        "Node name for S&R": "H3ScenesToChainPlan",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "scene",
@@ -2199,6 +2233,47 @@
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 1950,
+      "type": "H3PromptPreview",
+      "pos": [
+        -1462,
+        544
+      ],
+      "size": [
+        520,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 91
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [],
+      "title": "H3 Prompt Preview"
     }
   ],
   "links": [
@@ -2695,6 +2770,14 @@
       1948,
       0,
       1700,
+      0,
+      "STRING"
+    ],
+    [
+      91,
+      1947,
+      2,
+      1950,
       0,
       "STRING"
     ]

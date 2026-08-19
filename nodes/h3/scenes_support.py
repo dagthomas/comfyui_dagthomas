@@ -35,6 +35,7 @@ def envelope_contract(section_labels):
         "  === SYNOPSIS ===\n"
         "  Title: ...\n  Logline: one or two sentences\n"
         "  Wardrobe: one line per recurring character - `Name: anchor, anchor, anchor`\n"
+        "  Locations: one line per recurring place - `Name: anchor, anchor, anchor`\n"
         "  === END SYNOPSIS ===\n"
         "- Then one envelope per scene, numbered from 01:\n"
         "  === SCENE 01 | duration: 15.0 ===\n"
@@ -51,34 +52,403 @@ def envelope_contract(section_labels):
 
 
 WARDROBE_TOOLTIP = (
-    "Wardrobe lock, one line per character, e.g. `Sheldon: brown corduroy jacket over a "
-    "green Flash T-shirt, khakis`. Used word-for-word in every scene. Empty = Claude fixes "
-    "one outfit per character itself (in the synopsis) and repeats it in every scene."
+    "Wardrobe lock, one line per character, e.g. `Sheldon: brown corduroy jacket, green "
+    "Flash T-shirt, khaki trousers, small silver ring in the left nostril`. Used word-for-word "
+    "in every shot. Empty = Claude fixes one outfit per character itself (in the synopsis) "
+    "and repeats it in every shot."
+)
+
+ENFORCE_WARDROBE_TOOLTIP = (
+    "After writing, check that every shot a character is in restates all of that "
+    "character's wardrobe anchors verbatim, and that every scene set in a locked location "
+    "restates that location's anchors. If anything is dropped or changed, the model gets "
+    "one repair turn in the same session. Off = trust the first answer."
+)
+
+LOCATIONS_TOOLTIP = (
+    "Location lock, one line per recurring place, e.g. `Sheldon's living room: beige "
+    "three-seat sofa facing a wall-mounted TV on the LEFT, tall bookshelf of comics behind "
+    "it, bay window with white blinds on the RIGHT, warm tungsten floor lamp in the far "
+    "corner`. Used word-for-word in every scene set there, so the room looks the same in "
+    "every scene. Empty = the model fixes each recurring place itself (in the synopsis) "
+    "and repeats it."
+)
+
+_LOCATION_ANCHOR_RULES = (
+    "Location anchor rules: every anchor is one exact phrase naming a fixed feature of the "
+    "place with its colour/material and its position - the big furniture or landmarks and "
+    "where they stand (`beige three-seat sofa facing a wall-mounted TV on the LEFT`), the "
+    "openings (`bay window with white blinds on the RIGHT`, `door in the back wall`), the "
+    "surfaces (`dark hardwood floor`, `exposed red-brick wall`) and the practical light "
+    "(`warm tungsten floor lamp in the far corner`, `grey overcast daylight through the "
+    "window`). Fix a side once (LEFT/RIGHT as seen from the main camera position) and never "
+    "swap it; keep the camera on the same side of the room so screen direction holds. No "
+    "synonyms or paraphrases later (`sofa` never becomes `couch`, `beige` never becomes "
+    "`cream`): copy the phrase character-for-character. Nothing in the lock is ever dropped, "
+    "moved or recoloured, and no new major furniture or openings appear. A place only "
+    "changes when the story changes it on screen."
+)
+
+
+def locations_directive(locations=""):
+    """
+    Rooms and places drift between scenes unless each is fixed once and copied
+    into every scene set there. With user text: that text is the lock. Without:
+    the model writes the lock into the synopsis first, then reuses it.
+    """
+    locations = (locations or "").strip()
+    if locations:
+        lines = [line.strip() for line in locations.splitlines() if line.strip()]
+        return (
+            "Location lock (from the user) - copy these anchors word-for-word as the "
+            "synopsis `Locations:` lines and, in EVERY scene set in that place, into the "
+            "first shot of the scene right after the place is named (`... in Sheldon's "
+            "living room - <anchors> - ...`); later shots in the same scene restate the "
+            "anchors that are in frame. " + _LOCATION_ANCHOR_RULES +
+            "\n" + "\n".join(f"    {line}" for line in lines)
+        )
+    return (
+        "Location lock: before scene 01, name every place that appears in more than one "
+        "scene and fix it ONCE - 3-6 anchors - as the synopsis `Locations:` lines in exactly "
+        "this form, one place per line, anchors separated by commas:\n"
+        "    Locations:\n"
+        "    Sheldon's living room: beige three-seat sofa facing a wall-mounted TV on the "
+        "LEFT, tall bookshelf of comics behind it, bay window with white blinds on the RIGHT, "
+        "warm tungsten floor lamp in the far corner\n"
+        "Then, in EVERY scene set in that place, name the place with exactly that name and "
+        "copy its anchors word-for-word into the first shot of the scene right after the "
+        "place is named (`... in Sheldon's living room - <anchors> - ...`); later shots in "
+        "the same scene restate the anchors that are in frame. A place used in only one "
+        "scene needs no lock. " + _LOCATION_ANCHOR_RULES
+    )
+
+_ANCHOR_RULES = (
+    "Anchor rules: every anchor is one exact phrase - a precise colour word plus material "
+    "or pattern plus garment (`dark-brown corduroy jacket`, `forest-green cotton T-shirt`), "
+    "hair as colour plus style, and every accessory or mark with its exact position "
+    "(`small silver ring in the LEFT nostril`, `thin gold hoop in the RIGHT ear`, `scar "
+    "over the LEFT eyebrow`). Fix a side once and never swap it. No synonyms or "
+    "paraphrases later (`burgundy` never becomes `dark red`; `jacket` never becomes "
+    "`coat`): copy the phrase character-for-character. Nothing extra appears that is not "
+    "in the lock - no additional jewellery, glasses, hats or bags - and nothing in the lock "
+    "is ever dropped, recoloured or moved. Clothes, hair, accessories and props stay "
+    "identical across every scene unless the brief explicitly calls for a costume change, "
+    "and then the change is stated on screen."
 )
 
 
 def wardrobe_directive(wardrobe=""):
     """
-    Wardrobe drifts between scenes unless each outfit is fixed once and copied.
-    With user text: that text is the lock. Without: Claude writes the lock into
-    the synopsis first, then reuses it.
+    Wardrobe drifts between scenes unless each outfit is fixed once and copied
+    into EVERY shot. With user text: that text is the lock. Without: Claude
+    writes the lock into the synopsis first, then reuses it.
     """
     wardrobe = (wardrobe or "").strip()
     if wardrobe:
         lines = [line.strip() for line in wardrobe.splitlines() if line.strip()]
         return (
-            "Wardrobe lock (from the user) - copy these anchors word-for-word into the "
-            "synopsis `Wardrobe:` lines, into every scene's subject_definitions and into "
-            "the first shot each character appears in; never add, remove or recolour a "
-            "garment between scenes:\n" + "\n".join(f"    {line}" for line in lines)
+            "Wardrobe lock (from the user) - copy these anchors word-for-word as the "
+            "synopsis `Wardrobe:` lines and into EVERY shot in which that character is on "
+            "screen, right after the first mention of the character in that shot "
+            "(`... <Subject 1> Sheldon (S1), wearing <anchors>, ...`). " + _ANCHOR_RULES +
+            "\n" + "\n".join(f"    {line}" for line in lines)
         )
     return (
-        "Wardrobe lock: before scene 01, fix ONE outfit per character - 2-4 concrete "
-        "anchors (garment, colour, material or pattern, one distinctive item) - write "
-        "them as the synopsis `Wardrobe:` lines, then reuse that exact wording in every "
-        "scene's subject_definitions and in the first shot each character appears in. "
-        "Clothes, hair and props never change between scenes unless the brief explicitly "
-        "calls for a costume change, and then the change is stated on screen."
+        "Wardrobe lock: before scene 01, fix ONE outfit per character - 3-5 anchors - "
+        "and write them as the synopsis `Wardrobe:` lines in exactly this form, one "
+        "character per line, anchors separated by commas:\n"
+        "    Wardrobe:\n"
+        "    Sheldon Cooper: dark-brown corduroy jacket, forest-green cotton T-shirt, "
+        "khaki chino trousers, short side-parted brown hair\n"
+        "Then copy that character's anchors word-for-word into EVERY shot in which the "
+        "character is on screen, right after the first mention of the character in that "
+        "shot (`... <Subject 1> Sheldon Cooper (S1), wearing <anchors>, ...`). "
+        + _ANCHOR_RULES
+    )
+
+
+# ----------------------------------------------------------------------
+# Wardrobe verification
+# ----------------------------------------------------------------------
+
+_SYNOPSIS_HEADERS = ("title:", "logline:", "cast:", "wardrobe:", "locations:", "location:")
+_SHOT_SPLIT_RE = re.compile(r"(\[Shot\s*\d+\])", re.IGNORECASE)
+_OFFSCREEN_RE = re.compile(
+    r"[^.\n]*\b(?:not in frame|out of frame|off[- ]screen|not visible|not yet in frame|"
+    r"has not entered|remains? outside|is heard)\b[^.\n]*[.\n]?",
+    re.IGNORECASE,
+)
+
+
+def parse_wardrobe_lock(synopsis):
+    """
+    {character: [anchor, ...]} from the synopsis `Wardrobe:` lines.
+
+    Accepts both layouts: a `Wardrobe:` header followed by `Name: a, b, c`
+    lines, or `Wardrobe: Name: a, b, c` on one line. Stops at the next synopsis
+    header or a blank line.
+    """
+    return _parse_lock_block(synopsis, ("wardrobe:",))
+
+
+def parse_location_lock(synopsis):
+    """{place: [anchor, ...]} from the synopsis `Locations:` (or `Location:`) lines."""
+    return _parse_lock_block(synopsis, ("locations:", "location:"))
+
+
+def _parse_lock_block(synopsis, headers):
+    locks = {}
+    lines = (synopsis or "").splitlines()
+    i = 0
+    while i < len(lines) and not lines[i].strip().lower().startswith(headers):
+        i += 1
+    if i == len(lines):
+        return locks
+    stripped = lines[i].strip()
+    header = next(h for h in headers if stripped.lower().startswith(h))
+    first = stripped[len(header):].strip()
+    block = ([first] if first else []) + lines[i + 1:]
+    for raw in block:
+        line = raw.strip().lstrip("-*• ").strip()
+        if not line:
+            if locks:
+                break
+            continue
+        if line.lower().startswith(_SYNOPSIS_HEADERS):
+            break
+        name, sep, rest = line.partition(":")
+        if not sep or not rest.strip():
+            continue
+        name = re.sub(r"\s*\(.*?\)\s*", " ", name).strip()
+        anchors = [a.strip(" .;") for a in re.split(r"[,;]", rest) if a.strip(" .;")]
+        anchors = [a for a in anchors if len(a) >= 4]
+        if name and anchors:
+            locks[name] = anchors
+    return locks
+
+
+def _name_patterns(name):
+    """Regexes that mean `this character is mentioned`: full name, then first name."""
+    full = re.escape(name.strip())
+    pats = [re.compile(rf"\b{full}\b", re.IGNORECASE)]
+    first = name.strip().split()[0]
+    if len(first) >= 3 and first.lower() != name.strip().lower():
+        pats.append(re.compile(rf"\b{re.escape(first)}\b", re.IGNORECASE))
+    return pats
+
+
+def wardrobe_violations(scenes, locks):
+    """
+    [(scene_no, shot_no, name, anchor), ...] for every shot in which a locked
+    character is on screen but an anchor is missing verbatim (case-insensitive).
+    Sentences that say the character is NOT in frame do not count as presence.
+    """
+    found = []
+    if not locks:
+        return found
+    patterns = {name: _name_patterns(name) for name in locks}
+    for scene_no, prompt in enumerate(scenes, 1):
+        parts = _SHOT_SPLIT_RE.split(prompt)
+        # parts: [pre, "[Shot 1]", body1, "[Shot 2]", body2, ...]
+        shot_no = 0
+        for k in range(1, len(parts), 2):
+            shot_no += 1
+            body = parts[k + 1] if k + 1 < len(parts) else ""
+            visible = _OFFSCREEN_RE.sub(" ", body)
+            low = body.lower()
+            for name, anchors in locks.items():
+                if not any(p.search(visible) for p in patterns[name]):
+                    continue
+                for anchor in anchors:
+                    if anchor.lower() not in low:
+                        found.append((scene_no, shot_no, name, anchor))
+    return found
+
+
+def wardrobe_repair_prompt(locks, violations, scene_count):
+    """The one follow-up turn that asks for the full output again, anchors restored."""
+    lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in locks.items())
+    by_shot = {}
+    for scene_no, shot_no, name, anchor in violations:
+        by_shot.setdefault((scene_no, shot_no, name), []).append(anchor)
+    issue_lines = "\n".join(
+        f"    Scene {s:02d} [Shot {sh}]: {n} is on screen but missing: "
+        + ", ".join(f"`{a}`" for a in anchors)
+        for (s, sh, n), anchors in sorted(by_shot.items())
+    )
+    return (
+        "WARDROBE CHECK FAILED. The locked wardrobe from your synopsis is:\n"
+        f"{lock_lines}\n"
+        "These shots have the character on screen without restating every anchor "
+        "verbatim:\n"
+        f"{issue_lines}\n"
+        "Fix them: in every shot in which a character is on screen, restate ALL of that "
+        "character's anchors character-for-character (same words, same colours, same "
+        "side), right after the first mention of the character in that shot. Do not "
+        "change the story, dialogue, timecodes, durations, shot count or anything else. "
+        f"Return the COMPLETE output again in the exact same contract: the synopsis block "
+        f"and all {scene_count} scene envelopes."
+    )
+
+
+def wardrobe_summary(locks, violations):
+    if not locks:
+        return "wardrobe: no lock found in synopsis"
+    if not violations:
+        return f"wardrobe: ok ({len(locks)} locked)"
+    return f"wardrobe: {len(violations)} anchor miss(es)"
+
+
+# ----------------------------------------------------------------------
+# Location verification
+def _place_patterns(name):
+    """Regexes that mean `this scene is set in that place`: the full locked name."""
+    full = re.escape(name.strip())
+    pats = [re.compile(rf"\b{full}\b", re.IGNORECASE)]
+    # "Sheldon's living room" is also referred to as "the living room"
+    words = name.strip().split()
+    if len(words) >= 2 and words[0].endswith(("'s", "’s")):
+        tail = " ".join(words[1:])
+        if len(tail) >= 5:
+            pats.append(re.compile(rf"\b{re.escape(tail)}\b", re.IGNORECASE))
+    return pats
+
+
+def location_violations(scenes, locks):
+    """
+    [(scene_no, place, anchor), ...] for every scene that names a locked place
+    but does not restate one of its anchors verbatim (case-insensitive) anywhere
+    in the scene.
+    """
+    found = []
+    if not locks:
+        return found
+    patterns = {name: _place_patterns(name) for name in locks}
+    for scene_no, prompt in enumerate(scenes, 1):
+        low = prompt.lower()
+        for name, anchors in locks.items():
+            if not any(p.search(prompt) for p in patterns[name]):
+                continue
+            for anchor in anchors:
+                if anchor.lower() not in low:
+                    found.append((scene_no, name, anchor))
+    return found
+
+
+def location_summary(locks, violations):
+    if not locks:
+        return "locations: no lock found in synopsis"
+    if not violations:
+        return f"locations: ok ({len(locks)} locked)"
+    return f"locations: {len(violations)} anchor miss(es)"
+
+
+def continuity_repair_prompt(wardrobe_locks, wardrobe_misses, location_locks,
+                             location_misses, scene_count):
+    """
+    The one follow-up turn that asks for the full output again with wardrobe
+    and/or location anchors restored. Either half may be empty.
+    """
+    parts = []
+    if wardrobe_misses:
+        lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in wardrobe_locks.items())
+        by_shot = {}
+        for scene_no, shot_no, name, anchor in wardrobe_misses:
+            by_shot.setdefault((scene_no, shot_no, name), []).append(anchor)
+        issue_lines = "\n".join(
+            f"    Scene {s:02d} [Shot {sh}]: {n} is on screen but missing: "
+            + ", ".join(f"`{a}`" for a in anchors)
+            for (s, sh, n), anchors in sorted(by_shot.items())
+        )
+        parts.append(
+            "WARDROBE CHECK FAILED. The locked wardrobe from your synopsis is:\n"
+            f"{lock_lines}\n"
+            "These shots have the character on screen without restating every anchor "
+            "verbatim:\n"
+            f"{issue_lines}\n"
+            "Fix them: in every shot in which a character is on screen, restate ALL of that "
+            "character's anchors character-for-character (same words, same colours, same "
+            "side), right after the first mention of the character in that shot."
+        )
+    if location_misses:
+        lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in location_locks.items())
+        by_scene = {}
+        for scene_no, name, anchor in location_misses:
+            by_scene.setdefault((scene_no, name), []).append(anchor)
+        issue_lines = "\n".join(
+            f"    Scene {s:02d}: set in {n} but missing: " + ", ".join(f"`{a}`" for a in anchors)
+            for (s, n), anchors in sorted(by_scene.items())
+        )
+        parts.append(
+            "LOCATION CHECK FAILED. The locked locations from your synopsis are:\n"
+            f"{lock_lines}\n"
+            "These scenes are set in a locked place without restating every anchor "
+            "verbatim:\n"
+            f"{issue_lines}\n"
+            "Fix them: in every scene set in a locked place, name the place exactly as "
+            "locked and restate ALL of its anchors character-for-character (same words, "
+            "same colours, same LEFT/RIGHT) in the first shot of the scene, right after the "
+            "place is named; later shots in that scene restate the anchors in frame."
+        )
+    return (
+        "\n\n".join(parts) + "\n"
+        "Do not change the story, dialogue, timecodes, durations, shot count or anything "
+        f"else. Return the COMPLETE output again in the exact same contract: the synopsis "
+        f"block and all {scene_count} scene envelopes."
+    )
+
+
+def enforce_continuity(enabled, synopsis, parsed, scene_count, scene_duration,
+                       session_id, info, repair):
+    """
+    Shared post-check for the multi-scene writers: verify the wardrobe lock per
+    shot and the location lock per scene; if anything is missing and a session
+    is open, ask for ONE repair turn via `repair(prompt) -> (text, repair_info)`
+    and keep the repaired answer only if it still parses to the same scene count.
+    Returns (synopsis, parsed, info).
+    """
+    w_locks = parse_wardrobe_lock(synopsis)
+    l_locks = parse_location_lock(synopsis)
+    scenes = [p for _, _, p in parsed]
+    w_miss = wardrobe_violations(scenes, w_locks)
+    l_miss = location_violations(scenes, l_locks)
+    summary = f"{wardrobe_summary(w_locks, w_miss)} | {location_summary(l_locks, l_miss)}"
+    if not enabled or (not w_miss and not l_miss) or not session_id:
+        if enabled:
+            print(f"👔 {summary}")
+        return synopsis, parsed, f"{info} | {summary}"
+
+    print(
+        f"👔 continuity: {len(w_miss)} wardrobe miss(es) in {len(w_locks)} character(s), "
+        f"{len(l_miss)} location miss(es) in {len(l_locks)} place(s) - asking for one repair pass"
+    )
+    for scene_no, shot_no, name, anchor in w_miss[:10]:
+        print(f"   ↳ scene {scene_no:02d} [Shot {shot_no}] {name}: missing `{anchor}`")
+    for scene_no, name, anchor in l_miss[:10]:
+        print(f"   ↳ scene {scene_no:02d} {name}: missing `{anchor}`")
+    try:
+        text, repair_info = repair(
+            continuity_repair_prompt(w_locks, w_miss, l_locks, l_miss, scene_count)
+        )
+        new_synopsis, new_parsed = parse_scenes(text, scene_duration)
+    except Exception as exc:  # keep the first answer rather than fail the run
+        print(f"⚠️ continuity repair failed: {exc}")
+        return synopsis, parsed, f"{info} | {summary}, repair failed"
+    if len(new_parsed) != len(parsed):
+        print(f"⚠️ continuity repair returned {len(new_parsed)} scene(s); keeping the original {len(parsed)}")
+        return synopsis, parsed, f"{info} | {summary}, repair discarded"
+    new_scenes = [p for _, _, p in new_parsed]
+    w_left = wardrobe_violations(new_scenes, parse_wardrobe_lock(new_synopsis) or w_locks)
+    l_left = location_violations(new_scenes, parse_location_lock(new_synopsis) or l_locks)
+    print(
+        f"👔 after repair: wardrobe {len(w_miss)} -> {len(w_left)}, "
+        f"locations {len(l_miss)} -> {len(l_left)} miss(es) | {repair_info}"
+    )
+    return (
+        new_synopsis or synopsis,
+        new_parsed,
+        f"{info} | wardrobe: repaired {len(w_miss)} -> {len(w_left)} | "
+        f"locations: repaired {len(l_miss)} -> {len(l_left)}",
     )
 
 

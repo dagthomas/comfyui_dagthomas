@@ -12,6 +12,9 @@ from .claude_code_crossover_writer import H3ClaudeCodeCrossoverWriter
 from .claude_code_scenes_writer import H3ClaudeCodeScenesWriter
 from .scene_pick import H3ScenePick
 from .scenes_to_chain_plan import H3ScenesToChainPlan
+from .scenes_join import H3ScenesJoin
+from .llm_backend import H3LLMBackend
+from .claude_code_music_video_writer import H3ClaudeCodeMusicVideoWriter
 
 NODE_CLASS_MAPPINGS = {
     "H3BasePromptWriter": H3BasePromptWriter,
@@ -26,6 +29,9 @@ NODE_CLASS_MAPPINGS = {
     "H3ClaudeCodeScenesWriter": H3ClaudeCodeScenesWriter,
     "H3ScenePick": H3ScenePick,
     "H3ScenesToChainPlan": H3ScenesToChainPlan,
+    "H3ScenesJoin": H3ScenesJoin,
+    "H3LLMBackend": H3LLMBackend,
+    "H3ClaudeCodeMusicVideoWriter": H3ClaudeCodeMusicVideoWriter,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -41,4 +47,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3ClaudeCodeScenesWriter": "APNext H3 Claude Code Scenes Writer",
     "H3ScenePick": "APNext H3 Scene Pick",
     "H3ScenesToChainPlan": "APNext H3 Scenes → Contex Loop Plan",
+    "H3ScenesJoin": "APNext H3 Scenes Join",
+    "H3LLMBackend": "APNext H3 LLM Backend (Ollama / local / API)",
+    "H3ClaudeCodeMusicVideoWriter": "APNext H3 Music Video Writer",
 }

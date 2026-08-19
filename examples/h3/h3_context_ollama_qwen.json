@@ -920,6 +920,12 @@
           "name": "text",
           "type": "STRING",
           "link": 317
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -930,7 +936,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3PromptPreview"
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         ""
@@ -1008,7 +1015,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "TimePromptNode"
+        "Node name for S&R": "TimePromptNode",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "",
@@ -1062,7 +1070,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "ScenePromptNode"
+        "Node name for S&R": "ScenePromptNode",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "",
@@ -1118,7 +1127,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "FeelingsPromptNode"
+        "Node name for S&R": "FeelingsPromptNode",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "",
@@ -1172,7 +1182,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "CinematicPromptNode"
+        "Node name for S&R": "CinematicPromptNode",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "",
@@ -1314,7 +1325,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3BasePromptWriter"
+        "Node name for S&R": "H3BasePromptWriter",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "A detective walks into a room and realises the person waiting for them is not who they expected.",

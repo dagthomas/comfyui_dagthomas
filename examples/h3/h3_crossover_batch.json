@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 161,
-  "last_link_id": 316,
+  "last_node_id": 162,
+  "last_link_id": 318,
   "nodes": [
     {
       "id": 119,
@@ -680,13 +680,13 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 300
+          "link": 317
         },
         {
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
-          "link": 293
+          "link": 318
         }
       ],
       "outputs": [
@@ -920,6 +920,12 @@
           "name": "text",
           "type": "STRING",
           "link": 316
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -930,7 +936,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3PromptPreview"
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         ""
@@ -988,16 +995,24 @@
           "links": [
             311
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Sheldon Cooper — Jim Parsons (The Big Bang Theory)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1052,16 +1067,24 @@
           "links": [
             312
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Captain Jack Sparrow — Johnny Depp (Pirates of the Caribbean)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1116,16 +1139,24 @@
           "links": [
             313
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Dana Scully — Gillian Anderson (The X-Files)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1169,6 +1200,18 @@
           "type": "STRING",
           "shape": 7,
           "link": null
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1267,7 +1310,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeCrossoverWriter"
+        "Node name for S&R": "H3ClaudeCodeCrossoverWriter",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "A late-night diner. Sheldon is trying to get the waitress to bring the correct ketchup-to-fry ratio; the other two have their own agendas. Comedy, escalating; end on someone walking out with the ketchup bottle.",
@@ -1289,6 +1333,8 @@
         "randomize",
         "",
         "",
+        "",
+        true,
         "",
         "",
         "",
@@ -1324,6 +1370,75 @@
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 162,
+      "type": "H3ScenesJoin",
+      "pos": [
+        833.3203937926853,
+        4918.833697770201
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 300
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "shape": 7,
+          "link": 293
+        },
+        {
+          "name": "replace_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            317
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            318
+          ]
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3ScenesJoin",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        0,
+        "resize to first scene"
+      ],
+      "title": "H3 Scenes Join — all scenes → one video"
     }
   ],
   "links": [
@@ -1491,7 +1606,7 @@
       293,
       121,
       0,
-      146,
+      162,
       1,
       "AUDIO"
     ],
@@ -1507,7 +1622,7 @@
       300,
       122,
       0,
-      146,
+      162,
       0,
       "IMAGE"
     ],
@@ -1558,6 +1673,22 @@
       153,
       0,
       "STRING"
+    ],
+    [
+      317,
+      162,
+      0,
+      146,
+      0,
+      "IMAGE"
+    ],
+    [
+      318,
+      162,
+      1,
+      146,
+      1,
+      "AUDIO"
     ]
   ],
   "groups": [

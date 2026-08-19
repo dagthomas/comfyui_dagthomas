@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 158,
-  "last_link_id": 313,
+  "last_node_id": 159,
+  "last_link_id": 315,
   "nodes": [
     {
       "id": 119,
@@ -680,13 +680,13 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 300
+          "link": 314
         },
         {
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
-          "link": 293
+          "link": 315
         }
       ],
       "outputs": [
@@ -920,6 +920,12 @@
           "name": "text",
           "type": "STRING",
           "link": 313
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -930,7 +936,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3PromptPreview"
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         ""
@@ -967,6 +974,66 @@
             "name": "idea"
           },
           "link": null
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "subject_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "subject_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "subject_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "scenery_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "scenery_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "scenery_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "object_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "object_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "object_3",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1015,7 +1082,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeScenesWriter"
+        "Node name for S&R": "H3ClaudeCodeScenesWriter",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "A lighthouse keeper on a storm-lashed island discovers a message in a bottle, reads it by lamplight, and rows out into the surf at dawn to answer it.",
@@ -1044,6 +1112,8 @@
         "",
         "",
         "",
+        "",
+        true,
         "",
         "",
         ""
@@ -1077,6 +1147,75 @@
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 159,
+      "type": "H3ScenesJoin",
+      "pos": [
+        833.3203937926853,
+        4918.833697770201
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 300
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "shape": 7,
+          "link": 293
+        },
+        {
+          "name": "replace_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            314
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            315
+          ]
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3ScenesJoin",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        0,
+        "resize to first scene"
+      ],
+      "title": "H3 Scenes Join — all scenes → one video"
     }
   ],
   "links": [
@@ -1244,7 +1383,7 @@
       293,
       121,
       0,
-      146,
+      159,
       1,
       "AUDIO"
     ],
@@ -1260,7 +1399,7 @@
       300,
       122,
       0,
-      146,
+      159,
       0,
       "IMAGE"
     ],
@@ -1287,6 +1426,22 @@
       153,
       0,
       "STRING"
+    ],
+    [
+      314,
+      159,
+      0,
+      146,
+      0,
+      "IMAGE"
+    ],
+    [
+      315,
+      159,
+      1,
+      146,
+      1,
+      "AUDIO"
     ]
   ],
   "groups": [

@@ -20,9 +20,12 @@ from .claude_code_support import (
     REF_SKILLS,
     claude_code_inputs,
     claude_code_optional_inputs,
+    local_llm_inputs,
+    local_llm_options,
     directions_with_research,
     run_h3_claude_code,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
     CAMERA_AMPLITUDES,
@@ -136,6 +139,7 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
             }),
         }
         optional.update(claude_code_optional_inputs())
+        optional.update(local_llm_inputs())
         # Image sockets last, so the front-end can grow and trim them at the tail.
         optional.update(context_inputs())
         optional.update(reference_image_inputs())
@@ -196,10 +200,16 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
         custom_visual_style="",
         resume_session_id="",
         working_dir="",
+        llm=None,
         **image_slots,
     ):
         # The same tensors go back out on image_1..image_9 so the video node
         # can be wired from this node and numbering can never drift.
+        template_vars, template_summary = collect_template_vars(image_slots)
+        idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style = expand_all(
+            template_vars, idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style
+        )
+        log_template_vars(template_vars, template_summary, idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(image_slots)
         passthrough = tuple(image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
         try:
@@ -261,6 +271,7 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
                 working_dir,
                 director,
                 skills=REF_SKILLS,
+                local=local_llm_options(llm),
             )
 
             prompt = strip_code_fence(text)

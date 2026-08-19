@@ -483,6 +483,27 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.scenes_join import H3ScenesJoin
+    NEW_MAPPINGS["H3ScenesJoin"] = H3ScenesJoin
+    NEW_DISPLAY_MAPPINGS["H3ScenesJoin"] = "APNext H3 Scenes Join"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.llm_backend import H3LLMBackend
+    NEW_MAPPINGS["H3LLMBackend"] = H3LLMBackend
+    NEW_DISPLAY_MAPPINGS["H3LLMBackend"] = "APNext H3 LLM Backend (Ollama / local / API)"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_music_video_writer import H3ClaudeCodeMusicVideoWriter
+    NEW_MAPPINGS["H3ClaudeCodeMusicVideoWriter"] = H3ClaudeCodeMusicVideoWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeMusicVideoWriter"] = "APNext H3 Music Video Writer"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}

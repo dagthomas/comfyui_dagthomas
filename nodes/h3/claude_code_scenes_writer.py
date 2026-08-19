@@ -24,9 +24,12 @@ from .claude_code_support import (
     BASE_SKILLS,
     claude_code_inputs,
     claude_code_optional_inputs,
+    local_llm_inputs,
+    local_llm_options,
     directions_with_research,
     run_h3_claude_code,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
     CAMERA_AMPLITUDES,
@@ -45,7 +48,11 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
+    LOCATIONS_TOOLTIP,
+    enforce_continuity,
+    locations_directive,
     wardrobe_directive,
     CONTINUITY_MODES,
     DURATION_MODES,
@@ -145,8 +152,11 @@ class H3ClaudeCodeScenesWriter:
                 ),
             }),
             "wardrobe": ("STRING", {"multiline": True, "default": "", "tooltip": WARDROBE_TOOLTIP}),
+            "enforce_wardrobe": ("BOOLEAN", {"default": True, "tooltip": ENFORCE_WARDROBE_TOOLTIP}),
         }
         optional.update(claude_code_optional_inputs())
+        optional["locations"] = ("STRING", {"multiline": True, "default": "", "tooltip": LOCATIONS_TOOLTIP})
+        optional.update(local_llm_inputs())
         optional.update(typed_reference_inputs())
         optional.update(context_inputs())
 
@@ -174,6 +184,28 @@ class H3ClaudeCodeScenesWriter:
     @classmethod
     def IS_CHANGED(cls, seed=-1, **kwargs):
         return float("nan") if seed == -1 else seed
+
+    # ------------------------------------------------------------------
+    # Wardrobe verification (one repair turn in the same session)
+    # ------------------------------------------------------------------
+
+    def _enforce_wardrobe(
+        self, enabled, synopsis, parsed, scene_count, scene_duration, session_id,
+        info, model, use_subscription, timeout_seconds, working_dir, director,
+        continuity_mode, local=None,
+    ):
+        """Wardrobe + location lock check with one shared repair turn (scenes_support)."""
+        def repair(prompt):
+            text, _, repair_info = run_h3_claude_code(
+                self._build_system_prompt(continuity_mode), prompt,
+                None, model, False, use_subscription, timeout_seconds,
+                session_id, working_dir, director, local=local,
+            )
+            return text, repair_info
+
+        return enforce_continuity(
+            enabled, synopsis, parsed, scene_count, scene_duration, session_id, info, repair,
+        )
 
     # ------------------------------------------------------------------
 
@@ -228,6 +260,7 @@ class H3ClaudeCodeScenesWriter:
         references,
         rng,
         wardrobe="",
+        locations="",
     ):
         directives = [
             f"Write exactly {scene_count} scene{'s' if scene_count != 1 else ''}, numbered "
@@ -261,6 +294,7 @@ class H3ClaudeCodeScenesWriter:
                 f"Visual style: open every [Shot 1] with `{visual_style}` as the stated style."
             )
         directives.append(wardrobe_directive(wardrobe))
+        directives.append(locations_directive(locations))
         directives.append(camera_directive(camera_motion, camera_amplitude, camera_speed))
         directives.extend(
             toggle_directives(
@@ -332,10 +366,18 @@ class H3ClaudeCodeScenesWriter:
         custom_dialogue_language="",
         custom_visual_style="",
         wardrobe="",
+        enforce_wardrobe=True,
         resume_session_id="",
         working_dir="",
+        locations="",
+        llm=None,
         **reference_slots,
     ):
+        template_vars, template_summary = collect_template_vars(reference_slots)
+        idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations = expand_all(
+            template_vars, idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations
+        )
+        log_template_vars(template_vars, template_summary, idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(reference_slots, target="the scenes")
         references = collect_typed_references(reference_slots, tensor2pil)
         try:
@@ -375,6 +417,7 @@ class H3ClaudeCodeScenesWriter:
                 [label for label, _ in references],
                 rng,
                 wardrobe=wardrobe,
+                locations=locations,
             )
             user_prompt = with_context(user_prompt, context_text)
 
@@ -388,6 +431,7 @@ class H3ClaudeCodeScenesWriter:
                 f"seed {current_seed}"
             )
 
+            local = local_llm_options(llm)
             text, session_id, info = run_h3_claude_code(
                 self._build_system_prompt(continuity_mode),
                 user_prompt,
@@ -400,6 +444,7 @@ class H3ClaudeCodeScenesWriter:
                 working_dir,
                 director,
                 skills=BASE_SKILLS,
+                local=local,
             )
 
             synopsis, parsed = parse_scenes(text, scene_duration)
@@ -407,6 +452,12 @@ class H3ClaudeCodeScenesWriter:
                 raise ValueError("Claude Code returned no scenes.")
             if len(parsed) != scene_count:
                 print(f"⚠️ H3 Scenes Writer: asked for {scene_count} scene(s), parsed {len(parsed)}.")
+
+            synopsis, parsed, info = self._enforce_wardrobe(
+                enforce_wardrobe, synopsis, parsed, scene_count, scene_duration,
+                session_id, info, model, use_subscription, timeout_seconds,
+                working_dir, director, continuity_mode, local=local,
+            )
 
             scenes = [p for _, _, p in parsed]
             durations = [d for _, d, _ in parsed]

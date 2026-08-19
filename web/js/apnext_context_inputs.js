@@ -22,6 +22,7 @@ const NODE_CLASSES = new Set([
   "H3ClaudeCodeContinueWriter",
   "H3ClaudeCodeCrossoverWriter",
   "H3ClaudeCodeScenesWriter",
+  "H3ClaudeCodeMusicVideoWriter",
 ]);
 const MAX_CONTEXT = 8;
 const slotName = (i) => `context_${i}`;

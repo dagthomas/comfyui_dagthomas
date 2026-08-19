@@ -15,6 +15,8 @@ const NODE_CLASSES = new Set([
   "H3ClaudeCodeRefWriter",
   "H3RefPromptWriter",
   "H3ClaudeCodeCrossoverWriter",
+  "H3ClaudeCodeMusicVideoWriter",
+  "H3PromptPreview", // inputs only (thumbnails), no pass-through outputs
 ]);
 const MAX_IMAGES = 9;
 
@@ -56,7 +58,7 @@ function syncImageSlots(node) {
     let removed = false;
     for (let i = 1; i <= wanted; i++) {
       if (findInput(node, i) < 0) { node.addInput(slotName(i), "IMAGE"); added = true; }
-      if (findOutput(node, i) < 0) { node.addOutput(slotName(i), "IMAGE"); added = true; }
+      if (node._apnextImageOutputs && findOutput(node, i) < 0) { node.addOutput(slotName(i), "IMAGE"); added = true; }
     }
 
     // Trailing sockets past the spare go, but never one that carries a link.
@@ -86,6 +88,8 @@ app.registerExtension({
 
   beforeRegisterNodeDef(nodeType, nodeData) {
     if (!NODE_CLASSES.has(nodeData?.name)) return;
+    // Only writers pass the images through; the preview just shows them.
+    nodeType.prototype._apnextImageOutputs = (nodeData.output_name || []).includes("image_1");
 
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {

@@ -20,7 +20,44 @@ _DATA_PATH = os.path.join(
 )
 
 _RANDOM = "🎲 random"
+_CUSTOM = "✏️ custom (type in custom_character)"
 _ALL_FRANCHISES = "(all)"
+WARDROBE_SEP = " | wardrobe: "
+
+
+def custom_cast_line(text):
+    """A hand-written character as a single cast line (whitespace collapsed)."""
+    return " ".join((text or "").split())
+
+
+def cast_line_with_wardrobe(line, wardrobe):
+    """`Name (played by Actor) from Show | wardrobe: a, b, c` (one line)."""
+    anchors = ""
+    if wardrobe and wardrobe.strip():
+        parts = [a.strip(" .;") for a in ", ".join(wardrobe.splitlines()).split(",")]
+        anchors = ", ".join(a for a in parts if a)
+    return f"{line}{WARDROBE_SEP}{anchors}" if anchors else line
+
+
+def split_cast_line(line):
+    """(cast_line_without_wardrobe, wardrobe_anchors_or_"")."""
+    if WARDROBE_SEP.strip() in line:
+        head, _, tail = line.partition(WARDROBE_SEP.strip())
+        return head.rstrip(" |"), tail.strip()
+    return line, ""
+
+
+def cast_line_name(line):
+    """The character name a cast line refers to (for wardrobe locks / {characterN})."""
+    head, _ = split_cast_line(line)
+    head = head.strip()
+    if " (played by " in head:
+        return head.split(" (played by ", 1)[0].strip()
+    if " from " in head and not head.lower().startswith("from "):
+        return head.split(" from ", 1)[0].strip()
+    if ":" in head:
+        return head.split(":", 1)[0].strip()
+    return head
 
 
 def _load_rows():
@@ -78,10 +115,13 @@ _FRANCHISES = sorted({r["franchise"].split(",")[0].strip() for r in _ROWS}, key=
 class H3Characters:
     @classmethod
     def INPUT_TYPES(cls):
-        labels = [_RANDOM] + [r["label"] for r in _ROWS]
+        labels = [_RANDOM, _CUSTOM] + [r["label"] for r in _ROWS]
         return {
             "required": {
-                "character": (labels, {"default": labels[1] if len(labels) > 1 else _RANDOM}),
+                "character": (labels, {
+                    "default": labels[2] if len(labels) > 2 else _RANDOM,
+                    "tooltip": "Pick a character, 🎲 random (seeded), or ✏️ custom to describe your own in custom_character.",
+                }),
                 "franchise_filter": (
                     [_ALL_FRANCHISES] + _FRANCHISES,
                     {
@@ -96,6 +136,27 @@ class H3Characters:
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xFFFFFFFFFFFFFFFF}),
             },
             "optional": {
+                "custom_character": ("STRING", {
+                    "multiline": True,
+                    "default": "",
+                    "tooltip": (
+                        "Your own character, used when character = ✏️ custom (or whenever this is "
+                        "filled in). `Lena: a middle-aged woman with a limp and a silver bob` keeps "
+                        "`Lena` as the name the writers and {characterN} use; `Name (played by "
+                        "Actor) from Show` also works."
+                    ),
+                }),
+                "wardrobe": ("STRING", {
+                    "multiline": True,
+                    "default": "",
+                    "tooltip": (
+                        "This character's wardrobe lock: 3-5 exact anchors, comma separated "
+                        "(`dark-brown corduroy jacket, forest-green cotton T-shirt, khaki chinos, "
+                        "small silver ring in the LEFT nostril`). Travels with the cast line into "
+                        "the Crossover / Music Video writers, which copy it word-for-word into "
+                        "every shot. Empty = the writer invents one."
+                    ),
+                }),
                 "cast_in": ("STRING", {
                     "forceInput": True,
                     "tooltip": (
@@ -106,8 +167,8 @@ class H3Characters:
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING")
-    RETURN_NAMES = ("character", "actor", "franchise", "file_path", "cast")
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "STRING")
+    RETURN_NAMES = ("character", "actor", "franchise", "file_path", "cast", "wardrobe")
     FUNCTION = "pick"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -119,9 +180,21 @@ class H3Characters:
         "into the H3 Crossover Writer."
     )
 
-    def pick(self, character, franchise_filter, seed, cast_in=""):
+    def pick(self, character, franchise_filter, seed, custom_character="", wardrobe="", cast_in=""):
+        custom = custom_cast_line(custom_character)
+        wardrobe = (wardrobe or "").strip()
+        if character == _CUSTOM and not custom:
+            raise ValueError("H3 Characters: character is set to custom but custom_character is empty.")
+        if custom and character != _RANDOM:
+            # custom text wins over the dropdown (the dropdown still shows a name
+            # when the user only filled the box)
+            name = cast_line_name(custom)
+            line = cast_line_with_wardrobe(custom, wardrobe)
+            cast = (cast_in or "").strip()
+            cast = f"{cast}\n{line}" if cast else line
+            return (name, "", "", "", cast, wardrobe)
         if not _ROWS:
-            return ("", "", "", "", cast_in or "")
+            return ("", "", "", "", cast_in or "", wardrobe)
 
         if character == _RANDOM:
             pool = _ROWS
@@ -131,7 +204,7 @@ class H3Characters:
         else:
             row = _BY_LABEL.get(character) or _ROWS[0]
 
-        cast_line = cast_line_for(row)
+        cast_line = cast_line_with_wardrobe(cast_line_for(row), wardrobe)
         cast = (cast_in or "").strip()
         cast = f"{cast}\n{cast_line}" if cast else cast_line
-        return (row["character"], row["actor"], row["franchise"], row["path"], cast)
+        return (row["character"], row["actor"], row["franchise"], row["path"], cast, wardrobe)

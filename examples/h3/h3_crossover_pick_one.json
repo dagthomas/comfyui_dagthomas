@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 162,
-  "last_link_id": 318,
+  "last_node_id": 163,
+  "last_link_id": 319,
   "nodes": [
     {
       "id": 119,
@@ -920,6 +920,12 @@
           "name": "text",
           "type": "STRING",
           "link": 318
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -930,7 +936,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3PromptPreview"
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         ""
@@ -988,16 +995,24 @@
           "links": [
             311
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Walter White — Bryan Cranston (Breaking Bad)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1052,16 +1067,24 @@
           "links": [
             312
           ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3Characters"
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Michael Scott — Steve Carell (The Office)",
         "(all)",
         0,
-        "fixed"
+        "fixed",
+        "",
+        ""
       ],
       "title": "APNext H3 Characters",
       "color": "#232",
@@ -1105,6 +1128,18 @@
           "type": "STRING",
           "shape": 7,
           "link": null
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1127,7 +1162,9 @@
         {
           "name": "scenes_text",
           "type": "STRING",
-          "links": []
+          "links": [
+            319
+          ]
         },
         {
           "name": "synopsis",
@@ -1201,7 +1238,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeCrossoverWriter"
+        "Node name for S&R": "H3ClaudeCodeCrossoverWriter",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         "Michael Scott has hired Walter White as a chemistry consultant for a Dunder Mifflin 'paper science' seminar. Walter takes it far too seriously.",
@@ -1223,6 +1261,8 @@
         "fixed",
         "",
         "",
+        "",
+        true,
         "",
         "",
         "",
@@ -1296,7 +1336,8 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ScenePick"
+        "Node name for S&R": "H3ScenePick",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
         0
@@ -1365,6 +1406,47 @@
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 163,
+      "type": "H3PromptPreview",
+      "pos": [
+        -630,
+        5600
+      ],
+      "size": [
+        520,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 319
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [],
+      "title": "H3 Prompt Preview"
     }
   ],
   "links": [
@@ -1613,6 +1695,14 @@
       160,
       0,
       153,
+      0,
+      "STRING"
+    ],
+    [
+      319,
+      159,
+      2,
+      163,
       0,
       "STRING"
     ]

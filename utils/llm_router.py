@@ -85,6 +85,7 @@ _AUTO_DETECT_ORDER = (
 )
 
 AUTO_DETECT = "auto-detect"
+LOCAL_PROVIDERS = tuple(_LOCAL_PROVIDERS)
 
 # Clients are cached per process so repeated node runs reuse connections.
 _client_cache = {}
@@ -362,8 +363,33 @@ def _encode_png(image):
     return buffer.getvalue()
 
 
+def _text_history(history):
+    """Prior turns as plain text messages (images from earlier turns are not replayed)."""
+    out = []
+    for turn in history or []:
+        role = turn.get("role")
+        text = turn.get("content")
+        if role in ("user", "assistant") and isinstance(text, str) and text:
+            out.append({"role": role, "content": text})
+    return out
+
+
+def _history_as_text(history):
+    """Prior turns flattened into a transcript, for providers without a messages array."""
+    turns = _text_history(history)
+    if not turns:
+        return ""
+    lines = ["Earlier in this conversation:"]
+    for turn in turns:
+        label = "User" if turn["role"] == "user" else "Assistant"
+        lines.append(f"[{label}]\n{turn['content']}")
+    lines.append("[User]\n")
+    return "\n\n".join(lines)
+
+
 def _call_openai_compatible(
-    provider, model, user_prompt, system_prompt, images, temperature, seed, max_tokens, base_url=None
+    provider, model, user_prompt, system_prompt, images, temperature, seed, max_tokens,
+    base_url=None, history=None,
 ):
     client = _get_openai_compatible_client(provider, base_url)
 
@@ -383,6 +409,7 @@ def _call_openai_compatible(
     messages = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
+    messages.extend(_text_history(history))
     messages.append({"role": "user", "content": content})
 
     kwargs = {
@@ -415,7 +442,7 @@ def _call_openai_compatible(
     return (response.choices[0].message.content or "").strip()
 
 
-def _call_claude(model, user_prompt, system_prompt, images, temperature, max_tokens):
+def _call_claude(model, user_prompt, system_prompt, images, temperature, max_tokens, history=None):
     client = _get_claude_client()
 
     if images:
@@ -440,7 +467,7 @@ def _call_claude(model, user_prompt, system_prompt, images, temperature, max_tok
         "model": model,
         "max_tokens": max_tokens,
         "temperature": temperature,
-        "messages": [{"role": "user", "content": content}],
+        "messages": _text_history(history) + [{"role": "user", "content": content}],
     }
     if system_prompt:
         kwargs["system"] = system_prompt
@@ -452,10 +479,10 @@ def _call_claude(model, user_prompt, system_prompt, images, temperature, max_tok
     return "".join(parts).strip()
 
 
-def _call_gemini(model, user_prompt, system_prompt, images, temperature, max_tokens):
+def _call_gemini(model, user_prompt, system_prompt, images, temperature, max_tokens, history=None):
     client = _get_gemini_client()
 
-    contents = [user_prompt]
+    contents = [_history_as_text(history) + user_prompt]
     if images:
         contents.extend(images)
 
@@ -479,9 +506,14 @@ def call_llm(
     seed=-1,
     max_tokens=4000,
     base_url=None,
+    history=None,
 ):
     """
     Send a prompt to whichever provider `model_name` selects.
+
+    `history` is an optional list of earlier `{"role": "user"|"assistant",
+    "content": str}` turns, replayed before `user_prompt` so a provider without
+    sessions of its own can still continue a conversation.
 
     `images` is a list of PIL images; providers that support vision receive them
     inline. `base_url` overrides where a local provider (`ollama:`, `lmstudio:`,
@@ -502,17 +534,22 @@ def call_llm(
             seed,
             max_tokens,
             base_url=base_url,
+            history=history,
         )
     elif provider == "claude":
-        text = _call_claude(model, user_prompt, system_prompt, images, temperature, max_tokens)
+        text = _call_claude(
+            model, user_prompt, system_prompt, images, temperature, max_tokens, history=history
+        )
     elif provider == "gemini":
         if not GEMINI_AVAILABLE:
             raise ImportError("google-genai is not installed. Install it with: pip install google-genai")
-        text = _call_gemini(model, user_prompt, system_prompt, images, temperature, max_tokens)
+        text = _call_gemini(
+            model, user_prompt, system_prompt, images, temperature, max_tokens, history=history
+        )
     elif provider == CLAUDE_CODE_PROVIDER:
         # The CLI owns sampling, so temperature, seed and max_tokens do not apply.
         result = run_claude_code(
-            user_prompt,
+            _history_as_text(history) + user_prompt,
             system_prompt=system_prompt,
             images=images,
             model=model,

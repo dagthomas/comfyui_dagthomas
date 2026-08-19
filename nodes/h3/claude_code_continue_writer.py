@@ -32,8 +32,11 @@ from .claude_code_support import (
     BASE_SKILLS,
     claude_code_inputs,
     directions_with_research,
+    local_llm_inputs,
+    local_llm_options,
     run_h3_claude_code,
 )
+from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
     CAMERA_AMPLITUDES,
@@ -209,6 +212,7 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
             }),
         }
 
+        optional.update(local_llm_inputs())
         optional.update(context_inputs())
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
@@ -406,8 +410,14 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
         custom_visual_style="",
         resume_session_id="",
         working_dir="",
+        llm=None,
         **context_slots,
     ):
+        template_vars, template_summary = collect_template_vars(context_slots)
+        idea, extra_instructions, custom_dialogue_language, custom_visual_style = expand_all(
+            template_vars, idea, extra_instructions, custom_dialogue_language, custom_visual_style
+        )
+        log_template_vars(template_vars, template_summary, idea, extra_instructions, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(context_slots, target="the next clip")
         indices = select_last_frames(frames, frame_count, frame_stride)
         context = frames[indices]
@@ -469,6 +479,7 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
                 working_dir,
                 director,
                 skills=BASE_SKILLS,
+                local=local_llm_options(llm),
             )
 
             prompt = strip_code_fence(text)
