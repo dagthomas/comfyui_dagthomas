@@ -13,6 +13,7 @@ import random
 import re
 
 from ...utils.claude_code import is_interrupt
+from ...utils.image_utils import tensor2pil
 from ...utils.apnext_context import (
     build_context,
     context_hidden_inputs,
@@ -33,7 +34,11 @@ from .common import (
     VISUAL_STYLES,
     resolve_visual_style,
     DIALOGUE_LANGUAGES,
+    collect_reference_images,
+    downscale_for_vision,
     load_guide,
+    reference_image_inputs,
+    reference_image_outputs,
     resolve_dialogue_language,
     wildness_directive,
 )
@@ -179,12 +184,27 @@ class H3ClaudeCodeCrossoverWriter:
         })
         optional["wardrobe"] = ("STRING", {"multiline": True, "default": "", "tooltip": WARDROBE_TOOLTIP})
         optional["extra_instructions"] = ("STRING", {"multiline": True, "default": ""})
+        optional["image_notes"] = ("STRING", {
+            "multiline": True,
+            "default": "",
+            "tooltip": (
+                "What each reference image is, one per line: `Image 1: Sheldon`, "
+                "`Image 3: the diner, use as the location`. Without notes Claude works it out "
+                "from the cast and the pictures."
+            ),
+        })
         optional.update(claude_code_optional_inputs())
         optional.update(context_inputs())
+        # Image sockets last, so the front-end can grow and trim them at the tail.
+        optional.update(reference_image_inputs())
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
-    RETURN_TYPES = ("STRING", "FLOAT", "STRING", "STRING", "STRING", "INT", "STRING", "STRING")
+    _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
+    RETURN_TYPES = (
+        ("STRING", "FLOAT", "STRING", "STRING", "STRING", "INT", "STRING", "STRING")
+        + _IMAGE_OUTPUT_TYPES
+    )
     RETURN_NAMES = (
         "scenes",
         "durations",
@@ -194,8 +214,8 @@ class H3ClaudeCodeCrossoverWriter:
         "scene_count",
         "session_id",
         "info",
-    )
-    OUTPUT_IS_LIST = (True, True, False, False, False, False, False, False)
+    ) + _IMAGE_OUTPUT_NAMES
+    OUTPUT_IS_LIST = (True, True) + (False,) * (6 + len(_IMAGE_OUTPUT_NAMES))
     FUNCTION = "write_scenes"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -236,7 +256,14 @@ class H3ClaudeCodeCrossoverWriter:
             "they are there.\n"
             "- Use the character, actor and show strings exactly as given.\n"
             "- Write everything in English except dialogue, which uses the requested language "
-            "inside the <d>[...] tag."
+            "inside the <d>[...] tag.\n"
+            "- When reference pictures are attached the scenes are rendered with the same "
+            "pictures as <Picture 1>..<Picture N> (ref2va). Keep the four-section layout, but "
+            "bind each pictured character in subject_definitions as "
+            "`<Subject N> Character (played by Actor) from Show, appearance from <Picture k>` "
+            "and treat a location or prop picture as `<Picture k> is ...` on its own line; "
+            "refer to the pictures again inside the shots where their content appears. A "
+            "label keeps one meaning across the whole run and is never renumbered."
         )
 
     def _build_user_prompt(
@@ -254,6 +281,8 @@ class H3ClaudeCodeCrossoverWriter:
         extra_instructions,
         rng,
         wardrobe="",
+        image_labels=(),
+        image_notes="",
     ):
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast]
@@ -295,6 +324,21 @@ class H3ClaudeCodeCrossoverWriter:
                 "- Dialogue language: pick one that fits the setting and use it consistently "
                 "in every <d> tag."
             )
+        if image_labels:
+            labels = ", ".join(f"<Picture {i}>" for i in image_labels)
+            lines.append(
+                f"- Reference pictures: {len(image_labels)} attached, in order {labels}; the "
+                "video model receives the same pictures under the same labels in every "
+                "scene. Decide what each one shows (use the notes below, else match faces "
+                "and costumes to the cast); bind pictured characters to their <Picture k> in "
+                "subject_definitions, take their wardrobe lock from what the picture shows, "
+                "and restate it in the shots. Unmatched pictures are locations or props: "
+                "define them as `<Picture k> is ...` and use them where the story needs them."
+            )
+            notes = (image_notes or "").strip()
+            if notes:
+                lines.append("- Picture notes from the user:")
+                lines.extend(f"    {n.strip()}" for n in notes.splitlines() if n.strip())
         lines.append(f"- {wardrobe_directive(wardrobe)}")
         lines.append(
             "- Every listed character appears at least once across the run (unless the brief "
@@ -343,10 +387,17 @@ class H3ClaudeCodeCrossoverWriter:
         custom_visual_style="",
         wardrobe="",
         extra_instructions="",
+        image_notes="",
         resume_session_id="",
         working_dir="",
         **cast_slots,
     ):
+        # The same tensors go back out on image_1..image_9 so the video node
+        # can be wired from here; Claude gets downscaled copies.
+        passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
+        references = collect_reference_images(passthrough, tensor2pil)
+        images = [downscale_for_vision(pil) for _, pil in references] or None
+        image_labels = tuple(range(1, len(references) + 1))
         context_text, context_entries = build_context(cast_slots, target="the scenes")
         cast = parse_cast(*(cast_slots.get(name) for name in CAST_SOCKETS), extra_cast)
         cast_text = "\n".join(cast)
@@ -378,6 +429,8 @@ class H3ClaudeCodeCrossoverWriter:
                 directions_with_research(extra_instructions, research),
                 rng,
                 wardrobe=wardrobe,
+                image_labels=image_labels,
+                image_notes=image_notes,
             )
             user_prompt = with_context(user_prompt, context_text)
 
@@ -386,6 +439,7 @@ class H3ClaudeCodeCrossoverWriter:
                 f"context: {context_summary(context_entries)} | "
                 f"{duration_mode.split(' ')[0].lower()} {scene_duration:.1f}s | "
                 f"{'chain' if continuity_mode == CONTINUITY_MODES[1] else 'independent'} | "
+                f"{len(references)} reference image(s) | "
                 f"wildness {wildness} ({wild_label}) | research {'on' if research else 'off'} | "
                 f"director {'on' if director else 'off'} | seed {current_seed}"
             )
@@ -393,7 +447,7 @@ class H3ClaudeCodeCrossoverWriter:
             text, session_id, info = run_h3_claude_code(
                 self._build_system_prompt(continuity_mode),
                 user_prompt,
-                None,
+                images,
                 model,
                 research,
                 use_subscription,
@@ -425,7 +479,7 @@ class H3ClaudeCodeCrossoverWriter:
                 len(scenes),
                 session_id,
                 info,
-            )
+            ) + passthrough
 
         except Exception as exc:
             if is_interrupt(exc):
@@ -435,4 +489,6 @@ class H3ClaudeCodeCrossoverWriter:
 
             print(traceback.format_exc())
             message = f"Error occurred while writing crossover scenes: {exc}"
-            return ([message], [float(scene_duration)], message, "", cast_text, 0, "", "error")
+            return (
+                [message], [float(scene_duration)], message, "", cast_text, 0, "", "error"
+            ) + passthrough

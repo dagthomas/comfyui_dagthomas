@@ -744,6 +744,7 @@ Takes a cast (from `H3 Characters` nodes, or typed by hand) and your steer, and 
 | `continuity_mode` | **Independent clips** (each scene its own T2V clip, hard cuts, `already speaking` openers) or **Continuous chain** — scenes written for C2V / motion-context chaining per `data/h3/guide_chain_en.md`: scene N+1 opens on scene N's last frame, one continuous take with no `the shot cuts to`, a 2 s silent hand-off before a *new* speaker's first line, outgoing person kept as a tagged subject, rotating moving closers, one lighting string |
 | `shots_per_scene`, `visual_style`, `dialogue_language`, `wildness` | Same meaning as on the other writers |
 | `wardrobe` *(optional)* | Wardrobe lock, one line per character (`Sheldon: brown corduroy jacket over a green Flash T-shirt, khakis`), copied word-for-word into every scene. Empty = Claude fixes one outfit per character in the synopsis's `Wardrobe:` lines and repeats it in every scene. The Scenes Writer has the same input |
+| `image_1..image_9` *(optional)* | Reference images, `<Picture 1>..<Picture N>` in connection order. Downscaled copies go to Claude so it can recognise who/what each picture is (add `image_notes` like `Image 1: Sheldon`, `Image 3: the diner`); pictured characters are bound to their picture in `subject_definitions` and the wardrobe lock is taken from the picture. The originals come back out on the matching `image_N` outputs — wire them to the same slots on *MiniMax H3 Reference to Video* |
 | `model`, `research`, `director`, `use_subscription`, `timeout_seconds`, `seed` | The Claude Code block; `director` loads the `h3-crossover` skill with verified gold examples |
 
 | Output | Description |
@@ -752,6 +753,7 @@ Takes a cast (from `H3 Characters` nodes, or typed by hand) and your steer, and 
 | `durations` **(list)** | The matching seconds per scene; wire into your frame-count math |
 | `scenes_text` | All scenes with `=== SCENE NN | duration: S.S ===` envelopes, for preview/saving |
 | `synopsis`, `cast`, `scene_count`, `session_id`, `info` | Story summary, the merged cast, how many scenes parsed, and the Claude Code session for the refiner |
+| `image_1..image_9` | The reference images passed straight through, same order as the inputs — wire to *MiniMax H3 Reference to Video* |
 
 #### APNext H3 Claude Code Scenes Writer
 **Display Name:** `APNext H3 Claude Code Scenes Writer`

@@ -11,7 +11,11 @@
 
 import { app } from "../../../scripts/app.js";
 
-const NODE_CLASSES = new Set(["H3ClaudeCodeRefWriter", "H3RefPromptWriter"]);
+const NODE_CLASSES = new Set([
+  "H3ClaudeCodeRefWriter",
+  "H3RefPromptWriter",
+  "H3ClaudeCodeCrossoverWriter",
+]);
 const MAX_IMAGES = 9;
 
 const slotName = (i) => `image_${i}`;

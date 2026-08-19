@@ -1234,6 +1234,51 @@
           "name": "info",
           "type": "STRING",
           "links": []
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_2",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_3",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_4",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_5",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_6",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_7",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_8",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_9",
+          "type": "IMAGE",
+          "links": null
         }
       ],
       "properties": {
@@ -1257,6 +1302,7 @@
         900,
         1,
         "fixed",
+        "",
         "",
         "",
         "",

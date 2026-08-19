@@ -605,6 +605,24 @@ def collect_typed_references(slots, to_pil):
     return picked
 
 
+VISION_MAX_SIDE = 1024
+
+
+def downscale_for_vision(image, max_side=VISION_MAX_SIDE):
+    """
+    A copy of a PIL image small enough to send to the writer as context.
+
+    The video node gets the original tensors; Claude only needs enough pixels to
+    recognise a face, an outfit or a place, and a 4K still as base64 is a
+    megabyte of prompt for nothing.
+    """
+    w, h = image.size
+    scale = max_side / float(max(w, h))
+    if scale >= 1.0:
+        return image
+    return image.resize((max(1, round(w * scale)), max(1, round(h * scale))))
+
+
 def collect_reference_images(tensors, to_pil):
     """
     Attached images in slot order as (slot_number, PIL image).
