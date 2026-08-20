@@ -246,6 +246,16 @@ Sits between the per‑scene `VAE Decode` / `VAE Decode Audio` and a single `Cre
 
 For **continuity across scenes** (the last frames and audio of scene N carried into scene N+1). Converts the `scenes` / `durations` lists into the plan JSON that [ComfyUI‑MiniMaxH3‑Contex‑Loop](https://github.com/ethanfel/ComfyUI-MiniMaxH3-Contex-Loop)’s *MiniMax H3 Contex Loop Plan* node accepts on `plan_json_input` (`shots[]` with `id`, `prompt`, `duration_seconds`, `seed`, optional `prompt_prefix`, `defaults.steps`). That pack renders every scene in order with the previous tail as context and assembles one MP4. Inputs `id_prefix`, `base_seed`, `seed_mode`, `steps`, `prompt_prefix`; outputs `plan_json`, `shot_count`.
 
+### APNext H3 Scene Brief (manual scene)
+`H3SceneBrief` · feeds the Music Video, Crossover and Scenes writers
+
+Manual scene planning: one node = one scene YOU design — `description` (what happens), `location`, `cast` (names from your cast), `pictures` (which reference images apply, e.g. `Picture 2 = the rooftop, use as the location`) and an optional `camera` wish. Chain several through `brief_in` (like Characters chain through `cast_in`) and wire the final `briefs` output into a writer's **`scene_briefs`** socket. Each brief becomes the **binding plan** for its scene — the writer still produces the full production‑ready H3 envelope (grammar, timestamps, wardrobe locks, lyric sync), but the content follows your plan. `scene_number` pins a brief to a specific scene/piece; `0` fills scenes in chaining order, skipping pinned ones; scenes without a brief stay the model's to invent within the concept. Template vars (`{character1}` …) work inside every field.
+
+### APNext H3 Scenes Load (from disk)
+`H3ScenesLoad` · pairs with the writers' `save_scenes` toggle
+
+Re‑render a saved run **without any LLM call**. The Music Video Writer's `save_scenes` toggle (on by default) stores every successful generation as a JSON bundle in `output/apnext_scenes/` — scenes, synopsis, segment times, durations, frame lengths, clip starts, cast, tables. This node's file picker lists the bundles (newest first; refresh the browser to re‑scan) and outputs mirror the writer's core outputs, so it drops into the same graph: `scenes` → review/render, `lengths` → `length`, `clip_starts` → the masked‑audio context node. Connect the same song to `audio` and the per‑clip `audio_segments` (`ref_audio_1`) are re‑sliced from the saved segment times (a duration mismatch is warned about). Cached by file mtime.
+
 ### APNext H3 Scenes Review (edit before render)
 `H3ScenesReview` · in every example workflow, between the writer (or refiner) and the render
 

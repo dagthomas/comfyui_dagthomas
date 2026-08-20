@@ -255,6 +255,15 @@ class H3ClaudeCodeCrossoverWriter:
             "default": REFERENCE_IMAGE_USE[0],
             "tooltip": REFERENCE_IMAGE_USE_TOOLTIP,
         })
+        optional["scene_briefs"] = ("STRING", {
+            "forceInput": True,
+            "tooltip": (
+                "Manually planned scenes from chained H3 Scene Brief nodes: each brief "
+                "(what happens, where, which cast members and pictures) becomes the "
+                "binding plan for its scene. Pinned numbers take that scene; unpinned "
+                "briefs fill in order; scenes without a brief stay the model's to invent."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -373,6 +382,7 @@ class H3ClaudeCodeCrossoverWriter:
         image_notes="",
         locations="",
         characters_only=True,
+        scene_briefs="",
     ):
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast]
@@ -380,7 +390,21 @@ class H3ClaudeCodeCrossoverWriter:
         lines.append("CREATIVE BRIEF FROM THE USER:")
         lines.append(direction.strip() or "(none - invent a premise that fits this cast)")
         lines.append("")
+        briefs = (scene_briefs or "").strip()
+        if briefs:
+            lines.append("SCENE BRIEFS FROM THE USER - the plan for those scenes:")
+            lines.append(briefs)
+            lines.append("")
         lines.append("DIRECTIVES:")
+        if briefs:
+            lines.append(
+                "- SCENE BRIEFS ARE BINDING: a numbered brief is the plan for that scene - "
+                "set it where the brief says, put exactly the cast members it names on "
+                "screen, use the reference pictures it points at, honour its camera wish, "
+                "and stage what it describes within the scene's duration. `SCENE (next in "
+                "order)` briefs fill scenes in order from 01, skipping numbered ones. "
+                "Scenes without a brief are yours to write - but never contradict a brief."
+            )
         lines.append(
             f"- Write exactly {scene_count} scene{'s' if scene_count != 1 else ''}, "
             f"numbered 01 to {scene_count:02d}, forming one continuous story with "
@@ -493,6 +517,7 @@ class H3ClaudeCodeCrossoverWriter:
         locations="",
         llm=None,
         reference_image_use=None,
+        scene_briefs="",
         **cast_slots,
     ):
         # The same tensors go back out on image_1..image_9 so the video node
@@ -502,8 +527,8 @@ class H3ClaudeCodeCrossoverWriter:
         images = [downscale_for_vision(pil) for _, pil in references] or None
         image_labels = tuple(range(1, len(references) + 1))
         template_vars, template_summary = collect_template_vars(cast_slots)
-        direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style, locations = expand_all(
-            template_vars, direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style, locations
+        direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style, locations, scene_briefs = expand_all(
+            template_vars, direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style, locations, scene_briefs
         )
         log_template_vars(template_vars, template_summary, direction, extra_cast, wardrobe, extra_instructions, image_notes, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(cast_slots, target="the scenes")
@@ -543,6 +568,7 @@ class H3ClaudeCodeCrossoverWriter:
                 image_notes=image_notes,
                 locations=locations,
                 characters_only=characters_only_refs(reference_image_use),
+                scene_briefs=scene_briefs,
             )
             user_prompt = with_context(user_prompt, context_text)
 

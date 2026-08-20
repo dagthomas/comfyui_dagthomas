@@ -1244,7 +1244,7 @@
         false,
         true,
         true,
-        900,
+        1800,
         1,
         "fixed",
         "",
@@ -1256,7 +1256,12 @@
         "",
         "",
         "",
-        ""
+        "",
+        false,
+        "Characters only (ignore picture backgrounds)",
+        "Reference audio (<Audio 1> = the song piece)",
+        true,
+        4
       ],
       "title": "H3 Music Video Writer"
     },

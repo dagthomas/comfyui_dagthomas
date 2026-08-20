@@ -1328,7 +1328,7 @@
         false,
         true,
         true,
-        900,
+        1800,
         1,
         "fixed",
         "",
@@ -1339,7 +1339,8 @@
         "",
         "",
         "",
-        ""
+        "",
+        "Characters only (ignore picture backgrounds)"
       ],
       "title": "APNext H3 Crossover Writer",
       "color": "#223",

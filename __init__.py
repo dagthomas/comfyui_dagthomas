@@ -511,6 +511,20 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.scene_brief import H3SceneBrief
+    NEW_MAPPINGS["H3SceneBrief"] = H3SceneBrief
+    NEW_DISPLAY_MAPPINGS["H3SceneBrief"] = "APNext H3 Scene Brief (manual scene)"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.scenes_store import H3ScenesLoad
+    NEW_MAPPINGS["H3ScenesLoad"] = H3ScenesLoad
+    NEW_DISPLAY_MAPPINGS["H3ScenesLoad"] = "APNext H3 Scenes Load (from disk)"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}

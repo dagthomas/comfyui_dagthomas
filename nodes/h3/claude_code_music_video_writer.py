@@ -12,6 +12,7 @@
 # the clips into the finished music video.
 
 import random
+import re
 
 from ...utils.claude_code import is_interrupt
 from ...utils.image_utils import tensor2pil
@@ -33,6 +34,7 @@ from .claude_code_support import (
     run_h3_claude_code,
 )
 from .claude_code_crossover_writer import CAST_SOCKETS, cast_wardrobe, merge_wardrobe, parse_cast
+from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
@@ -105,6 +107,22 @@ SHOTS_PER_SCENE = [AUTO, "1", "2", "3", "4"]
 # one answer that long gets sloppy, so the run is split into chunks that
 # continue the same session (same synopsis, same locks).
 SCENES_PER_CALL = 6
+
+_GIST_RE = re.compile(r"integrated_multimodal_description\s*:\s*(.+)", re.IGNORECASE | re.DOTALL)
+
+
+def _scene_gist(prompt, limit=160):
+    """One compressed line of what a written scene shows, for the story-so-far recap."""
+    m = _GIST_RE.search(prompt or "")
+    text = m.group(1) if m else (prompt or "")
+    text = re.split(
+        r"\n\s*(?:overall_soundscape|non_diegetic_music|subject_definitions)\s*:", text
+    )[0]
+    text = re.sub(r"\[Shot\s*\d+\]\s*", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > limit:
+        text = text[:limit].rsplit(" ", 1)[0] + "…"
+    return text
 
 
 class H3ClaudeCodeMusicVideoWriter:
@@ -232,6 +250,16 @@ class H3ClaudeCodeMusicVideoWriter:
             "default": REFERENCE_IMAGE_USE[0],
             "tooltip": REFERENCE_IMAGE_USE_TOOLTIP,
         })
+        optional["scene_briefs"] = ("STRING", {
+            "forceInput": True,
+            "tooltip": (
+                "Manually planned scenes from chained H3 Scene Brief nodes: each brief "
+                "(what happens, where, which cast members and pictures) becomes the "
+                "binding plan for its scene/piece. Pinned numbers take that piece; "
+                "unpinned briefs fill in order; pieces without a brief stay the "
+                "model's to invent."
+            ),
+        })
         optional["audio_mode"] = (AUDIO_MODES, {
             "default": AUDIO_MODES[0],
             "tooltip": (
@@ -243,6 +271,24 @@ class H3ClaudeCodeMusicVideoWriter:
                 "`clip_starts`) - the prompts then reference the protected master-song audio "
                 "and define no <Audio N>, and lip-sync is enforced by the model itself. "
                 "Do not wire audio_segments to ref_audio in that setup."
+            ),
+        })
+        optional["save_scenes"] = ("BOOLEAN", {
+            "default": True,
+            "tooltip": (
+                "Store every successful run as a JSON bundle in output/apnext_scenes/ "
+                "(scenes, synopsis, segment times, durations, clip starts, cast). Reload "
+                "it any time with APNext H3 Scenes Load - re-render without paying for "
+                "the LLM again."
+            ),
+        })
+        optional["scenes_per_call"] = ("INT", {
+            "default": 4, "min": 1, "max": 8,
+            "tooltip": (
+                "How many scenes to ask the model for per call. Smaller chunks finish well "
+                "inside timeout_seconds and fail smaller (a timed-out chunk is retried at "
+                "half size automatically); larger chunks are slightly cheaper per scene. "
+                "1 = every scene written in its own call."
             ),
         })
 
@@ -392,16 +438,23 @@ class H3ClaudeCodeMusicVideoWriter:
         lyrics_driven=False,
         characters_only=True,
         masked_audio=False,
+        scene_briefs="",
+        prior_scenes=(),
     ):
         last = last or len(segments)
         n = len(segments)
         audio_ref = "the protected master-song audio" if masked_audio else "<Audio 1>"
+        briefs = (scene_briefs or "").strip()
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast] if cast else ["- (no cast given - invent a performer that fits the concept and keep them identical in every scene)"]
         lines.append("")
         lines.append("CONCEPT FROM THE USER:")
         lines.append(direction.strip() or "(none - invent a concept that fits the song, its lyrics and its energy)")
         lines.append("")
+        if briefs:
+            lines.append("SCENE BRIEFS FROM THE USER - the plan for those pieces:")
+            lines.append(briefs)
+            lines.append("")
         lines.append(
             f"THE SONG: {fmt_time(total_seconds)} long, cut into {n} consecutive pieces. One scene per piece, "
             "in this order. Each piece's lyric lines are given with the second inside the piece at which "
@@ -422,6 +475,11 @@ class H3ClaudeCodeMusicVideoWriter:
             else:
                 lines.append("    [instrumental]")
         lines.append("")
+        if first > 1 and prior_scenes:
+            lines.append("THE STORY SO FAR - what the scenes you already wrote show:")
+            for no, gist in prior_scenes:
+                lines.append(f"  {no:02d}: {gist}")
+            lines.append("")
         lines.append("DIRECTIVES:")
         if first == 1:
             lines.append(
@@ -435,7 +493,9 @@ class H3ClaudeCodeMusicVideoWriter:
                 f"- Continue the SAME video: write scenes {first:02d} to {last:02d} (of {n}) only, "
                 "following the synopsis, cast, wardrobe and location locks you already fixed - "
                 "and KEEP THE JOURNEY MOVING through the settings and story beats the synopsis "
-                "planned; do not fall back into one place. "
+                "planned; do not fall back into one place. Pick up exactly where scene "
+                f"{first - 1:02d} in the story-so-far list leaves off and advance the arc; do "
+                "not restage or repeat what an earlier scene already showed. "
                 "Start directly with the scene envelopes; do not repeat the synopsis."
             )
         lines.append(f"- Performance mode: {performance_mode}.")
@@ -520,6 +580,16 @@ class H3ClaudeCodeMusicVideoWriter:
             "scene; recurring locations restate their anchors; the chorus pieces share one "
             "signature look; the last scene resolves the concept."
         )
+        if briefs:
+            lines.append(
+                "- SCENE BRIEFS ARE BINDING: a numbered brief is the plan for that piece - "
+                "set the scene where it says, put exactly the cast members it names on "
+                "screen, use the reference pictures it points at, honour its camera wish, "
+                "and stage what it describes, adapted to the piece's lyric lines, duration "
+                "and energy. `SCENE (next in order)` briefs fill pieces in order from 01, "
+                "skipping numbered ones. Pieces without a brief are yours to write within "
+                "the concept - but never contradict a brief."
+            )
         distinct = min(6, max(3, n // 4))
         lines.append(
             "- THE VIDEO IS A JOURNEY, NOT A ROOM: plan the whole visual arc in the synopsis "
@@ -587,6 +657,9 @@ class H3ClaudeCodeMusicVideoWriter:
         scenes_from_lyrics=False,
         reference_image_use=None,
         audio_mode=None,
+        scene_briefs="",
+        scenes_per_call=4,
+        save_scenes=True,
         **cast_slots,
     ):
         passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
@@ -595,9 +668,9 @@ class H3ClaudeCodeMusicVideoWriter:
         image_labels = tuple(range(1, len(references) + 1))
         template_vars, template_summary = collect_template_vars(cast_slots)
         (direction, lyrics, extra_cast, wardrobe, locations, extra_instructions, image_notes,
-         custom_dialogue_language, custom_visual_style) = expand_all(
+         custom_dialogue_language, custom_visual_style, scene_briefs) = expand_all(
             template_vars, direction, lyrics, extra_cast, wardrobe, locations, extra_instructions,
-            image_notes, custom_dialogue_language, custom_visual_style,
+            image_notes, custom_dialogue_language, custom_visual_style, scene_briefs,
         )
         log_template_vars(template_vars, template_summary, direction, extra_cast, wardrobe, locations, extra_instructions, image_notes)
         context_text, context_entries = build_context(cast_slots, target="the music video")
@@ -663,26 +736,47 @@ class H3ClaudeCodeMusicVideoWriter:
             session_id = (resume_session_id or "").strip()
             infos = []
             first = 1
-            while first <= n:
-                last = min(n, first + SCENES_PER_CALL - 1)
-                user_prompt, wild_label = self._build_user_prompt(
+            per_call = max(1, min(8, int(scenes_per_call or 0) or SCENES_PER_CALL))
+            story_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
+
+            def ask(lo, hi):
+                user_prompt, _wild = self._build_user_prompt(
                     cast, direction, segments, labels, frames, placed, performance_mode,
                     shots_per_scene, visual_style, dialogue_language, wildness,
                     directions_with_research(extra_instructions, research), rng,
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
-                    image_notes=image_notes, first=first, last=last, total_seconds=total_seconds,
+                    image_notes=image_notes, first=lo, last=hi, total_seconds=total_seconds,
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
-                    masked_audio=masked_audio,
+                    masked_audio=masked_audio, scene_briefs=scene_briefs,
+                    prior_scenes=tuple(story_so_far),
                 )
-                if first == 1:
+                if lo == 1:
                     user_prompt = with_context(user_prompt, context_text)
-                text, session_id, info = run_h3_claude_code(
-                    None if (first > 1 and session_id) else system_prompt,
+                return run_h3_claude_code(
+                    None if (lo > 1 and session_id) else system_prompt,
                     user_prompt,
-                    images if first == 1 else None,
+                    images if lo == 1 else None,
                     model, research, use_subscription, timeout_seconds,
                     session_id, working_dir, director, skills=MUSIC_SKILLS, local=local,
                 )
+
+            while first <= n:
+                last = min(n, first + per_call - 1)
+                try:
+                    text, session_id, info = ask(first, last)
+                except Exception as exc:
+                    # a timed-out multi-scene chunk gets ONE retry at half size;
+                    # anything else (or a single scene timing out) is fatal
+                    if is_interrupt(exc) or "did not finish within" not in str(exc) or last <= first:
+                        raise
+                    half = first + (last - first) // 2
+                    print(
+                        f"⏱️ H3 Music Video Writer: scenes {first:02d}-{last:02d} timed out "
+                        f"after {timeout_seconds}s - retrying as {first:02d}-{half:02d}. "
+                        "Raise timeout_seconds or lower scenes_per_call to avoid this."
+                    )
+                    last = half
+                    text, session_id, info = ask(first, last)
                 infos.append(info)
                 chunk_synopsis, chunk = parse_scenes(text, durations[first - 1])
                 if first == 1:
@@ -707,6 +801,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 for k, (no, _d, p) in enumerate(got[: last - first + 1]):
                     idx = first + k
                     parsed.append((idx, durations[idx - 1], p))
+                    story_so_far.append((idx, _scene_gist(p)))
                 if len(got) < last - first + 1:
                     print(f"⚠️ H3 Music Video Writer: asked for scenes {first:02d}-{last:02d}, got {len(got)}.")
                 first = first + max(1, min(len(got), last - first + 1))
@@ -739,6 +834,12 @@ class H3ClaudeCodeMusicVideoWriter:
             while len(scenes) < n:
                 scenes.append(scenes[-1] if scenes else "")
             scenes_text = scenes_to_text(synopsis, [(i + 1, durations[i], s) for i, s in enumerate(scenes)])
+
+            if save_scenes:
+                save_scene_bundle(
+                    "H3ClaudeCodeMusicVideoWriter", synopsis, scenes, segments, durations,
+                    frames, clip_starts, cast_text, total_seconds, scenes_text, table, info,
+                )
 
             return (
                 scenes, durations, frames, audio_segments, table, scenes_text, synopsis,

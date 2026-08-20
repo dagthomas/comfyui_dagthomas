@@ -1251,7 +1251,7 @@
         false,
         true,
         true,
-        900,
+        1800,
         1,
         "fixed",
         "",
@@ -1266,7 +1266,9 @@
         "",
         false,
         "Characters only (ignore picture backgrounds)",
-        "Masked latent (song injected into the audio latent)"
+        "Masked latent (song injected into the audio latent)",
+        true,
+        4
       ],
       "title": "H3 Music Video Writer"
     },

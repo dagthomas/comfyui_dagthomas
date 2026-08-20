@@ -366,8 +366,13 @@ def claude_code_inputs():
             ),
         }),
         "timeout_seconds": ("INT", {
-            "default": 900, "min": 60, "max": 3600, "step": 30,
-            "tooltip": "How long to wait. H3 prompts take 25-60s; research runs take longer.",
+            "default": 1200, "min": 60, "max": 7200, "step": 30,
+            "tooltip": (
+                "How long to wait PER CALL before the node gives up on the CLI (this is the "
+                "node's own watchdog, not a Claude limit). Single H3 prompts take 25-60s; a "
+                "multi-scene chunk with director/research on can take 10-20 minutes. The "
+                "multi-scene writers retry a timed-out chunk at half size automatically."
+            ),
         }),
     }
 

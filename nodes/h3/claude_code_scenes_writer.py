@@ -154,6 +154,15 @@ class H3ClaudeCodeScenesWriter:
             "wardrobe": ("STRING", {"multiline": True, "default": "", "tooltip": WARDROBE_TOOLTIP}),
             "enforce_wardrobe": ("BOOLEAN", {"default": True, "tooltip": ENFORCE_WARDROBE_TOOLTIP}),
         }
+        optional["scene_briefs"] = ("STRING", {
+            "forceInput": True,
+            "tooltip": (
+                "Manually planned scenes from chained H3 Scene Brief nodes: each brief "
+                "(what happens, where, which cast members and pictures) becomes the "
+                "binding plan for its scene. Pinned numbers take that scene; unpinned "
+                "briefs fill in order; scenes without a brief stay the model's to invent."
+            ),
+        })
         optional.update(claude_code_optional_inputs())
         optional["locations"] = ("STRING", {"multiline": True, "default": "", "tooltip": LOCATIONS_TOOLTIP})
         optional.update(local_llm_inputs())
@@ -261,6 +270,7 @@ class H3ClaudeCodeScenesWriter:
         rng,
         wardrobe="",
         locations="",
+        scene_briefs="",
     ):
         directives = [
             f"Write exactly {scene_count} scene{'s' if scene_count != 1 else ''}, numbered "
@@ -307,6 +317,16 @@ class H3ClaudeCodeScenesWriter:
         )
         wild_lines, wild_label = wildness_directive(wildness, rng)
         directives.extend(wild_lines)
+        briefs = (scene_briefs or "").strip()
+        if briefs:
+            directives.append(
+                "SCENE BRIEFS ARE BINDING: a numbered brief in the source section is the "
+                "plan for that scene - set it where the brief says, with the cast members "
+                "it names and the reference pictures it points at, honour its camera wish, "
+                "and stage what it describes within the scene's duration. `SCENE (next in "
+                "order)` briefs fill scenes in order from 01, skipping numbered ones. "
+                "Scenes without a brief are yours to write - but never contradict a brief."
+            )
         if extra_instructions.strip():
             directives.append(f"Additional direction from the user: {extra_instructions.strip()}")
 
@@ -327,6 +347,8 @@ class H3ClaudeCodeScenesWriter:
                 "an object its shape and material - and use them consistently in every scene."
             )
         source_parts.append(f"The user's idea:\n{idea.strip() or '(none - use the images)'}")
+        if briefs:
+            source_parts.append(f"Scene briefs from the user - the plan for those scenes:\n{briefs}")
         source = "\n\n".join(source_parts)
 
         return (
@@ -371,11 +393,12 @@ class H3ClaudeCodeScenesWriter:
         working_dir="",
         locations="",
         llm=None,
+        scene_briefs="",
         **reference_slots,
     ):
         template_vars, template_summary = collect_template_vars(reference_slots)
-        idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations = expand_all(
-            template_vars, idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations
+        idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations, scene_briefs = expand_all(
+            template_vars, idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations, scene_briefs
         )
         log_template_vars(template_vars, template_summary, idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(reference_slots, target="the scenes")
@@ -418,6 +441,7 @@ class H3ClaudeCodeScenesWriter:
                 rng,
                 wardrobe=wardrobe,
                 locations=locations,
+                scene_briefs=scene_briefs,
             )
             user_prompt = with_context(user_prompt, context_text)
 
