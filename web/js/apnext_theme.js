@@ -3,13 +3,13 @@
 // Optional look-and-feel borrowed from graphgen (X:/KODE/graphgen): the "Dark
 // Botanical" palette (warm near-black, tan accent, dusty-pink highlight, muted
 // botanical port colours), IBM Plex Sans on the canvas and the UI chrome,
-// rounder nodes, and "gravity" wires - every link is a little verlet rope that
-// hangs between its two ports and swings when you drag a node (direct port of
-// graphgen's src/lib/flow/rope.svelte.ts).
+// rounder nodes, and alternative wire styles. All wire styles are static -
+// the old physics wires (verlet rope / spring cable) were removed because the
+// constant redraws hurt UI responsiveness.
 //
 // Everything is opt-in and reversible:
 //   Settings → APNext → Graphgen theme (On/Off) and Wire style (ComfyUI default /
-//              Bezier / Smooth step / Step / Straight / Cable / Gravity)
+//              Bezier / Smooth step / Step / Straight / Cable)
 //   top menu  → APNext → toggle theme / next wire style / Wire style submenu
 //   canvas right-click → APNext theme + wire style entries
 // Turning it off restores the palette that was active before, the default
@@ -23,9 +23,6 @@ import { api } from "../../../scripts/api.js";
 const PALETTE_ID = "apnext_graphgen";
 const S_MODE = "APNext.Theme.Mode";
 const S_PREV = "APNext.Theme.PreviousPalette";
-const S_SLACK = "APNext.Theme.WireSlack";
-const S_GRAVITY = "APNext.Theme.WireGravity";
-const S_SEGMENTS = "APNext.Theme.WireSegments";
 
 const MODE_OFF = "off";
 const MODE_THEME = "theme";
@@ -484,155 +481,13 @@ async function applyPalette(on) {
 }
 
 // ---------------------------------------------------------------------------
-// Gravity wires - verlet rope per link (port of graphgen rope.svelte.ts)
-// ---------------------------------------------------------------------------
-
-const rope = {
-  ropes: new Map(),
-  raf: 0,
-  frame: 0,
-  cfg: { segments: 22, gravity: 0.55, friction: 0.94, iterations: 12, slack: 1.16, settle: 0.05, maxExtra: 420 },
-
-  build(ax, ay, bx, by) {
-    const n = Math.max(4, this.cfg.segments | 0);
-    const pts = [];
-    for (let i = 0; i <= n; i++) {
-      const t = i / n;
-      const x = ax + (bx - ax) * t;
-      const y = ay + (by - ay) * t;
-      pts.push({ x, y, ox: x, oy: y });
-    }
-    return { pts, ax, ay, bx, by, seen: this.frame };
-  },
-
-  points(id, ax, ay, bx, by) {
-    let r = this.ropes.get(id);
-    if (!r || r.pts.length !== (Math.max(4, this.cfg.segments | 0) + 1)) {
-      r = this.build(ax, ay, bx, by);
-      this.ropes.set(id, r);
-      this.wake();
-    }
-    const moved = Math.abs(r.ax - ax) + Math.abs(r.ay - ay) + Math.abs(r.bx - bx) + Math.abs(r.by - by) > 0.01;
-    r.ax = ax; r.ay = ay; r.bx = bx; r.by = by;
-    r.seen = this.frame;
-    if (moved) {
-      // keep the ends glued even between ticks, so a drag never shows a gap
-      const a = r.pts[0], b = r.pts[r.pts.length - 1];
-      a.x = a.ox = ax; a.y = a.oy = ay; b.x = b.ox = bx; b.y = b.oy = by;
-      this.wake();
-    }
-    return r.pts;
-  },
-
-  prune() {
-    for (const [id, r] of this.ropes) if (r.seen < this.frame - 2) this.ropes.delete(id);
-  },
-
-  clear() { this.ropes.clear(); this.stop(); },
-  stop() { if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; },
-
-  wake() {
-    if (this.raf || typeof requestAnimationFrame === "undefined") return;
-    this.raf = requestAnimationFrame(() => this.step());
-  },
-
-  step() {
-    if (wireState.style !== WIRE_GRAVITY) { this.raf = 0; return; }
-    const { gravity, friction, iterations, slack, settle, maxExtra } = this.cfg;
-    let awake = false;
-    for (const r of this.ropes.values()) {
-      const n = r.pts.length;
-      for (let i = 1; i < n - 1; i++) {
-        const p = r.pts[i];
-        const vx = (p.x - p.ox) * friction;
-        const vy = (p.y - p.oy) * friction;
-        p.ox = p.x; p.oy = p.y;
-        p.x += vx; p.y += vy + gravity;
-      }
-      const a = r.pts[0], b = r.pts[n - 1];
-      a.x = a.ox = r.ax; a.y = a.oy = r.ay;
-      b.x = b.ox = r.bx; b.y = b.oy = r.by;
-      const span = Math.hypot(r.bx - r.ax, r.by - r.ay);
-      const rest = span + Math.min(span * (slack - 1), maxExtra);
-      const seg = rest / (n - 1);
-      for (let it = 0; it < iterations; it++) {
-        for (let i = 0; i < n - 1; i++) {
-          const p1 = r.pts[i], p2 = r.pts[i + 1];
-          const dx = p2.x - p1.x, dy = p2.y - p1.y;
-          const d = Math.hypot(dx, dy) || 1e-6;
-          const diff = ((seg - d) / d) * 0.5;
-          const ox = dx * diff, oy = dy * diff;
-          if (i !== 0) { p1.x -= ox; p1.y -= oy; }
-          if (i + 1 !== n - 1) { p2.x += ox; p2.y += oy; }
-        }
-      }
-      let motion = 0;
-      for (let i = 1; i < n - 1; i++) {
-        const p = r.pts[i];
-        motion += Math.abs(p.x - p.ox) + Math.abs(p.y - p.oy);
-        if (motion > settle) break;
-      }
-      if (motion > settle) awake = true;
-    }
-    // redraw the link layer while anything still swings
-    app.canvas?.setDirty?.(false, true);
-    this.raf = awake ? requestAnimationFrame(() => this.step()) : 0;
-  },
-};
-
-// ---------------------------------------------------------------------------
-// Cable wires - a damped spring per link chases "midpoint + sag", so the wire
-// droops and wobbles after a drag (port of graphgen cable.svelte.ts)
+// Cable wires - a static drooping quadratic per link (midpoint + sag). No
+// physics, no per-frame simulation: the old verlet rope / spring wobble cost
+// UI responsiveness and is gone.
 // ---------------------------------------------------------------------------
 
 const cable = {
-  springs: new Map(),
-  raf: 0,
-  last: 0,
-  frame: 0,
-  cfg: { stiffness: 90, damping: 9, settle: 0.25, sagMax: 70, sagRatio: 0.18 },
-
-  point(id, tx, ty) {
-    let s = this.springs.get(id);
-    if (!s) {
-      s = { px: tx, py: ty, vx: 0, vy: 0, tx, ty, seen: this.frame };
-      this.springs.set(id, s);
-    } else {
-      s.tx = tx; s.ty = ty; s.seen = this.frame;
-    }
-    if (!this.raf && (Math.hypot(s.tx - s.px, s.ty - s.py) > this.cfg.settle || Math.hypot(s.vx, s.vy) > this.cfg.settle)) {
-      this.wake();
-    }
-    return { x: s.px, y: s.py };
-  },
-
-  prune() { for (const [id, s] of this.springs) if (s.seen < this.frame - 2) this.springs.delete(id); },
-  clear() { this.springs.clear(); this.stop(); },
-  stop() { if (this.raf) cancelAnimationFrame(this.raf); this.raf = 0; },
-
-  wake() {
-    if (this.raf || typeof requestAnimationFrame === "undefined") return;
-    this.last = performance.now();
-    this.raf = requestAnimationFrame((t) => this.step(t));
-  },
-
-  step(now) {
-    if (wireState.style !== WIRE_CABLE) { this.raf = 0; return; }
-    const dt = Math.min(0.05, (now - this.last) / 1000);
-    this.last = now;
-    const { stiffness, damping, settle } = this.cfg;
-    let awake = false;
-    for (const s of this.springs.values()) {
-      s.vx += (s.tx - s.px) * stiffness * dt - s.vx * damping * dt;
-      s.vy += (s.ty - s.py) * stiffness * dt - s.vy * damping * dt;
-      s.px += s.vx * dt;
-      s.py += s.vy * dt;
-      if (Math.hypot(s.tx - s.px, s.ty - s.py) > settle || Math.hypot(s.vx, s.vy) > settle) awake = true;
-      else { s.px = s.tx; s.py = s.ty; s.vx = 0; s.vy = 0; }
-    }
-    app.canvas?.setDirty?.(false, true);
-    this.raf = awake ? requestAnimationFrame((t) => this.step(t)) : 0;
-  },
+  cfg: { sagMax: 70, sagRatio: 0.18 },
 };
 
 // ---------------------------------------------------------------------------
@@ -645,16 +500,15 @@ const WIRE_SMOOTHSTEP = "smoothstep";
 const WIRE_STEP = "step";
 const WIRE_STRAIGHT = "straight";
 const WIRE_CABLE = "cable";
-const WIRE_GRAVITY = "gravity";
-const WIRE_STYLES = [WIRE_DEFAULT, WIRE_BEZIER, WIRE_SMOOTHSTEP, WIRE_STEP, WIRE_STRAIGHT, WIRE_CABLE, WIRE_GRAVITY];
-const WIRE_COMBO = [WIRE_DEFAULT, WIRE_BEZIER, WIRE_SMOOTHSTEP, WIRE_STEP, WIRE_STRAIGHT, WIRE_CABLE]; // gravity is its own toggle
-const S_GRAVITY_ON = "APNext.Theme.GravityWires";
+const WIRE_GRAVITY = "gravity"; // legacy value only - migrated to default on load
+const WIRE_STYLES = [WIRE_DEFAULT, WIRE_BEZIER, WIRE_SMOOTHSTEP, WIRE_STEP, WIRE_STRAIGHT, WIRE_CABLE];
+const WIRE_COMBO = WIRE_STYLES;
 const themeState = { on: false };
 
 const wireState = { style: WIRE_DEFAULT, patched: false };
 
 function isCustomWire(style) {
-  return style === WIRE_SMOOTHSTEP || style === WIRE_STEP || style === WIRE_STRAIGHT || style === WIRE_CABLE || style === WIRE_GRAVITY;
+  return style === WIRE_SMOOTHSTEP || style === WIRE_STEP || style === WIRE_STRAIGHT || style === WIRE_CABLE;
 }
 
 // Points along a rounded corner from p0 -> corner -> p1 (radius r); the corner
@@ -704,10 +558,10 @@ function stepPoints(a, b, radius) {
   return pts;
 }
 
-function cablePoints(key, a, b) {
+function cablePoints(a, b) {
   const span = Math.hypot(b[0] - a[0], b[1] - a[1]);
   const sag = Math.min(cable.cfg.sagMax, span * cable.cfg.sagRatio);
-  const p = cable.point(key, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + sag);
+  const p = { x: (a[0] + b[0]) / 2, y: (a[1] + b[1]) / 2 + sag };
   const pts = [];
   for (let i = 0; i <= 24; i++) {
     const t = i / 24;
@@ -719,10 +573,9 @@ function cablePoints(key, a, b) {
   return pts;
 }
 
-function wirePoints(style, key, a, b) {
+function wirePoints(style, a, b) {
   switch (style) {
-    case WIRE_GRAVITY: return rope.points(key, a[0], a[1], b[0], b[1]);
-    case WIRE_CABLE: return cablePoints(key, a, b);
+    case WIRE_CABLE: return cablePoints(a, b);
     case WIRE_SMOOTHSTEP: return stepPoints(a, b, 8);
     case WIRE_STEP: return stepPoints(a, b, 0);
     case WIRE_STRAIGHT: return [{ x: a[0], y: a[1] }, { x: b[0], y: b[1] }];
@@ -730,20 +583,10 @@ function wirePoints(style, key, a, b) {
   }
 }
 
-function tracePoly(ctx, pts, smooth) {
+function tracePoly(ctx, pts) {
   ctx.beginPath();
   ctx.moveTo(pts[0].x, pts[0].y);
-  if (smooth) {
-    // smooth through the chain with quadratic midpoints (round joins do the rest)
-    for (let i = 1; i < pts.length - 1; i++) {
-      const mx = (pts[i].x + pts[i + 1].x) / 2;
-      const my = (pts[i].y + pts[i + 1].y) / 2;
-      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
-    }
-    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-  } else {
-    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
-  }
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
 }
 
 function pointAt(pts, t) {
@@ -787,12 +630,10 @@ function patchLinkRenderer() {
     if (!isCustomWire(style) || !link || !a || !b || opts?.disabled) {
       return origRender.apply(this, arguments);
     }
-    const key = `${link.id ?? "tmp"}|${opts?.reroute?.id ?? ""}|${opts?.startControl ? "s" : ""}`;
-    const pts = wirePoints(style, key, a, b);
+    const pts = wirePoints(style, a, b);
     if (!pts) return origRender.apply(this, arguments);
     const col =
       color || link.color || (LGC.link_type_colors && LGC.link_type_colors[link.type]) || this.default_link_color;
-    const smooth = style === WIRE_GRAVITY;
 
     ctx.save();
     ctx.lineJoin = "round";
@@ -801,12 +642,12 @@ function patchLinkRenderer() {
     if (!skip_border && this.render_connections_border && (this.ds?.scale ?? 1) > 0.6) {
       ctx.lineWidth = width + 4;
       ctx.strokeStyle = "rgba(0,0,0,0.5)";
-      tracePoly(ctx, pts, smooth);
+      tracePoly(ctx, pts);
       ctx.stroke();
     }
     ctx.lineWidth = width;
     ctx.strokeStyle = col;
-    tracePoly(ctx, pts, smooth);
+    tracePoly(ctx, pts);
     ctx.stroke();
 
     // link centre (used by the link menu / tooltip)
@@ -839,23 +680,25 @@ function patchLinkRenderer() {
   };
 
   // outermost pass: links that touch a selected node draw brighter (saturated
-  // version of their own colour), thicker, with a glow, and with flow dots
+  // version of their own colour) at their normal width, wrapped in a crisp
+  // border of the same hue but lighter (no blur/glow), and with flow dots
   // travelling in the data direction (output → input)
   LGC.prototype.renderLink = function (ctx, a, b, link, skip_border, flow, color, start_dir, end_dir, opts) {
     const boost = selGlowColor(this, link, color);
     if (!boost) return styledRender.apply(this, arguments);
-    const scale = this.ds?.scale ?? 1;
     const savedW = this.connections_width;
+    const baseW = savedW || 3;
     ctx.save();
-    if (scale > 0.4) {
-      ctx.shadowColor = boost;
-      ctx.shadowBlur = 13 * Math.min(1.2, scale);
-    }
-    this.connections_width = (savedW || 3) + 1.5;
     try {
-      // suppress the uniform built-in flow dots; the varied spheres below
-      // replace them (different speeds and sizes per link, glow halo + core)
-      const r = styledRender.call(this, ctx, a, b, link, skip_border,
+      // under-stroke first: a wider line in a lighter version of the boosted
+      // colour — reads as a bright border around the wire instead of a glow
+      this.connections_width = baseW + 3;
+      styledRender.call(this, ctx, a, b, link, true, false, haloColorOf(boost), start_dir, end_dir, opts);
+      // then the wire itself on top at its normal width, brighter + saturated
+      this.connections_width = baseW;
+      // suppress the uniform built-in flow dots; the varied ovals below
+      // replace them (different speeds and sizes per link, shell + hot core)
+      const r = styledRender.call(this, ctx, a, b, link, true,
         selGlow.flow ? false : flow, boost, start_dir, end_dir, opts);
       if (selGlow.flow) {
         try { drawFlowSpheres(this, ctx, a, b, link, boost, start_dir, end_dir, opts); }
@@ -868,18 +711,14 @@ function patchLinkRenderer() {
     }
   };
 
-  // prune springs / ropes whose links are gone, once per background-layer draw
+  // per-frame upkeep on the background-layer draw
   const origBack = LGC.prototype.drawBackCanvas;
   if (origBack) {
     LGC.prototype.drawBackCanvas = function () {
-      rope.frame++;
-      cable.frame++;
       if (themeState.on) { assertThemeColors(); assertChromeClass(); }
       if (sparks.on) { try { watchLinks(this); } catch (err) { console.warn("[APNext sparks] watch failed:", err); } }
       if (selGlow.on || runGlow.on) { try { selGlowFrame(this); } catch (err) { /* never block the draw */ } }
-      const r = origBack.apply(this, arguments);
-      if (rope.frame % 30 === 0) { rope.prune(); cable.prune(); }
-      return r;
+      return origBack.apply(this, arguments);
     };
   }
   wireState.patched = true;
@@ -889,20 +728,6 @@ function applyWires(style) {
   if (!WIRE_STYLES.includes(style)) style = WIRE_DEFAULT;
   if (style !== WIRE_DEFAULT) patchLinkRenderer();
   wireState.style = wireState.patched ? style : WIRE_DEFAULT;
-  if (style !== WIRE_GRAVITY) rope.clear();
-  if (style !== WIRE_CABLE) cable.clear();
-  app.canvas?.setDirty?.(false, true);
-}
-
-function readWireConfig() {
-  const slack = Number(settingGet(S_SLACK));
-  const gravity = Number(settingGet(S_GRAVITY));
-  const segments = Number(settingGet(S_SEGMENTS));
-  if (Number.isFinite(slack) && slack >= 1) rope.cfg.slack = slack;
-  if (Number.isFinite(gravity) && gravity >= 0) rope.cfg.gravity = gravity;
-  if (Number.isFinite(segments) && segments >= 4) rope.cfg.segments = segments;
-  rope.clear();
-  if (wireState.style === WIRE_GRAVITY) rope.wake();
   app.canvas?.setDirty?.(false, true);
 }
 
@@ -996,6 +821,65 @@ function botanical(color, kind) {
 
 const recolorState = { on: false, patched: false, savedNodeColors: null };
 
+// While the graphgen node look is on, groups are repainted node-style ON TOP
+// of the stock rendering: an opaque dark panel (no see-through fill), a header
+// band carrying the group's hue as a solid tint with a hued bottom border, a
+// 1px panel border and a bold white title - the same recipe as the nodes.
+function overdrawGroups(canvas, ctx) {
+  const LG = window.LiteGraph;
+  const groups = canvas.graph?._groups || [];
+  if (!groups.length) return;
+  const radius = LG?.ROUND_RADIUS ?? 8;
+  ctx.save();
+  ctx.globalAlpha = 1;
+  for (const g of groups) {
+    const x = g.pos?.[0] ?? g._pos?.[0], y = g.pos?.[1] ?? g._pos?.[1];
+    const w = g.size?.[0] ?? g._size?.[0], h = g.size?.[1] ?? g._size?.[1];
+    if (![x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) continue;
+    const hue = (recolorState.on ? botanical(g.color, "group") : g.color) || C.borderLight;
+    const fs = g.font_size || LG?.DEFAULT_GROUP_FONT || 24;
+    const th = Math.max(24, Math.round(fs * 1.5));
+    // opaque dark body, slightly darker than the nodes so they stay readable
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, radius);
+    ctx.fillStyle = mix(C.panel, C.bg, 0.45);
+    ctx.fill();
+    // header: solid hue tint + hued bottom border, like the node headers
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, Math.min(th, h), [radius, radius, 0, 0]);
+    ctx.fillStyle = mix(hue, C.panel, 0.75);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x, y + Math.min(th, h) - 1);
+    ctx.lineTo(x + w, y + Math.min(th, h) - 1);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = mix(hue, "#ffffff", 0.22);
+    ctx.stroke();
+    // 1px border around the whole box (accent outline when selected)
+    const selected = canvas.selectedItems instanceof Set && canvas.selectedItems.has(g);
+    ctx.beginPath();
+    ctx.roundRect(x + 0.5, y + 0.5, w - 1, h - 1, radius);
+    ctx.lineWidth = selected ? 2 : 1;
+    ctx.strokeStyle = selected ? C.accent : C.border;
+    ctx.stroke();
+    // resize handle (the stock one is painted over by the body)
+    ctx.beginPath();
+    ctx.moveTo(x + w - 12, y + h);
+    ctx.lineTo(x + w, y + h - 12);
+    ctx.lineTo(x + w, y + h);
+    ctx.closePath();
+    ctx.fillStyle = C.borderLight;
+    ctx.fill();
+    // bold white title, node-style
+    ctx.font = `700 ${fs}px ${FONT_SANS}`;
+    ctx.fillStyle = C.text;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(g.title || "Group", x + 10, y + Math.min(th, h) / 2 + 1);
+  }
+  ctx.restore();
+}
+
 function patchNodeRecolor() {
   if (recolorState.patched) return;
   const LGC = window.LGraphCanvas || app.canvas?.constructor;
@@ -1023,7 +907,11 @@ function patchNodeRecolor() {
       const saved = groups.map((g) => g.color);
       try {
         if (recolorState.on) for (const g of groups) if (g.color) g.color = botanical(g.color, "group");
-        return origDrawGroups.apply(this, arguments);
+        const r = origDrawGroups.apply(this, arguments);
+        if (ggState.on && !this.low_quality) {
+          try { overdrawGroups(this, ctx); } catch (err) { /* never block the draw */ }
+        }
+        return r;
       } finally {
         groups.forEach((g, i) => { g.color = saved[i]; });
       }
@@ -1213,9 +1101,10 @@ function armDragWatch() {
 }
 
 // ---------------------------------------------------------------------------
-// Selection link glow: while nodes are selected, every link that touches one
-// of them draws in a much brighter, more saturated version of its own colour,
-// slightly thicker and with a soft glow — so you can see at a glance where a
+// Selection link highlight: while nodes are selected, every link that touches
+// one of them draws in a much brighter, more saturated version of its own
+// colour, wrapped in a crisp lighter border of the same hue (no blur/glow) —
+// so you can see at a glance where a
 // node's data comes from and goes to. On top of that, flow dots travel along
 // the highlighted wires in the data direction (output → input). Independent
 // of the theme; works with the stock renderer and every custom wire style.
@@ -1295,7 +1184,7 @@ function boostLinkColor(col) {
     } else {
       out = s < 0.1
         ? mix(col, "#ffffff", 0.5)
-        : hslToHex(h, Math.min(1, s * 1.45 + 0.2), Math.min(0.72, l * 1.2 + 0.1));
+        : hslToHex(h, Math.min(1, s * 1.6 + 0.25), Math.min(0.75, l * 1.25 + 0.12));
     }
   }
   selGlow.cache.set(key, out);
@@ -1348,14 +1237,21 @@ function coreColorOf(col) {
   return c;
 }
 
-// the "data traffic" on a highlighted link: spheres of different sizes moving
-// at different (per-link deterministic) speeds, each a glowing halo + hot core
+const haloCache = new Map(); // boosted colour -> lighter border colour
+function haloColorOf(col) {
+  let c = haloCache.get(col);
+  if (!c) { c = mix(col, "#ffffff", 0.45); haloCache.set(col, c); }
+  return c;
+}
+
+// the "data traffic" on a highlighted link: ovals of different sizes stretched
+// along the wire, moving at different (per-link deterministic) speeds, each a
+// coloured shell + hot core (no blur)
 function drawFlowSpheres(canvas, ctx, a, b, link, col, start_dir, end_dir, opts) {
   const style = wireState.style;
   let pts = null;
   if (isCustomWire(style) && link && a && b && !opts?.disabled) {
-    const key = `${link.id ?? "tmp"}|${opts?.reroute?.id ?? ""}|${opts?.startControl ? "s" : ""}`;
-    pts = wirePoints(style, key, a, b);
+    pts = wirePoints(style, a, b);
   }
   const LG = window.LiteGraph;
   const sd = start_dir ?? LG?.RIGHT ?? 4;
@@ -1365,25 +1261,27 @@ function drawFlowSpheres(canvas, ctx, a, b, link, col, start_dir, end_dir, opts)
   const width = canvas.connections_width || 3;
   const core = coreColorOf(col);
   ctx.save();
+  const at = (t) => (pts ? pointAt(pts, t) : stockFlowPoint(canvas, a, b, t, sd, ed));
   for (let i = 0; i < 6; i++) {
     const r1 = hashSeed(id + ":" + i);
     const r2 = hashSeed(i + "#" + id);
     const speed = 0.1 + 0.35 * r1;            // laps/second: some crawl, some race
     const t = (r2 + i / 6 + time * speed) % 1;
     const size = width * (0.45 + 1.0 * r2);   // some small, some chunky
-    const [x, y] = pts ? pointAt(pts, t) : stockFlowPoint(canvas, a, b, t, sd, ed);
+    const [x, y] = at(t);
+    // ovals stretched along the wire: angle from a nearby sample point
+    const [x2, y2] = at(t < 0.98 ? t + 0.02 : t - 0.02);
+    const ang = Math.atan2(y2 - y, x2 - x);
+    const rx = size * 1.7, ry = size * 0.55;  // long axis rides the line
     ctx.globalAlpha = 0.9;
-    ctx.shadowColor = col;
-    ctx.shadowBlur = 6 + size * 3;
     ctx.fillStyle = col;
     ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.ellipse(x, y, rx, ry, ang, 0, Math.PI * 2);
     ctx.fill();
-    ctx.shadowBlur = 0;
     ctx.globalAlpha = 0.95;
     ctx.fillStyle = core;
     ctx.beginPath();
-    ctx.arc(x, y, Math.max(0.8, size * 0.45), 0, Math.PI * 2);
+    ctx.ellipse(x, y, Math.max(1.2, rx * 0.45), Math.max(0.6, ry * 0.45), ang, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -1806,7 +1704,8 @@ function patchNodeShape() {
     if (!collapsed && !hideTitle) {
       ctx.beginPath();
       ctx.roundRect(x, y, w, titleH, [radius, radius, 0, 0]);
-      ctx.fillStyle = hexToRgba(hue, 0.12);
+      // solid tint (hue folded into the panel colour) - no alpha in the layout
+      ctx.fillStyle = mix(hue, C.panel, 0.88);
       ctx.fill();
       ctx.beginPath();
       ctx.moveTo(x, y + titleH - 1);
@@ -1908,6 +1807,7 @@ function applyGraphgenNodes(on) {
     patchNodeShape();
     patchTitleFont();
     patchSlots(findSampleSlot());
+    patchNodeRecolor(); // hosts the group overdraw (node-style group panels)
     if (LG && ggState.savedTitleSize === null) { ggState.savedTitleSize = LG.NODE_TEXT_SIZE; LG.NODE_TEXT_SIZE = 13; }
   } else if (LG && ggState.savedTitleSize !== null) {
     LG.NODE_TEXT_SIZE = ggState.savedTitleSize; ggState.savedTitleSize = null;
@@ -1931,22 +1831,18 @@ function currentMode() {
 }
 
 function currentWires() {
-  // the gravity toggle wins; otherwise the wire-style combo (gravity there is legacy)
-  if (settingGet(S_GRAVITY_ON) === true) return WIRE_GRAVITY;
   const w = settingGet(S_WIRES);
-  if (w === WIRE_GRAVITY) return WIRE_DEFAULT;
+  if (w === WIRE_GRAVITY) return WIRE_DEFAULT; // legacy value
   return w && WIRE_STYLES.includes(w) ? w : WIRE_DEFAULT;
 }
 
 async function migrateLegacyGravity() {
-  // old combined mode values / gravity in the combo -> the explicit toggle
+  // gravity wires are gone: map any stored gravity mode/style back to defaults
   const m = currentMode();
   const w = settingGet(S_WIRES);
-  if (m === MODE_BOTH || m === MODE_GRAVITY || w === WIRE_GRAVITY) {
-    await settingSet(S_GRAVITY_ON, true);
-    if (w === WIRE_GRAVITY) await settingSet(S_WIRES, WIRE_DEFAULT);
-    await settingSet(S_MODE, m === MODE_BOTH ? MODE_THEME : m === MODE_GRAVITY ? MODE_OFF : m);
-  }
+  if (m === MODE_BOTH) await settingSet(S_MODE, MODE_THEME);
+  else if (m === MODE_GRAVITY) await settingSet(S_MODE, MODE_OFF);
+  if (w === WIRE_GRAVITY) await settingSet(S_WIRES, WIRE_DEFAULT);
 }
 
 let applying = false;
@@ -1982,19 +1878,12 @@ async function setTheme(on) {
 }
 async function setWires(style) {
   await migrateLegacyGravity();
-  if (style === WIRE_GRAVITY) return setGravity(true);
+  if (style === WIRE_GRAVITY) style = WIRE_DEFAULT;
   await settingSet(S_WIRES, style);
-  await applyAll();
-}
-async function setGravity(on) {
-  await settingSet(S_GRAVITY_ON, !!on);
   await applyAll();
 }
 function toggleTheme() {
   return setTheme(!themeOn(currentMode()));
-}
-function toggleGravity() {
-  return setGravity(settingGet(S_GRAVITY_ON) !== true);
 }
 function cycleWires() {
   const cur = settingGet(S_WIRES) || WIRE_DEFAULT;
@@ -2007,8 +1896,7 @@ const WIRE_LABELS = {
   [WIRE_SMOOTHSTEP]: "Smooth step",
   [WIRE_STEP]: "Step",
   [WIRE_STRAIGHT]: "Straight",
-  [WIRE_CABLE]: "Cable (sag + wobble)",
-  [WIRE_GRAVITY]: "Gravity (hanging rope)",
+  [WIRE_CABLE]: "Cable (sag)",
 };
 
 app.registerExtension({
@@ -2038,27 +1926,11 @@ app.registerExtension({
       category: ["APNext", "Graphgen theme", "Wire style"],
       name: "Wire style",
       tooltip:
-        "How links are drawn - graphgen's edge styles: Bezier, Smooth step, Step, Straight, " +
-        "Cable (a springy wire that sags and wobbles after a drag) or Gravity (a hanging verlet rope). " +
-        "ComfyUI default leaves the stock renderer alone.",
+        "How links are drawn - graphgen's edge styles: Bezier, Smooth step, Step, Straight or " +
+        "Cable (a drooping wire with a static sag). ComfyUI default leaves the stock renderer alone.",
       type: "combo",
       options: WIRE_COMBO.map((v) => ({ text: WIRE_LABELS[v], value: v })),
       defaultValue: WIRE_DEFAULT,
-      onChange: (value, old) => {
-        if (old === undefined) return;
-        applyAll();
-      },
-    },
-    {
-      id: S_GRAVITY_ON,
-      category: ["APNext", "Graphgen theme", "Gravity wires"],
-      name: "Gravity wires (hanging rope physics)",
-      tooltip:
-        "ON: every link is a verlet rope that hangs and swings (overrides the wire style above). " +
-        "OFF: the physics is fully stopped - no simulation, no extra redraws. Off by default; " +
-        "turn it off if the canvas feels slow on a big graph.",
-      type: "boolean",
-      defaultValue: false,
       onChange: (value, old) => {
         if (old === undefined) return;
         applyAll();
@@ -2110,7 +1982,7 @@ app.registerExtension({
       id: S_SELGLOW,
       category: ["APNext", "Canvas helpers", "Selection link glow"],
       name: "Highlight the links of selected nodes",
-      tooltip: "While one or more nodes are selected, every link connected to them is drawn brighter (a more saturated version of its own colour), thicker and with a soft glow, so you can see at a glance where the data comes from and goes to.",
+      tooltip: "While one or more nodes are selected, every link connected to them is drawn brighter (a more saturated version of its own colour) with a crisp lighter border in the same hue, so you can see at a glance where the data comes from and goes to.",
       type: "boolean",
       defaultValue: true,
       onChange: (value, old) => { if (old !== undefined) applyAll(); },
@@ -2128,7 +2000,7 @@ app.registerExtension({
       id: S_RUNGLOW,
       category: ["APNext", "Canvas helpers", "Running-node link glow"],
       name: "Highlight the links of the node being executed",
-      tooltip: "While a prompt runs, the links of the currently executing node glow (and carry the flow dots) exactly like a selected node's, so you can see which step the run is on and where its data goes. Clears when the run finishes.",
+      tooltip: "While a prompt runs, the links of the currently executing node are highlighted (and carry the flow dots) exactly like a selected node's, so you can see which step the run is on and where its data goes. Clears when the run finishes.",
       type: "boolean",
       defaultValue: true,
       onChange: (value, old) => { if (old !== undefined) applyAll(); },
@@ -2143,36 +2015,6 @@ app.registerExtension({
       onChange: (value, old) => { if (old !== undefined) applyAll(); },
     },
     {
-      id: S_SLACK,
-      category: ["APNext", "Graphgen theme", "Wire slack"],
-      name: "Gravity wire slack",
-      tooltip: "Rope length as a multiple of the straight distance. 1.0 = taut, 1.16 = graphgen default, 1.5 = very droopy.",
-      type: "slider",
-      attrs: { min: 1.0, max: 1.6, step: 0.01 },
-      defaultValue: 1.16,
-      onChange: () => readWireConfig(),
-    },
-    {
-      id: S_GRAVITY,
-      category: ["APNext", "Graphgen theme", "Wire gravity"],
-      name: "Gravity wire weight",
-      tooltip: "How hard the wires fall (px/frame²). 0 = weightless, 0.55 = graphgen default.",
-      type: "slider",
-      attrs: { min: 0, max: 1.5, step: 0.05 },
-      defaultValue: 0.55,
-      onChange: () => readWireConfig(),
-    },
-    {
-      id: S_SEGMENTS,
-      category: ["APNext", "Graphgen theme", "Wire segments"],
-      name: "Gravity wire segments",
-      tooltip: "Chain resolution per wire. More = smoother and heavier to simulate. 22 = graphgen default.",
-      type: "slider",
-      attrs: { min: 6, max: 40, step: 1 },
-      defaultValue: 22,
-      onChange: () => readWireConfig(),
-    },
-    {
       id: S_PREV,
       category: ["APNext", "Graphgen theme", "Previous palette"],
       name: "Palette to restore when the theme is turned off",
@@ -2184,23 +2026,21 @@ app.registerExtension({
   commands: [
     { id: "APNext.Theme.Toggle", label: "APNext: toggle Graphgen theme", icon: "pi pi-palette", function: () => toggleTheme() },
     { id: "APNext.Theme.CycleWires", label: "APNext: next wire style", icon: "pi pi-link", function: () => cycleWires() },
-    { id: "APNext.Theme.ToggleGravity", label: "APNext: toggle gravity wires", icon: "pi pi-sort-amount-down", function: () => toggleGravity() },
     { id: "APNext.Theme.WiresDefault", label: "APNext: wires - ComfyUI default", function: () => setWires(WIRE_DEFAULT) },
     { id: "APNext.Theme.WiresBezier", label: "APNext: wires - Bezier", function: () => setWires(WIRE_BEZIER) },
     { id: "APNext.Theme.WiresSmoothStep", label: "APNext: wires - Smooth step", function: () => setWires(WIRE_SMOOTHSTEP) },
     { id: "APNext.Theme.WiresStep", label: "APNext: wires - Step", function: () => setWires(WIRE_STEP) },
     { id: "APNext.Theme.WiresStraight", label: "APNext: wires - Straight", function: () => setWires(WIRE_STRAIGHT) },
-    { id: "APNext.Theme.WiresCable", label: "APNext: wires - Cable (sag + wobble)", function: () => setWires(WIRE_CABLE) },
-    { id: "APNext.Theme.WiresGravity", label: "APNext: wires - Gravity (rope) on/off", function: () => toggleGravity() },
-    { id: "APNext.Theme.Off", label: "APNext: theme off (stock ComfyUI)", icon: "pi pi-times", function: async () => { await setGravity(false); await setWires(WIRE_DEFAULT); await setTheme(false); } },
+    { id: "APNext.Theme.WiresCable", label: "APNext: wires - Cable (sag)", function: () => setWires(WIRE_CABLE) },
+    { id: "APNext.Theme.Off", label: "APNext: theme off (stock ComfyUI)", icon: "pi pi-times", function: async () => { await setWires(WIRE_DEFAULT); await setTheme(false); } },
   ],
   menuCommands: [
-    { path: ["APNext"], commands: ["APNext.Theme.Toggle", "APNext.Theme.CycleWires", "APNext.Theme.ToggleGravity", "APNext.Theme.Off"] },
+    { path: ["APNext"], commands: ["APNext.Theme.Toggle", "APNext.Theme.CycleWires", "APNext.Theme.Off"] },
     {
       path: ["APNext", "Wire style"],
       commands: [
         "APNext.Theme.WiresDefault", "APNext.Theme.WiresBezier", "APNext.Theme.WiresSmoothStep",
-        "APNext.Theme.WiresStep", "APNext.Theme.WiresStraight", "APNext.Theme.WiresCable", "APNext.Theme.WiresGravity",
+        "APNext.Theme.WiresStep", "APNext.Theme.WiresStraight", "APNext.Theme.WiresCable",
       ],
     },
   ],
@@ -2211,7 +2051,6 @@ app.registerExtension({
     return [
       null,
       { content: `APNext: Graphgen theme ${theme ? "✓" : ""}`, callback: () => toggleTheme() },
-      { content: `APNext: gravity wires ${settingGet(S_GRAVITY_ON) === true ? "✓" : ""}`, callback: () => toggleGravity() },
       {
         content: `APNext: wire style (${WIRE_LABELS[wires] || wires})`,
         has_submenu: true,
@@ -2238,7 +2077,6 @@ app.registerExtension({
 
   async setup() {
     await migrateLegacyGravity();
-    readWireConfig();
     // the palette store and canvas exist by now; apply once the first frame is in
     setTimeout(() => applyAll(), 50);
   },

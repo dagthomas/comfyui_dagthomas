@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 166,
-  "last_link_id": 322,
+  "last_node_id": 167,
+  "last_link_id": 324,
   "nodes": [
     {
       "id": 119,
@@ -943,7 +943,7 @@
         ""
       ],
       "widgets_values_named": {
-        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> \u2014 neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure \u2014 sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
+        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> — neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure — sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
       }
     },
     {
@@ -1007,7 +1007,7 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Walter White \u2014 Bryan Cranston (Breaking Bad)",
+        "Walter White — Bryan Cranston (Breaking Bad)",
         "(all)",
         0,
         "fixed",
@@ -1079,7 +1079,7 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Michael Scott \u2014 Steve Carell (The Office)",
+        "Michael Scott — Steve Carell (The Office)",
         "(all)",
         0,
         "fixed",
@@ -1328,12 +1328,16 @@
         {
           "name": "index",
           "type": "INT",
-          "links": []
+          "links": [
+            323
+          ]
         },
         {
           "name": "count",
           "type": "INT",
-          "links": []
+          "links": [
+            324
+          ]
         }
       ],
       "properties": {
@@ -1525,7 +1529,7 @@
           "slot_index": 0
         }
       ],
-      "title": "Fix H3 528px \u2192 960\u00d7540",
+      "title": "Fix H3 528px → 960×540",
       "properties": {
         "Node name for S&R": "ImageScale"
       },
@@ -1567,7 +1571,7 @@
           "slot_index": 0
         }
       ],
-      "title": "RTX VSR 2\u00d7 \u2192 1920\u00d71080",
+      "title": "RTX VSR 2× → 1920×1080",
       "properties": {
         "Node name for S&R": "RTXVideoSuperResolution"
       },
@@ -1576,6 +1580,49 @@
         2.0,
         "HIGH"
       ]
+    },
+    {
+      "id": 167,
+      "type": "H3SceneCounter",
+      "pos": [
+        -295.0,
+        5210.3
+      ],
+      "size": [
+        250,
+        170
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "index",
+          "type": "INT",
+          "link": 323
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "link": 324
+        }
+      ],
+      "outputs": [
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "remaining",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3SceneCounter"
+      },
+      "widgets_values": []
     }
   ],
   "links": [
@@ -1858,6 +1905,22 @@
       146,
       0,
       "IMAGE"
+    ],
+    [
+      323,
+      160,
+      2,
+      167,
+      0,
+      "INT"
+    ],
+    [
+      324,
+      160,
+      3,
+      167,
+      1,
+      "INT"
     ]
   ],
   "groups": [

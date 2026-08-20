@@ -11,6 +11,7 @@ from .characters import H3Characters
 from .claude_code_crossover_writer import H3ClaudeCodeCrossoverWriter
 from .claude_code_scenes_writer import H3ClaudeCodeScenesWriter
 from .scene_pick import H3ScenePick
+from .scene_counter import H3SceneCounter
 from .scenes_to_chain_plan import H3ScenesToChainPlan
 from .scenes_join import H3ScenesJoin
 from .llm_backend import H3LLMBackend
@@ -31,6 +32,7 @@ NODE_CLASS_MAPPINGS = {
     "H3ClaudeCodeCrossoverWriter": H3ClaudeCodeCrossoverWriter,
     "H3ClaudeCodeScenesWriter": H3ClaudeCodeScenesWriter,
     "H3ScenePick": H3ScenePick,
+    "H3SceneCounter": H3SceneCounter,
     "H3ScenesToChainPlan": H3ScenesToChainPlan,
     "H3ScenesJoin": H3ScenesJoin,
     "H3LLMBackend": H3LLMBackend,
@@ -52,6 +54,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3ClaudeCodeCrossoverWriter": "APNext H3 Crossover Writer",
     "H3ClaudeCodeScenesWriter": "APNext H3 Claude Code Scenes Writer",
     "H3ScenePick": "APNext H3 Scene Pick",
+    "H3SceneCounter": "APNext H3 Scene Counter",
     "H3ScenesToChainPlan": "APNext H3 Scenes → Contex Loop Plan",
     "H3ScenesJoin": "APNext H3 Scenes Join",
     "H3LLMBackend": "APNext H3 LLM Backend (Ollama / local / API)",

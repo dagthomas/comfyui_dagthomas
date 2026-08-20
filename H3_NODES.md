@@ -33,6 +33,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 LLM Backend](#apnext-h3-llm-backend-ollama--local--api)
 6. [Scene utilities](#scene-utilities)
    - [APNext H3 Scene Pick](#apnext-h3-scene-pick)
+   - [APNext H3 Scene Counter](#apnext-h3-scene-counter)
    - [APNext H3 Scenes Join](#apnext-h3-scenes-join)
    - [APNext H3 Scenes → Contex Loop Plan](#apnext-h3-scenes--contex-loop-plan)
    - [APNext H3 Resolution Planner (Crop Only)](#apnext-h3-resolution-planner-crop-only)
@@ -231,6 +232,11 @@ One node that says *“write with THIS model”* for every Claude Code H3 node. 
 `H3ScenePick` · workflows: [`h3_crossover_pick_one.json`](examples/h3/h3_crossover_pick_one.json), [`h3_scenes_pick_one.json`](examples/h3/h3_scenes_pick_one.json)
 
 Collapses the `scenes` / `durations` lists to **one** scene by `index` (clamped), so one scene can be rendered or refined on its own. Outputs `scene`, `duration`, `index`, `count`. Put an incrementing primitive on `index` to step through a run one queue at a time.
+
+### APNext H3 Scene Counter
+`H3SceneCounter` · workflows: [`h3_crossover_pick_one.json`](examples/h3/h3_crossover_pick_one.json), [`h3_scenes_pick_one.json`](examples/h3/h3_scenes_pick_one.json)
+
+Progress readout for a pick‑one run: wire **Scene Pick**'s `index` and `count` outputs in and the node shows a big **X / N** with a progress bar and "M scenes remaining", updated every queue. Also outputs the `status` text and the `remaining` count for filenames or notes.
 
 ### APNext H3 Scenes Join
 `H3ScenesJoin` · workflows: [`h3_scenes_batch.json`](examples/h3/h3_scenes_batch.json), [`h3_crossover_batch.json`](examples/h3/h3_crossover_batch.json), [`h3_music_video.json`](examples/h3/h3_music_video.json)

@@ -11,6 +11,7 @@
 //                    (centre X) for the selected nodes.
 //   Distribute     - even gaps horizontally or vertically (3+ nodes).
 //
+// A floating "DAG sort" button on the canvas triggers Auto-layout directly.
 // Scope: 2+ selected nodes = the selection; otherwise the whole graph.
 // Groups are re-fitted around the nodes they contained before a whole-graph
 // operation. Spacing lives in Settings → APNext → Layout.
@@ -308,6 +309,39 @@ function distribute(axis) {
 }
 
 // ---------------------------------------------------------------------------
+// Floating "DAG sort" button on the canvas: one click = auto-layout
+// ---------------------------------------------------------------------------
+
+function injectDagSortButton() {
+  if (document.getElementById("apnext-dag-sort-btn")) return;
+  const btn = document.createElement("button");
+  btn.id = "apnext-dag-sort-btn";
+  btn.type = "button";
+  btn.title = "DAG sort: auto-layout the graph along the data flow (selection only when 2+ nodes are selected)";
+  btn.innerHTML = '<i class="pi pi-sitemap" style="font-size:0.85em"></i><span>DAG sort</span>';
+  Object.assign(btn.style, {
+    position: "fixed",
+    right: "16px",
+    bottom: "72px",
+    zIndex: "999",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    padding: "6px 12px",
+    font: "500 12px/1 inherit",
+    color: "var(--fg-color, #ddd)",
+    background: "var(--comfy-menu-bg, #202020)",
+    border: "1px solid var(--border-color, #4e4e4e)",
+    borderRadius: "8px",
+    cursor: "pointer",
+  });
+  btn.addEventListener("mouseenter", () => { btn.style.borderColor = "var(--fg-color, #ddd)"; });
+  btn.addEventListener("mouseleave", () => { btn.style.borderColor = "var(--border-color, #4e4e4e)"; });
+  btn.addEventListener("click", () => autoLayout());
+  document.body.appendChild(btn);
+}
+
+// ---------------------------------------------------------------------------
 // Registration
 // ---------------------------------------------------------------------------
 
@@ -377,6 +411,7 @@ app.registerExtension({
   },
 
   setup() {
+    injectDagSortButton();
     // warm the dagre cache in the background so the first layout is instant
     setTimeout(() => { ensureDagre(); }, 2000);
   },
