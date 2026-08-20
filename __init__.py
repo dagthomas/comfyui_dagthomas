@@ -504,6 +504,13 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.scenes_review import H3ScenesReview
+    NEW_MAPPINGS["H3ScenesReview"] = H3ScenesReview
+    NEW_DISPLAY_MAPPINGS["H3ScenesReview"] = "APNext H3 Scenes Review (edit before render)"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}

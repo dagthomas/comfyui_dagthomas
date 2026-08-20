@@ -39,6 +39,10 @@ from .common import (
     VISUAL_STYLES,
     resolve_visual_style,
     DIALOGUE_LANGUAGES,
+    REFERENCE_IMAGE_USE,
+    REFERENCE_IMAGE_USE_TOOLTIP,
+    characters_only_directive,
+    characters_only_refs,
     collect_reference_images,
     downscale_for_vision,
     load_guide,
@@ -88,6 +92,11 @@ PERFORMANCE_MODES = [
     "Performance (the singer lip-syncs the lyrics on camera)",
     "Narrative (story visuals, nobody sings on camera)",
     "Mixed (performance and story, alternate or blend)",
+]
+
+AUDIO_MODES = [
+    "Reference audio (<Audio 1> = the song piece)",
+    "Masked latent (song injected into the audio latent)",
 ]
 
 SHOTS_PER_SCENE = [AUTO, "1", "2", "3", "4"]
@@ -195,7 +204,13 @@ class H3ClaudeCodeMusicVideoWriter:
         optional["image_notes"] = ("STRING", {
             "multiline": True,
             "default": "",
-            "tooltip": "Per-picture notes, one per line: `Image 1: the singer`, `Image 2: the rooftop`.",
+            "tooltip": (
+                "Per-picture notes, one per line: `Image 1: the singer`, `Image 2: the "
+                "rooftop, use as the location`. With reference_image_use = Characters only "
+                "(the default), a note like that is the ONLY way a picture may be read as "
+                "a location or prop - otherwise every picture is a performer and its "
+                "backdrop is ignored."
+            ),
         })
         optional.update(claude_code_optional_inputs())
         optional.update(local_llm_inputs())
@@ -211,6 +226,23 @@ class H3ClaudeCodeMusicVideoWriter:
                 "from its lyric lines - the pictures stage what the words say, while the "
                 "concept supplies style, palette and motifs. Instrumental stretches still "
                 "cut on the music."
+            ),
+        })
+        optional["reference_image_use"] = (REFERENCE_IMAGE_USE, {
+            "default": REFERENCE_IMAGE_USE[0],
+            "tooltip": REFERENCE_IMAGE_USE_TOOLTIP,
+        })
+        optional["audio_mode"] = (AUDIO_MODES, {
+            "default": AUDIO_MODES[0],
+            "tooltip": (
+                "How the song reaches the video model. Reference audio: each piece is "
+                "attached as ref_audio_1 and the prompts define <Audio 1> (classic Ref2VA; "
+                "lip-sync is a strong suggestion). Masked latent: for workflows that write "
+                "the song slice straight into the H3 audio latent and protect it from "
+                "denoising (e.g. `H3 Song Audio + Masked Video Context` fed by this node's "
+                "`clip_starts`) - the prompts then reference the protected master-song audio "
+                "and define no <Audio N>, and lip-sync is enforced by the model itself. "
+                "Do not wire audio_segments to ref_audio in that setup."
             ),
         })
 
@@ -260,9 +292,10 @@ class H3ClaudeCodeMusicVideoWriter:
     # Prompt construction
     # ------------------------------------------------------------------
 
-    def _build_system_prompt(self):
+    def _build_system_prompt(self, characters_only=True, masked_audio=False):
         base_guide = load_guide("guide_base_en.md")
         ref_guide = load_guide("guide_ref_en.md")
+        audio_ref = "the protected master-song audio" if masked_audio else "<Audio 1>"
         return (
             "You are a MiniMax-H3 music-video director and prompt engineer. You are given a "
             "song that has already been cut into consecutive pieces of 5-15 seconds, the "
@@ -286,22 +319,33 @@ class H3ClaudeCodeMusicVideoWriter:
             "images, colours, props and the chorus look, so every scene can reuse them).\n"
             "- Each scene envelope's `duration:` is the exact length of its song piece, given "
             "to you; copy it.\n"
-            "- AUDIO: every scene is rendered with its own song piece attached as <Audio 1>. "
-            "In subject_definitions define it as `<Audio 1> is the song, reused 1:1 as the "
-            "complete final soundtrack of this clip` (fully_copy). Cite <Audio 1> in the "
-            "description where the music drives the picture. overall_soundscape is "
-            "`<Audio 1> is the complete soundtrack; no other sound.` and non_diegetic_music "
-            "is `N/A (the song is <Audio 1>)`. Never invent other music, ambience or effects.\n"
+            + (
+                "- AUDIO: every scene's piece of the master song is written directly into the "
+                "clip's audio latent and protected from denoising - the soundtrack already "
+                "exists and drives the singing, breathing, body rhythm and emotional timing. "
+                "Do NOT define any <Audio N> reference and never invent music, ambience or "
+                "sound effects. overall_soundscape is `The protected master-song audio is the "
+                "complete soundtrack; no other sound.` and non_diegetic_music is `The "
+                "protected master-song audio drives the performance and the emotional "
+                "timing.`\n"
+                if masked_audio else
+                "- AUDIO: every scene is rendered with its own song piece attached as <Audio 1>. "
+                "In subject_definitions define it as `<Audio 1> is the song, reused 1:1 as the "
+                "complete final soundtrack of this clip` (fully_copy). Cite <Audio 1> in the "
+                "description where the music drives the picture. overall_soundscape is "
+                "`<Audio 1> is the complete soundtrack; no other sound.` and non_diegetic_music "
+                "is `N/A (the song is <Audio 1>)`. Never invent other music, ambience or effects.\n"
+            ) +
             "- LYRICS: the lines listed for a piece are sung at the moments given. In "
             "Performance mode the singer visibly sings them on camera, lip-synced: write "
             "`<Subject 1> (S1) keeps visibly singing with readable mouth and jaw movement in "
-            "exact sync with <Audio 1>: <d>[Language] exact lyric line</d>` at the right "
+            f"exact sync with {audio_ref}: <d>[Language] exact lyric line</d>` at the right "
             "timestamp, with the exact words, once per line, no paraphrase. Between lyric "
             "lines the performer keeps performing - breathing, phrasing, moving on the beat - "
             "never an idle closed mouth while the vocal is audible, and a sung line is never "
             "interrupted by a cut. In "
-            "Narrative mode nobody sings on camera - the lyric is audible from <Audio 1> and "
-            "the picture answers it (`as <Audio 1> reaches <d>[Language] line</d>, ...`). "
+            f"Narrative mode nobody sings on camera - the lyric is audible from {audio_ref} and "
+            f"the picture answers it (`as {audio_ref} reaches <d>[Language] line</d>, ...`). "
             "Mixed mode alternates. Instrumental pieces get pure visuals cut to the beat.\n"
             "- ENERGY: quiet pieces get long, slow, intimate shots; loud and peak pieces get "
             "more cuts, bigger moves, bolder light, the chorus look. The whole video keeps "
@@ -310,9 +354,17 @@ class H3ClaudeCodeMusicVideoWriter:
             "language inside the <d>[...] tag.\n"
             "- When reference pictures are attached the scenes are rendered with the same "
             "pictures as <Picture 1>..<Picture N>. Bind pictured performers in "
-            "subject_definitions as `<Subject N> ..., appearance from <Picture k>`, treat a "
-            "location or prop picture as `<Picture k> is ...` on its own line, and refer to "
-            "the pictures again inside the shots where their content appears."
+            "subject_definitions as `<Subject N> ..., appearance from <Picture k>`"
+            + (
+                ", and refer to the pictures again inside the shots where the performers "
+                "appear. Only a picture the user's notes explicitly declare a location or "
+                "prop may be treated as one (`<Picture k> is ...` on its own line); a "
+                "pictured person's backdrop is NEVER the scene."
+                if characters_only else
+                ", treat a location or prop picture as `<Picture k> is ...` on its own "
+                "line, and refer to the pictures again inside the shots where their "
+                "content appears."
+            )
         )
 
     def _build_user_prompt(
@@ -338,9 +390,12 @@ class H3ClaudeCodeMusicVideoWriter:
         last=None,
         total_seconds=0.0,
         lyrics_driven=False,
+        characters_only=True,
+        masked_audio=False,
     ):
         last = last or len(segments)
         n = len(segments)
+        audio_ref = "the protected master-song audio" if masked_audio else "<Audio 1>"
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast] if cast else ["- (no cast given - invent a performer that fits the concept and keep them identical in every scene)"]
         lines.append("")
@@ -378,7 +433,9 @@ class H3ClaudeCodeMusicVideoWriter:
         else:
             lines.append(
                 f"- Continue the SAME video: write scenes {first:02d} to {last:02d} (of {n}) only, "
-                "following the synopsis, cast, wardrobe and location locks you already fixed. "
+                "following the synopsis, cast, wardrobe and location locks you already fixed - "
+                "and KEEP THE JOURNEY MOVING through the settings and story beats the synopsis "
+                "planned; do not fall back into one place. "
                 "Start directly with the scene envelopes; do not repeat the synopsis."
             )
         lines.append(f"- Performance mode: {performance_mode}.")
@@ -397,8 +454,11 @@ class H3ClaudeCodeMusicVideoWriter:
                 "- Lip-sync: in every scene with sung lines the singer is on camera facing "
                 "the lens (or in a clear profile) with the mouth fully visible - no hands, "
                 "microphones, hair, shadows or props covering it - and readable mouth and "
-                "jaw movement locked to <Audio 1> from the first frame of the line to the "
-                "last. Never cut away from the singer in the middle of a sung line."
+                f"jaw movement locked to {audio_ref} from the first frame of the line to the "
+                "last. Frame sung lines MEDIUM CLOSE-UP or closer (the face large in frame) "
+                "and keep the camera slow and smooth while a line lasts; save wide shots and "
+                "fast moves for the instrumental moments. Never cut away from the singer in "
+                "the middle of a sung line."
             )
         if shots_per_scene != AUTO:
             lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
@@ -425,16 +485,21 @@ class H3ClaudeCodeMusicVideoWriter:
         )
         if image_labels:
             labels_s = ", ".join(f"<Picture {i}>" for i in image_labels)
+            wardrobe_clause = (
+                " and take their wardrobe lock from the picture."
+                if not (wardrobe or "").strip() else
+                "; the picture fixes their face, hair and build, while the written "
+                "wardrobe lock below fixes the clothes - where they differ, the written "
+                "lock wins."
+            )
             lines.append(
                 f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; the "
                 "video model receives the same pictures under the same labels in every scene. "
-                "Decide what each shows (use the notes below); bind pictured performers to "
-                "their <Picture k> in subject_definitions"
-                + (" and take their wardrobe lock from the picture."
-                   if not (wardrobe or "").strip() else
-                   "; the picture fixes their face, hair and build, while the written "
-                   "wardrobe lock below fixes the clothes - where they differ, the written "
-                   "lock wins.")
+                + (characters_only_directive() + " Bind pictured performers to their "
+                   "<Picture k> in subject_definitions" + wardrobe_clause
+                   if characters_only else
+                   "Decide what each shows (use the notes below); bind pictured performers to "
+                   "their <Picture k> in subject_definitions" + wardrobe_clause)
             )
             notes = (image_notes or "").strip()
             if notes:
@@ -454,6 +519,23 @@ class H3ClaudeCodeMusicVideoWriter:
             "- Continuity: the same performer identity, wardrobe, palette and style in every "
             "scene; recurring locations restate their anchors; the chorus pieces share one "
             "signature look; the last scene resolves the concept."
+        )
+        distinct = min(6, max(3, n // 4))
+        lines.append(
+            "- THE VIDEO IS A JOURNEY, NOT A ROOM: plan the whole visual arc in the synopsis "
+            "before scene 01. Unless the user's concept explicitly pins one place, the video "
+            f"MOVES: at least {distinct} clearly distinct settings across the {n} scenes, each "
+            "verse pushing the story somewhere new (a new place, or a visible transformation "
+            "of the last one), every chorus returning to ONE signature look that escalates "
+            "each time - bigger, brighter, stranger - and the bridge breaking the pattern "
+            "completely. Lock only the places that actually recur; everything else travels."
+        )
+        lines.append(
+            "- FIND A PLOT: invent a concrete story told in images - a transformation, a "
+            "chase, a love story, a descent, a heist, a ritual, a rebirth - with a visible "
+            "setup, an escalation, and a payoff in the final scene. Never many variations of "
+            "a performer standing in one room: something HAPPENS in this video, and every "
+            "scene advances it."
         )
         wild_lines, wild_label = wildness_directive(wildness, rng)
         lines += [f"- {w}" for w in wild_lines]
@@ -503,6 +585,8 @@ class H3ClaudeCodeMusicVideoWriter:
         working_dir="",
         llm=None,
         scenes_from_lyrics=False,
+        reference_image_use=None,
+        audio_mode=None,
         **cast_slots,
     ):
         passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
@@ -560,7 +644,11 @@ class H3ClaudeCodeMusicVideoWriter:
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
             local = local_llm_options(llm)
-            system_prompt = self._build_system_prompt()
+            chars_only = characters_only_refs(reference_image_use)
+            masked_audio = str(audio_mode or "").startswith("Masked")
+            system_prompt = self._build_system_prompt(
+                characters_only=chars_only, masked_audio=masked_audio,
+            )
 
             print(
                 f"🎬 H3 Music Video Writer | {len(cast)} cast | {n} scene(s) | "
@@ -583,7 +671,8 @@ class H3ClaudeCodeMusicVideoWriter:
                     directions_with_research(extra_instructions, research), rng,
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
                     image_notes=image_notes, first=first, last=last, total_seconds=total_seconds,
-                    lyrics_driven=lyrics_driven,
+                    lyrics_driven=lyrics_driven, characters_only=chars_only,
+                    masked_audio=masked_audio,
                 )
                 if first == 1:
                     user_prompt = with_context(user_prompt, context_text)

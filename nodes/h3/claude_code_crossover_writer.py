@@ -38,6 +38,10 @@ from .common import (
     VISUAL_STYLES,
     resolve_visual_style,
     DIALOGUE_LANGUAGES,
+    REFERENCE_IMAGE_USE,
+    REFERENCE_IMAGE_USE_TOOLTIP,
+    characters_only_directive,
+    characters_only_refs,
     collect_reference_images,
     downscale_for_vision,
     load_guide,
@@ -233,8 +237,11 @@ class H3ClaudeCodeCrossoverWriter:
             "default": "",
             "tooltip": (
                 "What each reference image is, one per line: `Image 1: Sheldon`, "
-                "`Image 3: the diner, use as the location`. Without notes Claude works it out "
-                "from the cast and the pictures."
+                "`Image 3: the diner, use as the location`. With reference_image_use = "
+                "Characters only (the default), such a note is the ONLY way a picture may be "
+                "read as a location or prop - otherwise every picture is a character and its "
+                "backdrop is ignored. In Auto mode Claude works it out from the cast and the "
+                "pictures."
             ),
         })
         optional.update(claude_code_optional_inputs())
@@ -243,6 +250,11 @@ class H3ClaudeCodeCrossoverWriter:
         optional.update(context_inputs())
         # Image sockets last, so the front-end can grow and trim them at the tail.
         optional.update(reference_image_inputs())
+        # appended LAST so saved workflows keep their widget positions
+        optional["reference_image_use"] = (REFERENCE_IMAGE_USE, {
+            "default": REFERENCE_IMAGE_USE[0],
+            "tooltip": REFERENCE_IMAGE_USE_TOOLTIP,
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -300,7 +312,7 @@ class H3ClaudeCodeCrossoverWriter:
     # Prompt construction
     # ------------------------------------------------------------------
 
-    def _build_system_prompt(self, continuity_mode=CONTINUITY_MODES[0]):
+    def _build_system_prompt(self, continuity_mode=CONTINUITY_MODES[0], characters_only=True):
         base_guide = load_guide("guide_base_en.md")
         crossover_guide = load_guide("guide_crossover_en.md")
         return (
@@ -328,10 +340,18 @@ class H3ClaudeCodeCrossoverWriter:
             "- When reference pictures are attached the scenes are rendered with the same "
             "pictures as <Picture 1>..<Picture N> (ref2va). Keep the four-section layout, but "
             "bind each pictured character in subject_definitions as "
-            "`<Subject N> Character (played by Actor) from Show, appearance from <Picture k>` "
-            "and treat a location or prop picture as `<Picture k> is ...` on its own line; "
-            "refer to the pictures again inside the shots where their content appears. A "
-            "label keeps one meaning across the whole run and is never renumbered."
+            "`<Subject N> Character (played by Actor) from Show, appearance from <Picture k>`"
+            + (
+                "; refer to the pictures again inside the shots where the characters appear. "
+                "Only a picture the user's notes explicitly declare a location or prop may "
+                "be treated as one (`<Picture k> is ...` on its own line); a pictured "
+                "person's backdrop is NEVER the scene."
+                if characters_only else
+                " and treat a location or prop picture as `<Picture k> is ...` on its own "
+                "line; refer to the pictures again inside the shots where their content "
+                "appears."
+            )
+            + " A label keeps one meaning across the whole run and is never renumbered."
         )
 
     def _build_user_prompt(
@@ -352,6 +372,7 @@ class H3ClaudeCodeCrossoverWriter:
         image_labels=(),
         image_notes="",
         locations="",
+        characters_only=True,
     ):
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast]
@@ -398,11 +419,19 @@ class H3ClaudeCodeCrossoverWriter:
             lines.append(
                 f"- Reference pictures: {len(image_labels)} attached, in order {labels}; the "
                 "video model receives the same pictures under the same labels in every "
-                "scene. Decide what each one shows (use the notes below, else match faces "
-                "and costumes to the cast); bind pictured characters to their <Picture k> in "
-                "subject_definitions, take their wardrobe lock from what the picture shows, "
-                "and restate it in the shots. Unmatched pictures are locations or props: "
-                "define them as `<Picture k> is ...` and use them where the story needs them."
+                "scene. "
+                + (
+                    characters_only_directive() + " Match faces and costumes to the cast, "
+                    "bind pictured characters to their <Picture k> in subject_definitions, "
+                    "take their wardrobe lock from what the picture shows, and restate it "
+                    "in the shots."
+                    if characters_only else
+                    "Decide what each one shows (use the notes below, else match faces "
+                    "and costumes to the cast); bind pictured characters to their <Picture k> in "
+                    "subject_definitions, take their wardrobe lock from what the picture shows, "
+                    "and restate it in the shots. Unmatched pictures are locations or props: "
+                    "define them as `<Picture k> is ...` and use them where the story needs them."
+                )
             )
             notes = (image_notes or "").strip()
             if notes:
@@ -463,6 +492,7 @@ class H3ClaudeCodeCrossoverWriter:
         working_dir="",
         locations="",
         llm=None,
+        reference_image_use=None,
         **cast_slots,
     ):
         # The same tensors go back out on image_1..image_9 so the video node
@@ -512,6 +542,7 @@ class H3ClaudeCodeCrossoverWriter:
                 image_labels=image_labels,
                 image_notes=image_notes,
                 locations=locations,
+                characters_only=characters_only_refs(reference_image_use),
             )
             user_prompt = with_context(user_prompt, context_text)
 
@@ -527,7 +558,7 @@ class H3ClaudeCodeCrossoverWriter:
 
             local = local_llm_options(llm)
             text, session_id, info = run_h3_claude_code(
-                self._build_system_prompt(continuity_mode),
+                self._build_system_prompt(continuity_mode, characters_only_refs(reference_image_use)),
                 user_prompt,
                 images,
                 model,

@@ -297,6 +297,7 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_crossover_contex_chain.json`](examples/h3/h3_crossover_contex_chain.json) | Crossover Writer (continuous‑chain mode) → **Scenes → Contex Loop Plan** → the Contex‑Loop chain (previous tail carried forward, one assembled MP4). |
 | [`h3_llm_backend_crossover.json`](examples/h3/h3_llm_backend_crossover.json) | The crossover batch written by a local model through an **LLM Backend** (`ollama:qwen3:14b`). |
 | [`h3_music_video.json`](examples/h3/h3_music_video.json) | Load Audio → **Music Video Writer** (custom performer + wardrobe from a Characters node) → clips (`lengths` → `length`, `audio_segments` → `ref_audio_1`) → Scenes Join with `replace_audio` = the song → one music video. |
+| [`h3_music_video_masked_audio.json`](examples/h3/h3_music_video_masked_audio.json) | The strongest lip‑sync: writer in `audio_mode` = *Masked latent* → **AudioSeparation** vocal stem + `clip_starts` → **H3 Song Audio + Masked Video Context** (the song slice written into the H3 audio latent, protected from denoising) → sampler → Scenes Join with `replace_audio` = the full mix. The song is deliberately *not* wired to `ref_audio`. Needs ComfyUI‑H3‑Motion‑Context‑MultiRef + audio‑separation‑nodes. |
 
 Every example has an **H3 Prompt Preview** wired to the writer’s prompt / scenes‑text output.
 

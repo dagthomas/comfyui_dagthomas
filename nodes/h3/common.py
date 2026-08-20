@@ -547,6 +547,40 @@ def reference_image_outputs():
     return ("IMAGE",) * MAX_REFERENCE_IMAGES, REFERENCE_IMAGE_NAMES
 
 
+# How the writers may interpret the reference pictures. "Characters only"
+# stops the model from reading a scene or location out of a character photo's
+# backdrop (a picture note like `Image 2: the diner, use as the location`
+# still declares a picture a location explicitly).
+REFERENCE_IMAGE_USE = [
+    "Characters only (ignore picture backgrounds)",
+    "Auto (decide what each picture shows)",
+]
+
+REFERENCE_IMAGE_USE_TOOLTIP = (
+    "How the reference pictures may be read. Characters only: every picture is a "
+    "character/performer reference - identity (and wardrobe) carries over, the photo's "
+    "background, setting and lighting are ignored, and no scene or location is ever "
+    "derived from them; a picture note can still declare a specific image a location or "
+    "prop. Auto: the model decides what each picture shows (a backdrop can become the "
+    "scene)."
+)
+
+
+def characters_only_refs(use):
+    return not str(use or "").strip().startswith("Auto")
+
+
+def characters_only_directive():
+    return (
+        "Every reference picture is a CHARACTER reference unless a picture note below "
+        "explicitly says it shows a location or a prop: take only the person - face, "
+        "hair, build, distinctive marks - and IGNORE the photo's background, setting, "
+        "lighting, weather and mood completely. Never derive a scene, a location, a "
+        "location lock or a lock anchor from what is behind or around a pictured "
+        "person; every setting comes from the brief and the location lock alone."
+    )
+
+
 # ----------------------------------------------------------------------
 # Typed references for the base writers
 # ----------------------------------------------------------------------
