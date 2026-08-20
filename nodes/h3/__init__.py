@@ -15,6 +15,7 @@ from .scenes_to_chain_plan import H3ScenesToChainPlan
 from .scenes_join import H3ScenesJoin
 from .llm_backend import H3LLMBackend
 from .claude_code_music_video_writer import H3ClaudeCodeMusicVideoWriter
+from .scenes_review import H3ScenesReview
 
 NODE_CLASS_MAPPINGS = {
     "H3BasePromptWriter": H3BasePromptWriter,
@@ -32,6 +33,7 @@ NODE_CLASS_MAPPINGS = {
     "H3ScenesJoin": H3ScenesJoin,
     "H3LLMBackend": H3LLMBackend,
     "H3ClaudeCodeMusicVideoWriter": H3ClaudeCodeMusicVideoWriter,
+    "H3ScenesReview": H3ScenesReview,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -50,6 +52,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3ScenesJoin": "APNext H3 Scenes Join",
     "H3LLMBackend": "APNext H3 LLM Backend (Ollama / local / API)",
     "H3ClaudeCodeMusicVideoWriter": "APNext H3 Music Video Writer",
+    "H3ScenesReview": "APNext H3 Scenes Review (edit before render)",
 }
 
 # ---------------------------------------------------------------------------

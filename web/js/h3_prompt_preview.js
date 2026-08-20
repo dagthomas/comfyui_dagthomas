@@ -655,6 +655,9 @@ function buildPanel(node) {
   };
 }
 
+// shared with h3_scenes_review.js: same token colours in the editable gate
+export { ensureStyle, highlight, LEGEND };
+
 app.registerExtension({
   name: "apnext.h3.promptPreview",
   async beforeRegisterNodeDef(nodeType, nodeData) {

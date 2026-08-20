@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 167,
-  "last_link_id": 324,
+  "last_node_id": 168,
+  "last_link_id": 325,
   "nodes": [
     {
       "id": 119,
@@ -943,7 +943,7 @@
         ""
       ],
       "widgets_values_named": {
-        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> — neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure — sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
+        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> \u2014 neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure \u2014 sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
       },
       "title": "refined prompt (goes to the video node)"
     },
@@ -1417,7 +1417,7 @@
         true,
         900,
         1,
-        "randomize",
+        "fixed",
         "",
         "",
         "",
@@ -1470,7 +1470,7 @@
         8000,
         false
       ],
-      "title": "H3 LLM Backend — one backend, two nodes"
+      "title": "H3 LLM Backend \u2014 one backend, two nodes"
     },
     {
       "id": 165,
@@ -1521,8 +1521,7 @@
           "name": "h3_prompt",
           "type": "STRING",
           "links": [
-            322,
-            323
+            325
           ]
         },
         {
@@ -1583,12 +1582,12 @@
         true,
         true,
         900,
-        -1,
-        "randomize",
+        7,
+        "fixed",
         "",
         ""
       ],
-      "title": "H3 Refiner — same backend, resumes the local session"
+      "title": "H3 Refiner \u2014 same backend, resumes the local session"
     },
     {
       "id": 166,
@@ -1649,11 +1648,57 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# Writer → Refiner on one local backend\n\nOne **H3 LLM Backend** (`ollama:qwen3:8b`) feeds both the **H3 Claude Code Writer** and the **H3 Claude Code Refiner** through their `llm` sockets. The writer drafts the prompt from the context nodes (Time / Scene / Feelings / Cinematic), the refiner revises it with your instruction, and the refined prompt is what the video node renders.\n\n- `session_id` → `session_id`: with a local model the writer keeps a text-only session under ComfyUI's temp folder, so the refiner continues the same conversation (the guide and the draft are already in context) exactly like it does with Claude Code.\n- Swap the backend's `model_name` to anything the router knows (`lmstudio:…`, `local:…`, `claude:…`, `gpt:…`) and both nodes follow.\n- `{vars}` work in every text box: connect an H3 Characters node to a `context_N` socket and write `{character1}`.\n\nBoth previews show the draft and the refined prompt side by side."
+        "# Writer \u2192 Refiner on one local backend\n\nOne **H3 LLM Backend** (`ollama:qwen3:8b`) feeds both the **H3 Claude Code Writer** and the **H3 Claude Code Refiner** through their `llm` sockets. The writer drafts the prompt from the context nodes (Time / Scene / Feelings / Cinematic), the refiner revises it with your instruction, and the refined prompt is what the video node renders.\n\n- `session_id` \u2192 `session_id`: with a local model the writer keeps a text-only session under ComfyUI's temp folder, so the refiner continues the same conversation (the guide and the draft are already in context) exactly like it does with Claude Code.\n- Swap the backend's `model_name` to anything the router knows (`lmstudio:\u2026`, `local:\u2026`, `claude:\u2026`, `gpt:\u2026`) and both nodes follow.\n- `{vars}` work in every text box: connect an H3 Characters node to a `context_N` socket and write `{character1}`.\n\nBoth previews show the draft and the refined prompt side by side."
       ],
       "color": "#3d3222",
       "bgcolor": "#1e1c17",
-      "title": "APNext — LLM Backend"
+      "title": "APNext \u2014 LLM Backend"
+    },
+    {
+      "id": 168,
+      "type": "H3ScenesReview",
+      "pos": [
+        -150,
+        5600
+      ],
+      "size": [
+        470,
+        420
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "scenes",
+          "type": "STRING",
+          "link": 325
+        }
+      ],
+      "outputs": [
+        {
+          "name": "scenes",
+          "type": "STRING",
+          "links": [
+            322,
+            323
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "H3 Scenes Review (edit before render)",
+      "properties": {
+        "Node name for S&R": "H3ScenesReview"
+      },
+      "widgets_values": [
+        "Review (stop here and edit)",
+        ""
+      ]
     }
   ],
   "links": [
@@ -1915,7 +1960,7 @@
     ],
     [
       322,
-      165,
+      168,
       0,
       136,
       8,
@@ -1923,7 +1968,7 @@
     ],
     [
       323,
-      165,
+      168,
       0,
       153,
       0,
@@ -1934,6 +1979,14 @@
       162,
       0,
       166,
+      0,
+      "STRING"
+    ],
+    [
+      325,
+      165,
+      0,
+      168,
       0,
       "STRING"
     ]

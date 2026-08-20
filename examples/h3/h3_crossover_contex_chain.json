@@ -1,8 +1,8 @@
 {
   "id": "c0b8422a-84d4-44f8-91ce-31c68a9a119e",
   "revision": 0,
-  "last_node_id": 1950,
-  "last_link_id": 91,
+  "last_node_id": 1951,
+  "last_link_id": 92,
   "nodes": [
     {
       "id": 1,
@@ -28,7 +28,7 @@
           ]
         }
       ],
-      "title": "H3 MODEL — REQUIRED",
+      "title": "H3 MODEL \u2014 REQUIRED",
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.30.0",
@@ -208,7 +208,7 @@
           ]
         }
       ],
-      "title": "SCENE PROMPT EDITOR — STANDARD AUTHORING",
+      "title": "SCENE PROMPT EDITOR \u2014 STANDARD AUTHORING",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -545,7 +545,7 @@
           "links": null
         }
       ],
-      "title": "CURRENT T2V SCENE — PROMPT / SEED / TIMING",
+      "title": "CURRENT T2V SCENE \u2014 PROMPT / SEED / TIMING",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -772,14 +772,14 @@
           ]
         }
       ],
-      "title": "CORE T2VA — NO IMAGE INPUTS",
+      "title": "CORE T2VA \u2014 NO IMAGE INPUTS",
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.30.0",
         "Node name for S&R": "MiniMaxH3ImageToVideo"
       },
       "widgets_values": [
-        "integrated_multimodal_description: The target video is in a hyper-realistic, cinematic single-take confessional style, shallow depth of field, soft moody key light on one side of the face, dark neutral background, portrait orientation.\n[Shot 1] A tight portrait shot frames a weary 40-year-old man seated close to camera, stubble catching the light, eyes glistening as he stares just past the lens. His breath catches once before he speaks. The raw, trembling-voiced man (S1) says, <d>[English] I have to be honest with you. I left Wan. It wasn't working anymore — the consistency, the way it just... let me down when I needed it most.</d> His hand comes up, rubbing his brow, a bitter half-smile breaking through. [Shot 2] At 00:04.500, he leans in slightly, voice steadying, a flicker of guilty excitement crossing his face. He continues, <d>[English] I'm with MiniMax now. And I know how that sounds. But for the first time in a long time... I feel understood.</d> His eyes well up, lip trembling, before he lets out a short, broken laugh and looks down, shaking his head at himself.\n\noverall_soundscape: A quiet room tone hums beneath, with a single sharp intake of breath before he speaks, a soft rustle as his hand moves to his face, and a faint, choked exhale on the laugh.\n\nnon_diegetic_music: A single sustained low piano note holds under the first line, joined by a soft, melancholic string swell, dropping away entirely on the final broken laugh.",
+        "integrated_multimodal_description: The target video is in a hyper-realistic, cinematic single-take confessional style, shallow depth of field, soft moody key light on one side of the face, dark neutral background, portrait orientation.\n[Shot 1] A tight portrait shot frames a weary 40-year-old man seated close to camera, stubble catching the light, eyes glistening as he stares just past the lens. His breath catches once before he speaks. The raw, trembling-voiced man (S1) says, <d>[English] I have to be honest with you. I left Wan. It wasn't working anymore \u2014 the consistency, the way it just... let me down when I needed it most.</d> His hand comes up, rubbing his brow, a bitter half-smile breaking through. [Shot 2] At 00:04.500, he leans in slightly, voice steadying, a flicker of guilty excitement crossing his face. He continues, <d>[English] I'm with MiniMax now. And I know how that sounds. But for the first time in a long time... I feel understood.</d> His eyes well up, lip trembling, before he lets out a short, broken laugh and looks down, shaking his head at himself.\n\noverall_soundscape: A quiet room tone hums beneath, with a single sharp intake of breath before he speaks, a soft rustle as his hand moves to his face, and a faint, choked exhale on the laugh.\n\nnon_diegetic_music: A single sustained low piano note holds under the first line, joined by a soft, melancholic string swell, dropping away entirely on the final broken laugh.",
         544,
         960,
         243
@@ -857,7 +857,7 @@
           ]
         }
       ],
-      "title": "AUTO CONTEXT — clip 1 bypass / continuation",
+      "title": "AUTO CONTEXT \u2014 clip 1 bypass / continuation",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -1130,7 +1130,7 @@
           "links": null
         }
       ],
-      "title": "H3 sampler — SINGLE LOOP BODY",
+      "title": "H3 sampler \u2014 SINGLE LOOP BODY",
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.30.0",
@@ -1416,7 +1416,7 @@
           "links": null
         }
       ],
-      "title": "FINAL ASSEMBLY — 5-FRAME VISUAL BLEND",
+      "title": "FINAL ASSEMBLY \u2014 5-FRAME VISUAL BLEND",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -1501,7 +1501,7 @@
           ]
         }
       ],
-      "title": "LIGHTX2V TURBO — 8 STEP V1.0",
+      "title": "LIGHTX2V TURBO \u2014 8 STEP V1.0",
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.30.0",
@@ -1577,7 +1577,7 @@
           "links": null
         }
       ],
-      "title": "LOOP END — ADVANCE T2V SCENE",
+      "title": "LOOP END \u2014 ADVANCE T2V SCENE",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -1646,7 +1646,7 @@
           ]
         }
       ],
-      "title": "T2V PLAN — NORMAL EDITOR",
+      "title": "T2V PLAN \u2014 NORMAL EDITOR",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -1662,7 +1662,7 @@
         }
       },
       "widgets_values": [
-        "{\"defaults\":{\"duration_seconds\":10,\"steps\":8},\"shots\":[{\"id\":\"confessional_opening\",\"prompt\":[\"integrated_multimodal_description: The target video is in a hyper-realistic, cinematic single-take confessional style, shallow depth of field, soft moody key light on one side of the face, dark neutral background, portrait orientation.\\n[Shot 1] A tight portrait shot frames a weary 40-year-old man seated close to camera, stubble catching the light, eyes glistening as he stares just past the lens. His breath catches once before he speaks. The raw, trembling-voiced man (S1) says, <d>[English] I have to be honest with you. I left Wan. It wasn't working anymore — the consistency, the way it just... let me down when I needed it most.</d> His hand comes up, rubbing his brow, a bitter half-smile breaking through. [Shot 2] At 00:04.500, he leans in slightly, voice steadying, a flicker of guilty excitement crossing his face. He continues, <d>[English] I'm with MiniMax now. And I know how that sounds. But for the first time in a long time... I feel understood.</d> His eyes well up, lip trembling, before he lets out a short, broken laugh and looks down, shaking his head at himself.\",\"\",\"overall_soundscape: A quiet room tone hums beneath, with a single sharp intake of breath before he speaks, a soft rustle as his hand moves to his face, and a faint, choked exhale on the laugh.\",\"\",\"non_diegetic_music: A single sustained low piano note holds under the first line, joined by a soft, melancholic string swell, dropping away entirely on the final broken laugh.\"],\"length\":243,\"seed\":\"1001\"},{\"id\":\"confessional_continuation\",\"prompt\":[\"integrated_multimodal_description: [Shot 1] Hyper-realistic, cinematic portrait footage continues directly from the incoming H3 Motion Context in the same dark confessional room. Preserve the weary 40-year-old man's identity, stubble, clothing, seated position, shallow depth of field, one-sided moody key light, dark neutral background, lens, portrait framing, and the downward head movement already in progress. His broken laugh trails off without resetting. The camera holds close and pushes in with small amplitude at slow speed as he draws one controlled breath, rubs his thumb against his brow, then lifts his wet eyes back toward the lens. The same raw, trembling-voiced man (S1) says quietly: <d>[English] I guess this is me moving on.</d> His lips move naturally with only those words. He lets the silence remain, lowers his hand into his lap, and holds eye contact while the camera gradually becomes still. No cut, no new person, no duplicated face, no change of room, wardrobe, lighting direction, or screen geography.\",\"\",\"overall_soundscape: Continue the same quiet room tone across the scene boundary without a restart. The last broken exhale fades into one controlled breath, accompanied by a soft sleeve rustle and the subtle movement of his hand returning to his lap.\",\"\",\"non_diegetic_music: The previous piano and strings have already stopped; use no non-diegetic music during this continuation.\"],\"length\":243,\"seed\":\"1002\"}]}",
+        "{\"defaults\":{\"duration_seconds\":10,\"steps\":8},\"shots\":[{\"id\":\"confessional_opening\",\"prompt\":[\"integrated_multimodal_description: The target video is in a hyper-realistic, cinematic single-take confessional style, shallow depth of field, soft moody key light on one side of the face, dark neutral background, portrait orientation.\\n[Shot 1] A tight portrait shot frames a weary 40-year-old man seated close to camera, stubble catching the light, eyes glistening as he stares just past the lens. His breath catches once before he speaks. The raw, trembling-voiced man (S1) says, <d>[English] I have to be honest with you. I left Wan. It wasn't working anymore \u2014 the consistency, the way it just... let me down when I needed it most.</d> His hand comes up, rubbing his brow, a bitter half-smile breaking through. [Shot 2] At 00:04.500, he leans in slightly, voice steadying, a flicker of guilty excitement crossing his face. He continues, <d>[English] I'm with MiniMax now. And I know how that sounds. But for the first time in a long time... I feel understood.</d> His eyes well up, lip trembling, before he lets out a short, broken laugh and looks down, shaking his head at himself.\",\"\",\"overall_soundscape: A quiet room tone hums beneath, with a single sharp intake of breath before he speaks, a soft rustle as his hand moves to his face, and a faint, choked exhale on the laugh.\",\"\",\"non_diegetic_music: A single sustained low piano note holds under the first line, joined by a soft, melancholic string swell, dropping away entirely on the final broken laugh.\"],\"length\":243,\"seed\":\"1001\"},{\"id\":\"confessional_continuation\",\"prompt\":[\"integrated_multimodal_description: [Shot 1] Hyper-realistic, cinematic portrait footage continues directly from the incoming H3 Motion Context in the same dark confessional room. Preserve the weary 40-year-old man's identity, stubble, clothing, seated position, shallow depth of field, one-sided moody key light, dark neutral background, lens, portrait framing, and the downward head movement already in progress. His broken laugh trails off without resetting. The camera holds close and pushes in with small amplitude at slow speed as he draws one controlled breath, rubs his thumb against his brow, then lifts his wet eyes back toward the lens. The same raw, trembling-voiced man (S1) says quietly: <d>[English] I guess this is me moving on.</d> His lips move naturally with only those words. He lets the silence remain, lowers his hand into his lap, and holds eye contact while the camera gradually becomes still. No cut, no new person, no duplicated face, no change of room, wardrobe, lighting direction, or screen geography.\",\"\",\"overall_soundscape: Continue the same quiet room tone across the scene boundary without a restart. The last broken exhale fades into one controlled breath, accompanied by a soft sleeve rustle and the subtle movement of his hand returning to his lap.\",\"\",\"non_diegetic_music: The previous piano and strings have already stopped; use no non-diegetic music during this continuation.\"],\"length\":243,\"seed\":\"1002\"}]}",
         "t2v_normal_demo",
         "t2v-community-confessional-v1",
         544,
@@ -1734,7 +1734,7 @@
           "links": null
         }
       ],
-      "title": "REVIEW GATE — APPROVE / EDIT+RETRY / REROLL / STOP",
+      "title": "REVIEW GATE \u2014 APPROVE / EDIT+RETRY / REROLL / STOP",
       "properties": {
         "cnr_id": "comfyui-minimaxh3-contex-loop",
         "ver": "0.3.10",
@@ -1878,7 +1878,7 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Tony Soprano — James Gandolfini (The Sopranos)",
+        "Tony Soprano \u2014 James Gandolfini (The Sopranos)",
         "(all)",
         0,
         "fixed",
@@ -1950,7 +1950,7 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Sheldon Cooper — Jim Parsons (The Big Bang Theory)",
+        "Sheldon Cooper \u2014 Jim Parsons (The Big Bang Theory)",
         "(all)",
         0,
         "fixed",
@@ -2019,7 +2019,7 @@
           "type": "STRING",
           "shape": 6,
           "links": [
-            88
+            92
           ]
         },
         {
@@ -2129,7 +2129,7 @@
         true,
         900,
         1,
-        "randomize",
+        "fixed",
         "",
         "",
         "",
@@ -2204,7 +2204,7 @@
         8,
         ""
       ],
-      "title": "APNext H3 Scenes → Contex Loop Plan",
+      "title": "APNext H3 Scenes \u2192 Contex Loop Plan",
       "color": "#332",
       "bgcolor": "#553"
     },
@@ -2274,6 +2274,51 @@
       },
       "widgets_values": [],
       "title": "H3 Prompt Preview"
+    },
+    {
+      "id": 1951,
+      "type": "H3ScenesReview",
+      "pos": [
+        -1462,
+        544
+      ],
+      "size": [
+        470,
+        420
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "scenes",
+          "type": "STRING",
+          "link": 92
+        }
+      ],
+      "outputs": [
+        {
+          "name": "scenes",
+          "type": "STRING",
+          "links": [
+            88
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "H3 Scenes Review (edit before render)",
+      "properties": {
+        "Node name for S&R": "H3ScenesReview"
+      },
+      "widgets_values": [
+        "Review (stop here and edit)",
+        ""
+      ]
     }
   ],
   "links": [
@@ -2751,7 +2796,7 @@
     ],
     [
       88,
-      1947,
+      1951,
       0,
       1948,
       0,
@@ -2778,6 +2823,14 @@
       1947,
       2,
       1950,
+      0,
+      "STRING"
+    ],
+    [
+      92,
+      1947,
+      0,
+      1951,
       0,
       "STRING"
     ]
@@ -2833,7 +2886,7 @@
     },
     {
       "id": 6,
-      "title": "T2V — PLAN + STANDARD PROMPT EDITOR",
+      "title": "T2V \u2014 PLAN + STANDARD PROMPT EDITOR",
       "bounding": [
         -704,
         480,

@@ -245,6 +245,11 @@ Sits between the per‑scene `VAE Decode` / `VAE Decode Audio` and a single `Cre
 
 For **continuity across scenes** (the last frames and audio of scene N carried into scene N+1). Converts the `scenes` / `durations` lists into the plan JSON that [ComfyUI‑MiniMaxH3‑Contex‑Loop](https://github.com/ethanfel/ComfyUI-MiniMaxH3-Contex-Loop)’s *MiniMax H3 Contex Loop Plan* node accepts on `plan_json_input` (`shots[]` with `id`, `prompt`, `duration_seconds`, `seed`, optional `prompt_prefix`, `defaults.steps`). That pack renders every scene in order with the previous tail as context and assembles one MP4. Inputs `id_prefix`, `base_seed`, `seed_mode`, `steps`, `prompt_prefix`; outputs `plan_json`, `shot_count`.
 
+### APNext H3 Scenes Review (edit before render)
+`H3ScenesReview` · in every example workflow, between the writer (or refiner) and the render
+
+The commit gate: nothing renders until the scene text has been through it. In **Review** mode (the default) a queue run fills the node's editor with the incoming `scenes` (or a single `h3_prompt`) and stops cleanly — the editor shows the same colour‑coded tags as the Prompt Preview but is fully editable, all scenes at once or one scene at a time (scope selector / ◀ ▶). Edit what you like, then queue again: the mode has flipped to **Continue** automatically, so the next run renders exactly the editor text. **▶ Continue** and **🎲 Recreate** buttons do it in one click — Recreate bumps the writer's seed and reviews a fresh draft. **Bypass** passes through untouched. Keep the `=== SCENE NN ===` markers and the scene count (the writer's `durations` / `audio_segments` stay aligned; a mismatch is padded/trimmed with a warning), and give the writer a **fixed seed** so Continue runs reuse its cached answer instead of paying for new scenes. Outputs `scenes`, `scene_count`.
+
 ### APNext H3 Resolution Planner (Crop Only)
 `H3ResolutionPlannerCropOnly` · by gabbo
 
