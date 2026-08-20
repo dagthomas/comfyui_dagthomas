@@ -773,7 +773,7 @@ function patchLinkRenderer() {
     return;
   }
   const origRender = LGC.prototype.renderLink;
-  LGC.prototype.renderLink = function (ctx, a, b, link, skip_border, flow, color, start_dir, end_dir, opts) {
+  const styledRender = function (ctx, a, b, link, skip_border, flow, color, start_dir, end_dir, opts) {
     const LG = window.LiteGraph;
     const style = wireState.style;
     if (LG && this.links_render_mode === LG.HIDDEN_LINK) return origRender.apply(this, arguments);
@@ -837,6 +837,29 @@ function patchLinkRenderer() {
     ctx.restore();
   };
 
+  // outermost pass: links that touch a selected node draw brighter (saturated
+  // version of their own colour), thicker, with a glow, and with flow dots
+  // travelling in the data direction (output → input)
+  LGC.prototype.renderLink = function (ctx, a, b, link, skip_border, flow, color, start_dir, end_dir, opts) {
+    const boost = selGlowColor(this, link, color);
+    if (!boost) return styledRender.apply(this, arguments);
+    const scale = this.ds?.scale ?? 1;
+    const savedW = this.connections_width;
+    ctx.save();
+    if (scale > 0.4) {
+      ctx.shadowColor = boost;
+      ctx.shadowBlur = 13 * Math.min(1.2, scale);
+    }
+    this.connections_width = (savedW || 3) + 1.5;
+    try {
+      return styledRender.call(this, ctx, a, b, link, skip_border,
+        selGlow.flow ? (flow || 1) : flow, boost, start_dir, end_dir, opts);
+    } finally {
+      this.connections_width = savedW;
+      ctx.restore();
+    }
+  };
+
   // prune springs / ropes whose links are gone, once per background-layer draw
   const origBack = LGC.prototype.drawBackCanvas;
   if (origBack) {
@@ -845,6 +868,7 @@ function patchLinkRenderer() {
       cable.frame++;
       if (themeState.on) { assertThemeColors(); assertChromeClass(); }
       if (sparks.on) { try { watchLinks(this); } catch (err) { console.warn("[APNext sparks] watch failed:", err); } }
+      if (selGlow.on) { try { selGlowFrame(this); } catch (err) { /* never block the draw */ } }
       const r = origBack.apply(this, arguments);
       if (rope.frame % 30 === 0) { rope.prune(); cable.prune(); }
       return r;
@@ -1172,6 +1196,95 @@ function armDragWatch() {
   overlayLoop.armed = true;
   document.addEventListener("pointerdown", () => ensureOverlayLoop(), true);
   document.addEventListener("pointermove", () => { if (dragSources(app.canvas).length) ensureOverlayLoop(); }, true);
+}
+
+// ---------------------------------------------------------------------------
+// Selection link glow: while nodes are selected, every link that touches one
+// of them draws in a much brighter, more saturated version of its own colour,
+// slightly thicker and with a soft glow — so you can see at a glance where a
+// node's data comes from and goes to. On top of that, flow dots travel along
+// the highlighted wires in the data direction (output → input). Independent
+// of the theme; works with the stock renderer and every custom wire style.
+// ---------------------------------------------------------------------------
+
+const S_SELGLOW = "APNext.Theme.SelectionGlow";
+const S_SELFLOW = "APNext.Theme.SelectionFlow";
+const selGlow = { on: true, flow: true, ids: null, raf: 0, cache: new Map() };
+
+function hslToHex(h, s, l) {
+  h = ((h % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return "#" + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join("");
+}
+
+// a link colour → its "hot" version: saturation and lightness pushed up hard.
+// Greys stay grey (pushed toward white) instead of picking up a false hue.
+function boostLinkColor(col) {
+  if (selGlow.cache.has(col)) return selGlow.cache.get(col);
+  const rgb = parseColor(col);
+  let out = col;
+  if (rgb) {
+    const [h, s, l] = rgbToHsl(...rgb);
+    out = s < 0.1
+      ? mix(col, "#ffffff", 0.5)
+      : hslToHex(h, Math.min(1, s * 1.45 + 0.2), Math.min(0.72, l * 1.2 + 0.1));
+  }
+  selGlow.cache.set(col, out);
+  return out;
+}
+
+function selectedNodeIds(canvas) {
+  const ids = new Set();
+  const sn = canvas?.selected_nodes;
+  if (sn) for (const k in sn) { const n = sn[k]; if (n?.id !== undefined) { ids.add(n.id); ids.add(String(n.id)); } }
+  const items = canvas?.selectedItems;
+  if (items instanceof Set) {
+    for (const it of items) {
+      if (it?.id !== undefined && (it.inputs || it.outputs)) { ids.add(it.id); ids.add(String(it.id)); }
+    }
+  }
+  return ids;
+}
+
+// the boosted colour when this link touches a selected node, else null
+function selGlowColor(canvas, link, color) {
+  if (!selGlow.on || !link || link.origin_id === undefined) return null;
+  const ids = selGlow.ids;
+  if (!ids || !ids.size) return null;
+  if (!ids.has(link.origin_id) && !ids.has(link.target_id)) return null;
+  const LGC = window.LGraphCanvas || canvas.constructor;
+  const base = color || link.color || LGC?.link_type_colors?.[link.type] || canvas.default_link_color || C.accent;
+  return boostLinkColor(base);
+}
+
+// once per background draw: refresh the selected-id set, and while flow dots
+// should animate keep the link layer redrawing (self-sustaining rAF that
+// stops by itself when the selection is cleared)
+function selGlowFrame(canvas) {
+  selGlow.ids = selectedNodeIds(canvas);
+  if (selGlow.flow && selGlow.ids.size && !selGlow.raf) {
+    selGlow.raf = requestAnimationFrame(() => {
+      selGlow.raf = 0;
+      if (selGlow.on && selGlow.flow && selGlow.ids?.size) app.canvas?.setDirty?.(false, true);
+    });
+  }
+}
+
+function applySelGlow(on, flowOn) {
+  if (on) patchLinkRenderer();
+  selGlow.on = !!on && wireState.patched;
+  selGlow.flow = !!flowOn;
+  if (!selGlow.on) selGlow.ids = null;
+  app.canvas?.setDirty?.(false, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -1691,6 +1804,7 @@ async function applyAll() {
     applyWires(currentWires());
     applyHighlight(settingGet(S_HIGHLIGHT) !== false);
     applySparks(settingGet(S_SPARKS) !== false);
+    applySelGlow(settingGet(S_SELGLOW) !== false, settingGet(S_SELFLOW) !== false);
     applyColorCode(settingGet(S_COLORCODE) !== false);
   } catch (e) {
     console.warn("[APNext theme] apply failed:", e);
@@ -1826,6 +1940,24 @@ app.registerExtension({
       category: ["APNext", "Canvas helpers", "Connect sparks"],
       name: "Spark burst when a link connects",
       tooltip: "A small particle burst in the link's colour at the input when a connection is made (graphgen's Sparks).",
+      type: "boolean",
+      defaultValue: true,
+      onChange: (value, old) => { if (old !== undefined) applyAll(); },
+    },
+    {
+      id: S_SELGLOW,
+      category: ["APNext", "Canvas helpers", "Selection link glow"],
+      name: "Highlight the links of selected nodes",
+      tooltip: "While one or more nodes are selected, every link connected to them is drawn brighter (a more saturated version of its own colour), thicker and with a soft glow, so you can see at a glance where the data comes from and goes to.",
+      type: "boolean",
+      defaultValue: true,
+      onChange: (value, old) => { if (old !== undefined) applyAll(); },
+    },
+    {
+      id: S_SELFLOW,
+      category: ["APNext", "Canvas helpers", "Selection flow animation"],
+      name: "Animate data flow on highlighted links",
+      tooltip: "Adds travelling dots to the highlighted links of the selected nodes, moving in the data direction (output → input). Turn off to keep the static highlight without the animation (saves redraws on big graphs).",
       type: "boolean",
       defaultValue: true,
       onChange: (value, old) => { if (old !== undefined) applyAll(); },

@@ -249,7 +249,11 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
         segments.append((start, best_end))
         start = best_end
 
-    # merge a too-short tail into its predecessor when the sum still fits
+    return _merge_short_tail(segments, total, longest, shortest), feats
+
+
+def _merge_short_tail(segments, total, longest, shortest):
+    """A tail shorter than the shortest clip is folded into its predecessor."""
     if len(segments) >= 2 and (segments[-1][1] - segments[-1][0]) < shortest:
         s0, _ = segments[-2]
         if total - s0 <= longest + 1e-6:
@@ -257,7 +261,70 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
         else:
             mid = s0 + seconds_for_frames(frames_for_seconds((total - s0) / 2))
             segments[-2:] = [(s0, mid), (mid, total)]
-    return segments, feats
+    return segments
+
+
+def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=()):
+    """
+    Lyrics-driven cut: [(start, end), ...] where (almost) every segment starts
+    where a lyric phrase starts. The song is walked front to back; each cut
+    snaps to the H3 grid duration that lands just before the first lyric line
+    at least min_seconds away, so a new scene begins right as its line begins.
+    Stretches without lyric lines cut on the music (onsets / energy changes)
+    like Auto. Needs timed lyric starts to mean anything - the caller decides
+    the fallback when none exist.
+    """
+    feats = analyse(audio)
+    total = feats["duration"]
+    choices = grid_durations(max_seconds, min_seconds)
+    longest, shortest = choices[-1], choices[0]
+    onset, novelty, times = feats["onset"], feats["novelty"], feats["times"]
+    lyric_times = sorted(t for t in lyric_times if t is not None)
+
+    def musical_cut(start):
+        best, best_end = -1e9, start + longest
+        for dur in choices:
+            end = start + dur
+            if 1e-3 < total - end < shortest:
+                continue  # would leave a stub shorter than the shortest clip
+            o, _ = _peak_near(onset, times, end, 0.18)
+            nv, _ = _peak_near(novelty, times, end, 0.35)
+            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices)
+            if score > best:
+                best, best_end = score, end
+        return best_end
+
+    segments = []
+    start = 0.0
+    while total - start > 1e-3:
+        if total - start <= longest + 1e-6:
+            segments.append((start, total))
+            break
+        # the first lyric start reachable with a valid clip length
+        target = next(
+            (lt for lt in lyric_times if start + shortest - 0.35 <= lt <= start + longest + 0.6),
+            None,
+        )
+        if target is None:
+            end = musical_cut(start)
+        else:
+            # grid duration landing as close as possible, ideally just BEFORE
+            # the line starts (cutting into a started line is heavily penalised)
+            best, end = -1e9, None
+            for dur in choices:
+                cand = start + dur
+                if 1e-3 < total - cand < shortest:
+                    continue
+                d = target - cand  # >0: cut lands before the line
+                score = -d if d >= 0 else -0.6 + 2.0 * d
+                if score > best:
+                    best, end = score, cand
+            if end is None:
+                end = musical_cut(start)
+        segments.append((start, end))
+        start = end
+
+    return _merge_short_tail(segments, total, longest, shortest), feats
 
 
 def energy_labels(feats, segments):

@@ -81,10 +81,20 @@ class H3PromptPreview:
         if isinstance(text, (list, tuple)):
             text = "\n\n".join(str(t) for t in text)
         text = "" if text is None else str(text)
-        images = [
-            (i, image_slots.get(name))
-            for i, name in enumerate(REFERENCE_IMAGE_NAMES, 1)
+        connected = [
+            (slot, image_slots.get(name))
+            for slot, name in enumerate(REFERENCE_IMAGE_NAMES, 1)
             if image_slots.get(name) is not None
         ]
+        # number by CONNECTION ORDER, not slot index - the writers and the video
+        # node label pictures <Picture 1>..<Picture N> the same way, so the
+        # thumbnail lands on the tag even when the slots have gaps
+        if connected and connected[-1][0] != len(connected):
+            used = ", ".join(f"image_{slot}" for slot, _ in connected)
+            print(
+                f"⚠️ H3 Prompt Preview: reference images have a gap ({used}); numbering "
+                f"thumbnails <Picture 1>..<Picture {len(connected)}> by connection order."
+            )
+        images = [(n, tensor) for n, (_slot, tensor) in enumerate(connected, 1)]
         thumbs = _save_thumbnails(images) if images else []
         return {"ui": {"text": [text], "thumbs": thumbs}, "result": (text,)}

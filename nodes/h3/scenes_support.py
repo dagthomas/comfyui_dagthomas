@@ -343,12 +343,8 @@ def location_summary(locks, violations):
     return f"locations: {len(violations)} anchor miss(es)"
 
 
-def continuity_repair_prompt(wardrobe_locks, wardrobe_misses, location_locks,
-                             location_misses, scene_count):
-    """
-    The one follow-up turn that asks for the full output again with wardrobe
-    and/or location anchors restored. Either half may be empty.
-    """
+def _repair_issue_parts(wardrobe_locks, wardrobe_misses, location_locks, location_misses):
+    """The failure descriptions shared by the full and the subset repair prompts."""
     parts = []
     if wardrobe_misses:
         lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in wardrobe_locks.items())
@@ -390,11 +386,40 @@ def continuity_repair_prompt(wardrobe_locks, wardrobe_misses, location_locks,
             "same colours, same LEFT/RIGHT) in the first shot of the scene, right after the "
             "place is named; later shots in that scene restate the anchors in frame."
         )
+    return parts
+
+
+def continuity_repair_prompt(wardrobe_locks, wardrobe_misses, location_locks,
+                             location_misses, scene_count):
+    """
+    The one follow-up turn that asks for the full output again with wardrobe
+    and/or location anchors restored. Either half may be empty.
+    """
+    parts = _repair_issue_parts(wardrobe_locks, wardrobe_misses, location_locks, location_misses)
     return (
         "\n\n".join(parts) + "\n"
         "Do not change the story, dialogue, timecodes, durations, shot count or anything "
         f"else. Return the COMPLETE output again in the exact same contract: the synopsis "
         f"block and all {scene_count} scene envelopes."
+    )
+
+
+def subset_repair_prompt(wardrobe_locks, wardrobe_misses, location_locks,
+                         location_misses, scene_items):
+    """
+    The repair turn for chunked runs, where re-emitting everything is too long:
+    ask for ONLY the violating scene envelopes again, same numbers and durations.
+    `scene_items` is [(scene_no, duration), ...].
+    """
+    parts = _repair_issue_parts(wardrobe_locks, wardrobe_misses, location_locks, location_misses)
+    nos = ", ".join(f"{no:02d} (duration {dur:.1f})" for no, dur in scene_items)
+    return (
+        "\n\n".join(parts) + "\n"
+        "Do not change the story, dialogue, timecodes, durations, shot count or anything "
+        f"else. Return ONLY the corrected envelopes for scenes {nos}, each in the exact "
+        "same envelope contract (`=== SCENE NN | duration: S.S ===` ... `=== END SCENE NN "
+        "===`) with its original number and duration. Do not repeat the synopsis and do "
+        "not return any other scene."
     )
 
 
@@ -449,6 +474,74 @@ def enforce_continuity(enabled, synopsis, parsed, scene_count, scene_duration,
         new_parsed,
         f"{info} | wardrobe: repaired {len(w_miss)} -> {len(w_left)} | "
         f"locations: repaired {len(l_miss)} -> {len(l_left)}",
+    )
+
+
+def enforce_continuity_chunked(enabled, synopsis, parsed, session_id, info, repair):
+    """
+    Post-check for runs written in chunks (music videos: 13-20 scenes), where a
+    full re-emit is too long to ask for: verify every scene against the synopsis
+    locks, then use ONE repair turn to re-emit only the violating scenes and
+    splice them back in by number. Returns (parsed, info).
+    """
+    w_locks = parse_wardrobe_lock(synopsis)
+    l_locks = parse_location_lock(synopsis)
+    scenes = [p for _, _, p in parsed]
+    w_miss = wardrobe_violations(scenes, w_locks)
+    l_miss = location_violations(scenes, l_locks)
+    summary = f"{wardrobe_summary(w_locks, w_miss)} | {location_summary(l_locks, l_miss)}"
+    if not enabled or (not w_miss and not l_miss) or not session_id:
+        if enabled:
+            print(f"👔 {summary}")
+        return parsed, f"{info} | {summary}"
+
+    by_no = {no: dur for no, dur, _ in parsed}
+    bad = sorted({m[0] for m in w_miss} | {m[0] for m in l_miss})
+    items = [(no, by_no[no]) for no in bad if no in by_no]
+    if not items:
+        return parsed, f"{info} | {summary}"
+    print(
+        f"👔 continuity: {len(w_miss)} wardrobe miss(es), {len(l_miss)} location miss(es) - "
+        f"asking for one repair pass on scene(s) {', '.join(f'{no:02d}' for no, _ in items)}"
+    )
+    for scene_no, shot_no, name, anchor in w_miss[:10]:
+        print(f"   ↳ scene {scene_no:02d} [Shot {shot_no}] {name}: missing `{anchor}`")
+    for scene_no, name, anchor in l_miss[:10]:
+        print(f"   ↳ scene {scene_no:02d} {name}: missing `{anchor}`")
+    try:
+        text, repair_info = repair(
+            subset_repair_prompt(w_locks, w_miss, l_locks, l_miss, items)
+        )
+        _, fixed = parse_scenes(text, items[0][1])
+    except Exception as exc:  # keep the first answer rather than fail the run
+        print(f"⚠️ continuity repair failed: {exc}")
+        return parsed, f"{info} | {summary}, repair failed"
+    wanted = {no for no, _ in items}
+    fixed_by_no = {no: p for no, _, p in fixed}
+    # only accept an answer that returned exactly (a subset of) the scenes asked
+    # for as real envelopes; the whole-text fallback of parse_scenes must not
+    # silently replace scene 1
+    if not fixed_by_no or not set(fixed_by_no) <= wanted or any(
+        "[shot" not in p.lower() for p in fixed_by_no.values()
+    ):
+        print(f"⚠️ continuity repair returned scene(s) {sorted(fixed_by_no)}; expected {sorted(wanted)} - discarded")
+        return parsed, f"{info} | {summary}, repair discarded"
+    out = [
+        (no, dur, fixed_by_no.get(no, p) if no in wanted else p)
+        for no, dur, p in parsed
+    ]
+    new_scenes = [p for _, _, p in out]
+    w_left = wardrobe_violations(new_scenes, w_locks)
+    l_left = location_violations(new_scenes, l_locks)
+    print(
+        f"👔 after repair: wardrobe {len(w_miss)} -> {len(w_left)}, "
+        f"locations {len(l_miss)} -> {len(l_left)} miss(es) "
+        f"({len(fixed_by_no)} scene(s) re-emitted) | {repair_info}"
+    )
+    return out, (
+        f"{info} | wardrobe: repaired {len(w_miss)} -> {len(w_left)} | "
+        f"locations: repaired {len(l_miss)} -> {len(l_left)} "
+        f"({len(fixed_by_no)} scene(s) re-emitted)"
     )
 
 

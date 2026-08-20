@@ -55,6 +55,7 @@ from .music_support import (
     lyrics_for_segment,
     parse_lyrics,
     place_untimed_lyrics,
+    segment_by_lyrics,
     segment_song,
     segment_table,
     slice_audio,
@@ -64,7 +65,10 @@ from .scenes_support import (
     WARDROBE_TOOLTIP,
     LOCATIONS_TOOLTIP,
     enforce_continuity,
+    enforce_continuity_chunked,
     locations_directive,
+    parse_location_lock,
+    parse_wardrobe_lock,
     wardrobe_directive,
     envelope_contract,
     parse_scenes,
@@ -197,13 +201,31 @@ class H3ClaudeCodeMusicVideoWriter:
         optional.update(local_llm_inputs())
         optional.update(context_inputs())
         optional.update(reference_image_inputs())
+        # appended LAST so saved workflows keep their widget positions
+        optional["scenes_from_lyrics"] = ("BOOLEAN", {
+            "default": False,
+            "tooltip": (
+                "Build the whole video from the lyrics: the song is cut where lyric phrases "
+                "start (needs timestamped lyrics like `[0:15] line`; without timestamps it "
+                "falls back to the segment mode above) and every scene's imagery is written "
+                "from its lyric lines - the pictures stage what the words say, while the "
+                "concept supplies style, palette and motifs. Instrumental stretches still "
+                "cut on the music."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
     _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
+    # clip_starts sits LAST (after the image passthroughs) so saved workflows
+    # keep their link indices: each piece's start second in the master song,
+    # for masked-audio music-video chains (clip_start_seconds on a song-audio
+    # latent-context node) where the song slice is written into the H3 audio
+    # latent instead of being passed as ref_audio.
     RETURN_TYPES = (
         ("STRING", "FLOAT", "INT", "AUDIO", "STRING", "STRING", "STRING", "STRING", "INT", "FLOAT", "STRING", "STRING")
         + _IMAGE_OUTPUT_TYPES
+        + ("FLOAT",)
     )
     RETURN_NAMES = (
         "scenes",
@@ -218,8 +240,8 @@ class H3ClaudeCodeMusicVideoWriter:
         "song_seconds",
         "session_id",
         "info",
-    ) + _IMAGE_OUTPUT_NAMES
-    OUTPUT_IS_LIST = (True, True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES))
+    ) + _IMAGE_OUTPUT_NAMES + ("clip_starts",)
+    OUTPUT_IS_LIST = (True, True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES)) + (True,)
     FUNCTION = "write_video"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -272,8 +294,12 @@ class H3ClaudeCodeMusicVideoWriter:
             "is `N/A (the song is <Audio 1>)`. Never invent other music, ambience or effects.\n"
             "- LYRICS: the lines listed for a piece are sung at the moments given. In "
             "Performance mode the singer visibly sings them on camera, lip-synced: write "
-            "`<Subject 1> sings <d>[Language] exact lyric line</d> in sync with <Audio 1>` at "
-            "the right timestamp, with the exact words, once per line, no paraphrase. In "
+            "`<Subject 1> (S1) keeps visibly singing with readable mouth and jaw movement in "
+            "exact sync with <Audio 1>: <d>[Language] exact lyric line</d>` at the right "
+            "timestamp, with the exact words, once per line, no paraphrase. Between lyric "
+            "lines the performer keeps performing - breathing, phrasing, moving on the beat - "
+            "never an idle closed mouth while the vocal is audible, and a sung line is never "
+            "interrupted by a cut. In "
             "Narrative mode nobody sings on camera - the lyric is audible from <Audio 1> and "
             "the picture answers it (`as <Audio 1> reaches <d>[Language] line</d>, ...`). "
             "Mixed mode alternates. Instrumental pieces get pure visuals cut to the beat.\n"
@@ -311,6 +337,7 @@ class H3ClaudeCodeMusicVideoWriter:
         first=1,
         last=None,
         total_seconds=0.0,
+        lyrics_driven=False,
     ):
         last = last or len(segments)
         n = len(segments)
@@ -355,12 +382,32 @@ class H3ClaudeCodeMusicVideoWriter:
                 "Start directly with the scene envelopes; do not repeat the synopsis."
             )
         lines.append(f"- Performance mode: {performance_mode}.")
+        if lyrics_driven:
+            lines.append(
+                "- LYRICS DRIVE THE VIDEO: the pieces are cut where lyric phrases start, and "
+                "every scene's imagery is built from its lyric lines - stage, illustrate or "
+                "answer what the words say at that moment, so someone watching without sound "
+                "could still follow the words. The CONCEPT supplies the style, palette, "
+                "world and recurring motifs, but the moment-to-moment content of each scene "
+                "comes from its lines. Instrumental pieces bridge between the lyric images "
+                "using the motifs."
+            )
+        if performance_mode.startswith("Performance"):
+            lines.append(
+                "- Lip-sync: in every scene with sung lines the singer is on camera facing "
+                "the lens (or in a clear profile) with the mouth fully visible - no hands, "
+                "microphones, hair, shadows or props covering it - and readable mouth and "
+                "jaw movement locked to <Audio 1> from the first frame of the line to the "
+                "last. Never cut away from the singer in the middle of a sung line."
+            )
         if shots_per_scene != AUTO:
             lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
         else:
             lines.append(
                 "- Shots per scene: your call, cut to the music - 1-2 in quiet pieces, 2-4 in "
-                "loud and peak pieces, each cut on a beat or a lyric."
+                "loud and peak pieces, each cut on a beat or a lyric. In Performance mode "
+                "prefer ONE continuous shot for a piece whose lyric lines run through it: "
+                "every cut risks breaking the lip-sync."
             )
         if visual_style == AUTO:
             lines.append(
@@ -382,8 +429,12 @@ class H3ClaudeCodeMusicVideoWriter:
                 f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; the "
                 "video model receives the same pictures under the same labels in every scene. "
                 "Decide what each shows (use the notes below); bind pictured performers to "
-                "their <Picture k> in subject_definitions and take their wardrobe lock from "
-                "the picture."
+                "their <Picture k> in subject_definitions"
+                + (" and take their wardrobe lock from the picture."
+                   if not (wardrobe or "").strip() else
+                   "; the picture fixes their face, hair and build, while the written "
+                   "wardrobe lock below fixes the clothes - where they differ, the written "
+                   "lock wins.")
             )
             notes = (image_notes or "").strip()
             if notes:
@@ -391,6 +442,14 @@ class H3ClaudeCodeMusicVideoWriter:
                 lines.extend(f"    {n_.strip()}" for n_ in notes.splitlines() if n_.strip())
         lines.append(f"- {wardrobe_directive(wardrobe)}")
         lines.append(f"- {locations_directive(locations)}")
+        lines.append(
+            "- The look is part of the brief: every appearance detail in the CAST lines and "
+            "the CONCEPT (hair, clothing, accessories, make-up, styling) is binding. Build "
+            "each performer's wardrobe lock from those exact details FIRST, quoting them "
+            "word-for-word as anchors, and invent anchors only for what the brief leaves "
+            "open. Never restyle a described performer and never contradict the concept's "
+            "look; where the concept and an invented idea differ, the concept wins."
+        )
         lines.append(
             "- Continuity: the same performer identity, wardrobe, palette and style in every "
             "scene; recurring locations restate their anchors; the chorus pieces share one "
@@ -443,6 +502,7 @@ class H3ClaudeCodeMusicVideoWriter:
         resume_session_id="",
         working_dir="",
         llm=None,
+        scenes_from_lyrics=False,
         **cast_slots,
     ):
         passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
@@ -465,9 +525,21 @@ class H3ClaudeCodeMusicVideoWriter:
         # --- cut the song -------------------------------------------------
         parsed_lyrics = parse_lyrics(lyrics)
         timed = [t for t, _ in parsed_lyrics if t is not None]
-        segments, feats = segment_song(
-            audio, max_segment_seconds, min_segment_seconds, segment_mode, lyric_times=timed,
-        )
+        lyrics_driven = bool(scenes_from_lyrics)
+        if lyrics_driven and timed:
+            segments, feats = segment_by_lyrics(
+                audio, max_segment_seconds, min_segment_seconds, lyric_times=timed,
+            )
+        else:
+            if lyrics_driven and not timed:
+                print(
+                    "⚠️ H3 Music Video Writer: scenes_from_lyrics is on but no lyric line "
+                    "carries a timestamp (`[0:15] line`); cutting with the segment mode "
+                    "instead. The scenes are still written from their lyric lines."
+                )
+            segments, feats = segment_song(
+                audio, max_segment_seconds, min_segment_seconds, segment_mode, lyric_times=timed,
+            )
         total_seconds = feats["duration"]
         placed = place_untimed_lyrics(parsed_lyrics, total_seconds)
         labels = energy_labels(feats, segments)
@@ -476,6 +548,7 @@ class H3ClaudeCodeMusicVideoWriter:
             for i, (s, e) in enumerate(segments)
         ]
         durations = [seconds_for(fr) for fr in frames]
+        clip_starts = [float(s) for s, _ in segments]
         audio_segments = [slice_audio(audio, s, e, fr) for (s, e), fr in zip(segments, frames)]
         table = segment_table(segments, labels, frames, placed)
         n = len(segments)
@@ -492,7 +565,7 @@ class H3ClaudeCodeMusicVideoWriter:
             print(
                 f"🎬 H3 Music Video Writer | {len(cast)} cast | {n} scene(s) | "
                 f"context: {context_summary(context_entries)} | {len(references)} reference image(s) | "
-                f"{performance_mode.split(' ')[0].lower()} | wildness {wildness} | "
+                f"{performance_mode.split(' ')[0].lower()}{' | lyrics-driven' if lyrics_driven else ''} | wildness {wildness} | "
                 f"research {'on' if research else 'off'} | director {'on' if director else 'off'} | seed {current_seed}"
             )
 
@@ -510,6 +583,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     directions_with_research(extra_instructions, research), rng,
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
                     image_notes=image_notes, first=first, last=last, total_seconds=total_seconds,
+                    lyrics_driven=lyrics_driven,
                 )
                 if first == 1:
                     user_prompt = with_context(user_prompt, context_text)
@@ -524,6 +598,19 @@ class H3ClaudeCodeMusicVideoWriter:
                 chunk_synopsis, chunk = parse_scenes(text, durations[first - 1])
                 if first == 1:
                     synopsis = chunk_synopsis
+                    # restate the locks the model just fixed in every follow-up
+                    # chunk's prompt, so later scenes copy the same anchors
+                    # verbatim instead of drifting from memory
+                    w_locks = parse_wardrobe_lock(synopsis)
+                    if w_locks:
+                        wardrobe = merge_wardrobe(
+                            wardrobe, [f"{k}: {', '.join(v)}" for k, v in w_locks.items()]
+                        )
+                    l_locks = parse_location_lock(synopsis)
+                    if l_locks:
+                        locations = merge_wardrobe(
+                            locations, [f"{k}: {', '.join(v)}" for k, v in l_locks.items()]
+                        )
                 if not chunk:
                     raise ValueError(f"the model returned no scenes for pieces {first:02d}-{last:02d}.")
                 got = [(no, d, p) for no, d, p in chunk]
@@ -551,17 +638,12 @@ class H3ClaudeCodeMusicVideoWriter:
                 synopsis, parsed, info = enforce_continuity(
                     enforce_wardrobe, synopsis, parsed, n, durations[0], session_id, info, repair,
                 )
-            elif enforce_wardrobe:
-                # multi-chunk runs: verify and report, but a full re-emit is too long to ask for
-                from .scenes_support import (
-                    location_summary, location_violations, parse_location_lock,
-                    parse_wardrobe_lock, wardrobe_summary, wardrobe_violations,
+            else:
+                # multi-chunk runs: a full re-emit is too long, so one repair
+                # turn re-emits only the violating scenes and splices them in
+                parsed, info = enforce_continuity_chunked(
+                    enforce_wardrobe, synopsis, parsed, session_id, info, repair,
                 )
-                sc = [p for _, _, p in parsed]
-                wl, ll = parse_wardrobe_lock(synopsis), parse_location_lock(synopsis)
-                wm, lm = wardrobe_violations(sc, wl), location_violations(sc, ll)
-                info += f" | {wardrobe_summary(wl, wm)} | {location_summary(ll, lm)} (checked, not repaired: {n} scenes)"
-                print(f"👔 {wardrobe_summary(wl, wm)} | {location_summary(ll, lm)}")
 
             # pad / trim to exactly one scene per piece so the lists stay aligned
             scenes = [p for _, _, p in parsed][:n]
@@ -572,7 +654,7 @@ class H3ClaudeCodeMusicVideoWriter:
             return (
                 scenes, durations, frames, audio_segments, table, scenes_text, synopsis,
                 cast_text, n, float(total_seconds), session_id, info,
-            ) + passthrough
+            ) + passthrough + (clip_starts,)
 
         except Exception as exc:
             if is_interrupt(exc):
@@ -584,7 +666,7 @@ class H3ClaudeCodeMusicVideoWriter:
             return (
                 [message] * n, durations, frames, audio_segments, table, message, "", cast_text,
                 n, float(total_seconds), "", "error",
-            ) + passthrough
+            ) + passthrough + (clip_starts,)
 
 
 def seconds_for(frames):

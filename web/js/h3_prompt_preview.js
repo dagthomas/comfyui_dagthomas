@@ -89,6 +89,13 @@ const CSS = `
   user-select: none;
 }
 .apnext-h3-thumbs figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.apnext-h3-hint { color: #9a9590; font-style: italic; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 10.5px; align-self: center; }
+.apnext-h3-thumbs button {
+  border: 1px solid #463f33; background: #1e1c17; color: #e8e4df; border-radius: 4px;
+  padding: 2px 9px; font-size: 11px; cursor: pointer;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; align-self: center;
+}
+.apnext-h3-thumbs button:hover { background: #2c2820; }
 .apnext-h3-thumbs img {
   display: block; max-height: 72px; max-width: 120px; border-radius: 4px;
   border: 1px solid rgba(136,169,192,0.55); background: #000; cursor: zoom-in;
@@ -342,6 +349,54 @@ function showZoom(src, label) {
   document.body.appendChild(z);
 }
 
+// ---------------------------------------------------------------------------
+// Image-input wiring helpers: the thumbnails can only show images that are
+// connected to THIS node's image_1..image_9 inputs. When none are, the strip
+// says so and offers to pull them from the node that feeds `text` (the
+// writers pass their reference images through under the same names).
+// ---------------------------------------------------------------------------
+
+function imageInputs(node) {
+  return (node?.inputs || []).filter((i) => /^image_\d+$/.test(i?.name || ""));
+}
+
+function hasImageLinks(node) {
+  return imageInputs(node).some((i) => i.link != null);
+}
+
+function graphLink(graph, id) {
+  if (id == null || !graph) return null;
+  const links = graph.links ?? graph._links;
+  if (!links) return null;
+  return typeof links.get === "function" ? links.get(id) ?? links.get(Number(id)) : links[id];
+}
+
+function textSourceWithImages(node) {
+  try {
+    const textIn = (node.inputs || []).find((i) => i?.name === "text");
+    const link = graphLink(node.graph, textIn?.link);
+    const src = link ? node.graph?.getNodeById?.(link.origin_id) : null;
+    if (!src) return null;
+    return (src.outputs || []).some((o) => /^image_\d+$/.test(o?.name || "")) ? src : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function autoWireImages(node, src) {
+  let made = 0;
+  for (const inp of imageInputs(node)) {
+    if (inp.link != null) continue;
+    const outIdx = (src.outputs || []).findIndex((o) => o?.name === inp.name);
+    if (outIdx < 0) continue;
+    try {
+      if (src.connect(outIdx, node, node.inputs.indexOf(inp))) made++;
+    } catch (e) { /* incompatible slot: skip */ }
+  }
+  node.graph?.setDirty?.(true, true);
+  return made;
+}
+
 function stats(text) {
   const count = (re) => (text.match(re) || []).length;
   const uniq = (re) => new Set((text.match(re) || []).map((s) => s.toLowerCase())).size;
@@ -471,6 +526,13 @@ function buildPanel(node) {
     showZoom(img.src, `Picture ${img.dataset.h3Pic}`);
   });
   root.addEventListener("keydown", (e) => e.stopPropagation());
+  // a thumb whose temp file is gone (ComfyUI restarted) hides instead of
+  // showing a broken-image icon (error events don't bubble - capture them)
+  root.addEventListener(
+    "error",
+    (e) => { if (e.target?.tagName === "IMG") e.target.style.display = "none"; },
+    true
+  );
 
   let current = "";
   let thumbs = new Map(); // picture index -> {url, ...}
@@ -479,10 +541,43 @@ function buildPanel(node) {
   const renderStrip = () => {
     strip.innerHTML = "";
     const on = showThumbs && thumbs.size > 0;
-    strip.style.display = on ? "" : "none";
     thumbBtn.classList.toggle("apnext-on", showThumbs);
     thumbBtn.textContent = showThumbs ? "Thumbs ✓" : "Thumbs";
-    if (!on) return;
+    if (!on) {
+      // say WHY there is nothing to show instead of hiding silently
+      if (showThumbs && node && !hasImageLinks(node)) {
+        strip.style.display = "";
+        const hint = document.createElement("span");
+        hint.className = "apnext-h3-hint";
+        hint.textContent =
+          "No images connected - thumbnails show the images wired into this node's image_1..image_9 inputs.";
+        strip.appendChild(hint);
+        const src = textSourceWithImages(node);
+        if (src) {
+          const wire = document.createElement("button");
+          wire.textContent = `Connect from ${src.title || src.type}`;
+          wire.title =
+            "Connect that node's image_N pass-through outputs to this node's image_N inputs, then run the graph once to load the thumbnails.";
+          wire.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const made = autoWireImages(node, src);
+            wire.textContent = made ? `Connected ${made} - run the graph to load` : "Nothing to connect";
+          });
+          strip.appendChild(wire);
+        }
+      } else if (showThumbs && node && current.trim()) {
+        strip.style.display = "";
+        const hint = document.createElement("span");
+        hint.className = "apnext-h3-hint";
+        hint.textContent = "Images connected - run the graph once to generate the thumbnails.";
+        strip.appendChild(hint);
+      } else {
+        strip.style.display = "none";
+      }
+      return;
+    }
+    strip.style.display = "";
     const used = new Set((current.match(/<Picture\s*(\d+)>/gi) || []).map((m) => Number(m.replace(/\D/g, ""))));
     for (const [n, t] of [...thumbs.entries()].sort((a, b) => a[0] - b[0])) {
       const fig = document.createElement("figure");
@@ -554,7 +649,10 @@ function buildPanel(node) {
   });
 
   setText("");
-  return { root, setText, getText: () => current, setThumbs, setShowThumbs, getShowThumbs: () => showThumbs };
+  return {
+    root, setText, getText: () => current, setThumbs, setShowThumbs,
+    getShowThumbs: () => showThumbs, refresh: render,
+  };
 }
 
 app.registerExtension({
@@ -580,6 +678,13 @@ app.registerExtension({
       if (this.properties && typeof this.properties.h3_show_thumbs === "boolean") {
         panel.setShowThumbs(this.properties.h3_show_thumbs);
       }
+      // keep the strip's connect-hint current when links change
+      const onConnectionsChange = this.onConnectionsChange;
+      this.onConnectionsChange = function () {
+        const rr = onConnectionsChange?.apply(this, arguments);
+        this._h3Panel?.refresh?.();
+        return rr;
+      };
 
       const size = this.computeSize();
       this.setSize([Math.max(size[0], 460), Math.max(size[1], 320)]);
@@ -591,8 +696,13 @@ app.registerExtension({
       onExecuted?.apply(this, arguments);
       const t = message?.text;
       const text = Array.isArray(t) ? t.join("\n\n") : t ?? "";
-      this._h3Panel?.setThumbs(Array.isArray(message?.thumbs) ? message.thumbs : []);
+      const thumbs = Array.isArray(message?.thumbs) ? message.thumbs : [];
+      this._h3Panel?.setThumbs(thumbs);
       this._h3Panel?.setText(text);
+      // keep the thumb entries on the node so a page reload (or a cached run,
+      // which fires no execution message) still shows them
+      this.properties = this.properties || {};
+      this.properties.h3_thumbs = thumbs;
       // keep the serialized widget value in sync so it survives reload
       const w = this.widgets?.find((x) => x.name === "h3_preview");
       if (w) w.value = text;
@@ -605,6 +715,9 @@ app.registerExtension({
       const w = this.widgets?.find((x) => x.name === "h3_preview");
       if (this.properties && typeof this.properties.h3_show_thumbs === "boolean") {
         this._h3Panel?.setShowThumbs(this.properties.h3_show_thumbs);
+      }
+      if (Array.isArray(this.properties?.h3_thumbs) && this.properties.h3_thumbs.length) {
+        this._h3Panel?.setThumbs(this.properties.h3_thumbs);
       }
       if (w && typeof w.value === "string") this._h3Panel?.setText(w.value);
     };
