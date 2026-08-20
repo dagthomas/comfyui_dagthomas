@@ -19,6 +19,7 @@
 # Works with list outputs (scenes from the multi-scene writers) and with a
 # single h3_prompt string alike.
 
+import hashlib
 import re
 
 from ...utils.constants import CUSTOM_CATEGORY
@@ -39,9 +40,19 @@ _HEADER = (
     "# Keep the SCENE markers and the scene count (durations stay aligned).\n"
 )
 
+_FP_RE = re.compile(r"#\s*source-fingerprint:\s*([0-9a-f]+)", re.IGNORECASE)
+
+
+def _fingerprint(scenes):
+    return hashlib.sha1("\x1e".join(scenes).encode("utf-8", "replace")).hexdigest()[:12]
+
 
 def serialize_scenes(scenes):
-    parts = [_HEADER]
+    parts = [
+        _HEADER
+        + f"# source-fingerprint: {_fingerprint(scenes)} (leave this line alone - it lets the\n"
+        "# node detect when the writer's scenes changed and re-review automatically)\n"
+    ]
     for i, s in enumerate(scenes, 1):
         parts.append(f"=== SCENE {i:02d} ===\n{(s or '').strip()}\n=== END SCENE {i:02d} ===\n")
     return "\n".join(parts)
@@ -87,7 +98,10 @@ class H3ScenesReview:
                     "tooltip": (
                         "The reviewed scene text, one === SCENE NN === envelope per scene. "
                         "Filled automatically by a Review run; edit freely. Empty = pass "
-                        "the incoming scenes through unchanged."
+                        "the incoming scenes through unchanged. The source-fingerprint line "
+                        "in the header lets the node detect when the writer's scenes changed "
+                        "upstream (new cast / direction / seed) - it then re-reviews with the "
+                        "fresh scenes instead of rendering the stale editor text."
                     ),
                 }),
             },
@@ -122,6 +136,20 @@ class H3ScenesReview:
 
         if mode == MODE_BYPASS:
             return (scenes, len(scenes))
+
+        # Continue with an editor that was filled from DIFFERENT incoming
+        # scenes (the cast, direction, lyrics or seed changed upstream since
+        # the review): the edits are for stale data - re-review with the
+        # fresh scenes instead of silently rendering the old text.
+        if mode == MODE_CONTINUE and edited.strip() and scenes:
+            m = _FP_RE.search(edited)
+            if m and m.group(1) != _fingerprint(scenes):
+                print(
+                    "♻️ H3 Scenes Review: the incoming scenes changed since the editor was "
+                    "filled (new cast / direction / seed upstream). Re-reviewing with the "
+                    "fresh scenes - the previous edits belonged to the old data."
+                )
+                mode = MODE_REVIEW
 
         if mode == MODE_REVIEW:
             text = serialize_scenes(scenes)

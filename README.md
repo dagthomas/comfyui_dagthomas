@@ -1256,3 +1256,13 @@ MIT License
 ## 🙏 Acknowledgments
 
 Built for the ComfyUI community. Special thanks to all contributors and users providing feedback.
+
+Shoutout to [**malcolmrey**](https://huggingface.co/malcolmrey) for the crossover ideas and for finding valid characters — see his [various dataset](https://huggingface.co/datasets/malcolmrey/various) on Hugging Face. The H3 Crossover Writer and the character casting owe him a beer. 🍻
+
+The example workflows stand on these excellent node packs:
+
+- [**ComfyUI-H3-Motion-Context-MultiRef**](https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef) by **seitanism** — the masked-audio latent technique behind the `h3_music_video_masked_audio` workflow (the song written into the H3 audio latent and protected from denoising, for structural lip-sync).
+- [**audio-separation-nodes-comfyui**](https://github.com/christian-byrne/audio-separation-nodes-comfyui) by **christian-byrne** — the vocal-stem separation feeding that same workflow.
+- [**Nvidia RTX Nodes**](https://github.com/Comfy-Org/Nvidia_RTX_Nodes_ComfyUI) by **Comfy-Org / NVIDIA** — the RTX Video Super Resolution finishing pass used across the example workflows.
+- [**ComfyUI-MiniMaxH3-Contex-Loop**](https://github.com/ethanfel/ComfyUI-MiniMaxH3-Contex-Loop) by **ethanfel** — the continuity-chain renderer targeted by the `h3_crossover_contex_chain` workflow.
+- [**dagre**](https://github.com/dagrejs/dagre) (MIT) — vendored for the canvas auto-layout tools.

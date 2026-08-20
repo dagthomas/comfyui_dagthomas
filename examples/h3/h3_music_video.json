@@ -1,15 +1,15 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 165,
-  "last_link_id": 326,
+  "last_node_id": 167,
+  "last_link_id": 328,
   "nodes": [
     {
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5270
+        -1490.0,
+        5190.3
       ],
       "size": [
         640,
@@ -50,8 +50,8 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5400
+        -1490.0,
+        5330.3
       ],
       "size": [
         650,
@@ -92,8 +92,8 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260,
-        5190
+        -260.0,
+        5200.0
       ],
       "size": [
         370,
@@ -126,8 +126,8 @@
       "id": 126,
       "type": "BasicGuider",
       "pos": [
-        -260,
-        5080
+        -260.0,
+        5070.0
       ],
       "size": [
         360,
@@ -165,8 +165,8 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490,
-        5090
+        -1490.0,
+        5000.3
       ],
       "size": [
         640,
@@ -210,8 +210,8 @@
       "id": 129,
       "type": "RandomNoise",
       "pos": [
-        -260,
-        4940
+        -260.0,
+        4910.0
       ],
       "size": [
         360,
@@ -246,8 +246,8 @@
       "id": 136,
       "type": "MiniMaxH3ReferenceToVideo",
       "pos": [
-        -750,
-        4940
+        -750.0,
+        4940.0
       ],
       "size": [
         410,
@@ -378,8 +378,8 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490,
-        4940
+        -1490.0,
+        4840.3
       ],
       "size": [
         640,
@@ -421,8 +421,8 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1053.7001484700845,
-        4487.1141936418935
+        -1053.7,
+        4487.1
       ],
       "size": [
         270,
@@ -463,8 +463,8 @@
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -260,
-        5310
+        -260.0,
+        5340.0
       ],
       "size": [
         370,
@@ -494,7 +494,7 @@
       },
       "widgets_values": [
         "simple",
-        25,
+        14,
         1
       ],
       "widgets_values_named": {
@@ -507,8 +507,8 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -726.0345247058672,
-        4488.181523720697
+        -726.0,
+        4488.2
       ],
       "size": [
         425,
@@ -564,8 +564,8 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1486.7689789589474,
-        4918.16530598828
+        1486.8,
+        4918.2
       ],
       "size": [
         1458.46875,
@@ -606,8 +606,8 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1153.3203937926853,
-        4918.833697770201
+        1163.3,
+        4918.8
       ],
       "size": [
         270,
@@ -620,7 +620,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 317
+          "link": 328
         },
         {
           "name": "audio",
@@ -654,8 +654,8 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        158.03185488963769,
-        5096.948269315885
+        158.0,
+        5096.9
       ],
       "size": [
         230,
@@ -714,8 +714,8 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        822.9405035967076,
-        5106.377964494297
+        822.9,
+        5124.7
       ],
       "size": [
         230,
@@ -755,8 +755,8 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        474.98008590661334,
-        4919.442328787373
+        475.0,
+        4919.4
       ],
       "size": [
         230,
@@ -796,8 +796,8 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1480,
-        5610
+        -1480.0,
+        5864.3
       ],
       "size": [
         270,
@@ -845,8 +845,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -425,
-        5615
+        -41.2,
+        5615.0
       ],
       "size": [
         847,
@@ -890,8 +890,8 @@
       "id": 157,
       "type": "H3Characters",
       "pos": [
-        -1490,
-        5600
+        -1490.0,
+        5664.3
       ],
       "size": [
         330,
@@ -962,8 +962,8 @@
       "id": 161,
       "type": "MarkdownNote",
       "pos": [
-        -1490,
-        6160
+        -1851.2,
+        6160.0
       ],
       "size": [
         700,
@@ -988,8 +988,8 @@
       "id": 162,
       "type": "H3ScenesJoin",
       "pos": [
-        833.3203937926853,
-        4918.833697770201
+        823.3,
+        4904.7
       ],
       "size": [
         300,
@@ -1057,8 +1057,8 @@
       "id": 163,
       "type": "H3ClaudeCodeMusicVideoWriter",
       "pos": [
-        -1110,
-        5600
+        -1111.2,
+        5600.0
       ],
       "size": [
         520,
@@ -1264,8 +1264,8 @@
       "id": 164,
       "type": "LoadAudio",
       "pos": [
-        -1490,
-        5450
+        -1490.0,
+        5470.3
       ],
       "size": [
         315,
@@ -1299,8 +1299,8 @@
       "id": 165,
       "type": "H3ScenesReview",
       "pos": [
-        -530,
-        5600
+        -551.2,
+        5600.0
       ],
       "size": [
         470,
@@ -1338,6 +1338,89 @@
       "widgets_values": [
         "Review (stop here and edit)",
         ""
+      ]
+    },
+    {
+      "id": 166,
+      "type": "ImageScale",
+      "pos": [
+        455.8,
+        4718.8
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 317
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            327
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Fix H3 528px \u2192 960\u00d7540",
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "bilinear",
+        960,
+        540,
+        "disabled"
+      ]
+    },
+    {
+      "id": 167,
+      "type": "RTXVideoSuperResolution",
+      "pos": [
+        810.8,
+        4714.7
+      ],
+      "size": [
+        315,
+        120
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 327
+        }
+      ],
+      "outputs": [
+        {
+          "name": "upscaled_images",
+          "type": "IMAGE",
+          "links": [
+            328
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "RTX VSR 2\u00d7 \u2192 1920\u00d71080",
+      "properties": {
+        "Node name for S&R": "RTXVideoSuperResolution"
+      },
+      "widgets_values": [
+        "scale by multiplier",
+        2.0,
+        "HIGH"
       ]
     }
   ],
@@ -1522,7 +1605,7 @@
       317,
       162,
       0,
-      146,
+      166,
       0,
       "IMAGE"
     ],
@@ -1597,6 +1680,22 @@
       165,
       0,
       "STRING"
+    ],
+    [
+      327,
+      166,
+      0,
+      167,
+      0,
+      "IMAGE"
+    ],
+    [
+      328,
+      167,
+      0,
+      146,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [
@@ -1604,10 +1703,10 @@
       "id": 1,
       "title": "Models",
       "bounding": [
-        -1520,
-        4840,
-        700,
-        670
+        -1506.0,
+        4766.3,
+        682.0,
+        844.0
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1616,10 +1715,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -280,
-        4840,
-        690,
-        670
+        -276.0,
+        4836.0,
+        680.0,
+        650.0
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1628,10 +1727,10 @@
       "id": 3,
       "title": "Conditioning",
       "bounding": [
-        -790,
-        4840,
-        480,
-        670
+        -766.0,
+        4866.0,
+        442.0,
+        444.0
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1640,10 +1739,10 @@
       "id": 4,
       "title": "Decoding and create video",
       "bounding": [
-        440,
-        4840,
-        670,
-        670
+        459.0,
+        4830.7,
+        680.3,
+        370.0
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1652,10 +1751,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1520,
-        5540,
-        1930,
-        900
+        -1867.2,
+        5526.0,
+        2689.0,
+        1270.0
       ],
       "color": "#3f789e",
       "flags": {}

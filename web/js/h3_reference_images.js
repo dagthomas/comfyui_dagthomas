@@ -34,6 +34,21 @@ function outputHasLinks(output) {
   return Array.isArray(output.links) && output.links.length > 0;
 }
 
+function imageOutputsAreTail(node) {
+  // The image outputs may only be grown/trimmed while they are the LAST
+  // outputs of the node. The server addresses outputs by slot index, so
+  // removing an image output that sits before a later non-image output
+  // (e.g. the Music Video Writer's `clip_starts`) would shift that output's
+  // index and silently re-point its links at an IMAGE slot.
+  const outs = node.outputs || [];
+  let sawImage = false;
+  for (const o of outs) {
+    if (/^image_\d+$/.test(o?.name || "")) sawImage = true;
+    else if (sawImage) return false;
+  }
+  return true;
+}
+
 function syncImageSlots(node) {
   if (!node || node._apnextSyncing) return;
   node._apnextSyncing = true;
@@ -49,24 +64,27 @@ function syncImageSlots(node) {
       if (idx >= 0 && outputHasLinks(node.outputs[idx])) highest = Math.max(highest, i);
     }
     const wanted = Math.min(MAX_IMAGES, highest + 1);
+    const manageOutputs = node._apnextImageOutputs && imageOutputsAreTail(node);
 
     // Sockets 1..wanted must exist. Adding appends at the tail; the image
-    // sockets are declared last, so numeric order is preserved.
+    // sockets are declared last among the sockets, so numeric order holds.
     const rows = () => Math.max((node.inputs || []).length, (node.outputs || []).length);
     const rowsBefore = rows();
     let added = false;
     let removed = false;
     for (let i = 1; i <= wanted; i++) {
       if (findInput(node, i) < 0) { node.addInput(slotName(i), "IMAGE"); added = true; }
-      if (node._apnextImageOutputs && findOutput(node, i) < 0) { node.addOutput(slotName(i), "IMAGE"); added = true; }
+      if (manageOutputs && findOutput(node, i) < 0) { node.addOutput(slotName(i), "IMAGE"); added = true; }
     }
 
     // Trailing sockets past the spare go, but never one that carries a link.
     for (let i = MAX_IMAGES; i > wanted; i--) {
       const inIdx = findInput(node, i);
       if (inIdx >= 0 && node.inputs[inIdx].link == null) { node.removeInput(inIdx); removed = true; }
-      const outIdx = findOutput(node, i);
-      if (outIdx >= 0 && !outputHasLinks(node.outputs[outIdx])) { node.removeOutput(outIdx); removed = true; }
+      if (manageOutputs) {
+        const outIdx = findOutput(node, i);
+        if (outIdx >= 0 && !outputHasLinks(node.outputs[outIdx])) { node.removeOutput(outIdx); removed = true; }
+      }
     }
 
     if (added || removed) {

@@ -16,6 +16,10 @@ const STYLE_ID = "apnext-h3-preview-style";
 
 const CSS = `
 .apnext-h3 {
+  /* the panel is deliberately dark in BOTH ComfyUI themes; color-scheme keeps
+     the UA-rendered parts (scrollbars, select popups, form controls) dark too,
+     so nothing glares in light mode */
+  color-scheme: dark;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -105,7 +109,12 @@ const CSS = `
   display: inline-block; vertical-align: middle; height: 22px; width: auto; max-width: 40px;
   border-radius: 3px; border: 1px solid rgba(136,169,192,0.55); margin: -3px 2px -3px 1px; cursor: zoom-in;
 }
+.apnext-h3 select, .apnext-h3 option {
+  background: #1e1c17; color: #e8e4df; border-color: #463f33;
+}
+.apnext-h3 ::placeholder { color: #7a756e; opacity: 1; }
 .apnext-h3-zoom {
+  color-scheme: dark;
   position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.8);
   display: flex; align-items: center; justify-content: center; cursor: zoom-out;
 }

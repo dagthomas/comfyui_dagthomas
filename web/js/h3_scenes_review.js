@@ -19,6 +19,7 @@ import { ensureStyle, highlight, LEGEND } from "./h3_prompt_preview.js";
 const NODE_CLASS = "H3ScenesReview";
 const MODE_REVIEW = "Review (stop here and edit)";
 const MODE_CONTINUE = "Continue (render the editor text)";
+const MODE_BYPASS = "Bypass (pass scenes through)";
 const STYLE_ID = "apnext-h3-review-style";
 
 const ENV_RE = /===\s*SCENE\s+(\d+)\s*===\s*([\s\S]*?)\s*===\s*END\s+SCENE\s*\1\s*===/gi;
@@ -52,6 +53,16 @@ const CSS = `
   border-radius: 4px; font-size: 10.5px; padding: 1px 4px; max-width: 130px;
 }
 .apnext-h3-edit .apnext-h3-bar button.apnext-h3-nav { padding: 2px 6px; }
+/* pulsing glow while the gate has stopped the run and waits for edits */
+.apnext-h3-edit.apnext-h3-waiting {
+  border-color: #d4a574;
+  animation: apnext-h3-pulse 1.15s ease-in-out infinite;
+}
+.apnext-h3-edit.apnext-h3-waiting .apnext-h3-title { color: #d4a574; }
+@keyframes apnext-h3-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(212,165,116,0.85), 0 0 18px 4px rgba(212,165,116,0.35); }
+  50%      { box-shadow: 0 0 0 3px rgba(232,180,184,0.95), 0 0 34px 10px rgba(212,165,116,0.65); }
+}
 `;
 
 function ensureReviewStyle() {
@@ -248,8 +259,14 @@ function buildEditor(node) {
     showView();
   };
 
+  // glow + title change while the gate waits for the user's edits
+  const setWaiting = (on) => {
+    root.classList.toggle("apnext-h3-waiting", !!on);
+    title.textContent = on ? "Scenes review — waiting for your edits" : "Scenes review";
+  };
+
   setValue("");
-  return { root, getValue: () => state.fullText, setValue };
+  return { root, getValue: () => state.fullText, setValue, setWaiting };
 }
 
 app.registerExtension({
@@ -267,7 +284,14 @@ app.registerExtension({
       if (w) w.value = text || "";
       const mode = widgetOf(node, "mode");
       if (mode) mode.value = MODE_CONTINUE; // the next queue renders the editor text
+      node._h3Review?.setWaiting(true); // glow until the user acts
       app.canvas?.setDirty?.(true, true);
+    });
+    // any new queue means the user has acted: stop the glow everywhere
+    api.addEventListener("execution_start", () => {
+      for (const n of app.graph?._nodes || []) {
+        if (n?.type === NODE_CLASS || n?.comfyClass === NODE_CLASS) n._h3Review?.setWaiting(false);
+      }
     });
   },
 
@@ -303,6 +327,7 @@ app.registerExtension({
       const btnContinue = this.addWidget("button", "▶ Continue - render this text", null, () => {
         const mode = widgetOf(node, "mode");
         if (mode) mode.value = MODE_CONTINUE;
+        node._h3Review?.setWaiting(false);
         app.queuePrompt(0, 1);
       });
       const btnRecreate = this.addWidget("button", "🎲 Recreate - new draft from the writer", null, () => {
@@ -320,6 +345,7 @@ app.registerExtension({
         }
         const mode = widgetOf(node, "mode");
         if (mode) mode.value = MODE_REVIEW;
+        node._h3Review?.setWaiting(false);
         app.queuePrompt(0, 1);
       });
       for (const b of [btnContinue, btnRecreate]) if (b) b.options = { ...(b.options || {}), serialize: false };

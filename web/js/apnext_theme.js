@@ -18,6 +18,7 @@
 // regular palette picker.
 
 import { app } from "../../../scripts/app.js";
+import { api } from "../../../scripts/api.js";
 
 const PALETTE_ID = "apnext_graphgen";
 const S_MODE = "APNext.Theme.Mode";
@@ -852,8 +853,15 @@ function patchLinkRenderer() {
     }
     this.connections_width = (savedW || 3) + 1.5;
     try {
-      return styledRender.call(this, ctx, a, b, link, skip_border,
-        selGlow.flow ? (flow || 1) : flow, boost, start_dir, end_dir, opts);
+      // suppress the uniform built-in flow dots; the varied spheres below
+      // replace them (different speeds and sizes per link, glow halo + core)
+      const r = styledRender.call(this, ctx, a, b, link, skip_border,
+        selGlow.flow ? false : flow, boost, start_dir, end_dir, opts);
+      if (selGlow.flow) {
+        try { drawFlowSpheres(this, ctx, a, b, link, boost, start_dir, end_dir, opts); }
+        catch (e) { /* never break the link render */ }
+      }
+      return r;
     } finally {
       this.connections_width = savedW;
       ctx.restore();
@@ -868,7 +876,7 @@ function patchLinkRenderer() {
       cable.frame++;
       if (themeState.on) { assertThemeColors(); assertChromeClass(); }
       if (sparks.on) { try { watchLinks(this); } catch (err) { console.warn("[APNext sparks] watch failed:", err); } }
-      if (selGlow.on) { try { selGlowFrame(this); } catch (err) { /* never block the draw */ } }
+      if (selGlow.on || runGlow.on) { try { selGlowFrame(this); } catch (err) { /* never block the draw */ } }
       const r = origBack.apply(this, arguments);
       if (rope.frame % 30 === 0) { rope.prune(); cable.prune(); }
       return r;
@@ -1120,9 +1128,13 @@ function drawHighlightOverlay(ctx) {
   const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
   const rCore = 10 + pulse * 3;
   const rHalo = 18 + pulse * 10;
+  const lightBg = canvasIsLight();
   for (const tg of targets) {
     const [x, y] = graphToScreen(tg.x, tg.y);
-    const rgb = tg.taken ? "232,180,184" : "212,165,116";
+    // darker, saturated tones on a light canvas so the rings stay contrasty
+    const rgb = lightBg
+      ? (tg.taken ? "168,74,86" : "146,92,30")
+      : (tg.taken ? "232,180,184" : "212,165,116");
     const grad = ctx.createRadialGradient(x, y, rCore * 0.6, x, y, rHalo);
     grad.addColorStop(0, `rgba(${rgb},${0.45 - 0.2 * pulse})`);
     grad.addColorStop(1, `rgba(${rgb},0)`);
@@ -1141,7 +1153,9 @@ function drawHighlightOverlay(ctx) {
     ctx.beginPath();
     ctx.arc(x, y, rCore - 2.5, 0, Math.PI * 2);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = `rgba(255,255,255,${0.5 + 0.3 * pulse})`;
+    ctx.strokeStyle = lightBg
+      ? `rgba(40,30,20,${0.5 + 0.3 * pulse})`
+      : `rgba(255,255,255,${0.5 + 0.3 * pulse})`;
     ctx.stroke();
   }
   return true;
@@ -1209,7 +1223,36 @@ function armDragWatch() {
 
 const S_SELGLOW = "APNext.Theme.SelectionGlow";
 const S_SELFLOW = "APNext.Theme.SelectionFlow";
+const S_RUNGLOW = "APNext.Theme.RunGlow";
 const selGlow = { on: true, flow: true, ids: null, raf: 0, cache: new Map() };
+// while a prompt runs, the executing node's links glow too, so you can see
+// which step the run is on and where its data goes
+const runGlow = { on: true, id: null, armed: false };
+
+function executingNodeId(detail) {
+  if (detail == null) return null;
+  if (typeof detail === "string" || typeof detail === "number") return detail;
+  return detail.display_node ?? detail.node ?? null;
+}
+
+function armRunGlow() {
+  if (runGlow.armed) return;
+  runGlow.armed = true;
+  try {
+    api.addEventListener("executing", (ev) => {
+      runGlow.id = executingNodeId(ev?.detail);
+      app.canvas?.setDirty?.(false, true);
+    });
+    for (const evName of ["execution_interrupted", "execution_error"]) {
+      api.addEventListener(evName, () => {
+        runGlow.id = null;
+        app.canvas?.setDirty?.(false, true);
+      });
+    }
+  } catch (e) {
+    console.warn("[APNext theme] run-glow events unavailable:", e);
+  }
+}
 
 function hslToHex(h, s, l) {
   h = ((h % 360) + 360) % 360;
@@ -1226,20 +1269,124 @@ function hslToHex(h, s, l) {
   return "#" + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join("");
 }
 
-// a link colour → its "hot" version: saturation and lightness pushed up hard.
-// Greys stay grey (pushed toward white) instead of picking up a false hue.
+// true when the canvas background is light (stock light palette): highlights
+// must then get DARKER and more saturated, not lighter, to stay contrasty
+function canvasIsLight() {
+  const rgb = parseColor(app.canvas?.clear_background_color || "#202020");
+  return !!rgb && rgbToHsl(...rgb)[2] > 0.5;
+}
+
+// a link colour → its "hot" version: saturation pushed up hard, lightness
+// pushed AWAY from the canvas background (up on dark canvases, down on light
+// ones). Greys stay grey (pushed toward white or black) instead of picking up
+// a false hue.
 function boostLinkColor(col) {
-  if (selGlow.cache.has(col)) return selGlow.cache.get(col);
+  const light = canvasIsLight();
+  const key = (light ? "L|" : "D|") + col;
+  if (selGlow.cache.has(key)) return selGlow.cache.get(key);
   const rgb = parseColor(col);
   let out = col;
   if (rgb) {
     const [h, s, l] = rgbToHsl(...rgb);
-    out = s < 0.1
-      ? mix(col, "#ffffff", 0.5)
-      : hslToHex(h, Math.min(1, s * 1.45 + 0.2), Math.min(0.72, l * 1.2 + 0.1));
+    if (light) {
+      out = s < 0.1
+        ? mix(col, "#000000", 0.55)
+        : hslToHex(h, Math.min(1, s * 1.5 + 0.25), Math.max(0.26, Math.min(0.42, l * 0.72)));
+    } else {
+      out = s < 0.1
+        ? mix(col, "#ffffff", 0.5)
+        : hslToHex(h, Math.min(1, s * 1.45 + 0.2), Math.min(0.72, l * 1.2 + 0.1));
+    }
   }
-  selGlow.cache.set(col, out);
+  selGlow.cache.set(key, out);
   return out;
+}
+
+// deterministic 0..1 from any id - keeps each sphere's speed/size/phase stable
+// across frames so the traffic looks alive instead of flickering
+function hashSeed(x) {
+  const s = String(x);
+  let n = 0;
+  for (let i = 0; i < s.length; i++) n = (Math.imul(n, 31) + s.charCodeAt(i)) | 0;
+  n = (n ^ 61) ^ (n >>> 16);
+  n = (n + (n << 3)) | 0;
+  n ^= n >>> 4;
+  n = Math.imul(n, 0x27d4eb2d);
+  n ^= n >>> 15;
+  return (n >>> 0) / 4294967296;
+}
+
+// point at t along the STOCK link path: cubic bezier like LiteGraph's spline
+// (control points 25% of the distance along the slot directions); straight
+// render modes fall back to a plain lerp
+function stockFlowPoint(canvas, a, b, t, start_dir, end_dir) {
+  const LG = window.LiteGraph;
+  if (LG && (canvas.links_render_mode === LG.STRAIGHT_LINK || canvas.links_render_mode === LG.LINEAR_LINK)) {
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  }
+  const f = Math.hypot(b[0] - a[0], b[1] - a[1]) * 0.25;
+  const off = (dir, m) => {
+    if (LG && dir === LG.UP) return [0, -m];
+    if (LG && dir === LG.DOWN) return [0, m];
+    if (LG && dir === LG.LEFT) return [-m, 0];
+    return [m, 0];
+  };
+  const o1 = off(start_dir, f), o2 = off(end_dir, f);
+  const p1x = a[0] + o1[0], p1y = a[1] + o1[1];
+  const p2x = b[0] + o2[0], p2y = b[1] + o2[1];
+  const u = 1 - t;
+  return [
+    u * u * u * a[0] + 3 * u * u * t * p1x + 3 * u * t * t * p2x + t * t * t * b[0],
+    u * u * u * a[1] + 3 * u * u * t * p1y + 3 * u * t * t * p2y + t * t * t * b[1],
+  ];
+}
+
+const flowCore = new Map(); // boosted colour -> hot-core colour
+function coreColorOf(col) {
+  let c = flowCore.get(col);
+  if (!c) { c = mix(col, "#ffffff", 0.6); flowCore.set(col, c); }
+  return c;
+}
+
+// the "data traffic" on a highlighted link: spheres of different sizes moving
+// at different (per-link deterministic) speeds, each a glowing halo + hot core
+function drawFlowSpheres(canvas, ctx, a, b, link, col, start_dir, end_dir, opts) {
+  const style = wireState.style;
+  let pts = null;
+  if (isCustomWire(style) && link && a && b && !opts?.disabled) {
+    const key = `${link.id ?? "tmp"}|${opts?.reroute?.id ?? ""}|${opts?.startControl ? "s" : ""}`;
+    pts = wirePoints(style, key, a, b);
+  }
+  const LG = window.LiteGraph;
+  const sd = start_dir ?? LG?.RIGHT ?? 4;
+  const ed = end_dir ?? LG?.LEFT ?? 3;
+  const id = link?.id ?? 0;
+  const time = (typeof performance !== "undefined" ? performance.now() : Date.now()) * 0.001;
+  const width = canvas.connections_width || 3;
+  const core = coreColorOf(col);
+  ctx.save();
+  for (let i = 0; i < 6; i++) {
+    const r1 = hashSeed(id + ":" + i);
+    const r2 = hashSeed(i + "#" + id);
+    const speed = 0.1 + 0.35 * r1;            // laps/second: some crawl, some race
+    const t = (r2 + i / 6 + time * speed) % 1;
+    const size = width * (0.45 + 1.0 * r2);   // some small, some chunky
+    const [x, y] = pts ? pointAt(pts, t) : stockFlowPoint(canvas, a, b, t, sd, ed);
+    ctx.globalAlpha = 0.9;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 6 + size * 3;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(0.8, size * 0.45), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function selectedNodeIds(canvas) {
@@ -1255,9 +1402,9 @@ function selectedNodeIds(canvas) {
   return ids;
 }
 
-// the boosted colour when this link touches a selected node, else null
+// the boosted colour when this link touches a selected (or executing) node
 function selGlowColor(canvas, link, color) {
-  if (!selGlow.on || !link || link.origin_id === undefined) return null;
+  if ((!selGlow.on && !runGlow.on) || !link || link.origin_id === undefined) return null;
   const ids = selGlow.ids;
   if (!ids || !ids.size) return null;
   if (!ids.has(link.origin_id) && !ids.has(link.target_id)) return null;
@@ -1270,7 +1417,14 @@ function selGlowColor(canvas, link, color) {
 // should animate keep the link layer redrawing (self-sustaining rAF that
 // stops by itself when the selection is cleared)
 function selGlowFrame(canvas) {
-  selGlow.ids = selectedNodeIds(canvas);
+  const ids = selGlow.on ? selectedNodeIds(canvas) : new Set();
+  if (runGlow.on && runGlow.id != null) {
+    ids.add(runGlow.id);
+    ids.add(String(runGlow.id));
+    const num = Number(runGlow.id);
+    if (!Number.isNaN(num)) ids.add(num);
+  }
+  selGlow.ids = ids;
   if (selGlow.flow && selGlow.ids.size && !selGlow.raf) {
     selGlow.raf = requestAnimationFrame(() => {
       selGlow.raf = 0;
@@ -1283,7 +1437,14 @@ function applySelGlow(on, flowOn) {
   if (on) patchLinkRenderer();
   selGlow.on = !!on && wireState.patched;
   selGlow.flow = !!flowOn;
-  if (!selGlow.on) selGlow.ids = null;
+  if (!selGlow.on && !runGlow.on) selGlow.ids = null;
+  app.canvas?.setDirty?.(false, true);
+}
+
+function applyRunGlow(on) {
+  if (on) { patchLinkRenderer(); armRunGlow(); }
+  runGlow.on = !!on && wireState.patched;
+  if (!selGlow.on && !runGlow.on) selGlow.ids = null;
   app.canvas?.setDirty?.(false, true);
 }
 
@@ -1805,6 +1966,7 @@ async function applyAll() {
     applyHighlight(settingGet(S_HIGHLIGHT) !== false);
     applySparks(settingGet(S_SPARKS) !== false);
     applySelGlow(settingGet(S_SELGLOW) !== false, settingGet(S_SELFLOW) !== false);
+    applyRunGlow(settingGet(S_RUNGLOW) !== false);
     applyColorCode(settingGet(S_COLORCODE) !== false);
   } catch (e) {
     console.warn("[APNext theme] apply failed:", e);
@@ -1958,6 +2120,15 @@ app.registerExtension({
       category: ["APNext", "Canvas helpers", "Selection flow animation"],
       name: "Animate data flow on highlighted links",
       tooltip: "Adds travelling dots to the highlighted links of the selected nodes, moving in the data direction (output → input). Turn off to keep the static highlight without the animation (saves redraws on big graphs).",
+      type: "boolean",
+      defaultValue: true,
+      onChange: (value, old) => { if (old !== undefined) applyAll(); },
+    },
+    {
+      id: S_RUNGLOW,
+      category: ["APNext", "Canvas helpers", "Running-node link glow"],
+      name: "Highlight the links of the node being executed",
+      tooltip: "While a prompt runs, the links of the currently executing node glow (and carry the flow dots) exactly like a selected node's, so you can see which step the run is on and where its data goes. Clears when the run finishes.",
       type: "boolean",
       defaultValue: true,
       onChange: (value, old) => { if (old !== undefined) applyAll(); },

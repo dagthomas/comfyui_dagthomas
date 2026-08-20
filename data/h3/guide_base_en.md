@@ -220,3 +220,13 @@ overall_soundscape: Fingertips tap the glass before it scrapes across the tablet
 
 non_diegetic_music: A low electronic pulse at a slow tempo, ending immediately after the glass breaks.
 ```
+
+## Geometry beats vocabulary
+
+The model draws what the words make visible on screen, not what they imply.
+
+- Use screen-space geometry, never body-relative or abstract terms: `enters from the left edge of the frame`, `crosses to the right third`, `in the lower foreground` — not `his left hand`, `behind her`, `nearby`.
+- Fix LEFT/RIGHT as seen from the camera once and never swap it across shots.
+- The model cannot render absence. Never prompt what is missing (`no arm`, `without a logo`, `no other people`); describe the visible evidence instead (`the empty sleeve hangs flat and collapsed`, `the street is empty except for the cyclist`).
+- Numbers and positions beat adjectives: `three overlapping posters on the brick wall, the middle one torn` beats `some old posters`.
+- Every property must be paintable in a single frame: if a still image could not show it, the video model cannot either.
