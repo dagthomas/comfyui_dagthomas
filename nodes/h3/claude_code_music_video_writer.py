@@ -103,6 +103,67 @@ AUDIO_MODES = [
 
 SHOTS_PER_SCENE = [AUTO, "1", "2", "3", "4"]
 
+# Identical example plots and ending advice in every run steer the model into
+# its favourite clichés (cosmic spectacle mid-video, the performer walking away
+# into the distance at the end). These pools are sampled PER SEED, so every run
+# gets different suggestions - and the stock moves are banned outright below.
+PLOT_ARCHETYPES = [
+    "a heist that goes wrong at the hand-off",
+    "two strangers swapping lives for one night",
+    "a chase in which the pursuer and the prey trade places",
+    "building something impossible by hand before sunrise",
+    "a competition with real stakes - a dance-off, a race, a card game",
+    "sneaking out (or breaking in), one room at a time",
+    "a rescue: someone or something small gets saved",
+    "one object passed hand to hand across a whole city",
+    "a slow-burn revenge that lands in the final chorus",
+    "an ordinary work shift that mutates into a spectacle",
+    "a party assembling itself piece by piece from an empty room",
+    "getting ready for someone who never shows - and showing up for yourself",
+    "a bet between the performer and the band",
+    "repairing something broken - a car, a friendship, a neon sign",
+    "a wedding, funeral or festival crashed and transformed",
+    "teaching someone to dance, sing or drive while the world reacts",
+]
+
+ENDING_MOVES = [
+    "the opening image returns, transformed by everything that happened",
+    "a hard cut on the biggest physical action, exactly on the last beat",
+    "the performer finally gets - or loses for good - the thing the video chased",
+    "a direct look into the lens, held through the final note",
+    "the crowd is gone and one small prop from scene 01 remains in frame",
+    "a reversal: whoever had the power in scene 01 has lost it",
+    "the two storylines collide in one frame for the first time",
+    "a diegetic punchline: something on screen answers the last lyric",
+    "the lights cut out mid-move, leaving one practical light burning",
+    "a door, a case or a curtain closes on the action",
+    "the performer joins the crowd and disappears INTO it, not away from it",
+    "the last note freezes on contact - a catch, a kiss, a handshake, a fist on a wall",
+]
+
+_ANTI_CLICHE_DIRECTIVE = (
+    "BANNED STOCK MOVES at every wildness level (these are model cliches, not "
+    "creativity - use one only if the user's concept explicitly asks for it): "
+    "ANYTHING OUTER SPACE - asteroids, meteors, comets, planets, moons, "
+    "galaxies, nebulae, star fields, spacesuits, zero-gravity floating, Earth "
+    "seen from orbit, the sky cracking open to reveal the cosmos; the performer "
+    "walking away from camera, into the distance or out of frame as the final "
+    "image; slow-motion walking toward camera as the default chorus staging; "
+    "dissolving into particles or light; 'the camera pulls back to reveal...' "
+    "endings; it-was-all-a-dream wake-ups. Space is not a personality. Invent "
+    "imagery specific to THIS song and concept instead."
+)
+
+_WILD_FUN_DIRECTIVE = (
+    "Wild means FUN, not cosmic: keep the unhinged energy, but make the "
+    "weirdness physical, playful and shootable inside the song's own world - "
+    "mischief with scale, materials, gravity of ORDINARY things, crowds moving "
+    "wrong, animals with agendas, furniture with opinions, weather indoors, "
+    "machines coming alive, the set itself misbehaving. Absurd and hilarious "
+    "beats grand and cosmic every time, and the weirdness should escalate "
+    "scene to scene like a joke building to its punchline."
+)
+
 # How many scenes to ask for per model call. A 3-minute song is ~13-20 scenes;
 # one answer that long gets sloppy, so the run is split into chunks that
 # continue the same session (same synopsis, same locks).
@@ -440,6 +501,8 @@ class H3ClaudeCodeMusicVideoWriter:
         masked_audio=False,
         scene_briefs="",
         prior_scenes=(),
+        plot_picks=(),
+        ending_picks=(),
     ):
         last = last or len(segments)
         n = len(segments)
@@ -597,18 +660,31 @@ class H3ClaudeCodeMusicVideoWriter:
             f"MOVES: at least {distinct} clearly distinct settings across the {n} scenes, each "
             "verse pushing the story somewhere new (a new place, or a visible transformation "
             "of the last one), every chorus returning to ONE signature look that escalates "
-            "each time - bigger, brighter, stranger - and the bridge breaking the pattern "
-            "completely. Lock only the places that actually recur; everything else travels."
+            "each time - through light, choreography, crowd and camera, never through cosmic "
+            "spectacle - and the bridge breaking the pattern completely. Lock only the places "
+            "that actually recur; everything else travels."
+        )
+        plots = "; ".join(plot_picks) if plot_picks else (
+            "a transformation, a chase, a heist, a ritual"
         )
         lines.append(
-            "- FIND A PLOT: invent a concrete story told in images - a transformation, a "
-            "chase, a love story, a descent, a heist, a ritual, a rebirth - with a visible "
-            "setup, an escalation, and a payoff in the final scene. Never many variations of "
-            "a performer standing in one room: something HAPPENS in this video, and every "
+            "- FIND A PLOT: invent a concrete story told in images, with a visible setup, an "
+            f"escalation, and a payoff in the final scene - for example: {plots} - or "
+            "something better that this specific song demands. Never many variations of a "
+            "performer standing in one room: something HAPPENS in this video, and every "
             "scene advances it."
         )
+        if ending_picks:
+            lines.append(
+                "- THE LAST SCENE lands a REAL payoff - a concrete story beat, staged and "
+                f"shot like it matters. Strong shapes for this song: {'; '.join(ending_picks)}. "
+                "Pick one of these, or beat them."
+            )
+        lines.append(f"- {_ANTI_CLICHE_DIRECTIVE}")
         wild_lines, wild_label = wildness_directive(wildness, rng)
         lines += [f"- {w}" for w in wild_lines]
+        if wildness > 40:
+            lines.append(f"- {_WILD_FUN_DIRECTIVE}")
         extra = (extra_instructions or "").strip()
         if extra:
             lines.append("")
@@ -716,6 +792,10 @@ class H3ClaudeCodeMusicVideoWriter:
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
+            # one sample per RUN (not per chunk), so every chunk of a long video
+            # is steered toward the same story and the same ending
+            plot_picks = tuple(rng.sample(PLOT_ARCHETYPES, 3))
+            ending_picks = tuple(rng.sample(ENDING_MOVES, 2))
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             masked_audio = str(audio_mode or "").startswith("Masked")
@@ -749,6 +829,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
                     prior_scenes=tuple(story_so_far),
+                    plot_picks=plot_picks, ending_picks=ending_picks,
                 )
                 if lo == 1:
                     user_prompt = with_context(user_prompt, context_text)

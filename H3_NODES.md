@@ -38,6 +38,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 Scene Counter](#apnext-h3-scene-counter)
    - [APNext H3 Scenes Join](#apnext-h3-scenes-join)
    - [APNext H3 Scenes → Contex Loop Plan](#apnext-h3-scenes--contex-loop-plan)
+   - [APNext H3 Dailies Gate (print / punch up / cut)](#apnext-h3-dailies-gate-print--punch-up--cut)
    - [APNext H3 Resolution Planner (Crop Only)](#apnext-h3-resolution-planner-crop-only)
 7. [Viewing](#viewing)
    - [APNext H3 Prompt Preview](#apnext-h3-prompt-preview)
@@ -294,6 +295,19 @@ Re‑render a saved run **without any LLM call**. The Music Video Writer's `save
 
 The commit gate: nothing renders until the scene text has been through it. In **Review** mode (the default) a queue run fills the node's editor with the incoming `scenes` (or a single `h3_prompt`) and stops cleanly — the editor shows the same colour‑coded tags as the Prompt Preview but is fully editable, all scenes at once or one scene at a time (scope selector / ◀ ▶). Edit what you like, then queue again: the mode has flipped to **Continue** automatically, so the next run renders exactly the editor text. **▶ Continue** and **🎲 Recreate** buttons do it in one click — Recreate bumps the writer's seed and reviews a fresh draft. **Bypass** passes through untouched. A `source-fingerprint` line in the editor header ties the edits to the scenes they came from: change the cast, direction, lyrics or seed upstream and the next queue **re-reviews with the fresh scenes automatically** instead of rendering the stale editor text. Keep the `=== SCENE NN ===` markers and the scene count (the writer's `durations` / `audio_segments` stay aligned; a mismatch is padded/trimmed with a warning), and give the writer a **fixed seed** so Continue runs reuse its cached answer instead of paying for new scenes. Outputs `scenes`, `scene_count`.
 
+### APNext H3 Dailies Gate (print / punch up / cut)
+`H3ScenesReviewGate` · workflow: [`h3_music_video_dailies_gate.json`](examples/h3/h3_music_video_dailies_gate.json)
+
+The **live** sibling of Scenes Review, styled as a screening‑room "dailies desk": instead of stopping the queue, the run **holds open** at this node while the freshly written scenes wait in the browser, and it moves again the moment a button is pressed — no re‑queueing, no seed juggling. On the desk:
+
+- **▶ Print it** — render exactly what is on the desk, hand edits included (the editor is the same colour‑coded overlay as the Prompt Preview, viewable **all takes at once or one take at a time** — ◀ Take NN ▶).
+- **✍ Punch‑up** — type director's notes (and optionally which takes: `2, 4-5`; empty = the take being viewed, or all in the all‑takes view) and the selected scenes are rewritten **inside the writer's own model session** — synopsis, locks, lyrics, reference images still in context. Hand edits are folded in *first*, so "fix a line by hand, then have the model rebuild the scene around it" is one round trip. Works with Claude Code, Codex (`codex-`) and local‑model (`local-`) sessions; the gate auto‑switches its `model` to codex for a `codex-` session id.
+- **🎲 New take** — the same rewrite with the notes dropped: the model is asked for a noticeably different version of the selected takes. Roll as many as you like.
+- **↩ Undo** — every rewrite is kept in a server‑side history for the life of the gate, so a bad punch‑up rolls back instantly (and the history survives a browser reload).
+- **✋ Cut** — end the run cleanly, render nothing.
+
+Wire the writer's `scenes` in, plus `durations` (keeps rewritten takes on their exact lengths — matters for music videos) and `session_id` (what enables the AI rewrites; without it the desk is edit‑by‑hand only). `auto_approve_minutes` > 0 prints automatically with a **live countdown** in the header so unattended runs still render; `chime` plays a soft browser tone when takes land; ComfyUI's Stop button also releases the gate, and a browser reload re‑attaches to a waiting desk. Because the gate sits *before* the render, no video model weights are held while it waits. Choose this gate for hands‑on sessions; choose **Scenes Review** when you want the free stop‑edit‑requeue flow with the writer's cached seed. Outputs `scenes`, `scene_count`, `status`. Code: `nodes/h3/scenes_review_gate.py`, `web/js/h3_review_gate.js`.
+
 ### APNext H3 Resolution Planner (Crop Only)
 `H3ResolutionPlannerCropOnly` · by gabbo
 
@@ -346,6 +360,7 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_music_video_masked_audio_briefs.json`](examples/h3/h3_music_video_masked_audio_briefs.json) | The masked‑latent music video **plus custom scenes**: three chained **H3 Scene Brief** nodes → the writer's `scene_briefs` — brief 1 pinned to scene 01, the rest filling in order, every unplanned piece still the model's to invent. |
 | [`h3_music_video_minimal.json`](examples/h3/h3_music_video_minimal.json) | **Music Video (Minimal)**: song + lyrics + a curated look + three sliders; a performer photo on `image_1` passes through to `ref_image_0`; Scenes Join with `replace_audio` = the song. |
 | [`h3_presentation.json`](examples/h3/h3_presentation.json) | **Presentation Writer**: source material (benchmark numbers) presented by a custom presenter on a keynote stage — `scenes` → prompt, `lengths` → length, generated voice, Scenes Join → one talk. |
+| [`h3_music_video_dailies_gate.json`](examples/h3/h3_music_video_dailies_gate.json) | The music video with the **Dailies Gate**: the run holds live in the browser — print (render with hand edits), punch up selected takes through the writer's own session with director's notes, or cut. |
 
 Every example has an **H3 Prompt Preview** wired to the writer’s prompt / scenes‑text output.
 
@@ -363,7 +378,12 @@ Every example has an **H3 Prompt Preview** wired to the writer’s prompt / scen
 | Scene envelope parsing | `nodes/h3/scenes_support.py` (`parse_scenes`, `envelope_contract`) |
 | Which model runs an H3 node / local sessions | `nodes/h3/claude_code_support.py`, `nodes/h3/llm_backend.py`, `utils/llm_router.py` |
 | Song segmentation / lyrics parsing | `nodes/h3/music_support.py` |
+| Music‑video plot / ending variety, cliché bans | `nodes/h3/claude_code_music_video_writer.py` → `PLOT_ARCHETYPES`, `ENDING_MOVES`, `_ANTI_CLICHE_DIRECTIVE`, `_WILD_FUN_DIRECTIVE` |
 | Template variables | `nodes/h3/template_vars.py`, `web/js/h3_template_vars.js` |
 | Preview rendering / colours | `web/js/h3_prompt_preview.js` |
 | Theme, wires, highlights, sparks, node colours | `web/js/apnext_theme.js` |
 | Autogrow sockets (`context_N`, `image_N`) | `web/js/apnext_context_inputs.js`, `web/js/h3_reference_images.js` |
+
+### TODO — watching upstream
+
+- **[ComfyUI PR #15789](https://github.com/Comfy-Org/ComfyUI/pull/15789)** (`--disable-subgraph-caching` + per‑node `"no_cache": true`, draft as of 2026‑08): compute‑and‑release for intermediate tensors. Our render chains are the target case — a full music video keeps per‑scene latents, decoded frames, the joined batch **and** the upscaled batch in the output cache after the run. When it merges: wrap the render section of the example workflows (conditioning → sampler → decode → join → upscale) in a subgraph, or set `no_cache` on those heavy nodes in the workflow generator — while **keeping the writers cached**: the Scenes Review stop‑edit‑requeue flow and fixed‑seed re‑runs rely on the writer's cached output to avoid paying for the LLM twice. (The Dailies Gate holds one run open and doesn't need the cache at all, so it pairs cleanly with aggressive no‑caching.)

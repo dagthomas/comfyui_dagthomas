@@ -68,8 +68,8 @@ good/MiniMax_H3_00701_.mp4	Bernadette Rostenkowski	Melissa Rauch	The Big Bang Th
 good/MiniMax_H3_00704_.mp4	Bobby Singer	Jim Beaver	Supernatural
 good/MiniMax_H3_00707_.mp4	Loki	Tom Hiddleston	Marvel's Avengers
 good/MiniMax_H3_00708_.mp4	Doctor Strange	Benedict Cumberbatch	Marvel's Avengers
-good/MiniMax_H3_00709_.mp4	Deadpool	Ryan Reynolds	Marvel's Avengers
-good/MiniMax_H3_00710_.mp4	Wolverine	Hugh Jackman	Marvel's Avengers
+good/MiniMax_H3_00709_.mp4	Deadpool	Ryan Reynolds	Deadpool / Marvel's Avengers
+good/MiniMax_H3_00710_.mp4	Wolverine	Hugh Jackman	Marvel's Avengers / X-Men
 good/MiniMax_H3_00716_.mp4	Andy Bernard	Ed Helms	The Office
 good/MiniMax_H3_00724_.mp4	Jerry Seinfeld	Jerry Seinfeld	Seinfeld
 good/MiniMax_H3_00725_.mp4	George Costanza	Jason Alexander	Seinfeld
@@ -106,7 +106,7 @@ good/MiniMax_H3_00874_.mp4	Michonne	Danai Gurira	The Walking Dead
 good/MiniMax_H3_00875_.mp4	Glenn Rhee	Steven Yeun	The Walking Dead
 good/MiniMax_H3_00877_.mp4	President Josiah "Jed" Bartlet	Martin Sheen	The West Wing
 good/MiniMax_H3_00878_.mp4	Josh Lyman	Bradley Whitford	The West Wing
-good/MiniMax_H3_00883_.mp4	Darth Vader (voiced by James Earl Jones) from Star Wars	Darth Vader (voiced by James Earl Jones) from Star Wars	Real Person / Celebrity
+good/MiniMax_H3_00883_.mp4	Darth Vader (voiced by James Earl Jones)	Darth Vader (voiced by James Earl Jones)	Star Wars
 good/MiniMax_H3_00884_.mp4	Thanos	Josh Brolin	Marvel's Avengers
 good/MiniMax_H3_00888_.mp4	Homelander	Antony Starr	The Boys
 good/MiniMax_H3_00890_.mp4	Tony Montana	Al Pacino	Scarface
@@ -170,15 +170,15 @@ good/MiniMax_H3_01028_.mp4	Carrie Mathison	Claire Danes	Homeland
 good/MiniMax_H3_01029_.mp4	Nicholas Brody	Damian Lewis	Homeland
 good/MiniMax_H3_01031_.mp4	Raymond Reddington	James Spader	The Blacklist
 good/MiniMax_H3_01033_.mp4	Javier Peña	Pedro Pascal	Narcos
-good/MiniMax_H3_01039_.mp4	Sergeant Terry Jeffords	Terry Crews	Brooklyn Nine-Nine, a massive muscular bodybuilder with a shaved bald head, wearing a tight dress shirt and suspenders over his huge chest, holding a plastic cup of yogurt with a tiny spoon.
-good/MiniMax_H3_01040_.mp4	Detective Rosa Diaz	Stephanie Beatriz	Brooklyn Nine-Nine, a tough intense detective with wild dark curly hair framing her face, wearing a dark leather motorcycle jacket and gold badge on her belt.
-good/MiniMax_H3_01049_.mp4	Spike	James Marsters	Buffy the Vampire Slayer, a rebellious vampire with bleached-blonde slicked hair, cheekbones, wearing a dark leather duster coat over a black shirt.
-good/MiniMax_H3_01052_.mp4	Saul Berenson	Mandy Patinkin	Homeland, a senior CIA official with a thick grey beard and silver hair, dark glasses, wearing a dark suit and sweater.
-good/MiniMax_H3_01054_.mp4	Jason Bourne	Matt Damon	The Bourne Identity, a lethal operative with short dark hair, piercing hyper-focused eyes, wearing a dark grey jacket over a black t-shirt.
-good/MiniMax_H3_01057_.mp4	Ragnar Lothbrok	Travis Fimmel	Vikings, a Viking king with piercing ice-blue eyes, braided hair, scruffy beard, wearing leather armor and holding an iron hand axe.
-good/MiniMax_H3_01060_.mp4	Bjorn Ironside	Alexander Ludwig	Vikings, a massive Viking warrior with braided blonde hair, beard, tattoos, wearing fur-trimmed leather armor, holding a heavy broadsword.
-good/MiniMax_H3_01063_.mp4	Tommy Shelby	Cillian Murphy	Peaky Blinders, a gangster with piercing icy blue eyes, undercut hair, tweed flat cap, heavy wool coat over a three-piece suit, smoking a cigarette.
-good/MiniMax_H3_01065_.mp4	Michael Scofield	Wentworth Miller	Prison Break, a man with buzzcut hair, pale blue eyes, wearing a grey long-sleeve shirt with intricate blueprint tattoos visible on his arms.
+good/MiniMax_H3_01039_.mp4	Sergeant Terry Jeffords	Terry Crews	Brooklyn Nine-Nine
+good/MiniMax_H3_01040_.mp4	Detective Rosa Diaz	Stephanie Beatriz	Brooklyn Nine-Nine
+good/MiniMax_H3_01049_.mp4	Spike	James Marsters	Buffy the Vampire Slayer
+good/MiniMax_H3_01052_.mp4	Saul Berenson	Mandy Patinkin	Homeland
+good/MiniMax_H3_01054_.mp4	Jason Bourne	Matt Damon	Bourne Franchise / The Bourne Identity
+good/MiniMax_H3_01057_.mp4	Ragnar Lothbrok	Travis Fimmel	Vikings
+good/MiniMax_H3_01060_.mp4	Bjorn Ironside	Alexander Ludwig	Vikings
+good/MiniMax_H3_01063_.mp4	Tommy Shelby	Cillian Murphy	Peaky Blinders
+good/MiniMax_H3_01065_.mp4	Michael Scofield	Wentworth Miller	Prison Break
 good/MiniMax_H3_01069_.mp4	Frank Martin	Jason Statham	The Transporter
 good/MiniMax_H3_01072_.mp4	Max Rockatansky	Mel Gibson	Mad Max
 good/MiniMax_H3_01073_.mp4	Bryan Mills	Liam Neeson	Taken
@@ -209,39 +209,39 @@ good/MiniMax_H3_01279_.mp4	Julia Roberts	Julia Roberts	Real Person / Celebrity
 good/MiniMax_H3_01281_.mp4	Morgan Freeman	Morgan Freeman	Real Person / Celebrity
 good/MiniMax_H3_01282_.mp4	Ellis Boyd 'Red' Redding	Morgan Freeman	The Shawshank Redemption
 good/MiniMax_H3_01283_.mp4	Ben Affleck	Ben Affleck	Real Person / Celebrity
-good/MiniMax_H3_01284_.mp4	Matt Damon	Matt Damon	Bourne Franchise
+good/MiniMax_H3_01284_.mp4	Matt Damon	Matt Damon	Real Person / Celebrity
 good/MiniMax_H3_01285_.mp4	Robin Williams	Robin Williams	Real Person / Celebrity
-good/MiniMax_H3_01286_.mp4	Angelina Jolie	Angelina Jolie	Lara Croft: Tomb Raider
+good/MiniMax_H3_01286_.mp4	Angelina Jolie	Angelina Jolie	Real Person / Celebrity
 good/MiniMax_H3_01288_.mp4	Sandra Bullock	Sandra Bullock	Real Person / Celebrity
-good/MiniMax_H3_01289_.mp4	Tom Hanks	Tom Hanks	Forrest Gump
-good/MiniMax_H3_01290_.mp4	Samuel L. Jackson	Samuel L. Jackson	Marvel's Avengers
+good/MiniMax_H3_01289_.mp4	Tom Hanks	Tom Hanks	Real Person / Celebrity
+good/MiniMax_H3_01290_.mp4	Samuel L. Jackson	Samuel L. Jackson	Real Person / Celebrity
 good/MiniMax_H3_01291_.mp4	John Travolta	John Travolta	Real Person / Celebrity
 good/MiniMax_H3_01293_.mp4	Jennifer Love Hewitt	Jennifer Love Hewitt	Real Person / Celebrity
-good/MiniMax_H3_01295_.mp4	Anthony Hopkins	Anthony Hopkins	The Silence of the Lambs
+good/MiniMax_H3_01295_.mp4	Anthony Hopkins	Anthony Hopkins	Real Person / Celebrity
 good/MiniMax_H3_01297_.mp4	Brad Pitt	Brad Pitt	Real Person / Celebrity
-good/MiniMax_H3_01298_.mp4	Robert De Niro	Robert De Niro	Taxi Driver
+good/MiniMax_H3_01298_.mp4	Robert De Niro	Robert De Niro	Real Person / Celebrity
 good/MiniMax_H3_01299_.mp4	Kevin Costner	Kevin Costner	Real Person / Celebrity
-good/MiniMax_H3_01300_.mp4	Tom Cruise	Tom Cruise	Mission: Impossible
+good/MiniMax_H3_01300_.mp4	Tom Cruise	Tom Cruise	Real Person / Celebrity
 good/MiniMax_H3_01301_.mp4	Michael Douglas	Michael Douglas	Real Person / Celebrity
 good/MiniMax_H3_01302_.mp4	Denzel Washington	Denzel Washington	Real Person / Celebrity
-good/MiniMax_H3_01303_.mp4	Jim Carrey	Jim Carrey	Ace Ventura
+good/MiniMax_H3_01303_.mp4	Jim Carrey	Jim Carrey	Real Person / Celebrity
 good/MiniMax_H3_01304_.mp4	Jack Nicholson	Jack Nicholson	Real Person / Celebrity
-good/MiniMax_H3_01306_.mp4	Tom Selleck	Tom Selleck	Magnum, P.I.
+good/MiniMax_H3_01306_.mp4	Tom Selleck	Tom Selleck	Real Person / Celebrity
 good/MiniMax_H3_01307_.mp4	Jackie Chan	Jackie Chan	Real Person / Celebrity
 good/MiniMax_H3_01309_.mp4	Paul Rudd	Paul Rudd	Real Person / Celebrity
 good/MiniMax_H3_01310_.mp4	Will Ferrell	Will Ferrell	Real Person / Celebrity
 good/MiniMax_H3_01311_.mp4	Ben Stiller	Ben Stiller	Real Person / Celebrity
 good/MiniMax_H3_01312_.mp4	Owen Wilson	Owen Wilson	Real Person / Celebrity
 good/MiniMax_H3_01313_.mp4	Vince Vaughn	Vince Vaughn	Real Person / Celebrity
-good/MiniMax_H3_01314_.mp4	Harrison Ford	Harrison Ford	Indiana Jones
+good/MiniMax_H3_01314_.mp4	Harrison Ford	Harrison Ford	Real Person / Celebrity
 good/MiniMax_H3_01316_.mp4	Adam Sandler	Adam Sandler	Real Person / Celebrity
 good/MiniMax_H3_01317_.mp4	Ashton Kutcher	Ashton Kutcher	Real Person / Celebrity
 good/MiniMax_H3_01318_.mp4	Grant Gustin	Grant Gustin	Real Person / Celebrity
-good/MiniMax_H3_01319_.mp4	Tom Hiddleston	Tom Hiddleston	Marvel's Avengers
+good/MiniMax_H3_01319_.mp4	Tom Hiddleston	Tom Hiddleston	Real Person / Celebrity
 good/MiniMax_H3_01320_.mp4	Natalie Portman	Natalie Portman	Real Person / Celebrity
 good/MiniMax_H3_01321_.mp4	Tim Allen	Tim Allen	Real Person / Celebrity
 good/MiniMax_H3_01325_.mp4	Bruce Wayne / Batman	Ben Affleck	Batman v Superman
-good/MiniMax_H3_01326_.mp4	Jason Bourne	Matt Damon	Bourne Franchise
+good/MiniMax_H3_01326_.mp4	Jason Bourne	Matt Damon	Bourne Franchise / The Bourne Identity
 good/MiniMax_H3_01327_.mp4	Daniel Hillard / Mrs. Doubtfire	Robin Williams	Mrs. Doubtfire
 good/MiniMax_H3_01328_.mp4	Lara Croft	Angelina Jolie	Lara Croft: Tomb Raider
 good/MiniMax_H3_01330_.mp4	Gracie Hart	Sandra Bullock	Miss Congeniality
@@ -276,70 +276,177 @@ good/MiniMax_H3_01364_.mp4	Rick O'Connell	Brendan Fraser	The Mummy
 good/MiniMax_H3_01369_.mp4	William Munny	Clint Eastwood	Unforgiven
 good/MiniMax_H3_01370_.mp4	Dr. Robert Ford	Anthony Hopkins	Westworld
 good/MiniMax_H3_01376_.mp4	Dr. Robert Ford	Anthony Hopkins	Westworld
-good/MiniMax_H3_01401_.mp4	Sylvester Stallone	Sylvester Stallone	Rambo
+good/MiniMax_H3_01401_.mp4	Sylvester Stallone	Sylvester Stallone	Real Person / Celebrity
 good/MiniMax_H3_01402_.mp4	Rocky Balboa	Sylvester Stallone	Rocky
 good/MiniMax_H3_01407_.mp4	Idris Elba	Idris Elba	Real Person / Celebrity
 good/MiniMax_H3_01408_.mp4	John Luther	Idris Elba	Luther
-good/MiniMax_H3_01421_.mp4	Adam Driver	Adam Driver	Star Wars
+good/MiniMax_H3_01421_.mp4	Adam Driver	Adam Driver	Real Person / Celebrity
 good/MiniMax_H3_01422_.mp4	Kylo Ren	Adam Driver	Star Wars
-good/MiniMax_H3_01427_.mp4	Daniel Craig	Daniel Craig	James Bond
+good/MiniMax_H3_01427_.mp4	Daniel Craig	Daniel Craig	Real Person / Celebrity
 good/MiniMax_H3_01428_.mp4	James Bond	Daniel Craig	Casino Royale
-good/MiniMax_H3_01435_.mp4	Gordon Ramsay	Gordon Ramsay	Hell's Kitchen
+good/MiniMax_H3_01435_.mp4	Gordon Ramsay	Gordon Ramsay	Real Person / Celebrity
 good/MiniMax_H3_01436_.mp4	Chef Gordon Ramsay	Gordon Ramsay	Hell's Kitchen
 good/MiniMax_H3_01440_.mp4	Geralt of Rivia	Henry Cavill	The Witcher
-good/MiniMax_H3_01441_.mp4	Hugh Jackman	Hugh Jackman	Real Person / Actor
-good/MiniMax_H3_01442_.mp4	Wolverine	Hugh Jackman	X-Men
-good/MiniMax_H3_01443_.mp4	Jake Gyllenhaal	Jake Gyllenhaal	Nightcrawler
+good/MiniMax_H3_01441_.mp4	Hugh Jackman	Hugh Jackman	Real Person / Celebrity
+good/MiniMax_H3_01442_.mp4	Wolverine	Hugh Jackman	Marvel's Avengers / X-Men
+good/MiniMax_H3_01443_.mp4	Jake Gyllenhaal	Jake Gyllenhaal	Real Person / Celebrity
 good/MiniMax_H3_01444_.mp4	Lou Bloom	Jake Gyllenhaal	Nightcrawler
-good/MiniMax_H3_01445_.mp4	Jamie Foxx	Jamie Foxx	Django Unchained
+good/MiniMax_H3_01445_.mp4	Jamie Foxx	Jamie Foxx	Real Person / Celebrity
 good/MiniMax_H3_01446_.mp4	Django	Jamie Foxx	Django Unchained
-good/MiniMax_H3_01451_.mp4	Joe Rogan	Joe Rogan	Real Person / Actor
+good/MiniMax_H3_01451_.mp4	Joe Rogan	Joe Rogan	The Joe Rogan Experience
 good/MiniMax_H3_01452_.mp4	Joe Rogan	Joe Rogan	The Joe Rogan Experience
-good/MiniMax_H3_01453_.mp4	John Cena	John Cena	Peacemaker
+good/MiniMax_H3_01453_.mp4	John Cena	John Cena	Real Person / Celebrity
 good/MiniMax_H3_01454_.mp4	Peacemaker	John Cena	Peacemaker
 good/MiniMax_H3_01456_.mp4	Dr. Walter Bishop	John Noble	Fringe
-good/MiniMax_H3_01459_.mp4	Kanye West	Kanye West	Real Person / Actor
-good/MiniMax_H3_01460_.mp4	Ye (played by Kanye West) live in concert	Ye (played by Kanye West) live in concert	Real Person / Actor
+good/MiniMax_H3_01459_.mp4	Kanye West	Kanye West	Real Person / Celebrity
+good/MiniMax_H3_01460_.mp4	Kanye West	Kanye West	Real Person / Celebrity
 good/MiniMax_H3_01462_.mp4	Billy Butcher	Karl Urban	The Boys
-good/MiniMax_H3_01463_.mp4	Leonardo DiCaprio	Leonardo DiCaprio	The Wolf of Wall Street
+good/MiniMax_H3_01463_.mp4	Leonardo DiCaprio	Leonardo DiCaprio	Real Person / Celebrity
 good/MiniMax_H3_01464_.mp4	Jordan Belfort	Leonardo DiCaprio	The Wolf of Wall Street
-good/MiniMax_H3_01465_.mp4	Mads Mikkelsen	Mads Mikkelsen	Hannibal
+good/MiniMax_H3_01465_.mp4	Mads Mikkelsen	Mads Mikkelsen	Real Person / Celebrity
 good/MiniMax_H3_01466_.mp4	Dr. Hannibal Lecter	Mads Mikkelsen	Hannibal
-good/MiniMax_H3_01467_.mp4	Matthew McConaughey	Matthew McConaughey	Real Person / Actor
+good/MiniMax_H3_01467_.mp4	Matthew McConaughey	Matthew McConaughey	Real Person / Celebrity
 good/MiniMax_H3_01468_.mp4	Rust Cohle	Matthew McConaughey	True Detective
-good/MiniMax_H3_01469_.mp4	Neil deGrasse Tyson	Neil deGrasse Tyson	Cosmos
+good/MiniMax_H3_01469_.mp4	Neil deGrasse Tyson	Neil deGrasse Tyson	Real Person / Celebrity
 good/MiniMax_H3_01470_.mp4	Host Neil deGrasse Tyson	Neil deGrasse Tyson	Cosmos
-good/MiniMax_H3_01471_.mp4	Michael Fassbender	Michael Fassbender	X-Men
-good/MiniMax_H3_01473_.mp4	Woody Harrelson	Woody Harrelson	Zombieland
+good/MiniMax_H3_01471_.mp4	Michael Fassbender	Michael Fassbender	Real Person / Celebrity
+good/MiniMax_H3_01473_.mp4	Woody Harrelson	Woody Harrelson	Real Person / Celebrity
 good/MiniMax_H3_01474_.mp4	Tallahassee	Woody Harrelson	Zombieland
-good/MiniMax_H3_01475_.mp4	Norman Reedus	Norman Reedus	Real Person / Actor
+good/MiniMax_H3_01475_.mp4	Norman Reedus	Norman Reedus	Real Person / Celebrity
 good/MiniMax_H3_01476_.mp4	Daryl Dixon	Norman Reedus	The Walking Dead
 good/MiniMax_H3_01478_.mp4	Alluri Sitarama Raju	Ram Charan	RRR
-good/MiniMax_H3_01481_.mp4	Robert Pattinson	Robert Pattinson	Real Person / Actor
+good/MiniMax_H3_01481_.mp4	Robert Pattinson	Robert Pattinson	Real Person / Celebrity
 good/MiniMax_H3_01482_.mp4	Edward Cullen	Robert Pattinson	Twilight
-good/MiniMax_H3_01483_.mp4	Ryan Gosling	Ryan Gosling	Drive
+good/MiniMax_H3_01483_.mp4	Ryan Gosling	Ryan Gosling	Real Person / Celebrity
 good/MiniMax_H3_01484_.mp4	Driver	Ryan Gosling	Drive
-good/MiniMax_H3_01485_.mp4	Ryan Reynolds	Ryan Reynolds	Real Person / Actor
-good/MiniMax_H3_01486_.mp4	Deadpool	Ryan Reynolds	Deadpool
-good/MiniMax_H3_01489_.mp4	Snoop Dogg	Snoop Dogg	Real Person / Actor
-good/MiniMax_H3_01490_.mp4	Snoop Dogg (played by Snoop Dogg) live in concert performance	Snoop Dogg (played by Snoop Dogg) live in concert performance	Real Person / Actor
-good/MiniMax_H3_01497_.mp4	Willem Dafoe	Willem Dafoe	Spider-Man
+good/MiniMax_H3_01485_.mp4	Ryan Reynolds	Ryan Reynolds	Real Person / Celebrity
+good/MiniMax_H3_01486_.mp4	Deadpool	Ryan Reynolds	Deadpool / Marvel's Avengers
+good/MiniMax_H3_01489_.mp4	Snoop Dogg	Snoop Dogg	Real Person / Celebrity
+good/MiniMax_H3_01490_.mp4	Snoop Dogg	Snoop Dogg	Real Person / Celebrity
+good/MiniMax_H3_01497_.mp4	Willem Dafoe	Willem Dafoe	Real Person / Celebrity
 good/MiniMax_H3_01498_.mp4	Norman Osborn	Willem Dafoe	Spider-Man
 good/MiniMax_H3_01499_.mp4	Michael Jackson	Michael Jackson	Real Person / Actor
-good/MiniMax_H3_01503_.mp4	Kobe Bryant	Kobe Bryant	Real Person / Actor
+good/MiniMax_H3_01503_.mp4	Kobe Bryant	Kobe Bryant	Lakers court
 good/MiniMax_H3_01504_.mp4	Kobe Bryant	Kobe Bryant	Lakers court
 good/MiniMax_H3_01508_.mp4	Komaram Bheem	N. T. Rama Rao Jr.	RRR
-good/MiniMax_H3_01509_.mp4	Dave Chappelle	Dave Chappelle	Real Person / Actor
+good/MiniMax_H3_01509_.mp4	Dave Chappelle	Dave Chappelle	Chappelle's Show
 good/MiniMax_H3_01510_.mp4	Dave Chappelle	Dave Chappelle	Chappelle's Show
-good/MiniMax_H3_01511_.mp4	David Letterman	David Letterman	Real Person / Actor
+good/MiniMax_H3_01511_.mp4	David Letterman	David Letterman	Late Show
 good/MiniMax_H3_01512_.mp4	David Letterman	David Letterman	Late Show
-good/MiniMax_H3_01513_.mp4	Conan O'Brien	Conan O'Brien	Real Person / Actor
+good/MiniMax_H3_01513_.mp4	Conan O'Brien	Conan O'Brien	Late Night
 good/MiniMax_H3_01514_.mp4	Conan O'Brien	Conan O'Brien	Late Night
 good/MiniMax_H3_01532_.mp4	Willow Rosenberg	Alyson Hannigan	Buffy the Vampire Slayer
-good/MiniMax_H3_01547_.mp4	Barack Obama	Barack Obama	the Oval Office
-good/MiniMax_H3_01548_.mp4	President Barack Obama	Barack Obama	the Oval Office
-good/MiniMax_H3_01549_.mp4	Donald Trump	Donald Trump	Real Person / Actor
+good/MiniMax_H3_01547_.mp4	Barack Obama	Barack Obama	Real Person / Celebrity
+good/MiniMax_H3_01548_.mp4	Barack Obama	Barack Obama	Real Person / Celebrity
+good/MiniMax_H3_01549_.mp4	Donald Trump	Donald Trump	The Apprentice
 good/MiniMax_H3_01550_.mp4	Donald Trump	Donald Trump	The Apprentice
 good/MiniMax_H3_01568_.mp4	Agent Olivia Dunham	Anna Torv	Fringe
-good/MiniMax_H3_01571_.mp4	Anne Hathaway	Anne Hathaway	The Devil Wears Prada
+good/MiniMax_H3_01571_.mp4	Anne Hathaway	Anne Hathaway	Real Person / Celebrity
 good/MiniMax_H3_01572_.mp4	Andy Sachs	Anne Hathaway	The Devil Wears Prada
+good/MiniMax_H3_02173_.mp4	Adonis Creed	Michael B. Jordan	Creed
+good/MiniMax_H3_02566_.mp4	Alan Dutch Schaefer	Arnold Schwarzenegger	Predator
+good/MiniMax_H3_02572_.mp4	Aldo Raine	Brad Pitt	Inglourious Basterds
+good/MiniMax_H3_02228_.mp4	Anakin Skywalker	Hayden Christensen	Star Wars
+good/MiniMax_H3_02569_.mp4	Andy Stitzer	Steve Carell	The 40-Year-Old Virgin
+good/MiniMax_H3_02191_.mp4	Anthony Mackie	Anthony Mackie	Real Person / Celebrity
+good/MiniMax_H3_02561_.mp4	Barney Ross	Sylvester Stallone	The Expendables
+good/MiniMax_H3_02557_.mp4	Benjamin Franklin Gates	Nicolas Cage	National Treasure
+good/MiniMax_H3_02553_.mp4	Benoit Blanc	Daniel Craig	Knives Out
+good/MiniMax_H3_02319_.mp4	Bilbo Baggins	Martin Freeman	The Hobbit
+good/MiniMax_H3_02381_.mp4	Billy Costigan	Leonardo DiCaprio	The Departed
+good/MiniMax_H3_02558_.mp4	Brennan Huff	Will Ferrell	Step Brothers
+good/MiniMax_H3_02568_.mp4	Brick Tamland	Steve Carell	Anchorman
+good/MiniMax_H3_02578_.mp4	Bruce Wayne	Christian Bale	The Dark Knight
+good/MiniMax_H3_02285_.mp4	Bruce Wayne / Batman	George Clooney	Batman & Robin
+good/MiniMax_H3_02289_.mp4	Bruce Wayne / Batman	Robert Pattinson	The Batman
+good/MiniMax_H3_02258_.mp4	Calvin Candie	Leonardo DiCaprio	Django Unchained
+good/MiniMax_H3_01472_.mp4	Cameron Poe	Nicolas Cage	Con Air
+good/MiniMax_H3_01433_.mp4	Captain Jack Sparrow	Johnny Depp	Pirates of the Caribbean
+good/MiniMax_H3_02580_.mp4	Castor Troy	John Travolta	Face/Off
+good/MiniMax_H3_02246_.mp4	Cliff Booth	Brad Pitt	Once Upon a Time in Hollywood
+good/MiniMax_H3_02185_.mp4	Clint Barton / Hawkeye	Jeremy Renner	Marvel's Avengers
+good/MiniMax_H3_02157_.mp4	Colin Farrell	Colin Farrell	Real Person / Celebrity
+good/MiniMax_H3_01492_.mp4	Commodus	Joaquin Phoenix	Gladiator
+good/MiniMax_H3_02565_.mp4	Conan	Arnold Schwarzenegger	Conan the Barbarian
+good/MiniMax_H3_02421_.mp4	Daemon Targaryen	Matt Smith	House of the Dragon
+good/MiniMax_H3_02546_.mp4	David Attenborough	David Attenborough	Real Person / Celebrity
+good/MiniMax_H3_01493_.mp4	Django Freeman	Jamie Foxx	Django Unchained
+good/MiniMax_H3_02577_.mp4	Doctor Stephen Strange	Benedict Cumberbatch	Doctor Strange
+good/MiniMax_H3_02564_.mp4	Douglas Quaid	Arnold Schwarzenegger	Total Recall
+good/MiniMax_H3_02547_.mp4	Eddie Brock	Tom Hardy	Venom
+good/MiniMax_H3_02309_.mp4	Edward Nygma / The Riddler	Jim Carrey	Batman Forever
+good/MiniMax_H3_01438_.mp4	Edward Scissorhands	Johnny Depp	Edward Scissorhands
+good/MiniMax_H3_02208_.mp4	Eleven	Millie Bobby Brown	Stranger Things
+good/MiniMax_H3_02171_.mp4	Erik Killmonger	Michael B. Jordan	Black Panther
+good/MiniMax_H3_01447_.mp4	Ethan Hunt	Tom Cruise	Mission: Impossible
+good/MiniMax_H3_01458_.mp4	Fletcher Reede	Jim Carrey	Liar Liar
+good/MiniMax_H3_02377_.mp4	Frank Costello	Jack Nicholson	The Departed
+good/MiniMax_H3_02562_.mp4	Frank Lucas	Denzel Washington	American Gangster
+good/MiniMax_H3_02579_.mp4	Frank Slade	Al Pacino	Scent of a Woman
+good/MiniMax_H3_02379_.mp4	Gellert Grindelwald	Mads Mikkelsen	Fantastic Beasts
+good/MiniMax_H3_02567_.mp4	God	Morgan Freeman	Bruce Almighty
+good/MiniMax_H3_02582_.mp4	Hal Wilkerson	Bryan Cranston, 2000s Malcolm in the Middle era	Malcolm in the Middle
+good/MiniMax_H3_02576_.mp4	Han Solo	Harrison Ford	Star Wars
+good/MiniMax_H3_02549_.mp4	J Robert Oppenheimer	Cillian Murphy	Oppenheimer
+good/MiniMax_H3_02329_.mp4	J.K. Simmons	J.K. Simmons	Real Person / Celebrity
+good/MiniMax_H3_01448_.mp4	Jack Dawson	Leonardo DiCaprio	Titanic
+good/MiniMax_H3_02551_.mp4	James Hunt	Chris Hemsworth	Rush
+good/MiniMax_H3_02074_.mp4	Jeff Goldblum	Jeff Goldblum	Real Person / Celebrity
+good/MiniMax_H3_02183_.mp4	Jeremy Renner	Jeremy Renner	Real Person / Celebrity
+good/MiniMax_H3_02365_.mp4	Jesse Eisenberg	Jesse Eisenberg	Real Person / Celebrity
+good/MiniMax_H3_02005_.mp4	Jessica Jones	Krysten Ritter	Jessica Jones
+good/MiniMax_H3_02373_.mp4	Jimmy Conway	Robert De Niro	Goodfellas
+good/MiniMax_H3_02503_.mp4	Jimmy Fallon	Jimmy Fallon	Real Person / Celebrity
+good/MiniMax_H3_02574_.mp4	John Wick	Keanu Reeves	John Wick
+good/MiniMax_H3_01449_.mp4	Jordan Belfort	Leonardo DiCaprio	The Wolf of Wall Street
+good/MiniMax_H3_02548_.mp4	Joseph Cooper	Matthew McConaughey	Interstellar
+good/MiniMax_H3_02560_.mp4	Judge Joseph Dredd	Sylvester Stallone	Judge Dredd
+good/MiniMax_H3_02545_.mp4	Kevin Hart	Kevin Hart	Real Person / Celebrity
+good/MiniMax_H3_01480_.mp4	Kirk Lazarus	Robert Downey Jr.	Tropic Thunder
+good/MiniMax_H3_02019_.mp4	Laurence Fishburne	Laurence Fishburne	Real Person / Celebrity
+good/MiniMax_H3_02361_.mp4	Lex Luthor	Kevin Spacey	Superman Returns
+good/MiniMax_H3_01457_.mp4	Lloyd Christmas	Jim Carrey	Dumb and Dumber
+good/MiniMax_H3_02250_.mp4	Lt. Aldo Raine	Brad Pitt	Inglourious Basterds
+good/MiniMax_H3_02009_.mp4	Luke Cage	Mike Colter	Luke Cage
+good/MiniMax_H3_02226_.mp4	Mace Windu	Samuel L. Jackson	Star Wars
+good/MiniMax_H3_02556_.mp4	Major Marquis Warren	Samuel L. Jackson	The Hateful Eight
+good/MiniMax_H3_01487_.mp4	Mark Watney	Matt Damon	The Martian
+good/MiniMax_H3_02066_.mp4	Martin Sheen	Martin Sheen	Real Person / Celebrity
+good/MiniMax_H3_02013_.mp4	Matt Murdock	Ben Affleck	Daredevil
+good/MiniMax_H3_02153_.mp4	Max Rockatansky	Tom Hardy	Mad Max: Fury Road
+good/MiniMax_H3_02036_.mp4	Meryl Streep	Meryl Streep	Real Person / Celebrity
+good/MiniMax_H3_02169_.mp4	Michael B. Jordan	Michael B. Jordan	Real Person / Celebrity
+good/MiniMax_H3_01429_.mp4	Michael Corleone	Al Pacino	The Godfather
+good/MiniMax_H3_02018_.mp4	Morpheus	Laurence Fishburne	The Matrix
+good/MiniMax_H3_02571_.mp4	Natasha Romanoff	Scarlett Johansson	The Avengers
+good/MiniMax_H3_02033_.mp4	Navin R. Johnson	Steve Martin	The Jerk
+good/MiniMax_H3_02575_.mp4	Neo	Keanu Reeves	The Matrix
+good/MiniMax_H3_02192_.mp4	Neytiri	Zoe Saldana	Avatar
+good/MiniMax_H3_02163_.mp4	Oscar Isaac	Oscar Isaac	Real Person / Celebrity
+good/MiniMax_H3_02241_.mp4	Owen Grady	Chris Pratt	Jurassic World
+good/MiniMax_H3_02160_.mp4	Pennywise	Bill Skarsgård	IT
+good/MiniMax_H3_02573_.mp4	Pete Maverick Mitchell	Tom Cruise	Top Gun
+good/MiniMax_H3_02225_.mp4	Qui-Gon Jinn	Liam Neeson	Star Wars
+good/MiniMax_H3_02552_.mp4	Ransom Drysdale	Chris Evans	Knives Out
+good/MiniMax_H3_02161_.mp4	Ray	Colin Farrell	In Bruges
+good/MiniMax_H3_01477_.mp4	Richard Kimble	Harrison Ford	The Fugitive
+good/MiniMax_H3_02554_.mp4	Rick Deckard	Harrison Ford	Blade Runner
+good/MiniMax_H3_02559_.mp4	Ricky Bobby	Will Ferrell	Talladega Nights
+good/MiniMax_H3_02060_.mp4	Rob Lowe	Rob Lowe	Real Person / Celebrity
+good/MiniMax_H3_02563_.mp4	Robert McCall	Denzel Washington	The Equalizer
+good/MiniMax_H3_02555_.mp4	Sam Ace Rothstein	Robert De Niro	Casino
+good/MiniMax_H3_02061_.mp4	Sam Seaborn	Rob Lowe	The West Wing
+good/MiniMax_H3_02230_.mp4	Sean Dignam	Mark Wahlberg	The Departed
+good/MiniMax_H3_01479_.mp4	Sherlock Holmes	Robert Downey Jr.	Sherlock Holmes
+good/MiniMax_H3_02570_.mp4	Stanley Ipkiss as The Mask	Jim Carrey	The Mask
+good/MiniMax_H3_02501_.mp4	Stephen Colbert	Stephen Colbert	Real Person / Celebrity
+good/MiniMax_H3_02356_.mp4	Stringer Bell	Idris Elba	The Wire
+good/MiniMax_H3_02151_.mp4	Tom Hardy	Tom Hardy	Real Person / Celebrity
+good/MiniMax_H3_02581_.mp4	Tony Montana	Al Pacino	Scarface
+good/MiniMax_H3_01450_.mp4	Tyler Durden	Brad Pitt	Fight Club
+good/MiniMax_H3_02550_.mp4	Tyler Rake	Chris Hemsworth	Extraction
+good/MiniMax_H3_01437_.mp4	Vincent Hanna	Al Pacino	Heat
+good/MiniMax_H3_01426_.mp4	Vincent Vega	John Travolta	Pulp Fiction
+good/MiniMax_H3_01488_.mp4	Will Hunting	Matt Damon	Good Will Hunting
+good/MiniMax_H3_01461_.mp4	William Somerset	Morgan Freeman	Se7en
+good/MiniMax_H3_01439_.mp4	Willy Wonka	Johnny Depp	Charlie and the Chocolate Factory

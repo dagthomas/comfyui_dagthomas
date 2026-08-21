@@ -525,6 +525,34 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.scenes_review_gate import H3ScenesReviewGate
+    NEW_MAPPINGS["H3ScenesReviewGate"] = H3ScenesReviewGate
+    NEW_DISPLAY_MAPPINGS["H3ScenesReviewGate"] = "APNext H3 Dailies Gate (print / punch up / cut)"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.scene_counter import H3SceneCounter
+    NEW_MAPPINGS["H3SceneCounter"] = H3SceneCounter
+    NEW_DISPLAY_MAPPINGS["H3SceneCounter"] = "APNext H3 Scene Counter"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.claude_code_presentation_writer import H3ClaudeCodePresentationWriter
+    NEW_MAPPINGS["H3ClaudeCodePresentationWriter"] = H3ClaudeCodePresentationWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodePresentationWriter"] = "APNext H3 Presentation Writer"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.music_video_minimal import H3MusicVideoMinimal
+    NEW_MAPPINGS["H3MusicVideoMinimal"] = H3MusicVideoMinimal
+    NEW_DISPLAY_MAPPINGS["H3MusicVideoMinimal"] = "APNext H3 Music Video (Minimal)"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}

@@ -19,6 +19,7 @@ from .claude_code_music_video_writer import H3ClaudeCodeMusicVideoWriter
 from .claude_code_presentation_writer import H3ClaudeCodePresentationWriter
 from .music_video_minimal import H3MusicVideoMinimal
 from .scenes_review import H3ScenesReview
+from .scenes_review_gate import H3ScenesReviewGate
 from .scene_brief import H3SceneBrief
 from .scenes_store import H3ScenesLoad
 
@@ -42,6 +43,7 @@ NODE_CLASS_MAPPINGS = {
     "H3ClaudeCodePresentationWriter": H3ClaudeCodePresentationWriter,
     "H3MusicVideoMinimal": H3MusicVideoMinimal,
     "H3ScenesReview": H3ScenesReview,
+    "H3ScenesReviewGate": H3ScenesReviewGate,
     "H3SceneBrief": H3SceneBrief,
     "H3ScenesLoad": H3ScenesLoad,
 }
@@ -66,6 +68,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3ClaudeCodePresentationWriter": "APNext H3 Presentation Writer",
     "H3MusicVideoMinimal": "APNext H3 Music Video (Minimal)",
     "H3ScenesReview": "APNext H3 Scenes Review (edit before render)",
+    "H3ScenesReviewGate": "APNext H3 Dailies Gate (print / punch up / cut)",
     "H3SceneBrief": "APNext H3 Scene Brief (manual scene)",
     "H3ScenesLoad": "APNext H3 Scenes Load (from disk)",
 }
