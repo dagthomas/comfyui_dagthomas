@@ -15,6 +15,7 @@ import time
 import uuid
 
 from ...utils.claude_code import CLAUDE_CODE_MODELS, RESEARCH_TOOLS, run_claude_code
+from ...utils.codex_cli import is_available as codex_available, run_codex
 from ...utils.llm_router import (
     CLAUDE_CODE_PROVIDER,
     LOCAL_PROVIDERS,
@@ -157,18 +158,35 @@ def director_block_inline(skills, include_references=False):
 # Backend selection: Claude Code CLI (default) or anything the LLM router knows
 # ---------------------------------------------------------------------------
 
+def list_codex_models():
+    """`codex` entries for the dropdowns, only when the Codex CLI is installed."""
+    return ["codex"] if codex_available() else []
+
+
+def is_codex_model(model):
+    """
+    True when `model` names the OpenAI Codex CLI: the bare alias `codex` (the
+    model ~/.codex/config.toml picks) or `codex:<model-id>` for a specific one
+    (e.g. `codex:gpt-5.3-codex`).
+    """
+    model = (model or "").strip().lower()
+    return model == "codex" or model.startswith("codex:")
+
+
 def _model_choices():
     """CLI aliases first, then every local server model answering right now."""
-    return list(CLAUDE_CODE_MODELS) + list_local_models()
+    return list(CLAUDE_CODE_MODELS) + list_codex_models() + list_local_models()
 
 
 def is_router_model(model):
     """
-    True when `model` should go through the LLM router instead of the Claude Code
-    CLI: any `provider:model` string (ollama:, lmstudio:, local:, claude:, gpt:,
-    gemini:, ...) that is not the claudecode provider itself.
+    True when `model` should go through the LLM router instead of an agent CLI:
+    any `provider:model` string (ollama:, lmstudio:, local:, claude:, gpt:,
+    gemini:, ...) that is not the claudecode provider or the codex CLI.
     """
     model = (model or "").strip()
+    if is_codex_model(model):
+        return False
     if ":" not in model:
         return False
     provider, _ = split_model(model)
@@ -230,6 +248,7 @@ def local_llm_inputs():
 # One JSON file per session under the temp folder; survives a ComfyUI restart.
 
 _SESSION_PREFIX = "local-"
+_CODEX_SESSION_PREFIX = "codex-"
 
 
 def _session_dir():
@@ -329,6 +348,54 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
     return text, session_id, info
 
 
+def _run_h3_codex(system_prompt, user_prompt, images, model, research,
+                  use_subscription, timeout_seconds, resume_session_id,
+                  working_dir, director, skills):
+    """One H3 turn through the OpenAI Codex CLI (`codex exec`)."""
+    codex_model = model.split(":", 1)[1].strip() if ":" in (model or "") else ""
+    resume_session_id = (resume_session_id or "").strip()
+    if resume_session_id.startswith(_SESSION_PREFIX):
+        raise ValueError(
+            f"resume_session_id '{resume_session_id}' is a local-model session; it cannot "
+            f"be continued with Codex. Pick the same ollama:/local: model or clear it."
+        )
+    if resume_session_id and not resume_session_id.startswith(_CODEX_SESSION_PREFIX):
+        raise ValueError(
+            f"resume_session_id '{resume_session_id[:12]}…' is a Claude Code session; it "
+            f"cannot be continued with Codex. Use a Claude Code model, or clear "
+            "resume_session_id."
+        )
+    thread_id = resume_session_id[len(_CODEX_SESSION_PREFIX):] if resume_session_id else None
+
+    # Codex reads files with its own shell (read-only sandbox), so the skills'
+    # reference tables with absolute paths work the same way they do for Claude.
+    if director and system_prompt and not thread_id:
+        system_prompt = system_prompt + director_block(skills)
+
+    result = run_codex(
+        user_prompt,
+        system_prompt=None if thread_id else system_prompt,
+        images=images or None,
+        model=codex_model or None,
+        timeout=timeout_seconds,
+        research=research,
+        working_dir=(working_dir or "").strip() or None,
+        resume_session_id=thread_id,
+        use_subscription=use_subscription,
+        on_progress=lambda note: print(f"   ↳ {note}"),
+    )
+
+    session_id = (
+        f"{_CODEX_SESSION_PREFIX}{result['session_id']}" if result["session_id"] else ""
+    )
+    info = (
+        f"model=codex:{codex_model or 'default'} | {result['duration_ms'] / 1000:.1f}s | "
+        f"turns={result['num_turns']} | session={session_id}"
+    )
+    print(f"✅ H3 via Codex | {info}")
+    return result["text"], session_id, info
+
+
 def claude_code_inputs():
     """The Claude Code widget block, shared by every H3 node that uses the CLI."""
     return {
@@ -336,7 +403,9 @@ def claude_code_inputs():
             "default": "sonnet",
             "tooltip": (
                 "Who writes the prompt. sonnet / opus / haiku / fable / default are Claude "
-                "Code aliases (`default` = whatever the CLI is configured for). ollama: / "
+                "Code aliases (`default` = whatever the CLI is configured for). `codex` is "
+                "the OpenAI Codex CLI with its configured model (shown when installed; "
+                "`codex:<model-id>` in an H3 LLM Backend picks a specific one). ollama: / "
                 "lmstudio: / local: entries are whatever your local servers were serving when "
                 "the page loaded; pick one to run fully offline. Anything not listed goes in "
                 "model_override."
@@ -345,8 +414,9 @@ def claude_code_inputs():
         "research": ("BOOLEAN", {
             "default": False,
             "tooltip": (
-                "Let Claude Code search the web for real references before writing - the actual "
-                "location, wardrobe, lighting and physics. Slower, and it reaches the internet."
+                "Let the agent CLI (Claude Code or Codex) search the web for real references "
+                "before writing - the actual location, wardrobe, lighting and physics. "
+                "Slower, and it reaches the internet."
             ),
         }),
         "director": ("BOOLEAN", {
@@ -361,8 +431,9 @@ def claude_code_inputs():
         "use_subscription": ("BOOLEAN", {
             "default": True,
             "tooltip": (
-                "Hide ANTHROPIC_API_KEY from the CLI so it uses your Claude Code login and "
-                "subscription seat. Turn off to bill the API key instead."
+                "Hide the API key from the CLI so it uses your login and subscription seat "
+                "(ANTHROPIC_API_KEY for Claude Code, OPENAI_API_KEY for Codex). Turn off to "
+                "bill the API key instead."
             ),
         }),
         "timeout_seconds": ("INT", {
@@ -383,8 +454,10 @@ def claude_code_optional_inputs():
         "resume_session_id": ("STRING", {
             "default": "",
             "tooltip": (
-                "Continue an earlier Claude Code run by feeding it that node's session_id. The "
-                "whole conversation, images included, is still in context."
+                "Continue an earlier run by feeding it that node's session_id. The whole "
+                "conversation, images included, is still in context. A session sticks to "
+                "its backend: Claude Code ids resume with Claude Code, `codex-` ids with "
+                "Codex, `local-` ids with the same local model."
             ),
         }),
         "working_dir": ("STRING", {
@@ -433,6 +506,11 @@ def run_h3_claude_code(
     """
     local = dict(local or {})
     model = resolve_backend_model(model, local.get("model_override", ""))
+    if is_codex_model(model):
+        return _run_h3_codex(
+            system_prompt, user_prompt, images, model, research, use_subscription,
+            timeout_seconds, resume_session_id, working_dir, director, skills,
+        )
     if is_router_model(model):
         if research:
             print(f"ℹ️  research is a Claude Code feature; '{model}' writes without web research.")
@@ -446,6 +524,11 @@ def run_h3_claude_code(
         raise ValueError(
             f"resume_session_id '{resume_session_id}' is a local-model session; it cannot be "
             f"continued with Claude Code. Pick the same ollama:/local: model or clear it."
+        )
+    if resume_session_id.startswith(_CODEX_SESSION_PREFIX):
+        raise ValueError(
+            f"resume_session_id '{resume_session_id}' is a Codex session; it cannot be "
+            f"continued with Claude Code. Pick a codex model or clear resume_session_id."
         )
 
     if research:

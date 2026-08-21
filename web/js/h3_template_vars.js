@@ -17,6 +17,7 @@ const NODE_CLASSES = new Set([
   "H3ClaudeCodeContinueWriter",
   "H3ClaudeCodeRefiner",
   "H3ClaudeCodeMusicVideoWriter",
+  "H3ClaudeCodePresentationWriter",
   "H3BasePromptWriter",
   "H3RefPromptWriter",
 ]);

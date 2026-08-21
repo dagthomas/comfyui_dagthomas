@@ -21,16 +21,17 @@ from ...utils.llm_router import (
     groq_models,
     list_local_models,
 )
-from .claude_code_support import LLM_SOCKET_TYPE
+from .claude_code_support import LLM_SOCKET_TYPE, list_codex_models
 
 _CUSTOM = "custom (use model_name below)"
-_KNOWN_PREFIXES = set(LOCAL_PROVIDERS) | {"claude", "gpt", "gemini", "grok", "groq", CLAUDE_CODE_PROVIDER}
+_KNOWN_PREFIXES = set(LOCAL_PROVIDERS) | {"claude", "gpt", "gemini", "grok", "groq", "codex", CLAUDE_CODE_PROVIDER}
 
 
 def _choices():
     local = list_local_models()
     return (
         local
+        + list_codex_models()
         + [_CUSTOM]
         + [f"claude:{m}" for m in claude_models]
         + [f"gpt:{m}" for m in gpt_models]
@@ -61,7 +62,8 @@ class H3LLMBackend:
                     "tooltip": (
                         "Used when model = custom. Any router string: 'ollama:qwen3:8b', "
                         "'lmstudio:qwen/qwen3-8b', 'local:my-model', 'claude:claude-sonnet-5', "
-                        "'gpt:gpt-5.6', 'gemini:gemini-3.7-flash'."
+                        "'gpt:gpt-5.6', 'gemini:gemini-3.7-flash' - or the Codex CLI: 'codex' "
+                        "(its configured model) / 'codex:<model-id>' for a specific one."
                     ),
                 }),
                 "base_url": ("STRING", {

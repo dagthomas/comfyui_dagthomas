@@ -85,11 +85,44 @@ CAMERA_SPEEDS = [AUTO, "at slow speed", "normal (omit)", "at fast speed"]
 
 VISUAL_STYLE_CUSTOM = "Custom (use custom_visual_style)"
 
-# The guide's own examples first ...
+# Curated cinematic looks first: each is a complete one-line style statement
+# (medium, camera, lenses, movement, colour) written to open a [Shot 1]
+# verbatim, the way "Live-action, 35mm cinematic film aesthetic" does - but
+# with the photography actually spelled out so every scene renders the same
+# look.
+_CINEMATIC_LOOKS = [
+    "Live-action, 35mm cinematic film aesthetic",
+    "Live-action, modern large-format digital cinema: Alexa 65 clarity, creamy shallow depth of field, natural HDR skin tones, smooth floating gimbal moves, neutral filmic grade",
+    "Live-action, 65mm epic scale: IMAX-format deep-focus vistas, slow deliberate crane and dolly moves, natural available light, cool desaturated grade with warm protected skin tones",
+    "Live-action, Wes Anderson style: perfectly symmetrical planimetric framing, deadpan centered portraits and 90-degree whip pans, pastel candy-box palette, meticulous dollhouse production design, flat 40mm perspective",
+    "Live-action, David Fincher style: locked-down surgically precise camera, low-key tungsten and sodium-vapour practicals, cold teal-green shadow grade, crisp clinical digital sharpness",
+    "Live-action, Roger Deakins naturalism: motivated single-source lighting, silhouettes against windows and fire, clean geometric widescreen compositions, gentle drifting camera, restrained filmic grade",
+    "Live-action, Denis Villeneuve scale: monolithic minimalist compositions, tiny figures in vast spaces, atmospheric dust and haze diffusion, slow creeping push-ins, muted near-monochrome grade",
+    "Live-action, Stanley Kubrick style: one-point-perspective symmetry, slow menacing zooms, ultra-wide 18mm interiors, cold practical-lit spaces, immaculate composed stillness",
+    "Live-action, Terrence Malick golden hour: wide-angle handheld lyricism, backlit magic-hour sun flare, natural bounce light only, wandering steadicam through grass and doorways",
+    "Live-action, Wong Kar-wai style: step-printed motion smear, saturated neon greens and reds, handheld intimacy in cramped interiors, rain-streaked glass and mirrors, romantic halation glow",
+    "Live-action, Quentin Tarantino grindhouse: punchy 35mm Kodak saturation, crash zooms and low trunk-shot angles, long unbroken dialogue two-shots, warm 70s amber cast",
+    "Live-action, 1970s paranoid thriller: 2.39 anamorphic Panavision, zoom-heavy long-lens surveillance framing, grimy urban browns and greens, grainy push-processed stock",
+    "Live-action, A24 indie realism: 35mm grain, soft natural window light, muted pastel grade with lifted blacks, static tableaux broken by intimate handheld close-ups",
+    "Live-action, neon noir: rain-slick night streets, cyan and magenta neon reflections, volumetric smoke and searchlights, anamorphic blue-streak flares, deep crushed blacks",
+    "Live-action, 1940s film noir: hard black-and-white chiaroscuro, venetian-blind shadows, single low-key key light, canted dutch angles, cigarette smoke drifting through light beams",
+    "Live-action, golden-age Technicolor: three-strip saturated primaries, glamour key lighting with crisp eye-lights, stately dolly moves, painted-backdrop soundstage depth",
+    "Live-action, 16mm vérité documentary: handheld reportage framing, visible film grain and gate weave, available light only, quick reactive zooms and refocuses",
+    "Live-action, Super 8 home movie: heavy grain and light leaks, warm faded Kodachrome colours, jittery handheld framing, soft vignetted frame edges",
+    "Live-action, late-80s VHS camcorder: smeared lo-fi video texture, auto-exposure pumping, bleeding oversaturated colour, abrupt handheld pans and snap zooms",
+    "Live-action, BBC nature documentary: long-lens telephoto compression, patient locked-off observation, golden dawn haze, pristine 8K clarity, sweeping aerial establishing shots",
+    "Live-action, glossy blockbuster: sweeping 360-degree hero orbits, teal-and-orange grade, horizontal lens flares, low-angle wide shots, crisp high-shutter action",
+    "Live-action, high-fashion editorial: glossy beauty lighting, bold saturated gel colours, slow-motion hair and fabric, macro texture inserts, high-contrast punchy grade",
+    "Hand-painted 2D animation, Studio Ghibli style: lush watercolour backgrounds, soft natural light, gentle wind moving grass and hair, warm pastoral palette",
+    "2D anime, 1990s theatrical cel style: hand-inked linework over painted backgrounds, dramatic key-frame lighting, subtle film grain over the cels",
+    "3D CG animation, Pixar style: rounded appealing character design, soft global illumination, shallow cinematic depth of field, warm saturated storybook palette",
+    "Stop-motion animation, Laika style: tactile handcrafted puppets, visible fabric and clay texture, miniature-set depth of field, slightly staccato hand-animated motion",
+]
+
+# ... then the guide's own examples ...
 _GUIDE_VISUAL_STYLES = [
     "Cinematic",
     "live-action",
-    "Live-action, 35mm cinematic film aesthetic",
     "2D-animated",
     "3D CG",
     "claymation",
@@ -119,7 +152,7 @@ def _apnext_cinematic_items(name):
 def _build_visual_styles():
     styles = [AUTO, VISUAL_STYLE_CUSTOM]
     seen = {s.lower() for s in styles}
-    for source in [_GUIDE_VISUAL_STYLES] + [
+    for source in [_CINEMATIC_LOOKS, _GUIDE_VISUAL_STYLES] + [
         _apnext_cinematic_items(name) for name in _APNEXT_VISUAL_STYLE_FILES
     ]:
         for item in source:

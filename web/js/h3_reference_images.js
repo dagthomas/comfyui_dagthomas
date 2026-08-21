@@ -16,6 +16,8 @@ const NODE_CLASSES = new Set([
   "H3RefPromptWriter",
   "H3ClaudeCodeCrossoverWriter",
   "H3ClaudeCodeMusicVideoWriter",
+  "H3ClaudeCodePresentationWriter",
+  "H3MusicVideoMinimal",
   "H3PromptPreview", // inputs only (thumbnails), no pass-through outputs
 ]);
 const MAX_IMAGES = 9;

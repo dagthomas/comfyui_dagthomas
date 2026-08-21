@@ -50,10 +50,12 @@ from .claude_code import (
     is_interrupt,
     run_claude_code,
 )
+from .codex_cli import is_available as codex_available, run_codex
 
-# Claude Code runs through the locally installed CLI and its own login, so it
-# needs no API key here.
+# Claude Code and Codex run through their locally installed CLIs and their own
+# logins, so they need no API key here.
 CLAUDE_CODE_PROVIDER = "claudecode"
+CODEX_PROVIDER = "codex"
 
 
 # Provider prefix -> (env var names, OpenAI-compatible base url or None)
@@ -235,6 +237,11 @@ def list_claude_code_models():
     return [f"{CLAUDE_CODE_PROVIDER}:{m}" for m in CLAUDE_CODE_MODELS]
 
 
+def list_codex_models():
+    """The `codex` entry (the CLI's configured model), only when installed."""
+    return [CODEX_PROVIDER] if codex_available() else []
+
+
 def list_all_models():
     """Every selectable model string, auto-detect first and local servers last."""
     return (
@@ -245,6 +252,7 @@ def list_all_models():
         + [f"grok:{m}" for m in grok_models]
         + [f"groq:{m}" for m in groq_models]
         + list_claude_code_models()
+        + list_codex_models()
         + list_local_models()
     )
 
@@ -284,6 +292,9 @@ def split_model(model_name):
     if ":" in model_name:
         provider, model = model_name.split(":", 1)
         return provider.strip().lower(), model.strip()
+    if model_name.strip().lower() == CODEX_PROVIDER:
+        # The bare `codex` entry means the Codex CLI with its configured model.
+        return CODEX_PROVIDER, CODEX_PROVIDER
     return "gpt", model_name.strip()
 
 
@@ -546,6 +557,22 @@ def call_llm(
         text = _call_gemini(
             model, user_prompt, system_prompt, images, temperature, max_tokens, history=history
         )
+    elif provider == CODEX_PROVIDER:
+        # The CLI owns sampling, so temperature, seed and max_tokens do not apply.
+        # `codex` alone runs the CLI's configured model; `codex:<id>` picks one.
+        result = run_codex(
+            _history_as_text(history) + user_prompt,
+            system_prompt=system_prompt,
+            images=images,
+            model=model if model != CODEX_PROVIDER else None,
+            timeout=int(os.environ.get("APNEXT_CODEX_TIMEOUT", "600")),
+            on_progress=lambda note: print(f"   ↳ {note}"),
+        )
+        print(
+            f"🤖 Codex | {result['model']} | {result['duration_ms'] / 1000:.1f}s | "
+            f"session {result['session_id'][:8]}"
+        )
+        text = result["text"]
     elif provider == CLAUDE_CODE_PROVIDER:
         # The CLI owns sampling, so temperature, seed and max_tokens do not apply.
         result = run_claude_code(
@@ -562,7 +589,7 @@ def call_llm(
         )
         text = result["text"]
     else:
-        known = ["claude", "gemini", CLAUDE_CODE_PROVIDER] + list(_OPENAI_COMPATIBLE) + list(_LOCAL_PROVIDERS)
+        known = ["claude", "gemini", CLAUDE_CODE_PROVIDER, CODEX_PROVIDER] + list(_OPENAI_COMPATIBLE) + list(_LOCAL_PROVIDERS)
         raise ValueError(
             f"Unknown provider '{provider}' in model '{model_name}'. Prefix the model "
             f"with one of: {', '.join(known)} - e.g. 'ollama:qwen3:8b'."
