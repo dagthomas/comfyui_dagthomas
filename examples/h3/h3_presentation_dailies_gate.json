@@ -1,15 +1,15 @@
 {
-  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "id": "3e9d0b28-56f4-4c71-a2e6-84d17fb0c62a",
   "revision": 0,
-  "last_node_id": 191,
-  "last_link_id": 401,
+  "last_node_id": 167,
+  "last_link_id": 330,
   "nodes": [
     {
       "id": 119,
       "type": "VAELoader",
       "pos": [
         -1490.0,
-        5123.8
+        5190.3
       ],
       "size": [
         640,
@@ -51,7 +51,7 @@
       "type": "VAELoader",
       "pos": [
         -1490.0,
-        5263.8
+        5330.3
       ],
       "size": [
         650,
@@ -67,8 +67,7 @@
           "type": "VAE",
           "links": [
             250,
-            274,
-            329
+            274
           ]
         }
       ],
@@ -94,7 +93,7 @@
       "type": "KSamplerSelect",
       "pos": [
         -260.0,
-        5301.9
+        5200.0
       ],
       "size": [
         370,
@@ -128,7 +127,7 @@
       "type": "BasicGuider",
       "pos": [
         -260.0,
-        5171.9
+        5070.0
       ],
       "size": [
         360,
@@ -167,7 +166,7 @@
       "type": "CLIPLoader",
       "pos": [
         -1490.0,
-        4933.8
+        5000.3
       ],
       "size": [
         640,
@@ -212,7 +211,7 @@
       "type": "RandomNoise",
       "pos": [
         -260.0,
-        5011.9
+        4910.0
       ],
       "size": [
         360,
@@ -380,7 +379,7 @@
       "type": "UNETLoader",
       "pos": [
         -1490.0,
-        4773.8
+        4840.3
       ],
       "size": [
         640,
@@ -465,7 +464,7 @@
       "type": "BasicScheduler",
       "pos": [
         -260.0,
-        5441.9
+        5340.0
       ],
       "size": [
         370,
@@ -508,7 +507,7 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -740.3,
+        -726.0,
         4488.2
       ],
       "size": [
@@ -621,7 +620,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 333
+          "link": 328
         },
         {
           "name": "audio",
@@ -689,7 +688,7 @@
         {
           "name": "latent_image",
           "type": "LATENT",
-          "link": 331
+          "link": 271
         }
       ],
       "outputs": [
@@ -798,7 +797,7 @@
       "type": "ResolutionSelector",
       "pos": [
         -1480.0,
-        6017.8
+        5864.3
       ],
       "size": [
         270,
@@ -847,7 +846,7 @@
       "type": "H3PromptPreview",
       "pos": [
         -41.2,
-        5641.9
+        5615.0
       ],
       "size": [
         847,
@@ -882,17 +881,14 @@
       },
       "widgets_values": [
         ""
-      ],
-      "widgets_values_named": {
-        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> — neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure — sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
-      }
+      ]
     },
     {
       "id": 157,
       "type": "H3Characters",
       "pos": [
         -1490.0,
-        5817.8
+        5664.3
       ],
       "size": [
         330,
@@ -952,10 +948,10 @@
         "(all)",
         0,
         "fixed",
-        "Lena: a singer in her early 30s, platinum pixie cut, sharp cheekbones",
-        "red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings"
+        "Dr. Maya Ellis: a research scientist in her early 40s, shoulder-length dark curls, rectangular glasses",
+        "charcoal blazer over a white crew-neck tee, dark straight-leg jeans, thin silver watch on the left wrist"
       ],
-      "title": "H3 Characters — custom performer + wardrobe",
+      "title": "H3 Characters — custom presenter + wardrobe",
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -964,7 +960,7 @@
       "type": "MarkdownNote",
       "pos": [
         -1851.2,
-        6257.8
+        6160.0
       ],
       "size": [
         700,
@@ -979,7 +975,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece; **H3 Scenes Join** stitches the clips and puts the song back under them.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails."
+        "# H3 Presentation\n\n1. Paste your **source material** (findings, benchmark numbers, a changelog, release notes) into the **H3 Presentation Writer** - it is the ground truth: every number, name and claim spoken or shown comes from it verbatim, nothing is invented.\n2. The writer plans the talk (hook → one point per scene → takeaway), writes one H3 prompt per scene with the presenter speaking generated dialogue and charts/graphics showing the real values, and emits matching lists: `scenes` → prompt, `lengths` → length.\n3. The H3 video node runs once per scene (voice and room tone are generated by the model); **H3 Scenes Join** stitches the clips into one talk.\n\nThe presenter comes from the H3 Characters node (✏️ custom); connect a face photo to the writer's `image_1..` to lock their identity. The `script` output is a teleprompter view of every spoken line - read it to check fact fidelity before rendering.\n\n**Dailies Gate variant:** the run HOLDS live at the gate instead of stopping - **▶ Print it** renders with your hand edits, **✍ Punch-up** rewrites selected takes through the writer's own model session using your notes, **🎲 New take** asks for a different version, **↩ Undo** rolls a rewrite back, **✋ Cut** ends the run. No re-queueing; `session_id` wired into the gate is what enables the AI rewrites."
       ],
       "title": "How this works",
       "color": "#222",
@@ -1014,7 +1010,7 @@
         {
           "name": "replace_audio",
           "type": "AUDIO",
-          "link": 325,
+          "link": null,
           "shape": 7
         }
       ],
@@ -1056,24 +1052,19 @@
     },
     {
       "id": 163,
-      "type": "H3ClaudeCodeMusicVideoWriter",
+      "type": "H3ClaudeCodePresentationWriter",
       "pos": [
         -1111.2,
         5600.0
       ],
       "size": [
         520,
-        1180
+        1080
       ],
       "flags": {},
       "order": 0,
       "mode": 0,
       "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 319
-        },
         {
           "name": "cast_1",
           "type": "STRING",
@@ -1122,7 +1113,9 @@
         {
           "name": "durations",
           "type": "FLOAT",
-          "links": null
+          "links": [
+            329
+          ]
         },
         {
           "name": "lengths",
@@ -1130,16 +1123,6 @@
           "links": [
             323
           ]
-        },
-        {
-          "name": "audio_segments",
-          "type": "AUDIO",
-          "links": []
-        },
-        {
-          "name": "segment_table",
-          "type": "STRING",
-          "links": null
         },
         {
           "name": "scenes_text",
@@ -1154,6 +1137,11 @@
           "links": null
         },
         {
+          "name": "script",
+          "type": "STRING",
+          "links": null
+        },
+        {
           "name": "cast",
           "type": "STRING",
           "links": null
@@ -1164,14 +1152,16 @@
           "links": null
         },
         {
-          "name": "song_seconds",
+          "name": "total_seconds",
           "type": "FLOAT",
           "links": null
         },
         {
           "name": "session_id",
           "type": "STRING",
-          "links": null
+          "links": [
+            330
+          ]
         },
         {
           "name": "info",
@@ -1222,31 +1212,24 @@
           "name": "image_9",
           "type": "IMAGE",
           "links": null
-        },
-        {
-          "name": "clip_starts",
-          "type": "FLOAT",
-          "links": [
-            328
-          ],
-          "slot_index": 21
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeMusicVideoWriter",
+        "Node name for S&R": "H3ClaudeCodePresentationWriter",
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Neon-lit rooftop at night in the rain; Lena performs to camera with the city behind her. Verses: intimate handheld close-ups. Chorus: wide, the whole rooftop lit by a giant pink billboard, rain in the backlight. A single red umbrella is the recurring motif.",
-        "[0:00] (intro - instrumental)\n[0:12] I walked the wire in the rain\n[0:18] counting every light below\n[0:24] you said the city keeps our names\n[0:30] but the city doesn't know\n[Chorus]\n[0:36] So hold me in the neon\n[0:42] hold me till the morning\n[0:48] we were never leaving\n[0:54] only falling slow",
-        "Performance (the singer lip-syncs the lyrics on camera)",
-        "Auto (cut on the music)",
-        15.0,
-        5.2,
-        "Auto",
+        "Project Falcon benchmark results (v2.1 vs v1.4):\n- accuracy: 91.4% (up from 78.2%)\n- median latency: 95 ms (down from 220 ms)\n- memory: 1.9 GB (down from 3.4 GB)\n- supported languages: 14 (up from 6)\nKey finding: switching to the fused attention kernel accounts for 70% of the latency win.\nKnown limitation: accuracy drops to 84% on inputs longer than 4k tokens.",
+        "An enthusiastic keynote reveal. Dr. Maya Ellis presents on a dark stage with a giant LED screen behind her; confident, warm, a little playful. The audience is developers.",
+        "Keynote stage (presenter + giant LED screen)",
+        6,
+        "Vary 5-15s (let Claude pace each scene)",
+        12.0,
+        "Auto (a graphic wherever it helps)",
+        "Independent clips (hard cuts, T2V openers)",
         "Live-action, 35mm cinematic film aesthetic",
         "English",
-        45,
+        10,
         "sonnet",
         false,
         true,
@@ -1262,63 +1245,26 @@
         true,
         "",
         "",
-        "",
-        "",
+        true,
         false,
+        "",
+        "",
         "Characters only (ignore picture backgrounds)",
-        "Masked latent (song injected into the audio latent)",
         true,
         4
       ],
-      "title": "H3 Music Video Writer"
-    },
-    {
-      "id": 164,
-      "type": "LoadAudio",
-      "pos": [
-        -1490.0,
-        5403.8
-      ],
-      "size": [
-        315,
-        124
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            319,
-            325,
-            327,
-            401
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadAudio"
-      },
-      "widgets_values": [
-        "song.mp3",
-        null,
-        null
-      ],
-      "title": "Load the song"
+      "title": "H3 Presentation Writer"
     },
     {
       "id": 165,
-      "type": "H3ScenesReview",
+      "type": "H3ScenesReviewGate",
       "pos": [
         -551.2,
-        5641.9
+        5600.0
       ],
       "size": [
         470,
-        420
+        560
       ],
       "flags": {},
       "order": 0,
@@ -1328,6 +1274,24 @@
           "name": "scenes",
           "type": "STRING",
           "link": 326
+        },
+        {
+          "name": "durations",
+          "type": "FLOAT",
+          "link": 329,
+          "shape": 7
+        },
+        {
+          "name": "session_id",
+          "type": "STRING",
+          "link": 330,
+          "shape": 7
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1336,189 +1300,35 @@
           "type": "STRING",
           "links": [
             321
-          ],
-          "slot_index": 0
+          ]
         },
         {
           "name": "scene_count",
           "type": "INT",
           "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
         }
       ],
-      "title": "H3 Scenes Review (edit before render)",
+      "title": "H3 Dailies Gate — print / punch up / cut",
       "properties": {
-        "Node name for S&R": "H3ScenesReview"
+        "Node name for S&R": "H3ScenesReviewGate",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Review (stop here and edit)",
-        ""
+        true,
+        0.0,
+        "sonnet",
+        true,
+        600,
+        false
       ]
     },
     {
       "id": 166,
-      "type": "AudioSeparation",
-      "pos": [
-        -1490.0,
-        5597.8
-      ],
-      "size": [
-        315,
-        150
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 327
-        }
-      ],
-      "outputs": [
-        {
-          "name": "Bass",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "Drums",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "Other",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "Vocals",
-          "type": "AUDIO",
-          "links": [
-            330
-          ],
-          "slot_index": 3
-        }
-      ],
-      "title": "Vocal stem (better lip-sync)",
-      "properties": {
-        "Node name for S&R": "AudioSeparation"
-      },
-      "widgets_values": [
-        "linear",
-        10.0,
-        0.1
-      ]
-    },
-    {
-      "id": 167,
-      "type": "MiniMaxH3SongMaskedAVContext",
-      "pos": [
-        -270.5,
-        4721.9
-      ],
-      "size": [
-        370,
-        220
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "latent",
-          "type": "LATENT",
-          "link": 271
-        },
-        {
-          "name": "audio_vae",
-          "type": "VAE",
-          "link": 329
-        },
-        {
-          "name": "master_audio",
-          "type": "AUDIO",
-          "link": 330
-        },
-        {
-          "name": "clip_start_seconds",
-          "type": "FLOAT",
-          "link": 328,
-          "widget": {
-            "name": "clip_start_seconds"
-          }
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": null
-        },
-        {
-          "name": "source_frames",
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "source_latent",
-          "type": "LATENT",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "latent",
-          "type": "LATENT",
-          "links": [
-            331
-          ],
-          "slot_index": 0
-        },
-        {
-          "name": "trim_frames",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "clip_audio",
-          "type": "AUDIO",
-          "links": null
-        }
-      ],
-      "title": "Song → audio latent (protected)",
-      "properties": {
-        "Node name for S&R": "MiniMaxH3SongMaskedAVContext"
-      },
-      "widgets_values": [
-        0.0,
-        0,
-        24.0,
-        "disabled"
-      ]
-    },
-    {
-      "id": 168,
-      "type": "MarkdownNote",
-      "pos": [
-        -275.3,
-        4421.9
-      ],
-      "size": [
-        370,
-        230
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Masked-audio lip-sync",
-      "properties": {},
-      "widgets_values": [
-        "**Masked-audio music video** - the strongest lip-sync H3 can do.\n\nEach clip's exact slice of the song is encoded with the audio VAE and written straight into the H3 audio latent, protected from denoising (mask 0). The video is generated against the real, frozen vocal - lip-sync is enforced by the model, not requested by the prompt.\n\n- The song is **not** connected to `ref_audio` (that is on purpose).\n- The **vocal stem** (AudioSeparation) is injected so instruments don't mask the voice; the final soundtrack is still the full mix via Scenes Join `replace_audio`.\n- The writer's `audio_mode` is set to *Masked latent*, so the prompts reference the protected master-song audio instead of `<Audio 1>`.\n- `clip_starts` from the writer gives every clip its exact offset in the master song.\n\nNeeds ComfyUI-H3-Motion-Context-MultiRef and audio-separation-nodes-comfyui."
-      ]
-    },
-    {
-      "id": 169,
       "type": "ImageScale",
       "pos": [
         455.8,
@@ -1543,7 +1353,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            332
+            327
           ],
           "slot_index": 0
         }
@@ -1560,7 +1370,7 @@
       ]
     },
     {
-      "id": 170,
+      "id": 167,
       "type": "RTXVideoSuperResolution",
       "pos": [
         810.8,
@@ -1577,7 +1387,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 332
+          "link": 327
         }
       ],
       "outputs": [
@@ -1585,7 +1395,7 @@
           "name": "upscaled_images",
           "type": "IMAGE",
           "links": [
-            333
+            328
           ],
           "slot_index": 0
         }
@@ -1599,60 +1409,6 @@
         2.0,
         "HIGH"
       ]
-    },
-    {
-      "id": 191,
-      "type": "H3SongAnalysis",
-      "pos": [
-        -1140.0,
-        5403.8
-      ],
-      "size": [
-        340,
-        160
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 401
-        }
-      ],
-      "outputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "profile",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "bpm",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "intensity",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "label",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "title": "Song Analysis — BPM / intensity",
-      "properties": {
-        "Node name for S&R": "H3SongAnalysis",
-        "cnr_id": "comfyui_dagthomas"
-      }
     }
   ],
   "links": [
@@ -1716,8 +1472,8 @@
       271,
       136,
       1,
-      167,
-      0,
+      125,
+      4,
       "LATENT"
     ],
     [
@@ -1836,7 +1592,7 @@
       317,
       162,
       0,
-      169,
+      166,
       0,
       "IMAGE"
     ],
@@ -1849,19 +1605,11 @@
       "AUDIO"
     ],
     [
-      319,
-      164,
-      0,
-      163,
-      0,
-      "AUDIO"
-    ],
-    [
       320,
       157,
       4,
       163,
-      1,
+      0,
       "STRING"
     ],
     [
@@ -1875,7 +1623,7 @@
     [
       322,
       163,
-      5,
+      3,
       153,
       0,
       "STRING"
@@ -1889,14 +1637,6 @@
       "INT"
     ],
     [
-      325,
-      164,
-      0,
-      162,
-      2,
-      "AUDIO"
-    ],
-    [
       326,
       163,
       0,
@@ -1906,67 +1646,35 @@
     ],
     [
       327,
-      164,
-      0,
       166,
       0,
-      "AUDIO"
-    ],
-    [
-      331,
       167,
-      0,
-      125,
-      4,
-      "LATENT"
-    ],
-    [
-      329,
-      120,
-      0,
-      167,
-      1,
-      "VAE"
-    ],
-    [
-      330,
-      166,
-      3,
-      167,
-      2,
-      "AUDIO"
-    ],
-    [
-      328,
-      163,
-      21,
-      167,
-      3,
-      "FLOAT"
-    ],
-    [
-      332,
-      169,
-      0,
-      170,
       0,
       "IMAGE"
     ],
     [
-      333,
-      170,
+      328,
+      167,
       0,
       146,
       0,
       "IMAGE"
     ],
     [
-      401,
-      164,
-      0,
-      191,
-      0,
-      "AUDIO"
+      329,
+      163,
+      1,
+      165,
+      1,
+      "FLOAT"
+    ],
+    [
+      330,
+      163,
+      9,
+      165,
+      2,
+      "STRING"
     ]
   ],
   "groups": [
@@ -1975,7 +1683,7 @@
       "title": "Models",
       "bounding": [
         -1506.0,
-        4699.8,
+        4766.3,
         682.0,
         844.0
       ],
@@ -1986,10 +1694,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -286.5,
-        4647.9,
-        690.5,
-        940.0
+        -276.0,
+        4836.0,
+        680.0,
+        650.0
       ],
       "color": "#3f789e",
       "flags": {}
@@ -2023,9 +1731,9 @@
       "title": "User Inputs",
       "bounding": [
         -1867.2,
-        5523.8,
+        5526.0,
         2689.0,
-        1272.2
+        1270.0
       ],
       "color": "#3f789e",
       "flags": {}

@@ -61,10 +61,12 @@ from .music_support import (
     lyrics_for_segment,
     parse_lyrics,
     place_untimed_lyrics,
+    profile_line,
     segment_by_lyrics,
     segment_song,
     segment_table,
     slice_audio,
+    song_profile,
 )
 from .scenes_support import (
     ENFORCE_WARDROBE_TOOLTIP,
@@ -503,6 +505,7 @@ class H3ClaudeCodeMusicVideoWriter:
         prior_scenes=(),
         plot_picks=(),
         ending_picks=(),
+        profile=None,
     ):
         last = last or len(segments)
         n = len(segments)
@@ -523,6 +526,8 @@ class H3ClaudeCodeMusicVideoWriter:
             "in this order. Each piece's lyric lines are given with the second inside the piece at which "
             "they start ([+s]); `exact` times come from the user's timestamps, `~` times are estimates."
         )
+        if profile:
+            lines.append(f"THE SOUND (measured from the audio): {profile_line(profile)}")
         for i, ((s, e), label, fr) in enumerate(zip(segments, labels, frames), 1):
             lyr = lyrics_for_segment(placed_lyrics, s, e)
             sung = [l for l in lyr if l[1] and not l[1].startswith("#")]
@@ -681,6 +686,29 @@ class H3ClaudeCodeMusicVideoWriter:
                 "Pick one of these, or beat them."
             )
         lines.append(f"- {_ANTI_CLICHE_DIRECTIVE}")
+        if profile:
+            beat = f" At ~{profile['bpm']:g} BPM a bar is ~{240.0 / profile['bpm']:.1f}s - time cuts, gestures and choreography to land ON the beat." if profile.get("bpm") else ""
+            intensity = profile.get("intensity", 50)
+            if intensity < 40:
+                lines.append(
+                    "- MATCH THE SOUND - this is a SOFT song: favour long unbroken takes, "
+                    "slow tender camera moves, close intimacy, soft motivated light and "
+                    "small precise gestures. Cuts breathe with the phrases; nothing slams." + beat
+                )
+            elif intensity < 65:
+                lines.append(
+                    "- MATCH THE SOUND - mid-energy song: let the quiet pieces breathe with "
+                    "longer takes and gentler camera, and make the loud pieces visibly hit "
+                    "harder - the contrast IS the video's rhythm." + beat
+                )
+            else:
+                lines.append(
+                    "- MATCH THE SOUND - this is an AGGRESSIVE song: punchy staging - hard "
+                    "cuts on the beat, bold fast camera moves, physical committed "
+                    "choreography, stark high-contrast light, real impact in every scene. "
+                    "Keep sung lines stable for lip-sync, then let everything around them "
+                    "hit." + beat
+                )
         wild_lines, wild_label = wildness_directive(wildness, rng)
         lines += [f"- {w}" for w in wild_lines]
         if wildness > 40:
@@ -783,7 +811,8 @@ class H3ClaudeCodeMusicVideoWriter:
         durations = [seconds_for(fr) for fr in frames]
         clip_starts = [float(s) for s, _ in segments]
         audio_segments = [slice_audio(audio, s, e, fr) for (s, e), fr in zip(segments, frames)]
-        table = segment_table(segments, labels, frames, placed)
+        profile = song_profile(feats)
+        table = f"SOUND: {profile_line(profile)}\n" + segment_table(segments, labels, frames, placed)
         n = len(segments)
         print(f"🎵 H3 Music Video Writer | {fmt_time(total_seconds)} song -> {n} piece(s)\n{table}")
 
@@ -830,6 +859,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
                     prior_scenes=tuple(story_so_far),
                     plot_picks=plot_picks, ending_picks=ending_picks,
+                    profile=profile,
                 )
                 if lo == 1:
                     user_prompt = with_context(user_prompt, context_text)

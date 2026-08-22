@@ -39,6 +39,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 Scenes Join](#apnext-h3-scenes-join)
    - [APNext H3 Scenes → Contex Loop Plan](#apnext-h3-scenes--contex-loop-plan)
    - [APNext H3 Dailies Gate (print / punch up / cut)](#apnext-h3-dailies-gate-print--punch-up--cut)
+   - [APNext H3 Song Analysis (BPM / intensity)](#apnext-h3-song-analysis-bpm--intensity)
    - [APNext H3 Resolution Planner (Crop Only)](#apnext-h3-resolution-planner-crop-only)
 7. [Viewing](#viewing)
    - [APNext H3 Prompt Preview](#apnext-h3-prompt-preview)
@@ -197,8 +198,9 @@ A **cast** (from H3 Characters nodes on `cast_1..4`, or typed in `extra_cast`) +
 Turns a **song** into a whole music video:
 
 1. **Cuts the audio** into consecutive pieces no longer than H3 renders in one clip (`min_segment_seconds`–`max_segment_seconds`, 5–15 s). `segment_mode` *Auto* cuts on the music (spectral‑flux onsets, energy steps, section changes — and, with timed lyrics, right before a lyric line), *Fixed* takes the longest allowed piece every time, *Lyric lines* tries hardest to cut before a line. Every piece length is snapped to H3’s frame grid (5 + 17k frames at 24 fps) so each rendered clip is exactly as long as its audio slice — the stitched video never drifts.
-2. **Writes one scene per piece** (four‑section prompt): the piece is `<Audio 1>`, reused 1:1 as the clip’s soundtrack; `performance_mode` *Performance* has the singer lip‑sync the piece’s lyric lines on camera (`<Subject 1> sings <d>[English] exact line</d> in sync with <Audio 1>`), *Narrative* answers the lyric with pictures, *Mixed* alternates; quiet pieces get long intimate shots, loud/peak pieces more cuts and the chorus look. Long songs are written in chunks of 6 scenes continuing one session (same synopsis and locks).
-3. Emits matching **lists**: `scenes` → the video node’s `prompt`; `lengths` (frame counts) → `length`; `audio_segments` → `ref_audio_1`; `durations`; plus `segment_table` (`01  0:00.00 – 0:15.08  (15.08s, 362 frames)  energy: peak  lyrics: …`), `scenes_text`, `synopsis`, `cast`, `scene_count`, `song_seconds`, `session_id`, `info`, `image_1..9`.
+2. **Measures the sound** — tempo by autocorrelating the onset envelope (`~124 BPM`), plus an aggression profile from transient spikes and loudness (intensity 0–100: gentle → laid‑back → mid‑energy → driving → aggressive, and the dynamics spread in dB). The profile is shown in the console / `segment_table` and steers the writing: a soft song gets long tender takes and breathing cuts, an aggressive one gets hard on‑the‑beat cuts, bold camera and stark light — and cuts, gestures and choreography are timed to the measured bar length.
+3. **Writes one scene per piece** (four‑section prompt): the piece is `<Audio 1>`, reused 1:1 as the clip’s soundtrack; `performance_mode` *Performance* has the singer lip‑sync the piece’s lyric lines on camera (`<Subject 1> sings <d>[English] exact line</d> in sync with <Audio 1>`), *Narrative* answers the lyric with pictures, *Mixed* alternates; quiet pieces get long intimate shots, loud/peak pieces more cuts and the chorus look. Per‑seed plot and ending suggestions keep runs varied, and stock clichés (outer‑space imagery, walking‑away endings) are banned unless the concept asks. Long songs are written in chunks continuing one session (same synopsis and locks).
+4. Emits matching **lists**: `scenes` → the video node’s `prompt`; `lengths` (frame counts) → `length`; `audio_segments` → `ref_audio_1`; `durations`; plus `segment_table` (`01  0:00.00 – 0:15.08  (15.08s, 362 frames)  energy: peak  lyrics: …`), `scenes_text`, `synopsis`, `cast`, `scene_count`, `song_seconds`, `session_id`, `info`, `image_1..9`.
 
 Inputs: `audio` (Load Audio), `direction` (the concept), `lyrics` (`[0:15] line`, `0:15 line` or LRC `[00:15.20] line` for exact sync; `[Chorus]` tags kept; untimed lines spread evenly; empty = instrumental), `dialogue_language` (lyric language), cast (`cast_1..4` / `extra_cast` — an H3 Characters node in ✏️ custom mode with a `wardrobe` is made for the performer), locks, images, the Claude Code block, `llm`. Finish with **Scenes Join** (`replace_audio` = the song) → Create Video → Save Video. Code: `nodes/h3/claude_code_music_video_writer.py`, `nodes/h3/music_support.py`.
 
@@ -308,6 +310,11 @@ The **live** sibling of Scenes Review, styled as a screening‑room "dailies des
 
 Wire the writer's `scenes` in, plus `durations` (keeps rewritten takes on their exact lengths — matters for music videos) and `session_id` (what enables the AI rewrites; without it the desk is edit‑by‑hand only). `auto_approve_minutes` > 0 prints automatically with a **live countdown** in the header so unattended runs still render; `chime` plays a soft browser tone when takes land; ComfyUI's Stop button also releases the gate, and a browser reload re‑attaches to a waiting desk. Because the gate sits *before* the render, no video model weights are held while it waits. Choose this gate for hands‑on sessions; choose **Scenes Review** when you want the free stop‑edit‑requeue flow with the writer's cached seed. Outputs `scenes`, `scene_count`, `status`. Code: `nodes/h3/scenes_review_gate.py`, `web/js/h3_review_gate.js`.
 
+### APNext H3 Song Analysis (BPM / intensity)
+`H3SongAnalysis` · in every music‑video example, between Load Audio and the writer
+
+The Music Video Writer's sound measurement as a **visible readout**: wire the song in and the node shows `~124 BPM | driving (intensity 68/100) | moderate dynamics (9 dB) | 2.7 onset spikes/s` right on the canvas — tempo from the autocorrelated onset envelope (0 = no steady pulse), aggression 0–100 from transient spikes + sustained loudness + punch, and the dynamics spread. Use it to sanity‑check a song before a long run or to pick `wildness` / `performance` settings; outputs `audio` (pass‑through), `profile` (the one‑liner, wireable into any STRING/context input), `bpm`, `intensity`, `label`. The writers measure this themselves either way — this node just makes it visible. Code: `nodes/h3/song_analysis.py`, maths in `nodes/h3/music_support.py`.
+
 ### APNext H3 Resolution Planner (Crop Only)
 `H3ResolutionPlannerCropOnly` · by gabbo
 
@@ -360,7 +367,12 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_music_video_masked_audio_briefs.json`](examples/h3/h3_music_video_masked_audio_briefs.json) | The masked‑latent music video **plus custom scenes**: three chained **H3 Scene Brief** nodes → the writer's `scene_briefs` — brief 1 pinned to scene 01, the rest filling in order, every unplanned piece still the model's to invent. |
 | [`h3_music_video_minimal.json`](examples/h3/h3_music_video_minimal.json) | **Music Video (Minimal)**: song + lyrics + a curated look + three sliders; a performer photo on `image_1` passes through to `ref_image_0`; Scenes Join with `replace_audio` = the song. |
 | [`h3_presentation.json`](examples/h3/h3_presentation.json) | **Presentation Writer**: source material (benchmark numbers) presented by a custom presenter on a keynote stage — `scenes` → prompt, `lengths` → length, generated voice, Scenes Join → one talk. |
-| [`h3_music_video_dailies_gate.json`](examples/h3/h3_music_video_dailies_gate.json) | The music video with the **Dailies Gate**: the run holds live in the browser — print (render with hand edits), punch up selected takes through the writer's own session with director's notes, or cut. |
+| [`h3_music_video_dailies_gate.json`](examples/h3/h3_music_video_dailies_gate.json) | The music video with the **Dailies Gate**: the run holds live in the browser — print (render with hand edits), punch up selected takes through the writer's own session with director's notes, roll a new take, undo, or cut. |
+| [`h3_music_video_minimal_dailies_gate.json`](examples/h3/h3_music_video_minimal_dailies_gate.json) | The **Minimal** music video with the Dailies Gate instead of Scenes Review — the fastest hands‑on loop: sliders → live desk → print/punch‑up. |
+| [`h3_music_video_masked_audio_briefs_dailies_gate.json`](examples/h3/h3_music_video_masked_audio_briefs_dailies_gate.json) | The masked‑latent + Scene Briefs workflow with the Dailies Gate — plan takes by hand, then punch them up live before the expensive render. |
+| [`h3_presentation_dailies_gate.json`](examples/h3/h3_presentation_dailies_gate.json) | The Presentation Writer with the Dailies Gate — check the `script`'s fact fidelity on the desk and punch up takes before rendering the talk. |
+
+Every music‑video example also carries an **H3 Song Analysis** readout next to Load Audio, showing the measured BPM / intensity the writer steers by.
 
 Every example has an **H3 Prompt Preview** wired to the writer’s prompt / scenes‑text output.
 
@@ -377,7 +389,7 @@ Every example has an **H3 Prompt Preview** wired to the writer’s prompt / scen
 | Wardrobe / location lock wording and the repair turn | `nodes/h3/scenes_support.py` |
 | Scene envelope parsing | `nodes/h3/scenes_support.py` (`parse_scenes`, `envelope_contract`) |
 | Which model runs an H3 node / local sessions | `nodes/h3/claude_code_support.py`, `nodes/h3/llm_backend.py`, `utils/llm_router.py` |
-| Song segmentation / lyrics parsing | `nodes/h3/music_support.py` |
+| Song segmentation / lyrics parsing / BPM + aggression profile | `nodes/h3/music_support.py` (`estimate_bpm`, `song_profile`) |
 | Music‑video plot / ending variety, cliché bans | `nodes/h3/claude_code_music_video_writer.py` → `PLOT_ARCHETYPES`, `ENDING_MOVES`, `_ANTI_CLICHE_DIRECTIVE`, `_WILD_FUN_DIRECTIVE` |
 | Template variables | `nodes/h3/template_vars.py`, `web/js/h3_template_vars.js` |
 | Preview rendering / colours | `web/js/h3_prompt_preview.js` |

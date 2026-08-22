@@ -1,8 +1,8 @@
 {
-  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "id": "8b1f3a64-72c9-4e05-b3d8-f96a02e47c15",
   "revision": 0,
   "last_node_id": 191,
-  "last_link_id": 401,
+  "last_link_id": 403,
   "nodes": [
     {
       "id": 119,
@@ -979,7 +979,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece; **H3 Scenes Join** stitches the clips and puts the song back under them.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails."
+        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece; **H3 Scenes Join** stitches the clips and puts the song back under them.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Scene briefs (custom scenes):** the chained **H3 Scene Brief** nodes are YOUR plan - brief 1 is pinned to scene 01, the unpinned ones fill the following pieces in order; every remaining piece stays the model's to invent within the concept. Each brief is binding: its location, cast and camera wish are honoured, adapted to that piece's lyric lines, duration and energy.\n\n**Dailies Gate variant:** the run HOLDS live at the gate instead of stopping - **▶ Print it** renders with your hand edits, **✍ Punch-up** rewrites selected takes through the writer's own model session using your notes, **🎲 New take** asks for a different version, **↩ Undo** rolls a rewrite back, **✋ Cut** ends the run. No re-queueing; `session_id` wired into the gate is what enables the AI rewrites."
       ],
       "title": "How this works",
       "color": "#222",
@@ -1109,6 +1109,12 @@
           "type": "IMAGE",
           "link": null,
           "shape": 7
+        },
+        {
+          "name": "scene_briefs",
+          "type": "STRING",
+          "link": 336,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1122,7 +1128,9 @@
         {
           "name": "durations",
           "type": "FLOAT",
-          "links": null
+          "links": [
+            402
+          ]
         },
         {
           "name": "lengths",
@@ -1171,7 +1179,9 @@
         {
           "name": "session_id",
           "type": "STRING",
-          "links": null
+          "links": [
+            403
+          ]
         },
         {
           "name": "info",
@@ -1311,14 +1321,14 @@
     },
     {
       "id": 165,
-      "type": "H3ScenesReview",
+      "type": "H3ScenesReviewGate",
       "pos": [
         -551.2,
         5641.9
       ],
       "size": [
         470,
-        420
+        560
       ],
       "flags": {},
       "order": 0,
@@ -1328,6 +1338,24 @@
           "name": "scenes",
           "type": "STRING",
           "link": 326
+        },
+        {
+          "name": "durations",
+          "type": "FLOAT",
+          "link": 402,
+          "shape": 7
+        },
+        {
+          "name": "session_id",
+          "type": "STRING",
+          "link": 403,
+          "shape": 7
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1336,22 +1364,31 @@
           "type": "STRING",
           "links": [
             321
-          ],
-          "slot_index": 0
+          ]
         },
         {
           "name": "scene_count",
           "type": "INT",
           "links": null
+        },
+        {
+          "name": "status",
+          "type": "STRING",
+          "links": null
         }
       ],
-      "title": "H3 Scenes Review (edit before render)",
+      "title": "H3 Dailies Gate — print / punch up / cut",
       "properties": {
-        "Node name for S&R": "H3ScenesReview"
+        "Node name for S&R": "H3ScenesReviewGate",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Review (stop here and edit)",
-        ""
+        true,
+        0.0,
+        "sonnet",
+        true,
+        600,
+        false
       ]
     },
     {
@@ -1653,6 +1690,141 @@
         "Node name for S&R": "H3SongAnalysis",
         "cnr_id": "comfyui_dagthomas"
       }
+    },
+    {
+      "id": 171,
+      "type": "H3SceneBrief",
+      "pos": [
+        -1851.2,
+        5560.0
+      ],
+      "size": [
+        330,
+        210
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "brief_in",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "briefs",
+          "type": "STRING",
+          "links": [
+            334
+          ]
+        }
+      ],
+      "title": "Scene Brief 1 (pinned to scene 01)",
+      "properties": {
+        "Node name for S&R": "H3SceneBrief",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "Cold open: a rusted rooftop door bursts outward and Lena steps into the rain, red umbrella opening, the neon city sprawling behind her.",
+        1,
+        "the rooftop",
+        "Lena",
+        "",
+        "one slow push-in, no cuts"
+      ]
+    },
+    {
+      "id": 172,
+      "type": "H3SceneBrief",
+      "pos": [
+        -1851.2,
+        5790.0
+      ],
+      "size": [
+        330,
+        210
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "brief_in",
+          "type": "STRING",
+          "link": 334,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "briefs",
+          "type": "STRING",
+          "links": [
+            335
+          ]
+        }
+      ],
+      "title": "Scene Brief 2",
+      "properties": {
+        "Node name for S&R": "H3SceneBrief",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "Lena walks the parapet edge like a tightrope, arms out, singing straight into the lens as rain streaks through the backlight.",
+        0,
+        "the rooftop",
+        "Lena",
+        "",
+        "handheld, close"
+      ]
+    },
+    {
+      "id": 173,
+      "type": "H3SceneBrief",
+      "pos": [
+        -1851.2,
+        6020.0
+      ],
+      "size": [
+        330,
+        210
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "brief_in",
+          "type": "STRING",
+          "link": 335,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "briefs",
+          "type": "STRING",
+          "links": [
+            336
+          ]
+        }
+      ],
+      "title": "Scene Brief 3",
+      "properties": {
+        "Node name for S&R": "H3SceneBrief",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "First chorus: the giant pink billboard flickers on and floods the whole rooftop; wide shot, Lena tiny against the glow, umbrella tumbling away in the wind.",
+        0,
+        "the rooftop",
+        "Lena",
+        "",
+        "wide, slow crane up"
+      ]
     }
   ],
   "links": [
@@ -1967,6 +2139,46 @@
       191,
       0,
       "AUDIO"
+    ],
+    [
+      334,
+      171,
+      0,
+      172,
+      0,
+      "STRING"
+    ],
+    [
+      335,
+      172,
+      0,
+      173,
+      0,
+      "STRING"
+    ],
+    [
+      336,
+      173,
+      0,
+      163,
+      7,
+      "STRING"
+    ],
+    [
+      402,
+      163,
+      1,
+      165,
+      1,
+      "FLOAT"
+    ],
+    [
+      403,
+      163,
+      10,
+      165,
+      2,
+      "STRING"
     ]
   ],
   "groups": [
@@ -2023,7 +2235,7 @@
       "title": "User Inputs",
       "bounding": [
         -1867.2,
-        5523.8,
+        5500.0,
         2689.0,
         1272.2
       ],

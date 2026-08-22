@@ -115,6 +115,122 @@ def analyse(audio):
             "duration": wave.numel() / sr, "sample_rate": sr}
 
 
+# ----------------------------------------------------------------------
+# Song character: tempo and aggression, from the envelopes analyse() already
+# computes. Used to tell the writer whether the staging should be tender or
+# punchy, and what tempo the cuts and choreography should sit on.
+
+def estimate_bpm(feats):
+    """
+    Tempo from the autocorrelation of the onset envelope, folded into the
+    70-180 BPM range. Returns 0.0 when the song has no usable pulse (ambient
+    pads, spoken word), so callers can simply skip the tempo line.
+    """
+    onset, hop = feats["onset"], feats["hop_seconds"]
+    x = onset - onset.mean()
+    n = x.numel()
+    lo = max(2, int(round(60.0 / 200.0 / hop)))   # 200 BPM
+    hi = min(n // 2, int(round(60.0 / 60.0 / hop)))  # 60 BPM
+    if hi <= lo + 2:
+        return 0.0
+    denom = float((x * x).sum()) + 1e-9
+    ac = torch.tensor([float((x[:n - lag] * x[lag:]).sum()) / denom for lag in range(lo, hi + 1)])
+    # a real beat repeats: reward lags whose double also correlates
+    score = ac.clone()
+    for i in range(score.numel()):
+        lag2 = 2 * (lo + i) - lo
+        if 0 <= lag2 < score.numel():
+            score[i] += 0.5 * ac[lag2]
+    j = int(torch.argmax(score))
+    if float(ac[j]) < 0.05:  # no periodicity worth reporting
+        return 0.0
+    # parabolic interpolation for sub-hop precision
+    lag = float(lo + j)
+    if 0 < j < score.numel() - 1:
+        y0, y1, y2 = float(score[j - 1]), float(score[j]), float(score[j + 1])
+        d = y0 - 2 * y1 + y2
+        if abs(d) > 1e-9:
+            lag += 0.5 * (y0 - y2) / d
+    bpm = 60.0 / (lag * hop)
+    while bpm < 70.0:
+        bpm *= 2.0
+    while bpm > 180.0:
+        bpm /= 2.0
+    return round(bpm, 1)
+
+
+def song_profile(feats):
+    """
+    The song's character as numbers and words:
+      bpm            0.0 = no clear pulse
+      spikes_per_sec onset peaks per second (transient density)
+      dynamics_db    loudness spread p95-p15 in dB (small = compressed wall)
+      intensity      0-100 aggression score
+      label          gentle / laid-back / mid-energy / driving / aggressive
+      dynamics_label compressed / moderate / wide
+    """
+    onset, rms, hop = feats["onset"], feats["rms"], feats["hop_seconds"]
+    n = onset.numel()
+    duration = max(1e-6, float(feats["duration"]))
+
+    # spikes: local maxima of the onset envelope above a floor, >=100 ms apart
+    spikes = 0
+    gap = max(1, int(round(0.1 / hop)))
+    last = -gap
+    for i in range(1, n - 1):
+        v = float(onset[i])
+        if v > 0.25 and v >= float(onset[i - 1]) and v >= float(onset[i + 1]) and i - last >= gap:
+            spikes += 1
+            last = i
+    spikes_per_sec = spikes / duration
+
+    loud_db = 20.0 * torch.log10(rms + 1e-9)
+    active = loud_db[loud_db > float(loud_db.max()) - 60.0]  # ignore true silence
+    if active.numel() < 4:
+        active = loud_db
+    q = torch.quantile(active, torch.tensor([0.15, 0.5, 0.95]))
+    dynamics_db = float(q[2] - q[0])
+    # sustained loudness: how close the typical level sits to the loud peaks
+    sustain = max(0.0, min(1.0, 1.0 - (float(q[2] - q[1]) / 12.0)))
+    punch = float(torch.quantile(onset, 0.9))
+
+    intensity = int(round(100.0 * min(1.0, (
+        0.45 * min(1.0, spikes_per_sec / 3.0)  # transient density
+        + 0.35 * sustain                        # wall-of-sound loudness
+        + 0.20 * punch                          # how hard the hits hit
+    ))))
+    label = (
+        "gentle" if intensity < 20 else
+        "laid-back" if intensity < 40 else
+        "mid-energy" if intensity < 60 else
+        "driving" if intensity < 80 else
+        "aggressive"
+    )
+    dynamics_label = (
+        "compressed" if dynamics_db < 6.0 else
+        "moderate" if dynamics_db < 15.0 else
+        "wide"
+    )
+    return {
+        "bpm": estimate_bpm(feats),
+        "spikes_per_sec": round(spikes_per_sec, 2),
+        "dynamics_db": round(dynamics_db, 1),
+        "intensity": intensity,
+        "label": label,
+        "dynamics_label": dynamics_label,
+    }
+
+
+def profile_line(profile):
+    """One human-readable line, for the console, the segment table and the model."""
+    bpm = f"~{profile['bpm']:g} BPM" if profile["bpm"] else "no steady pulse"
+    return (
+        f"{bpm} | {profile['label']} (intensity {profile['intensity']}/100) | "
+        f"{profile['dynamics_label']} dynamics ({profile['dynamics_db']:g} dB) | "
+        f"{profile['spikes_per_sec']:g} onset spikes/s"
+    )
+
+
 def _peak_near(values, times, t, radius):
     """Max of `values` within +-radius seconds of t, and the time where it sits."""
     n = values.numel()

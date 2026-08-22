@@ -1,8 +1,8 @@
 {
   "id": "9d5e2f80-6c17-4a3b-b2e4-0f8a94c6d357",
   "revision": 0,
-  "last_node_id": 168,
-  "last_link_id": 342,
+  "last_node_id": 190,
+  "last_link_id": 400,
   "nodes": [
     {
       "id": 119,
@@ -1152,7 +1152,8 @@
           "type": "AUDIO",
           "links": [
             319,
-            325
+            325,
+            400
           ]
         }
       ],
@@ -1293,6 +1294,60 @@
         2.0,
         "HIGH"
       ]
+    },
+    {
+      "id": 190,
+      "type": "H3SongAnalysis",
+      "pos": [
+        -1140.0,
+        5470.3
+      ],
+      "size": [
+        340,
+        160
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 400
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "profile",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "intensity",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "label",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Song Analysis — BPM / intensity",
+      "properties": {
+        "Node name for S&R": "H3SongAnalysis",
+        "cnr_id": "comfyui_dagthomas"
+      }
     },
     {
       "id": 168,
@@ -1597,6 +1652,14 @@
       146,
       0,
       "IMAGE"
+    ],
+    [
+      400,
+      164,
+      0,
+      190,
+      0,
+      "AUDIO"
     ],
     [
       340,

@@ -533,6 +533,13 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.song_analysis import H3SongAnalysis
+    NEW_MAPPINGS["H3SongAnalysis"] = H3SongAnalysis
+    NEW_DISPLAY_MAPPINGS["H3SongAnalysis"] = "APNext H3 Song Analysis (BPM / intensity)"
+except Exception:
+    pass
+
+try:
     from .nodes.h3.scene_counter import H3SceneCounter
     NEW_MAPPINGS["H3SceneCounter"] = H3SceneCounter
     NEW_DISPLAY_MAPPINGS["H3SceneCounter"] = "APNext H3 Scene Counter"
