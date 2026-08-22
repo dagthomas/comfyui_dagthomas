@@ -24,6 +24,7 @@ from ...utils.apnext_context import (
 )
 from ...utils.constants import CUSTOM_CATEGORY
 from .claude_code_support import (
+    BASE_SKILLS,
     CORE_SKILL,
     claude_code_inputs,
     claude_code_optional_inputs,
@@ -39,6 +40,7 @@ from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
+    LITERAL_CAMERA_DIRECTIVE,
     VISUAL_STYLES,
     _WILDNESS_BANDS,
     resolve_visual_style,
@@ -76,6 +78,14 @@ from .scenes_support import (
 )
 
 PRESENTATION_SKILLS = (CORE_SKILL, "h3-ref2va", "h3-style-craft")
+
+# REF writes against the reference-image guide (<Picture N> binds the
+# presenter photo); FL writes against the base guide, from scratch in words.
+PROMPT_MODES = [
+    "Auto (Ref with images, FL without)",
+    "Ref2VA (bind reference images)",
+    "FL / T2VA (from scratch - pictures ignored)",
+]
 
 _SCENE_FIELDS = (
     "subject_definitions",
@@ -357,6 +367,17 @@ class H3ClaudeCodePresentationWriter:
                 "half size automatically); larger chunks are slightly cheaper per scene."
             ),
         })
+        # appended LAST so saved workflows keep their widget positions
+        optional["prompt_mode"] = (PROMPT_MODES, {
+            "default": PROMPT_MODES[1],  # Ref2VA - the pre-switch behaviour
+            "tooltip": (
+                "Which official prompt guide the scenes follow. Ref (guide_ref_en.md) "
+                "binds the attached pictures as <Picture N> - use it with a presenter "
+                "photo. FL / T2VA (guide_base_en.md) creates the presenter from scratch "
+                "in words; pictures are ignored. Auto picks Ref when images are "
+                "connected, FL otherwise."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -393,13 +414,20 @@ class H3ClaudeCodePresentationWriter:
     def IS_CHANGED(cls, seed=-1, **kwargs):
         return float("nan") if seed == -1 else seed
 
+    @classmethod
+    def VALIDATE_INPUTS(cls, prompt_mode=None):
+        # Workflows saved before this widget existed restore it as '' - accept
+        # anything here; write_presentation coerces empty values to Auto.
+        return True
+
     # ------------------------------------------------------------------
     # Prompt construction
     # ------------------------------------------------------------------
 
-    def _build_system_prompt(self, characters_only=True, continuity_mode=CONTINUITY_MODES[0]):
+    def _build_system_prompt(self, characters_only=True, continuity_mode=CONTINUITY_MODES[0],
+                             ref_mode=True):
         base_guide = load_guide("guide_base_en.md")
-        ref_guide = load_guide("guide_ref_en.md")
+        ref_guide = load_guide("guide_ref_en.md") if ref_mode else ""
         return (
             "You are a MiniMax-H3 presentation director and prompt engineer. You are given "
             "SOURCE MATERIAL (scientific findings, data, code, release notes - any content) "
@@ -408,15 +436,23 @@ class H3ClaudeCodePresentationWriter:
             "tables, code panels) that display the material's real values. You write ONE "
             "scene per outline point, in order, each a complete production-ready H3 prompt, "
             "so that the clips cut together into one coherent talk.\n\n"
-            "Two documents follow. The official guide is authoritative for grammar, camera "
-            "vocabulary, timestamps, speaker IDs and <d> blocks. The reference guide is "
-            "authoritative for the <Picture N> labels and the relationship markers.\n\n"
-            "=== BEGIN MINIMAX-H3 VIDEO PROMPT WRITING GUIDE ===\n"
+            + (
+                "Two documents follow. The official guide is authoritative for grammar, camera "
+                "vocabulary, timestamps, speaker IDs and <d> blocks. The reference guide is "
+                "authoritative for the <Picture N> labels and the relationship markers.\n\n"
+                if ref_mode else
+                "The official guide follows and is authoritative for grammar, camera "
+                "vocabulary, timestamps, speaker IDs and <d> blocks.\n\n"
+            )
+            + "=== BEGIN MINIMAX-H3 VIDEO PROMPT WRITING GUIDE ===\n"
             f"{base_guide}\n"
-            "=== END MINIMAX-H3 VIDEO PROMPT WRITING GUIDE ===\n\n"
-            "=== BEGIN MINIMAX-H3 REFERENCE (REF2VA) GUIDE ===\n"
-            f"{ref_guide}\n"
-            "=== END MINIMAX-H3 REFERENCE (REF2VA) GUIDE ==="
+            "=== END MINIMAX-H3 VIDEO PROMPT WRITING GUIDE ==="
+            + (
+                "\n\n=== BEGIN MINIMAX-H3 REFERENCE (REF2VA) GUIDE ===\n"
+                f"{ref_guide}\n"
+                "=== END MINIMAX-H3 REFERENCE (REF2VA) GUIDE ==="
+                if ref_mode else ""
+            )
             + chain_system_block(continuity_mode) + "\n\n"
             + envelope_contract(_SCENE_FIELDS) + "\n"
             "- The synopsis block also carries `Topic:` (what is being presented, one "
@@ -462,18 +498,25 @@ class H3ClaudeCodePresentationWriter:
             "- Write everything in English except the spoken lines and any on-screen "
             "text, which keep their own language inside the <d>[...] tag / the quotation "
             "marks.\n"
-            "- When reference pictures are attached the scenes are rendered with the same "
-            "pictures as <Picture 1>..<Picture N>. Bind pictured people in "
-            "subject_definitions as `<Subject N> ..., appearance from <Picture k>`"
             + (
-                ", and refer to the pictures again inside the shots where those people "
-                "appear. Only a picture the user's notes explicitly declare a location or "
-                "prop may be treated as one (`<Picture k> is ...` on its own line); a "
-                "pictured person's backdrop is NEVER the scene."
-                if characters_only else
-                ", treat a location or prop picture as `<Picture k> is ...` on its own "
-                "line, and refer to the pictures again inside the shots where their "
-                "content appears."
+                "- When reference pictures are attached the scenes are rendered with the same "
+                "pictures as <Picture 1>..<Picture N>. Bind pictured people in "
+                "subject_definitions as `<Subject N> ..., appearance from <Picture k>`"
+                + (
+                    ", and refer to the pictures again inside the shots where those people "
+                    "appear. Only a picture the user's notes explicitly declare a location or "
+                    "prop may be treated as one (`<Picture k> is ...` on its own line); a "
+                    "pictured person's backdrop is NEVER the scene."
+                    if characters_only else
+                    ", treat a location or prop picture as `<Picture k> is ...` on its own "
+                    "line, and refer to the pictures again inside the shots where their "
+                    "content appears."
+                )
+                if ref_mode else
+                "- This run uses NO reference pictures: never write a <Picture N> label. "
+                "The presenter is created from scratch in words - define them fully in "
+                "subject_definitions (age, face, hair, build, wardrobe) and keep that "
+                "written identity anchored word-for-word in every scene."
             )
         )
 
@@ -658,6 +701,7 @@ class H3ClaudeCodePresentationWriter:
                 "skipping numbered ones. Scenes without a brief are yours - but never "
                 "contradict a brief."
             )
+        lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         lines.append(f"- {_wildness_scale_directive(wildness)}")
         if wildness > 40:
             lines.append(
@@ -717,10 +761,22 @@ class H3ClaudeCodePresentationWriter:
         scene_briefs="",
         scenes_per_call=SCENES_PER_CALL,
         save_scenes=True,
+        prompt_mode=None,
         **cast_slots,
     ):
         passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
+        # REF binds pictures via guide_ref_en.md; FL writes from scratch against
+        # guide_base_en.md; Auto follows whether pictures are connected. Empty /
+        # missing (stale workflows) defaults to Ref - the pre-switch behaviour.
+        mode = str(prompt_mode or PROMPT_MODES[1])
+        ref_mode = bool(references) if mode.startswith("Auto") else mode.startswith("Ref")
+        if not ref_mode and references:
+            print(
+                f"ℹ️ H3 Presentation Writer: FL prompt mode - the {len(references)} connected "
+                "picture(s) are ignored for writing (they still pass through the image outputs)."
+            )
+            references = []
         images = [downscale_for_vision(pil) for _, pil in references] or None
         image_labels = tuple(range(1, len(references) + 1))
         template_vars, template_summary = collect_template_vars(cast_slots)
@@ -749,8 +805,10 @@ class H3ClaudeCodePresentationWriter:
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
+            skills = PRESENTATION_SKILLS if ref_mode else BASE_SKILLS
             system_prompt = self._build_system_prompt(
                 characters_only=chars_only, continuity_mode=continuity_mode,
+                ref_mode=ref_mode,
             )
 
             print(
@@ -789,7 +847,7 @@ class H3ClaudeCodePresentationWriter:
                     user_prompt,
                     images if lo == 1 else None,
                     model, research, use_subscription, timeout_seconds,
-                    session_id, working_dir, director, skills=PRESENTATION_SKILLS, local=local,
+                    session_id, working_dir, director, skills=skills, local=local,
                 )
 
             while first <= n:
@@ -845,7 +903,7 @@ class H3ClaudeCodePresentationWriter:
             def repair(prompt):
                 text, _, repair_info = run_h3_claude_code(
                     system_prompt, prompt, None, model, False, use_subscription, timeout_seconds,
-                    session_id, working_dir, director, skills=PRESENTATION_SKILLS, local=local,
+                    session_id, working_dir, director, skills=skills, local=local,
                 )
                 return text, repair_info
 

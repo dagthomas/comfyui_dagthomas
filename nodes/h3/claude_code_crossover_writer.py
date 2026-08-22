@@ -35,6 +35,7 @@ from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .characters import cast_line_name, split_cast_line
 from .common import (
     AUTO,
+    LITERAL_CAMERA_DIRECTIVE,
     VISUAL_STYLES,
     resolve_visual_style,
     DIALOGUE_LANGUAGES,
@@ -416,6 +417,7 @@ class H3ClaudeCodeCrossoverWriter:
             lines.append("- Use 2-3 shots per scene, varying the pattern between scenes.")
         else:
             lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
+        lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         if visual_style == AUTO:
             lines.append(
                 "- Visual style: choose one concrete style that suits this cast (e.g. "

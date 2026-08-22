@@ -2,7 +2,7 @@
   "id": "4f8a1b3c-9e26-4d75-a1c8-72e05b9d6e43",
   "revision": 0,
   "last_node_id": 191,
-  "last_link_id": 401,
+  "last_link_id": 403,
   "nodes": [
     {
       "id": 119,
@@ -621,13 +621,13 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 333
+          "link": 402
         },
         {
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
-          "link": 318
+          "link": 403
         }
       ],
       "outputs": [
@@ -744,7 +744,7 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            293
+            403
           ]
         }
       ],
@@ -785,7 +785,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            300
+            402
           ]
         }
       ],
@@ -979,80 +979,11 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece; **H3 Scenes Join** stitches the clips and puts the song back under them.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Scene briefs (custom scenes):** the chained **H3 Scene Brief** nodes are YOUR plan - brief 1 is pinned to scene 01, the unpinned ones fill the following pieces in order; every remaining piece stays the model's to invent within the concept. Each brief is binding: its location, cast and camera wish are honoured, adapted to that piece's lyric lines, duration and energy."
+        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Scene briefs (custom scenes):** the chained **H3 Scene Brief** nodes are YOUR plan - brief 1 is pinned to scene 01, the unpinned ones fill the following pieces in order; every remaining piece stays the model's to invent within the concept. Each brief is binding: its location, cast and camera wish are honoured, adapted to that piece's lyric lines, duration and energy."
       ],
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
-    },
-    {
-      "id": 162,
-      "type": "H3ScenesJoin",
-      "pos": [
-        823.3,
-        4904.7
-      ],
-      "size": [
-        300,
-        150
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 300
-        },
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "shape": 7,
-          "link": 293
-        },
-        {
-          "name": "replace_audio",
-          "type": "AUDIO",
-          "link": 325,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": [
-            317
-          ]
-        },
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": [
-            318
-          ]
-        },
-        {
-          "name": "frame_count",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "H3ScenesJoin",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        0,
-        "resize to first scene"
-      ],
-      "title": "H3 Scenes Join — all scenes → one video"
     },
     {
       "id": 163,
@@ -1258,8 +1189,8 @@
         true,
         true,
         1800,
-        1,
-        "fixed",
+        -1,
+        "randomize",
         "",
         "",
         "",
@@ -1274,7 +1205,8 @@
         "Characters only (ignore picture backgrounds)",
         "Masked latent (song injected into the audio latent)",
         true,
-        4
+        4,
+        "Ref2VA (bind reference images)"
       ],
       "title": "H3 Music Video Writer"
     },
@@ -1299,7 +1231,6 @@
           "type": "AUDIO",
           "links": [
             319,
-            325,
             327,
             401
           ]
@@ -1521,89 +1452,6 @@
       "properties": {},
       "widgets_values": [
         "**Masked-audio music video** - the strongest lip-sync H3 can do.\n\nEach clip's exact slice of the song is encoded with the audio VAE and written straight into the H3 audio latent, protected from denoising (mask 0). The video is generated against the real, frozen vocal - lip-sync is enforced by the model, not requested by the prompt.\n\n- The song is **not** connected to `ref_audio` (that is on purpose).\n- The **vocal stem** (AudioSeparation) is injected so instruments don't mask the voice; the final soundtrack is still the full mix via Scenes Join `replace_audio`.\n- The writer's `audio_mode` is set to *Masked latent*, so the prompts reference the protected master-song audio instead of `<Audio 1>`.\n- `clip_starts` from the writer gives every clip its exact offset in the master song.\n\nNeeds ComfyUI-H3-Motion-Context-MultiRef and audio-separation-nodes-comfyui."
-      ]
-    },
-    {
-      "id": 169,
-      "type": "ImageScale",
-      "pos": [
-        455.8,
-        4718.8
-      ],
-      "size": [
-        315,
-        130
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 317
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            332
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "Fix H3 528px → 960×540",
-      "properties": {
-        "Node name for S&R": "ImageScale"
-      },
-      "widgets_values": [
-        "bilinear",
-        960,
-        540,
-        "disabled"
-      ]
-    },
-    {
-      "id": 170,
-      "type": "RTXVideoSuperResolution",
-      "pos": [
-        810.8,
-        4714.7
-      ],
-      "size": [
-        315,
-        120
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 332
-        }
-      ],
-      "outputs": [
-        {
-          "name": "upscaled_images",
-          "type": "IMAGE",
-          "links": [
-            333
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "RTX VSR 2× → 1920×1080",
-      "properties": {
-        "Node name for S&R": "RTXVideoSuperResolution"
-      },
-      "widgets_values": [
-        "scale by multiplier",
-        2.0,
-        "HIGH"
       ]
     },
     {
@@ -1950,44 +1798,12 @@
       "MODEL"
     ],
     [
-      293,
-      121,
-      0,
-      162,
-      1,
-      "AUDIO"
-    ],
-    [
       294,
       146,
       0,
       92,
       0,
       "VIDEO"
-    ],
-    [
-      300,
-      122,
-      0,
-      162,
-      0,
-      "IMAGE"
-    ],
-    [
-      317,
-      162,
-      0,
-      169,
-      0,
-      "IMAGE"
-    ],
-    [
-      318,
-      162,
-      1,
-      146,
-      1,
-      "AUDIO"
     ],
     [
       319,
@@ -2028,14 +1844,6 @@
       136,
       11,
       "INT"
-    ],
-    [
-      325,
-      164,
-      0,
-      162,
-      2,
-      "AUDIO"
     ],
     [
       326,
@@ -2086,27 +1894,27 @@
       "FLOAT"
     ],
     [
-      332,
-      169,
+      401,
+      164,
       0,
-      170,
+      191,
       0,
-      "IMAGE"
+      "AUDIO"
     ],
     [
-      333,
-      170,
+      402,
+      122,
       0,
       146,
       0,
       "IMAGE"
     ],
     [
-      401,
-      164,
+      403,
+      121,
       0,
-      191,
-      0,
+      146,
+      1,
       "AUDIO"
     ],
     [

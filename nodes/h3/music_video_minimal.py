@@ -16,6 +16,7 @@ from .claude_code_music_video_writer import (
     AUDIO_MODES,
     H3ClaudeCodeMusicVideoWriter,
     PERFORMANCE_MODES,
+    PROMPT_MODES,
 )
 from .music_support import SEGMENT_MODES
 from .common import (
@@ -100,6 +101,14 @@ class H3MusicVideoMinimal:
                 "default": -1, "min": -1, "max": 0xffffffffffffffff,
                 "tooltip": "Seeds the surreal picks and controls caching. -1 re-runs every queue.",
             }),
+            "prompt_mode": (PROMPT_MODES, {
+                "default": PROMPT_MODES[1],  # Ref2VA - the pre-switch behaviour
+                "tooltip": (
+                    "REF writes against the reference-image guide (<Picture N> binds the "
+                    "performer photo); FL writes against the base guide, everything from "
+                    "scratch in words. Auto: REF when a picture is connected, FL otherwise."
+                ),
+            }),
         }
         optional = {}
         optional.update(local_llm_inputs())
@@ -136,8 +145,14 @@ class H3MusicVideoMinimal:
     def IS_CHANGED(cls, seed=-1, **kwargs):
         return float("nan") if seed == -1 else seed
 
+    @classmethod
+    def VALIDATE_INPUTS(cls, prompt_mode=None):
+        # Workflows saved before this widget existed restore it as '' - accept
+        # anything; the full writer coerces empty values to Auto.
+        return True
+
     def write_video(self, audio, lyrics, visual_style, performance, pace, wildness,
-                    model, seed, llm=None, **image_slots):
+                    model, seed, prompt_mode=PROMPT_MODES[1], llm=None, **image_slots):
         writer = H3ClaudeCodeMusicVideoWriter()
         result = writer.write_video(
             audio=audio,
@@ -160,6 +175,7 @@ class H3MusicVideoMinimal:
             llm=llm,
             scenes_from_lyrics=bool((lyrics or "").strip()),
             audio_mode=AUDIO_MODES[0],
+            prompt_mode=prompt_mode,
             **{name: image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES},
         )
         # Full-writer tuple: scenes, durations, lengths, audio_segments, table,

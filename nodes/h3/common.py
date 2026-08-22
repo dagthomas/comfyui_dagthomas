@@ -111,7 +111,7 @@ _CINEMATIC_LOOKS = [
     "Live-action, Super 8 home movie: heavy grain and light leaks, warm faded Kodachrome colours, jittery handheld framing, soft vignetted frame edges",
     "Live-action, late-80s VHS camcorder: smeared lo-fi video texture, auto-exposure pumping, bleeding oversaturated colour, abrupt handheld pans and snap zooms",
     "Live-action, BBC nature documentary: long-lens telephoto compression, patient locked-off observation, golden dawn haze, pristine 8K clarity, sweeping aerial establishing shots",
-    "Live-action, glossy blockbuster: sweeping 360-degree hero orbits, teal-and-orange grade, horizontal lens flares, low-angle wide shots, crisp high-shutter action",
+    "Live-action, glossy blockbuster: sweeping 360-degree arc shots circling the hero at chest height, teal-and-orange grade, horizontal lens flares, low-angle wide shots, crisp high-shutter action",
     "Live-action, high-fashion editorial: glossy beauty lighting, bold saturated gel colours, slow-motion hair and fabric, macro texture inserts, high-contrast punchy grade",
     "Hand-painted 2D animation, Studio Ghibli style: lush watercolour backgrounds, soft natural light, gentle wind moving grass and hair, warm pastoral palette",
     "2D anime, 1990s theatrical cel style: hand-inked linework over painted backgrounds, dramatic key-frame lighting, subtle film grain over the cels",
@@ -267,6 +267,23 @@ CUT_STYLES = [
 ]
 
 
+# The video model takes every word at face value: `the camera orbits her`
+# can render outer space, not an arc shot. Every writer appends this so the
+# scene text spells out what is physically meant.
+LITERAL_CAMERA_DIRECTIVE = (
+    "WORDS ARE READ LITERALLY by the video model, so spell out what is "
+    "physically meant: write `an orbital camera move circling the performer at "
+    "eye level` - never just `orbit`, which reads as outer space; `a high "
+    "top-down camera angle`, not `bird's-eye` or `satellite view`; a "
+    "figurative phrase that could be read as a physical event (`explodes into "
+    "the chorus`, `rockets upward`, `melts into the next shot`) becomes the "
+    "picture actually intended (`the chorus hits with a burst of light and "
+    "movement`, `rises fast`, `a soft dissolve`). This goes for everything - "
+    "camera moves, transitions, actions, metaphors: always describe the "
+    "literal thing that should be on screen."
+)
+
+
 def camera_directive(motion, amplitude, speed):
     """
     Turn the three camera widgets into one instruction line, honouring the
@@ -276,7 +293,8 @@ def camera_directive(motion, amplitude, speed):
         return (
             "Camera motion: choose motion types that suit the action, and write them as "
             "natural English inside the shot (motion type, plus amplitude and speed only "
-            "when meaningful). Do not stack them as labels at the end of a sentence."
+            "when meaningful). Do not stack them as labels at the end of a sentence. "
+            + LITERAL_CAMERA_DIRECTIVE
         )
 
     parts = [motion]
@@ -289,7 +307,8 @@ def camera_directive(motion, amplitude, speed):
     return (
         f"Camera motion: the primary camera movement is `{phrase}`. Express it as natural "
         "English action inside the shot rather than as a trailing label. Additional shots "
-        "may use other motion types when the action calls for it."
+        "may use other motion types when the action calls for it. "
+        + LITERAL_CAMERA_DIRECTIVE
     )
 
 

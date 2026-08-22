@@ -2,7 +2,7 @@
   "id": "0c7e5f92-4ab1-4d38-9e67-21b84cd5a9f3",
   "revision": 0,
   "last_node_id": 190,
-  "last_link_id": 402,
+  "last_link_id": 404,
   "nodes": [
     {
       "id": 119,
@@ -620,13 +620,13 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 328
+          "link": 401
         },
         {
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
-          "link": 318
+          "link": 402
         }
       ],
       "outputs": [
@@ -743,7 +743,7 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            293
+            402
           ]
         }
       ],
@@ -784,7 +784,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            300
+            401
           ]
         }
       ],
@@ -903,80 +903,11 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video (Minimal)\n\nThe one-box music video: **song + lyrics + a cinematic look + three sliders - go.**\n\n1. **Load the song** → `audio` (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track). Paste the lyrics (`[0:12] line` timestamps = exact lip-sync).\n2. Pick a **visual_style** (the curated looks fix style, camera, lenses and colour) and set the sliders: `performance` (0 story → 100 singer on camera), `pace` (0 slow → 100 quick cuts), `wildness` (0 grounded → 100 surreal).\n3. The model invents the concept and the performer; a photo on `image_1` locks the performer's face and passes through to the video node's `ref_image_0`.\n\nThe full Music Video Writer runs underneath (Auto cutting on the music, lyric-driven imagery, wardrobe/location locks, saved scene bundles). Use the full writer's workflow when you need cast lines, locks, briefs or masked audio.\n\n**Dailies Gate variant:** the run HOLDS live at the gate instead of stopping - **▶ Print it** renders with your hand edits, **✍ Punch-up** rewrites selected takes through the writer's own model session using your notes, **🎲 New take** asks for a different version, **↩ Undo** rolls a rewrite back, **✋ Cut** ends the run. No re-queueing; `session_id` wired into the gate is what enables the AI rewrites."
+        "# H3 Music Video (Minimal)\n\nThe one-box music video: **song + lyrics + a cinematic look + three sliders - go.**\n\n1. **Load the song** → `audio` (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track). Paste the lyrics (`[0:12] line` timestamps = exact lip-sync).\n2. Pick a **visual_style** (the curated looks fix style, camera, lenses and colour) and set the sliders: `performance` (0 story → 100 singer on camera), `pace` (0 slow → 100 quick cuts), `wildness` (0 grounded → 100 surreal).\n3. The model invents the concept and the performer; a photo on `image_1` locks the performer's face and passes through to the video node's `ref_image_0`.\n\nThe full Music Video Writer runs underneath (Auto cutting on the music, lyric-driven imagery, wardrobe/location locks, saved scene bundles). Use the full writer's workflow when you need cast lines, locks, briefs or masked audio.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Dailies Gate variant:** the run HOLDS live at the gate instead of stopping - **▶ Print it** renders with your hand edits, **✍ Punch-up** rewrites selected takes through the writer's own model session using your notes, **🎲 New take** asks for a different version, **↩ Undo** rolls a rewrite back, **✋ Cut** ends the run. No re-queueing; `session_id` wired into the gate is what enables the AI rewrites. The writer's seed is **-1 (randomize)** here, so EVERY queue writes a brand-new video - nothing is reused from earlier runs."
       ],
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
-    },
-    {
-      "id": 162,
-      "type": "H3ScenesJoin",
-      "pos": [
-        823.3,
-        4904.7
-      ],
-      "size": [
-        300,
-        150
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 300
-        },
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "shape": 7,
-          "link": 293
-        },
-        {
-          "name": "replace_audio",
-          "type": "AUDIO",
-          "link": 325,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": [
-            317
-          ]
-        },
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": [
-            318
-          ]
-        },
-        {
-          "name": "frame_count",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "H3ScenesJoin",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        0,
-        "resize to first scene"
-      ],
-      "title": "H3 Scenes Join — all scenes → one video"
     },
     {
       "id": 163,
@@ -1029,7 +960,7 @@
           "name": "durations",
           "type": "FLOAT",
           "links": [
-            401
+            403
           ]
         },
         {
@@ -1057,7 +988,7 @@
           "name": "session_id",
           "type": "STRING",
           "links": [
-            402
+            404
           ]
         },
         {
@@ -1130,8 +1061,9 @@
         30,
         45,
         "sonnet",
-        1,
-        "fixed"
+        -1,
+        "randomize",
+        "Ref2VA (bind reference images)"
       ],
       "title": "H3 Music Video (Minimal) — lyrics + look + 3 sliders"
     },
@@ -1156,7 +1088,6 @@
           "type": "AUDIO",
           "links": [
             319,
-            325,
             400
           ]
         }
@@ -1194,13 +1125,13 @@
         {
           "name": "durations",
           "type": "FLOAT",
-          "link": 401,
+          "link": 403,
           "shape": 7
         },
         {
           "name": "session_id",
           "type": "STRING",
-          "link": 402,
+          "link": 404,
           "shape": 7
         },
         {
@@ -1241,89 +1172,6 @@
         true,
         600,
         false
-      ]
-    },
-    {
-      "id": 166,
-      "type": "ImageScale",
-      "pos": [
-        455.8,
-        4718.8
-      ],
-      "size": [
-        315,
-        130
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 317
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            327
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "Fix H3 528px → 960×540",
-      "properties": {
-        "Node name for S&R": "ImageScale"
-      },
-      "widgets_values": [
-        "bilinear",
-        960,
-        540,
-        "disabled"
-      ]
-    },
-    {
-      "id": 167,
-      "type": "RTXVideoSuperResolution",
-      "pos": [
-        810.8,
-        4714.7
-      ],
-      "size": [
-        315,
-        120
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 327
-        }
-      ],
-      "outputs": [
-        {
-          "name": "upscaled_images",
-          "type": "IMAGE",
-          "links": [
-            328
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "RTX VSR 2× → 1920×1080",
-      "properties": {
-        "Node name for S&R": "RTXVideoSuperResolution"
-      },
-      "widgets_values": [
-        "scale by multiplier",
-        2.0,
-        "HIGH"
       ]
     },
     {
@@ -1573,44 +1421,12 @@
       "MODEL"
     ],
     [
-      293,
-      121,
-      0,
-      162,
-      1,
-      "AUDIO"
-    ],
-    [
       294,
       146,
       0,
       92,
       0,
       "VIDEO"
-    ],
-    [
-      300,
-      122,
-      0,
-      162,
-      0,
-      "IMAGE"
-    ],
-    [
-      317,
-      162,
-      0,
-      166,
-      0,
-      "IMAGE"
-    ],
-    [
-      318,
-      162,
-      1,
-      146,
-      1,
-      "AUDIO"
     ],
     [
       319,
@@ -1653,14 +1469,6 @@
       "AUDIO"
     ],
     [
-      325,
-      164,
-      0,
-      162,
-      2,
-      "AUDIO"
-    ],
-    [
       326,
       163,
       0,
@@ -1669,27 +1477,27 @@
       "STRING"
     ],
     [
-      327,
-      166,
+      400,
+      164,
       0,
-      167,
+      190,
       0,
-      "IMAGE"
+      "AUDIO"
     ],
     [
-      328,
-      167,
+      401,
+      122,
       0,
       146,
       0,
       "IMAGE"
     ],
     [
-      400,
-      164,
+      402,
+      121,
       0,
-      190,
-      0,
+      146,
+      1,
       "AUDIO"
     ],
     [
@@ -1717,7 +1525,7 @@
       "IMAGE"
     ],
     [
-      401,
+      403,
       163,
       1,
       165,
@@ -1725,7 +1533,7 @@
       "FLOAT"
     ],
     [
-      402,
+      404,
       163,
       5,
       165,
