@@ -11,6 +11,7 @@ import os
 import random
 
 from ...utils.constants import CUSTOM_CATEGORY
+from .common import scale_reference_image
 
 _DATA_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
@@ -164,11 +165,20 @@ class H3Characters:
                         "is appended, so several can be chained into one cast list."
                     ),
                 }),
+                "image": ("IMAGE", {
+                    "tooltip": (
+                        "This character's reference picture (their face photo). Passed through "
+                        "unchanged on the `image` output, so the character and their picture "
+                        "travel together: wire `cast` to a writer's cast_N and `image` to the "
+                        "matching image_N."
+                    ),
+                }),
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "STRING")
-    RETURN_NAMES = ("character", "actor", "franchise", "file_path", "cast", "wardrobe")
+    # `image` is appended LAST so saved workflows keep their output link indices
+    RETURN_TYPES = ("STRING", "STRING", "STRING", "STRING", "STRING", "STRING", "IMAGE")
+    RETURN_NAMES = ("character", "actor", "franchise", "file_path", "cast", "wardrobe", "image")
     FUNCTION = "pick"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -180,7 +190,11 @@ class H3Characters:
         "into the H3 Crossover Writer."
     )
 
-    def pick(self, character, franchise_filter, seed, custom_character="", wardrobe="", cast_in=""):
+    def pick(self, character, franchise_filter, seed, custom_character="", wardrobe="", cast_in="", image=None):
+        # normalised here already (~0.8 MP, /32), so the picture is at the video
+        # model's working size even when wired straight to a video node; the
+        # writers' own pass-through normalisation is a no-op on top of this
+        image = scale_reference_image(image)
         custom = custom_cast_line(custom_character)
         wardrobe = (wardrobe or "").strip()
         if character == _CUSTOM and not custom:
@@ -192,9 +206,9 @@ class H3Characters:
             line = cast_line_with_wardrobe(custom, wardrobe)
             cast = (cast_in or "").strip()
             cast = f"{cast}\n{line}" if cast else line
-            return (name, "", "", "", cast, wardrobe)
+            return (name, "", "", "", cast, wardrobe, image)
         if not _ROWS:
-            return ("", "", "", "", cast_in or "", wardrobe)
+            return ("", "", "", "", cast_in or "", wardrobe, image)
 
         if character == _RANDOM:
             pool = _ROWS
@@ -207,4 +221,4 @@ class H3Characters:
         cast_line = cast_line_with_wardrobe(cast_line_for(row), wardrobe)
         cast = (cast_in or "").strip()
         cast = f"{cast}\n{cast_line}" if cast else cast_line
-        return (row["character"], row["actor"], row["franchise"], row["path"], cast, wardrobe)
+        return (row["character"], row["actor"], row["franchise"], row["path"], cast, wardrobe, image)

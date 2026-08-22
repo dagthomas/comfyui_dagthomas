@@ -8,8 +8,8 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5139.7
+        -1490,
+        5140
       ],
       "size": [
         640,
@@ -50,8 +50,8 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5279.7
+        -1490,
+        5280
       ],
       "size": [
         650,
@@ -165,8 +165,8 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490.0,
-        4949.7
+        -1490,
+        4950
       ],
       "size": [
         640,
@@ -246,8 +246,8 @@
       "id": 131,
       "type": "ComfyMathExpression",
       "pos": [
-        -1755.0,
-        5940.0
+        -1760,
+        5940
       ],
       "size": [
         225,
@@ -438,8 +438,8 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490.0,
-        4789.7
+        -1490,
+        4790
       ],
       "size": [
         640,
@@ -481,8 +481,8 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1053.7,
-        4487.1
+        -1050,
+        4490
       ],
       "size": [
         270,
@@ -567,12 +567,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -726.0,
-        4488.2
+        -730,
+        4490
       ],
       "size": [
         425,
-        317.984375
+        318
       ],
       "flags": {},
       "order": 15,
@@ -624,12 +624,12 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1486.8,
-        4918.2
+        1490,
+        4920
       ],
       "size": [
-        1458.46875,
-        978.625
+        1458,
+        979
       ],
       "flags": {},
       "order": 25,
@@ -666,8 +666,8 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1153.3,
-        4918.8
+        1150,
+        4920
       ],
       "size": [
         270,
@@ -714,8 +714,8 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        158.0,
-        5096.9
+        160,
+        5100
       ],
       "size": [
         230,
@@ -774,8 +774,8 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        822.9,
-        5106.4
+        820,
+        5110
       ],
       "size": [
         230,
@@ -815,8 +815,8 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        475.0,
-        4919.4
+        480,
+        4920
       ],
       "size": [
         230,
@@ -856,8 +856,8 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1865.0,
-        5610.0
+        -1860,
+        5610
       ],
       "size": [
         270,
@@ -905,8 +905,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -25.0,
-        5615.0
+        -20,
+        5620
       ],
       "size": [
         847,
@@ -950,8 +950,8 @@
       "id": 157,
       "type": "H3ClaudeCodeScenesWriter",
       "pos": [
-        -1555.0,
-        5634.5
+        -1560,
+        5630
       ],
       "size": [
         420,
@@ -1042,7 +1042,7 @@
           "type": "STRING",
           "shape": 6,
           "links": [
-            318
+            312
           ]
         },
         {
@@ -1126,8 +1126,8 @@
       "id": 158,
       "type": "H3ScenePick",
       "pos": [
-        -1025.2,
-        5579.7
+        -1030,
+        5580
       ],
       "size": [
         300,
@@ -1203,8 +1203,8 @@
       "id": 159,
       "type": "PrimitiveInt",
       "pos": [
-        -1040.0,
-        5419.7
+        -1040,
+        5420
       ],
       "size": [
         300,
@@ -1238,8 +1238,8 @@
       "id": 160,
       "type": "MarkdownNote",
       "pos": [
-        -1490.0,
-        6464.5
+        -1490,
+        6460
       ],
       "size": [
         700,
@@ -1264,8 +1264,8 @@
       "id": 161,
       "type": "H3PromptPreview",
       "pos": [
-        -585.0,
-        5682.9
+        -580,
+        5680
       ],
       "size": [
         520,
@@ -1302,56 +1302,11 @@
       "title": "H3 Prompt Preview"
     },
     {
-      "id": 162,
-      "type": "H3ScenesReview",
-      "pos": [
-        -1095.0,
-        5759.7
-      ],
-      "size": [
-        470,
-        420
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "link": 318
-        }
-      ],
-      "outputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "links": [
-            312
-          ],
-          "slot_index": 0
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "title": "H3 Scenes Review (edit before render)",
-      "properties": {
-        "Node name for S&R": "H3ScenesReview"
-      },
-      "widgets_values": [
-        "Review (stop here and edit)",
-        ""
-      ]
-    },
-    {
       "id": 163,
       "type": "ImageScale",
       "pos": [
-        445.8,
-        4718.8
+        450,
+        4720
       ],
       "size": [
         315,
@@ -1392,8 +1347,8 @@
       "id": 164,
       "type": "RTXVideoSuperResolution",
       "pos": [
-        800.8,
-        4718.8
+        800,
+        4720
       ],
       "size": [
         315,
@@ -1433,8 +1388,8 @@
       "id": 165,
       "type": "H3SceneCounter",
       "pos": [
-        -665.2,
-        5409.7
+        -670,
+        5410
       ],
       "size": [
         250,
@@ -1668,7 +1623,7 @@
     ],
     [
       312,
-      162,
+      157,
       0,
       158,
       0,
@@ -1715,14 +1670,6 @@
       "STRING"
     ],
     [
-      318,
-      157,
-      0,
-      162,
-      0,
-      "STRING"
-    ],
-    [
       319,
       163,
       0,
@@ -1760,10 +1707,10 @@
       "id": 1,
       "title": "Models",
       "bounding": [
-        -1506.0,
-        4715.7,
-        796.8,
-        990.0
+        -1520,
+        4700,
+        820,
+        1020
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1772,10 +1719,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -276.0,
-        4836.0,
-        680.0,
-        650.0
+        -290,
+        4820,
+        710,
+        680
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1784,10 +1731,10 @@
       "id": 3,
       "title": "Conditioning",
       "bounding": [
-        -766.0,
-        4866.0,
-        442.0,
-        444.0
+        -780,
+        4850,
+        470,
+        480
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1796,10 +1743,10 @@
       "id": 4,
       "title": "Decoding and create video",
       "bounding": [
-        459.0,
-        4845.4,
-        609.9,
-        337.0
+        450,
+        4830,
+        630,
+        370
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1808,10 +1755,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1881.0,
-        5505.7,
-        2719.0,
-        943.3
+        -1890,
+        5490,
+        2750,
+        980
       ],
       "color": "#3f789e",
       "flags": {}

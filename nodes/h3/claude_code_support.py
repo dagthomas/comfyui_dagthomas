@@ -470,6 +470,51 @@ def claude_code_optional_inputs():
     }
 
 
+SAME_AS_MODEL = "same as model"
+
+
+def draft_model_input():
+    """
+    The `draft_model` widget for writers that split a run into a plan and scene
+    chunks: the main `model` plans the video and repairs continuity, while this
+    (usually cheaper, faster) model drafts the scene chunks. Output speed is the
+    bottleneck of a long run, so drafting with haiku cuts wall-clock time hard.
+    """
+    return {
+        "draft_model": ([SAME_AS_MODEL] + list(CLAUDE_CODE_MODELS), {
+            "default": "haiku",
+            "tooltip": (
+                "Who DRAFTS the scene chunks. The main `model` stays the director: it "
+                "plans the video (synopsis, wardrobe/location locks, scene plan) and runs "
+                "the continuity repair, while this model writes the scenes from that plan. "
+                "haiku drafts several times faster than sonnet. `same as model` turns the "
+                "split off. Ignored when the run is backed by Codex, a local server or an "
+                "H3 LLM Backend override - those runs use one model throughout."
+            ),
+        }),
+    }
+
+
+def resolve_draft_model(draft_model, model, local):
+    """
+    The model that writes the scene chunks. The draft pick applies only when the
+    run is a plain Claude Code run: a Codex / router / override backend keeps
+    one model throughout (their sessions cannot be shared across backends).
+    """
+    draft = (draft_model or "").strip()
+    if not draft or draft == SAME_AS_MODEL:
+        return model
+    effective = resolve_backend_model(model, (local or {}).get("model_override", ""))
+    if ((local or {}).get("model_override") or "").strip() or is_codex_model(effective) \
+            or is_router_model(effective):
+        print(
+            f"ℹ️ H3: draft_model '{draft}' ignored - this run is backed by "
+            f"'{effective}', which writes every chunk itself."
+        )
+        return model
+    return draft
+
+
 def directions_with_research(extra_instructions, research):
     """Fold the research directive into the user's own extra direction."""
     text = (extra_instructions or "").strip()

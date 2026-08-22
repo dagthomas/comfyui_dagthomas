@@ -1,0 +1,278 @@
+{
+  "119": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    }
+  },
+  "120": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    }
+  },
+  "123": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "res_multistep"
+    }
+  },
+  "126": {
+    "class_type": "BasicGuider",
+    "inputs": {
+      "model": [
+        "141",
+        0
+      ],
+      "conditioning": [
+        "136",
+        0
+      ]
+    }
+  },
+  "128": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    }
+  },
+  "129": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 337404407076246
+    }
+  },
+  "136": {
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "inputs": {
+      "prompt": [
+        "165",
+        0
+      ],
+      "width": [
+        "115",
+        0
+      ],
+      "height": [
+        "115",
+        1
+      ],
+      "length": [
+        "163",
+        2
+      ],
+      "ref_image_size": "match",
+      "clip": [
+        "128",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "audio_vae": [
+        "120",
+        0
+      ]
+    }
+  },
+  "127": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "143": {
+    "class_type": "PathchSageAttentionKJ",
+    "inputs": {
+      "sage_attention": "auto",
+      "allow_compile": false,
+      "model": [
+        "127",
+        0
+      ]
+    }
+  },
+  "124": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 25,
+      "denoise": 1,
+      "model": [
+        "141",
+        0
+      ]
+    }
+  },
+  "141": {
+    "class_type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
+    "inputs": {
+      "enabled": true,
+      "tau": 1,
+      "min_tokens": 4096,
+      "strict": false,
+      "thresh_type": "diag",
+      "int8_qk": false,
+      "int8_pv": "exact_kv",
+      "sink_conditioning": "exact_kv",
+      "dense_blocks": "",
+      "model": [
+        "143",
+        0
+      ]
+    }
+  },
+  "92": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "filename_prefix": "video/MiniMax_H3",
+      "format": "auto",
+      "codec": "auto",
+      "video": [
+        "146",
+        0
+      ]
+    }
+  },
+  "146": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "images": [
+        "122",
+        0
+      ],
+      "audio": [
+        "121",
+        0
+      ]
+    }
+  },
+  "125": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "126",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "124",
+        0
+      ],
+      "latent_image": [
+        "136",
+        1
+      ]
+    }
+  },
+  "121": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    }
+  },
+  "122": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    }
+  },
+  "115": {
+    "class_type": "ResolutionSelector",
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 0.5,
+      "multiple": 32
+    }
+  },
+  "157": {
+    "class_type": "H3Characters",
+    "inputs": {
+      "character": "✏️ custom (type in custom_character)",
+      "franchise_filter": "(all)",
+      "seed": 0,
+      "custom_character": "Dr. Maya Ellis: a research scientist in her early 40s, shoulder-length dark curls, rectangular glasses",
+      "wardrobe": "charcoal blazer over a white crew-neck tee, dark straight-leg jeans, thin silver watch on the left wrist"
+    }
+  },
+  "163": {
+    "class_type": "H3ClaudeCodePresentationWriter",
+    "inputs": {
+      "source_material": "Project Falcon benchmark results (v2.1 vs v1.4):\n- accuracy: 91.4% (up from 78.2%)\n- median latency: 95 ms (down from 220 ms)\n- memory: 1.9 GB (down from 3.4 GB)\n- supported languages: 14 (up from 6)\nKey finding: switching to the fused attention kernel accounts for 70% of the latency win.\nKnown limitation: accuracy drops to 84% on inputs longer than 4k tokens.",
+      "direction": "An enthusiastic keynote reveal. Dr. Maya Ellis presents on a dark stage with a giant LED screen behind her; confident, warm, a little playful. The audience is developers.",
+      "presentation_format": "Keynote stage (presenter + giant LED screen)",
+      "scene_count": 6,
+      "duration_mode": "Vary 5-15s (let Claude pace each scene)",
+      "scene_duration": 12.0,
+      "visual_aids": "Auto (a graphic wherever it helps)",
+      "continuity_mode": "Independent clips (hard cuts, T2V openers)",
+      "visual_style": "Live-action, 35mm cinematic film aesthetic",
+      "dialogue_language": "English",
+      "wildness": 10,
+      "model": "sonnet",
+      "research": false,
+      "director": true,
+      "use_subscription": true,
+      "timeout_seconds": 1800,
+      "seed": -1,
+      "extra_cast": "",
+      "custom_dialogue_language": "",
+      "custom_visual_style": "",
+      "wardrobe": "",
+      "locations": "",
+      "enforce_wardrobe": true,
+      "extra_instructions": "",
+      "image_notes": "",
+      "include_soundscape": true,
+      "include_non_diegetic_music": false,
+      "resume_session_id": "",
+      "working_dir": "",
+      "reference_image_use": "Characters only (ignore picture backgrounds)",
+      "save_scenes": true,
+      "scenes_per_call": 4,
+      "prompt_mode": "Ref2VA (bind reference images)",
+      "cast_1": [
+        "157",
+        4
+      ]
+    }
+  },
+  "165": {
+    "class_type": "H3ScenesReview",
+    "inputs": {
+      "mode": "Bypass (pass scenes through)",
+      "edited": "",
+      "scenes": [
+        "163",
+        0
+      ]
+    }
+  }
+}

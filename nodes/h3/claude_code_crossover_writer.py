@@ -34,6 +34,7 @@ from .claude_code_support import (
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .characters import cast_line_name, split_cast_line
 from .common import (
+    scale_reference_passthrough,
     AUTO,
     LITERAL_CAMERA_DIRECTIVE,
     VISUAL_STYLES,
@@ -524,7 +525,7 @@ class H3ClaudeCodeCrossoverWriter:
     ):
         # The same tensors go back out on image_1..image_9 so the video node
         # can be wired from here; Claude gets downscaled copies.
-        passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
+        passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
         images = [downscale_for_vision(pil) for _, pil in references] or None
         image_labels = tuple(range(1, len(references) + 1))

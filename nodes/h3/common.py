@@ -691,6 +691,75 @@ def collect_typed_references(slots, to_pil):
     return picked
 
 
+# ----------------------------------------------------------------------
+# Reference image normalisation - the released reference pipeline's rule
+# (diffusers modular_pipelines/minimax_h3/before_encoder.py):
+#
+#     scale = reference_image_short_edge / min(width, height)   # 2048
+#
+# rounded to /32 - INCLUDING upscaling. ComfyUI's own node clamps this with
+# min(1.0, ...) and never upscales, so a small reference (say 512px) reaches
+# the DiT with 16x fewer reference latent rows than the model was built to
+# see, and identity fidelity suffers. We do the resize on the writers' image
+# pass-throughs instead: by the time the stock node sees the picture its own
+# scale is min(1.0, 2048/2048) = 1.0 and its resize is a no-op.
+#
+# Upscaling is not free: reference rows ride through every sampling step, so
+# quadrupling the short edge multiplies those rows by 16. That is the
+# released pipeline's cost; the console line makes the final size visible.
+
+REFERENCE_SHORT_EDGE = 2048
+REFERENCE_MULTIPLE = 32
+# the reference pipeline rejects references outside 1:4 .. 4:1
+REFERENCE_MAX_ASPECT = 4.0
+
+
+def scale_reference_image(tensor):
+    """
+    An IMAGE tensor [B,H,W,C] scaled so its SHORT edge is
+    REFERENCE_SHORT_EDGE, both sides rounded to REFERENCE_MULTIPLE - up as
+    well as down, exactly like the released reference pipeline (ComfyUI's
+    node only ever downscales). None passes through; a conforming image is
+    untouched. Warns on aspect ratios outside 1:4..4:1, which the reference
+    pipeline rejects outright.
+    """
+    if tensor is None:
+        return None
+    import torch
+    _b, h, w, _c = tensor.shape
+    aspect = w / h if w >= h else h / w
+    if aspect > REFERENCE_MAX_ASPECT:
+        print(
+            f"⚠️ H3 reference image {w}x{h} is outside the 1:4..4:1 aspect range "
+            "the reference pipeline accepts - expect degraded identity transfer."
+        )
+    s = REFERENCE_SHORT_EDGE / float(min(h, w))
+    nw = max(REFERENCE_MULTIPLE, round(w * s / REFERENCE_MULTIPLE) * REFERENCE_MULTIPLE)
+    nh = max(REFERENCE_MULTIPLE, round(h * s / REFERENCE_MULTIPLE) * REFERENCE_MULTIPLE)
+    if (nh, nw) == (h, w):
+        return tensor
+    x = tensor.movedim(-1, 1)  # BHWC -> BCHW
+    if nw * nh < w * h:
+        x = torch.nn.functional.interpolate(x, size=(nh, nw), mode="area")
+    else:
+        x = torch.nn.functional.interpolate(x, size=(nh, nw), mode="bicubic", antialias=True)
+    return x.movedim(1, -1).clamp(0.0, 1.0)
+
+
+def scale_reference_passthrough(slots, names):
+    """The image_N pass-through tuple, every connected tensor normalised."""
+    scaled = tuple(scale_reference_image(slots.get(name)) for name in names)
+    n = sum(1 for t in scaled if t is not None)
+    if n:
+        first = next(t for t in scaled if t is not None)
+        print(
+            f"🖼️ H3 reference images: {n} fitted to short edge {REFERENCE_SHORT_EDGE} "
+            f"(/{REFERENCE_MULTIPLE}, reference-pipeline rule, upscaling included) - "
+            f"e.g. {first.shape[2]}x{first.shape[1]}"
+        )
+    return scaled
+
+
 VISION_MAX_SIDE = 1024
 
 

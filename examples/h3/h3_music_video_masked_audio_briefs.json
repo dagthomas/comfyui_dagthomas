@@ -8,8 +8,8 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5123.8
+        -1490,
+        5120
       ],
       "size": [
         640,
@@ -50,8 +50,8 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5263.8
+        -1490,
+        5260
       ],
       "size": [
         650,
@@ -93,8 +93,8 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260.0,
-        5301.9
+        -260,
+        5300
       ],
       "size": [
         370,
@@ -127,8 +127,8 @@
       "id": 126,
       "type": "BasicGuider",
       "pos": [
-        -260.0,
-        5171.9
+        -260,
+        5170
       ],
       "size": [
         360,
@@ -166,8 +166,8 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490.0,
-        4933.8
+        -1490,
+        4930
       ],
       "size": [
         640,
@@ -211,8 +211,8 @@
       "id": 129,
       "type": "RandomNoise",
       "pos": [
-        -260.0,
-        5011.9
+        -260,
+        5010
       ],
       "size": [
         360,
@@ -379,8 +379,8 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490.0,
-        4773.8
+        -1490,
+        4770
       ],
       "size": [
         640,
@@ -422,8 +422,8 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1053.7,
-        4487.1
+        -1050,
+        4490
       ],
       "size": [
         270,
@@ -464,8 +464,8 @@
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -260.0,
-        5441.9
+        -260,
+        5440
       ],
       "size": [
         370,
@@ -508,12 +508,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -740.3,
-        4488.2
+        -740,
+        4490
       ],
       "size": [
         425,
-        317.984375
+        318
       ],
       "flags": {},
       "order": 16,
@@ -565,12 +565,12 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1486.8,
-        4918.2
+        1490,
+        4920
       ],
       "size": [
-        1458.46875,
-        978.625
+        1458,
+        979
       ],
       "flags": {},
       "order": 26,
@@ -607,8 +607,8 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1163.3,
-        4918.8
+        1160,
+        4920
       ],
       "size": [
         270,
@@ -655,8 +655,8 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        158.0,
-        5096.9
+        160,
+        5100
       ],
       "size": [
         230,
@@ -715,8 +715,8 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        822.9,
-        5124.7
+        820,
+        5120
       ],
       "size": [
         230,
@@ -743,9 +743,7 @@
         {
           "name": "AUDIO",
           "type": "AUDIO",
-          "links": [
-            403
-          ]
+          "links": []
         }
       ],
       "properties": {
@@ -756,8 +754,8 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        475.0,
-        4919.4
+        480,
+        4920
       ],
       "size": [
         230,
@@ -797,8 +795,8 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1480.0,
-        6017.8
+        -1480,
+        6020
       ],
       "size": [
         270,
@@ -846,8 +844,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -41.2,
-        5641.9
+        -40,
+        5640
       ],
       "size": [
         847,
@@ -891,8 +889,8 @@
       "id": 157,
       "type": "H3Characters",
       "pos": [
-        -1490.0,
-        5817.8
+        -1490,
+        5820
       ],
       "size": [
         330,
@@ -963,8 +961,8 @@
       "id": 161,
       "type": "MarkdownNote",
       "pos": [
-        -1851.2,
-        6257.8
+        -1850,
+        6260
       ],
       "size": [
         700,
@@ -979,7 +977,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Scene briefs (custom scenes):** the chained **H3 Scene Brief** nodes are YOUR plan - brief 1 is pinned to scene 01, the unpinned ones fill the following pieces in order; every remaining piece stays the model's to invent within the concept. Each brief is binding: its location, cast and camera wish are honoured, adapted to that piece's lyric lines, duration and energy."
+        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Original sound:** every saved clip carries its ORIGINAL slice of the song (the writer's `audio_segments`, cut on the same frame grid) - not the model-generated audio, and in the masked workflow not the vocals-only stem. Wire Create Video's `audio` back to VAE Decode Audio if you want to hear what the model generated.\n\n**Scene briefs (custom scenes):** the chained **H3 Scene Brief** nodes are YOUR plan - brief 1 is pinned to scene 01, the unpinned ones fill the following pieces in order; every remaining piece stays the model's to invent within the concept. Each brief is binding: its location, cast and camera wish are honoured, adapted to that piece's lyric lines, duration and energy."
       ],
       "title": "How this works",
       "color": "#222",
@@ -989,8 +987,8 @@
       "id": 163,
       "type": "H3ClaudeCodeMusicVideoWriter",
       "pos": [
-        -1111.2,
-        5600.0
+        -1110,
+        5600
       ],
       "size": [
         520,
@@ -1053,7 +1051,7 @@
           "name": "scenes",
           "type": "STRING",
           "links": [
-            326
+            321
           ]
         },
         {
@@ -1071,7 +1069,9 @@
         {
           "name": "audio_segments",
           "type": "AUDIO",
-          "links": []
+          "links": [
+            403
+          ]
         },
         {
           "name": "segment_table",
@@ -1174,8 +1174,8 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Neon-lit rooftop at night in the rain; Lena performs to camera with the city behind her. Verses: intimate handheld close-ups. Chorus: wide, the whole rooftop lit by a giant pink billboard, rain in the backlight. A single red umbrella is the recurring motif.",
-        "[0:00] (intro - instrumental)\n[0:12] I walked the wire in the rain\n[0:18] counting every light below\n[0:24] you said the city keeps our names\n[0:30] but the city doesn't know\n[Chorus]\n[0:36] So hold me in the neon\n[0:42] hold me till the morning\n[0:48] we were never leaving\n[0:54] only falling slow",
+        "",
+        "",
         "Performance (the singer lip-syncs the lyrics on camera)",
         "Auto (cut on the music)",
         15.0,
@@ -1206,7 +1206,9 @@
         "Masked latent (song injected into the audio latent)",
         true,
         4,
-        "Ref2VA (bind reference images)"
+        "Ref2VA (bind reference images)",
+        "haiku",
+        true
       ],
       "title": "H3 Music Video Writer"
     },
@@ -1214,8 +1216,8 @@
       "id": 164,
       "type": "LoadAudio",
       "pos": [
-        -1490.0,
-        5403.8
+        -1490,
+        5400
       ],
       "size": [
         315,
@@ -1240,63 +1242,18 @@
         "Node name for S&R": "LoadAudio"
       },
       "widgets_values": [
-        "song.mp3",
+        "",
         null,
         null
       ],
       "title": "Load the song"
     },
     {
-      "id": 165,
-      "type": "H3ScenesReview",
-      "pos": [
-        -551.2,
-        5641.9
-      ],
-      "size": [
-        470,
-        420
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "link": 326
-        }
-      ],
-      "outputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "links": [
-            321
-          ],
-          "slot_index": 0
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "title": "H3 Scenes Review (edit before render)",
-      "properties": {
-        "Node name for S&R": "H3ScenesReview"
-      },
-      "widgets_values": [
-        "Review (stop here and edit)",
-        ""
-      ]
-    },
-    {
       "id": 166,
       "type": "AudioSeparation",
       "pos": [
-        -1490.0,
-        5597.8
+        -1490,
+        5600
       ],
       "size": [
         315,
@@ -1351,8 +1308,8 @@
       "id": 167,
       "type": "MiniMaxH3SongMaskedAVContext",
       "pos": [
-        -270.5,
-        4721.9
+        -270,
+        4720
       ],
       "size": [
         370,
@@ -1436,8 +1393,8 @@
       "id": 168,
       "type": "MarkdownNote",
       "pos": [
-        -275.3,
-        4421.9
+        -280,
+        4420
       ],
       "size": [
         370,
@@ -1458,8 +1415,8 @@
       "id": 191,
       "type": "H3SongAnalysis",
       "pos": [
-        -1140.0,
-        5403.8
+        -1140,
+        5400
       ],
       "size": [
         340,
@@ -1512,8 +1469,8 @@
       "id": 171,
       "type": "H3SceneBrief",
       "pos": [
-        -1851.2,
-        5560.0
+        -1850,
+        5560
       ],
       "size": [
         330,
@@ -1557,8 +1514,8 @@
       "id": 172,
       "type": "H3SceneBrief",
       "pos": [
-        -1851.2,
-        5790.0
+        -1850,
+        5790
       ],
       "size": [
         330,
@@ -1602,8 +1559,8 @@
       "id": 173,
       "type": "H3SceneBrief",
       "pos": [
-        -1851.2,
-        6020.0
+        -1850,
+        6020
       ],
       "size": [
         330,
@@ -1823,7 +1780,7 @@
     ],
     [
       321,
-      165,
+      163,
       0,
       136,
       8,
@@ -1844,14 +1801,6 @@
       136,
       11,
       "INT"
-    ],
-    [
-      326,
-      163,
-      0,
-      165,
-      0,
-      "STRING"
     ],
     [
       327,
@@ -1911,8 +1860,8 @@
     ],
     [
       403,
-      121,
-      0,
+      163,
+      3,
       146,
       1,
       "AUDIO"
@@ -1947,10 +1896,10 @@
       "id": 1,
       "title": "Models",
       "bounding": [
-        -1506.0,
-        4699.8,
-        682.0,
-        844.0
+        -1520,
+        4680,
+        750,
+        910
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1959,10 +1908,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -286.5,
-        4647.9,
-        690.5,
-        940.0
+        -300,
+        4630,
+        720,
+        970
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1971,10 +1920,10 @@
       "id": 3,
       "title": "Conditioning",
       "bounding": [
-        -766.0,
-        4866.0,
-        442.0,
-        444.0
+        -780,
+        4850,
+        470,
+        480
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1983,10 +1932,10 @@
       "id": 4,
       "title": "Decoding and create video",
       "bounding": [
-        459.0,
-        4830.7,
-        680.3,
-        370.0
+        450,
+        4830,
+        630,
+        380
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1995,10 +1944,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1867.2,
-        5500.0,
-        2689.0,
-        1272.2
+        -1880,
+        4830,
+        2720,
+        1980
       ],
       "color": "#3f789e",
       "flags": {}

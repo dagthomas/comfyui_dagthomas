@@ -554,9 +554,23 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.claude_code_short_film_writer import H3ClaudeCodeShortFilmWriter
+    NEW_MAPPINGS["H3ClaudeCodeShortFilmWriter"] = H3ClaudeCodeShortFilmWriter
+    NEW_DISPLAY_MAPPINGS["H3ClaudeCodeShortFilmWriter"] = "APNext H3 Short Film Writer"
+except Exception:
+    pass
+
+try:
     from .nodes.h3.music_video_minimal import H3MusicVideoMinimal
     NEW_MAPPINGS["H3MusicVideoMinimal"] = H3MusicVideoMinimal
     NEW_DISPLAY_MAPPINGS["H3MusicVideoMinimal"] = "APNext H3 Music Video (Minimal)"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.manual_scenes import H3ManualScenes
+    NEW_MAPPINGS["H3ManualScenes"] = H3ManualScenes
+    NEW_DISPLAY_MAPPINGS["H3ManualScenes"] = "APNext H3 Manual Scenes (script → lists)"
 except Exception:
     pass
 

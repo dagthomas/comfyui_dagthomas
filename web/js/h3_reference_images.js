@@ -17,6 +17,7 @@ const NODE_CLASSES = new Set([
   "H3ClaudeCodeCrossoverWriter",
   "H3ClaudeCodeMusicVideoWriter",
   "H3ClaudeCodePresentationWriter",
+  "H3ClaudeCodeShortFilmWriter",
   "H3MusicVideoMinimal",
   "H3PromptPreview", // inputs only (thumbnails), no pass-through outputs
 ]);

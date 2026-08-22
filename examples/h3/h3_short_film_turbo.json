@@ -1,8 +1,8 @@
 {
-  "id": "9d5e2f80-6c17-4a3b-b2e4-0f8a94c6d357",
+  "id": "7e3a9c50-2b16-4f88-a4d1-c95e60b823d7",
   "revision": 0,
-  "last_node_id": 190,
-  "last_link_id": 402,
+  "last_node_id": 216,
+  "last_link_id": 518,
   "nodes": [
     {
       "id": 119,
@@ -116,11 +116,8 @@
         "Node name for S&R": "KSamplerSelect"
       },
       "widgets_values": [
-        "res_multistep"
-      ],
-      "widgets_values_named": {
-        "sampler_name": "res_multistep"
-      }
+        "euler"
+      ]
     },
     {
       "id": 126,
@@ -140,7 +137,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 284
+          "link": 518
         },
         {
           "name": "conditioning",
@@ -277,7 +274,7 @@
           "name": "ref_images.ref_image_0",
           "shape": 7,
           "type": "IMAGE",
-          "link": 341
+          "link": null
         },
         {
           "label": "ref_image_1",
@@ -305,7 +302,7 @@
           "name": "ref_audios.ref_audio_0",
           "shape": 7,
           "type": "AUDIO",
-          "link": 324
+          "link": null
         },
         {
           "name": "prompt",
@@ -394,7 +391,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            287
+            510
           ]
         }
       ],
@@ -418,48 +415,6 @@
       }
     },
     {
-      "id": 143,
-      "type": "PathchSageAttentionKJ",
-      "pos": [
-        -1050,
-        4490
-      ],
-      "size": [
-        270,
-        114
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 287
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            288
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PathchSageAttentionKJ"
-      },
-      "widgets_values": [
-        "auto",
-        false
-      ],
-      "widgets_values_named": {
-        "sage_attention": "auto",
-        "allow_compile": false
-      }
-    },
-    {
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
@@ -477,7 +432,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 285
+          "link": 517
         }
       ],
       "outputs": [
@@ -494,71 +449,9 @@
       },
       "widgets_values": [
         "simple",
-        14,
+        4,
         1
-      ],
-      "widgets_values_named": {
-        "scheduler": "simple",
-        "steps": 25,
-        "denoise": 1
-      }
-    },
-    {
-      "id": 141,
-      "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
-      "pos": [
-        -730,
-        4490
-      ],
-      "size": [
-        425,
-        318
-      ],
-      "flags": {},
-      "order": 16,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 288
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            284,
-            285
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "MiniMaxH3MemoryEfficientSolAttentionPatch"
-      },
-      "widgets_values": [
-        true,
-        1,
-        4096,
-        false,
-        "diag",
-        false,
-        "exact_kv",
-        "exact_kv",
-        ""
-      ],
-      "widgets_values_named": {
-        "enabled": true,
-        "tau": 1,
-        "min_tokens": 4096,
-        "strict": false,
-        "thresh_type": "diag",
-        "int8_qk": false,
-        "int8_pv": "exact_kv",
-        "sink_conditioning": "exact_kv",
-        "dense_blocks": ""
-      }
+      ]
     },
     {
       "id": 92,
@@ -742,7 +635,9 @@
         {
           "name": "AUDIO",
           "type": "AUDIO",
-          "links": []
+          "links": [
+            402
+          ]
         }
       ],
       "properties": {
@@ -862,7 +757,7 @@
         {
           "name": "image_1",
           "type": "IMAGE",
-          "link": 342,
+          "link": null,
           "shape": 7
         }
       ],
@@ -880,6 +775,78 @@
       "widgets_values": [
         ""
       ]
+    },
+    {
+      "id": 157,
+      "type": "H3Characters",
+      "pos": [
+        -1490,
+        5660
+      ],
+      "size": [
+        330,
+        130
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "cast_in",
+          "type": "STRING",
+          "shape": 7,
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "character",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "actor",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "franchise",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": [
+            320
+          ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "✏️ custom (type in custom_character)",
+        "(all)",
+        0,
+        "fixed",
+        "Maja: a retired postwoman in her 60s, weathered kind face, steel-grey hair in a tight bun",
+        "bright yellow oilskin coat, chunky knitted mustard scarf, dark rubber boots"
+      ],
+      "title": "H3 Characters — the lead + wardrobe",
+      "color": "#232",
+      "bgcolor": "#353"
     },
     {
       "id": 161,
@@ -901,7 +868,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video (Minimal)\n\nThe one-box music video: **song + lyrics + a cinematic look + three sliders - go.**\n\n1. **Load the song** → `audio` (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track). Paste the lyrics (`[0:12] line` timestamps = exact lip-sync).\n2. Pick a **visual_style** (the curated looks fix style, camera, lenses and colour) and set the sliders: `performance` (0 story → 100 singer on camera), `pace` (0 slow → 100 quick cuts), `wildness` (0 grounded → 100 surreal).\n3. The model invents the concept and the performer; a photo on `image_1` locks the performer's face and passes through to the video node's `ref_image_0`.\n\nThe full Music Video Writer runs underneath (Auto cutting on the music, lyric-driven imagery, wardrobe/location locks, saved scene bundles). Use the full writer's workflow when you need cast lines, locks, briefs or masked audio.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead."
+        "# H3 Short Film\n\n1. Paste your **manuscript** - a story, treatment, script or synopsis - into the **H3 Short Film Writer**. It is adapted faithfully: named characters, events and written dialogue survive verbatim into the scenes.\n2. Size the film either by **scene count** or by **target length** (`length_mode`) - in target mode the node derives the scene count (~11 s per scene) and the model paces each scene's duration so the total lands close to the target. Long films are written in chunks continuing one session, with a film-so-far recap, wardrobe/location locks and a full Beats plan in the synopsis.\n3. The H3 video node runs once per scene (dialogue, ambience and the score are generated by the model - that IS the film's sound) and each clip is saved as its own file; stitch externally or re-add H3 Scenes Join for one file.\n\nCharacters come from H3 Characters nodes or the manuscript itself; a face photo on `image_1..` locks a lead's identity (REF prompt mode). The `script` output is the film's dialogue as a script - read it before rendering.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Turbo variant:** the render chain carries the speed setup from the reference graph - `minimax_h3_turbo_v4_step600_ema.safetensors` LoRA, chunked feed-forward, Sage + LowVRAM + SoL attention, EasyCache and Spectrum, sampled with euler at 4 steps. Needs the packs providing those nodes (Spectrum-MiniMax-H3, the SoL/turbo patch packs) and the turbo LoRA in models/loras."
       ],
       "title": "How this works",
       "color": "#222",
@@ -909,23 +876,42 @@
     },
     {
       "id": 163,
-      "type": "H3MusicVideoMinimal",
+      "type": "H3ClaudeCodeShortFilmWriter",
       "pos": [
         -1110,
         5600
       ],
       "size": [
         520,
-        620
+        1080
       ],
       "flags": {},
       "order": 0,
       "mode": 0,
       "inputs": [
         {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 319
+          "name": "cast_1",
+          "type": "STRING",
+          "link": 320,
+          "shape": 7
+        },
+        {
+          "name": "cast_2",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "cast_3",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "cast_4",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
         },
         {
           "name": "llm",
@@ -935,12 +921,6 @@
         },
         {
           "name": "image_1",
-          "type": "IMAGE",
-          "link": 340,
-          "shape": 7
-        },
-        {
-          "name": "image_2",
           "type": "IMAGE",
           "link": null,
           "shape": 7
@@ -967,19 +947,36 @@
           ]
         },
         {
-          "name": "audio_segments",
-          "type": "AUDIO",
-          "links": [
-            324,
-            402
-          ]
-        },
-        {
           "name": "scenes_text",
           "type": "STRING",
           "links": [
             322
           ]
+        },
+        {
+          "name": "synopsis",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "script",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "total_seconds",
+          "type": "FLOAT",
+          "links": null
         },
         {
           "name": "session_id",
@@ -994,10 +991,7 @@
         {
           "name": "image_1",
           "type": "IMAGE",
-          "links": [
-            341,
-            342
-          ]
+          "links": null
         },
         {
           "name": "image_2",
@@ -1038,156 +1032,424 @@
           "name": "image_9",
           "type": "IMAGE",
           "links": null
-        },
-        {
-          "name": "clip_starts",
-          "type": "FLOAT",
-          "links": null
         }
       ],
       "properties": {
-        "Node name for S&R": "H3MusicVideoMinimal",
+        "Node name for S&R": "H3ClaudeCodeShortFilmWriter",
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "",
-        "Live-action, neon noir: rain-slick night streets, cyan and magenta neon reflections, volumetric smoke and searchlights, anamorphic blue-streak flares, deep crushed blacks",
-        80,
-        30,
-        45,
+        "THE LAST DELIVERY\n\nNight rain over a small harbour town. MAJA (60s, retired postwoman, steel-grey bun, yellow oilskin coat) finds one undelivered letter from 1987 behind a loose panel in her old mail van. The address: the lighthouse. She drives the coughing van up the coast road, headlights cutting the rain. At the lighthouse she meets ESPEN (70s, the keeper, white beard, coarse wool sweater), who never got the letter his late wife wrote him the week they argued. Maja hands it over. He reads it in the lamp room while the beam turns. It says: 'I was never angry. Come home.' Espen laughs and cries at once. Maja pours coffee from a thermos. Dawn breaks; the rain stops; the lamp goes dark as the sun takes over.\nESPEN: 'Forty years late.'\nMAJA: 'Post's like that.'",
+        "Target length (use target_minutes)",
+        8,
+        2.0,
+        "Independent clips (hard cuts, T2V openers)",
+        "Live-action, 35mm cinematic film aesthetic",
+        "English",
+        25,
         "sonnet",
+        false,
+        true,
+        true,
+        1800,
         -1,
         "randomize",
-        "Ref2VA (bind reference images)"
-      ],
-      "title": "H3 Music Video (Minimal) — lyrics + look + 3 sliders"
-    },
-    {
-      "id": 164,
-      "type": "LoadAudio",
-      "pos": [
-        -1490,
-        5470
-      ],
-      "size": [
-        315,
-        124
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            319,
-            400
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadAudio"
-      },
-      "widgets_values": [
         "",
-        null,
-        null
+        "",
+        "",
+        "",
+        "",
+        true,
+        "",
+        "",
+        false,
+        true,
+        true,
+        "",
+        "",
+        "Characters only (ignore picture backgrounds)",
+        true,
+        4,
+        "Ref2VA (bind reference images)",
+        "haiku",
+        true
       ],
-      "title": "Load the song"
+      "title": "H3 Short Film Writer"
     },
     {
-      "id": 190,
-      "type": "H3SongAnalysis",
+      "id": 210,
+      "type": "LoraLoaderModelOnly",
       "pos": [
-        -1140,
-        5470
+        -1500.0,
+        4270.0
       ],
       "size": [
-        340,
-        160
+        625,
+        114
       ],
       "flags": {},
-      "order": 2,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 400
+          "name": "model",
+          "type": "MODEL",
+          "link": 510
         }
       ],
       "outputs": [
         {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "profile",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "bpm",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "intensity",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "label",
-          "type": "STRING",
-          "links": null
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            511
+          ]
         }
       ],
-      "title": "Song Analysis — BPM / intensity",
       "properties": {
-        "Node name for S&R": "H3SongAnalysis",
-        "cnr_id": "comfyui_dagthomas"
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.31.1"
+      },
+      "widgets_values": [
+        "minimax_h3_turbo_v4_step600_ema.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "minimax_h3_turbo_v4_step600_ema.safetensors",
+        "strength_model": 1
       }
     },
     {
-      "id": 168,
-      "type": "LoadImage",
+      "id": 211,
+      "type": "MiniMaxChunkFeedForward",
       "pos": [
-        -1490,
-        5660
+        -1160.0,
+        4270.0
       ],
       "size": [
-        330,
-        314
+        316,
+        114
       ],
       "flags": {},
-      "order": 7,
+      "order": 11,
       "mode": 0,
-      "inputs": [],
-      "outputs": [
+      "inputs": [
         {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            340
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
+          "name": "model",
+          "type": "MODEL",
+          "link": 511
         }
       ],
-      "title": "Performer photo (reference)",
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            512
+          ]
+        }
+      ],
       "properties": {
-        "Node name for S&R": "LoadImage"
+        "Node name for S&R": "MiniMaxChunkFeedForward",
+        "cnr_id": "ComfyUI-KJNodes",
+        "ver": "073efb07419f56cc714e099a82e49fbc23ad9263"
       },
       "widgets_values": [
-        "example.png",
-        "image"
-      ]
+        2,
+        4096
+      ],
+      "widgets_values_named": {
+        "chunks": 2,
+        "seq_threshold": 4096
+      }
+    },
+    {
+      "id": 212,
+      "type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+      "pos": [
+        -820.0,
+        4270.0
+      ],
+      "size": [
+        320,
+        58
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 512
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            513
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+        "cnr_id": "ComfyUI-KJNodes",
+        "ver": "6ab7e8130e449ed2c0037589bcf84146ceb7fc9c"
+      }
+    },
+    {
+      "id": 213,
+      "type": "MiniMaxLowVRAMAttention",
+      "pos": [
+        -480.0,
+        4270.0
+      ],
+      "size": [
+        318,
+        86
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 513
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            514
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxLowVRAMAttention",
+        "cnr_id": "ComfyUI-KJNodes",
+        "ver": "073efb07419f56cc714e099a82e49fbc23ad9263"
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "head_chunks": 4
+      }
+    },
+    {
+      "id": 214,
+      "type": "SolAttnPatch",
+      "pos": [
+        -1500.0,
+        4460.0
+      ],
+      "size": [
+        270,
+        422
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 514
+        },
+        {
+          "name": "tau_profile",
+          "type": "STRING",
+          "shape": 7,
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            515
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SolAttnPatch",
+        "aux_id": "kijai/ComfyUI-SolAttn_triton",
+        "ver": "842c4eaa7d91dbaef3fee3ccdbf36a39521e82fc"
+      },
+      "widgets_values": [
+        1.5,
+        0.2,
+        0.9,
+        4096,
+        true,
+        "exact_kv_and_rows",
+        false,
+        "2d_frame",
+        true,
+        false,
+        false,
+        "39-43"
+      ],
+      "widgets_values_named": {
+        "tau": 1.5,
+        "start_percent": 0.2,
+        "end_percent": 0.9,
+        "min_tokens": 4096,
+        "int8_qk": true,
+        "sink_conditioning": "exact_kv_and_rows",
+        "morton": false,
+        "morton_curve": "2d_frame",
+        "int8_pv": true,
+        "verbose": false,
+        "use_tma": false,
+        "dense_blocks": "39-43"
+      }
+    },
+    {
+      "id": 215,
+      "type": "EasyCache",
+      "pos": [
+        -1160.0,
+        4460.0
+      ],
+      "size": [
+        257,
+        130
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 515
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            516
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EasyCache",
+        "cnr_id": "comfy-core",
+        "ver": "0.31.1"
+      },
+      "widgets_values": [
+        0.2,
+        0.15,
+        0.95,
+        false
+      ],
+      "widgets_values_named": {
+        "reuse_threshold": 0.2,
+        "start_percent": 0.15,
+        "end_percent": 0.95,
+        "verbose": false
+      }
+    },
+    {
+      "id": 216,
+      "type": "SpectrumApplyMiniMaxH3",
+      "pos": [
+        -820.0,
+        4460.0
+      ],
+      "size": [
+        329,
+        758
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 516
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            517,
+            518
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SpectrumApplyMiniMaxH3",
+        "cnr_id": "comfyui-spectrum-minimax-h3",
+        "ver": "0.2.6"
+      },
+      "widgets_values": [
+        true,
+        0.5,
+        1,
+        0.1,
+        2,
+        0.75,
+        1,
+        1,
+        8,
+        false,
+        "system_ram",
+        true,
+        false,
+        false,
+        true,
+        0,
+        "system_ram",
+        "off",
+        0.65,
+        false,
+        false,
+        "coordinate_rls",
+        "hard_clip",
+        0.4,
+        "no_attenuation"
+      ],
+      "widgets_values_named": {
+        "enabled": true,
+        "blend_weight": 0.5,
+        "degree": 1,
+        "ridge_lambda": 0.1,
+        "window_size": 2,
+        "flex_window": 0.75,
+        "warmup_steps": 1,
+        "tail_actual_steps": 1,
+        "max_history": 8,
+        "debug": false,
+        "history_storage": "system_ram",
+        "bootstrap_first_forecast": true,
+        "anchor_residual_feedback": false,
+        "selective_rollback_correction": false,
+        "offline_smoothing_replay": true,
+        "audio_blend_weight": 0,
+        "offline_archive_storage": "system_ram",
+        "model_aware_mode": "off",
+        "model_aware_risk_threshold": 0.65,
+        "model_aware_trust_shrinkage": false,
+        "model_aware_replay_generic_correction": false,
+        "generic_correction_mode": "coordinate_rls",
+        "generic_correction_limiter": "hard_clip",
+        "generic_correction_limit": 0.4,
+        "generic_correction_attenuation": "no_attenuation"
+      }
     }
   ],
   "links": [
@@ -1312,38 +1574,6 @@
       "LATENT"
     ],
     [
-      284,
-      141,
-      0,
-      126,
-      0,
-      "MODEL"
-    ],
-    [
-      285,
-      141,
-      0,
-      124,
-      0,
-      "MODEL"
-    ],
-    [
-      287,
-      127,
-      0,
-      143,
-      0,
-      "MODEL"
-    ],
-    [
-      288,
-      143,
-      0,
-      141,
-      0,
-      "MODEL"
-    ],
-    [
       294,
       146,
       0,
@@ -1352,12 +1582,12 @@
       "VIDEO"
     ],
     [
-      319,
-      164,
-      0,
+      320,
+      157,
+      4,
       163,
       0,
-      "AUDIO"
+      "STRING"
     ],
     [
       321,
@@ -1370,7 +1600,7 @@
     [
       322,
       163,
-      4,
+      3,
       153,
       0,
       "STRING"
@@ -1384,22 +1614,6 @@
       "INT"
     ],
     [
-      324,
-      163,
-      3,
-      136,
-      7,
-      "AUDIO"
-    ],
-    [
-      400,
-      164,
-      0,
-      190,
-      0,
-      "AUDIO"
-    ],
-    [
       401,
       122,
       0,
@@ -1409,35 +1623,83 @@
     ],
     [
       402,
-      163,
-      3,
+      121,
+      0,
       146,
       1,
       "AUDIO"
     ],
     [
-      340,
-      168,
+      510,
+      127,
       0,
-      163,
-      2,
-      "IMAGE"
+      210,
+      0,
+      "MODEL"
     ],
     [
-      341,
-      163,
-      7,
-      136,
-      3,
-      "IMAGE"
+      511,
+      210,
+      0,
+      211,
+      0,
+      "MODEL"
     ],
     [
-      342,
-      163,
-      7,
-      153,
-      1,
-      "IMAGE"
+      512,
+      211,
+      0,
+      212,
+      0,
+      "MODEL"
+    ],
+    [
+      513,
+      212,
+      0,
+      213,
+      0,
+      "MODEL"
+    ],
+    [
+      514,
+      213,
+      0,
+      214,
+      0,
+      "MODEL"
+    ],
+    [
+      515,
+      214,
+      0,
+      215,
+      0,
+      "MODEL"
+    ],
+    [
+      516,
+      215,
+      0,
+      216,
+      0,
+      "MODEL"
+    ],
+    [
+      517,
+      216,
+      0,
+      124,
+      0,
+      "MODEL"
+    ],
+    [
+      518,
+      216,
+      0,
+      126,
+      0,
+      "MODEL"
     ]
   ],
   "groups": [
@@ -1447,8 +1709,8 @@
       "bounding": [
         -1520,
         4750,
-        750,
-        910
+        710,
+        680
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1494,9 +1756,9 @@
       "title": "User Inputs",
       "bounding": [
         -1880,
-        5240,
+        5510,
         2720,
-        1230
+        1200
       ],
       "color": "#3f789e",
       "flags": {}

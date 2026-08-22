@@ -8,8 +8,8 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5190.3
+        -1490,
+        5190
       ],
       "size": [
         640,
@@ -50,8 +50,8 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5330.3
+        -1490,
+        5330
       ],
       "size": [
         650,
@@ -165,8 +165,8 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490.0,
-        5000.3
+        -1490,
+        5000
       ],
       "size": [
         640,
@@ -378,8 +378,8 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490.0,
-        4840.3
+        -1490,
+        4840
       ],
       "size": [
         640,
@@ -421,8 +421,8 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1053.7,
-        4487.1
+        -1050,
+        4490
       ],
       "size": [
         270,
@@ -507,12 +507,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -726.0,
-        4488.2
+        -730,
+        4490
       ],
       "size": [
         425,
-        317.984375
+        318
       ],
       "flags": {},
       "order": 16,
@@ -564,12 +564,12 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1486.8,
-        4918.2
+        1490,
+        4920
       ],
       "size": [
-        1458.46875,
-        978.625
+        1458,
+        979
       ],
       "flags": {},
       "order": 26,
@@ -606,8 +606,8 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1163.3,
-        4918.8
+        1160,
+        4920
       ],
       "size": [
         270,
@@ -654,8 +654,8 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        158.0,
-        5096.9
+        160,
+        5100
       ],
       "size": [
         230,
@@ -714,8 +714,8 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        822.9,
-        5124.7
+        820,
+        5120
       ],
       "size": [
         230,
@@ -742,9 +742,7 @@
         {
           "name": "AUDIO",
           "type": "AUDIO",
-          "links": [
-            402
-          ]
+          "links": []
         }
       ],
       "properties": {
@@ -755,8 +753,8 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        475.0,
-        4919.4
+        480,
+        4920
       ],
       "size": [
         230,
@@ -796,8 +794,8 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1480.0,
-        5864.3
+        -1480,
+        5860
       ],
       "size": [
         270,
@@ -845,8 +843,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -41.2,
-        5615.0
+        -40,
+        5620
       ],
       "size": [
         847,
@@ -890,8 +888,8 @@
       "id": 157,
       "type": "H3Characters",
       "pos": [
-        -1490.0,
-        5664.3
+        -1490,
+        5660
       ],
       "size": [
         330,
@@ -962,8 +960,8 @@
       "id": 161,
       "type": "MarkdownNote",
       "pos": [
-        -1851.2,
-        6160.0
+        -1850,
+        6160
       ],
       "size": [
         700,
@@ -988,8 +986,8 @@
       "id": 163,
       "type": "H3ClaudeCodeMusicVideoWriter",
       "pos": [
-        -1111.2,
-        5600.0
+        -1110,
+        5600
       ],
       "size": [
         520,
@@ -1067,7 +1065,8 @@
           "name": "audio_segments",
           "type": "AUDIO",
           "links": [
-            324
+            324,
+            402
           ]
         },
         {
@@ -1165,8 +1164,8 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Neon-lit rooftop at night in the rain; Lena performs to camera with the city behind her. Verses: intimate handheld close-ups. Chorus: wide, the whole rooftop lit by a giant pink billboard, rain in the backlight. A single red umbrella is the recurring motif.",
-        "[0:00] (intro - instrumental)\n[0:12] I walked the wire in the rain\n[0:18] counting every light below\n[0:24] you said the city keeps our names\n[0:30] but the city doesn't know\n[Chorus]\n[0:36] So hold me in the neon\n[0:42] hold me till the morning\n[0:48] we were never leaving\n[0:54] only falling slow",
+        "",
+        "",
         "Performance (the singer lip-syncs the lyrics on camera)",
         "Auto (cut on the music)",
         15.0,
@@ -1197,7 +1196,9 @@
         "Reference audio (<Audio 1> = the song piece)",
         true,
         4,
-        "Ref2VA (bind reference images)"
+        "Ref2VA (bind reference images)",
+        "haiku",
+        true
       ],
       "title": "H3 Music Video Writer"
     },
@@ -1205,8 +1206,8 @@
       "id": 164,
       "type": "LoadAudio",
       "pos": [
-        -1490.0,
-        5470.3
+        -1490,
+        5470
       ],
       "size": [
         315,
@@ -1230,7 +1231,7 @@
         "Node name for S&R": "LoadAudio"
       },
       "widgets_values": [
-        "song.mp3",
+        "",
         null,
         null
       ],
@@ -1240,8 +1241,8 @@
       "id": 165,
       "type": "H3ScenesReviewGate",
       "pos": [
-        -551.2,
-        5600.0
+        -550,
+        5600
       ],
       "size": [
         470,
@@ -1312,8 +1313,8 @@
       "id": 190,
       "type": "H3SongAnalysis",
       "pos": [
-        -1140.0,
-        5470.3
+        -1140,
+        5470
       ],
       "size": [
         340,
@@ -1598,8 +1599,8 @@
     ],
     [
       402,
-      121,
-      0,
+      163,
+      3,
       146,
       1,
       "AUDIO"
@@ -1626,10 +1627,10 @@
       "id": 1,
       "title": "Models",
       "bounding": [
-        -1506.0,
-        4766.3,
-        682.0,
-        844.0
+        -1520,
+        4750,
+        750,
+        910
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1638,10 +1639,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -276.0,
-        4836.0,
-        680.0,
-        650.0
+        -290,
+        4820,
+        710,
+        680
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1650,10 +1651,10 @@
       "id": 3,
       "title": "Conditioning",
       "bounding": [
-        -766.0,
-        4866.0,
-        442.0,
-        444.0
+        -780,
+        4850,
+        470,
+        480
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1662,10 +1663,10 @@
       "id": 4,
       "title": "Decoding and create video",
       "bounding": [
-        459.0,
-        4830.7,
-        680.3,
-        370.0
+        450,
+        4830,
+        630,
+        380
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1674,10 +1675,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1867.2,
-        5526.0,
-        2689.0,
-        1270.0
+        -1880,
+        5240,
+        2720,
+        1570
       ],
       "color": "#3f789e",
       "flags": {}

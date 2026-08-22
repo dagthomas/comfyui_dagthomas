@@ -536,18 +536,21 @@ function roundedCorner(p0, c, p1, r) {
 
 // xyflow-style smooth step between a right-facing output and a left-facing
 // input: horizontal, vertical, horizontal - with a detour when the target sits
-// behind the source. radius 0 => hard steps.
-function stepPoints(a, b, radius) {
+// behind the source. radius 0 => hard steps. `lane` shifts this wire's vertical
+// run left/right so parallel wires ride separate lanes instead of stacking on
+// the shared mid-corridor and crossing each other.
+function stepPoints(a, b, radius, lane = 0) {
   const off = 20;
   let corners;
   if (b[0] >= a[0] + 2 * off) {
-    const mx = (a[0] + b[0]) / 2;
+    const mx = Math.min(Math.max((a[0] + b[0]) / 2 + lane, a[0] + off), b[0] - off);
     corners = [{ x: mx, y: a[1] }, { x: mx, y: b[1] }];
   } else {
-    const my = (a[1] + b[1]) / 2;
+    const bump = Math.abs(lane);
+    const my = (a[1] + b[1]) / 2 + lane;
     corners = [
-      { x: a[0] + off, y: a[1] }, { x: a[0] + off, y: my },
-      { x: b[0] - off, y: my }, { x: b[0] - off, y: b[1] },
+      { x: a[0] + off + bump, y: a[1] }, { x: a[0] + off + bump, y: my },
+      { x: b[0] - off - bump, y: my }, { x: b[0] - off - bump, y: b[1] },
     ];
   }
   const all = [{ x: a[0], y: a[1] }, ...corners, { x: b[0], y: b[1] }];
@@ -556,6 +559,44 @@ function stepPoints(a, b, radius) {
   for (let i = 1; i < all.length - 1; i++) pts.push(...roundedCorner(all[i - 1], all[i], all[i + 1], radius));
   pts.push(all[all.length - 1]);
   return pts;
+}
+
+// Which lane a step wire rides in - PCB-style trace bundling. Every step wire
+// registers the corridor its vertical run wants (x position + y span); wires
+// whose corridors coincide are spread onto evenly spaced parallel lanes,
+// ordered by height, like traces etched next to each other instead of on top
+// of each other. Grouping uses the previous frame's corridors (the canvas
+// redraws constantly, so the one-frame lag is invisible).
+const LANE_SPACING = 14;
+const laneBuf = { tick: -1, prev: new Map(), cur: new Map() };
+
+function stepLane(canvas, link, a, b) {
+  if (!link || !a || !b) return 0;
+  const tick =
+    canvas?.frame ??
+    Math.floor((typeof performance !== "undefined" ? performance.now() : Date.now()) / 50);
+  if (tick !== laneBuf.tick) {
+    laneBuf.prev = laneBuf.cur;
+    laneBuf.cur = new Map();
+    laneBuf.tick = tick;
+  }
+  const off = 20;
+  const mx = b[0] >= a[0] + 2 * off ? (a[0] + b[0]) / 2 : a[0] + off;
+  const y0 = Math.min(a[1], b[1]);
+  const y1 = Math.max(a[1], b[1]);
+  laneBuf.cur.set(link.id, { mx, y0, y1 });
+
+  const mates = [];
+  for (const [id, r] of laneBuf.prev) {
+    if (Math.abs(r.mx - mx) < LANE_SPACING * 3 && r.y0 < y1 && r.y1 > y0) mates.push([id, r]);
+  }
+  if (mates.length <= 1) return 0;
+  mates.sort(
+    (p, q) => p[1].y0 + p[1].y1 - (q[1].y0 + q[1].y1) || p[0] - q[0],
+  );
+  const idx = mates.findIndex((p) => p[0] === link.id);
+  if (idx < 0) return 0;
+  return (idx - (mates.length - 1) / 2) * LANE_SPACING;
 }
 
 function cablePoints(a, b) {
@@ -573,11 +614,11 @@ function cablePoints(a, b) {
   return pts;
 }
 
-function wirePoints(style, a, b) {
+function wirePoints(style, a, b, lane = 0) {
   switch (style) {
     case WIRE_CABLE: return cablePoints(a, b);
-    case WIRE_SMOOTHSTEP: return stepPoints(a, b, 8);
-    case WIRE_STEP: return stepPoints(a, b, 0);
+    case WIRE_SMOOTHSTEP: return stepPoints(a, b, 8, lane);
+    case WIRE_STEP: return stepPoints(a, b, 0, lane);
     case WIRE_STRAIGHT: return [{ x: a[0], y: a[1] }, { x: b[0], y: b[1] }];
     default: return null;
   }
@@ -630,7 +671,9 @@ function patchLinkRenderer() {
     if (!isCustomWire(style) || !link || !a || !b || opts?.disabled) {
       return origRender.apply(this, arguments);
     }
-    const pts = wirePoints(style, a, b);
+    const lane =
+      style === WIRE_STEP || style === WIRE_SMOOTHSTEP ? stepLane(this, link, a, b) : 0;
+    const pts = wirePoints(style, a, b, lane);
     if (!pts) return origRender.apply(this, arguments);
     const col =
       color || link.color || (LGC.link_type_colors && LGC.link_type_colors[link.type]) || this.default_link_color;
@@ -946,9 +989,11 @@ function applyNodeRecolor(on) {
 
 // ---------------------------------------------------------------------------
 // Drag highlight: while a link is being dragged, every slot that could take it
-// (matching type, other node) gets a pulsing ring, so the valid targets are
-// obvious. Works for output→input and input→output drags. Independent of the
-// theme; the ring uses the accent colour.
+// (matching type, other node) is drawn scaled up a little with its NAME in a
+// readable label pill - no pulsing, just a clear picture of where you can
+// drop. The label size is zoom-aware: it never falls below a readable
+// screen-space size, so zoomed-out targets stay legible. Works for
+// output→input and input→output drags.
 // ---------------------------------------------------------------------------
 
 const S_HIGHLIGHT = "APNext.Theme.HighlightTargets";
@@ -976,7 +1021,8 @@ function dragSources(canvas) {
   return out;
 }
 
-// slots that could take the dragged link(s): [{x, y, taken}] in graph space
+// slots that could take the dragged link(s), with what to print next to them:
+// [{x, y, taken, name, type, side}] in graph space
 function highlightTargets(canvas) {
   const LG = window.LiteGraph;
   const sources = dragSources(canvas);
@@ -992,14 +1038,20 @@ function highlightTargets(canvas) {
           if (inp.widget && inp.link == null && !inp.pos) return; // hidden widget sockets
           let p = null;
           try { p = node.getInputPos(i); } catch (e) { p = null; }
-          if (p) out.push({ x: p[0], y: p[1], taken: inp.link != null });
+          if (p) out.push({
+            x: p[0], y: p[1], taken: inp.link != null, nodeId: node.id,
+            name: inp.label || inp.name || "", type: inp.type, side: "input",
+          });
         });
       } else {
         (node.outputs || []).forEach((outp, i) => {
           if (!outp || !LG.isValidConnection(outp.type, src.type)) return;
           let p = null;
           try { p = node.getOutputPos(i); } catch (e) { p = null; }
-          if (p) out.push({ x: p[0], y: p[1], taken: false });
+          if (p) out.push({
+            x: p[0], y: p[1], taken: false, nodeId: node.id,
+            name: outp.label || outp.name || "", type: outp.type, side: "output",
+          });
         });
       }
     }
@@ -1007,45 +1059,166 @@ function highlightTargets(canvas) {
   return out;
 }
 
+function slotTypeColor(canvas, type) {
+  if (!type || type === "*" || type === -1) return null;
+  const LGC = window.LGraphCanvas || canvas?.constructor;
+  return canvas?.default_connection_color_byType?.[type] || LGC?.link_type_colors?.[type] || null;
+}
+
+// the "you will hit THIS one" colour - deliberately used nowhere else in the
+// theme, so the live snap target can never be confused with a candidate
+const ACTIVE_TARGET_DARK = "#6dff8e";
+const ACTIVE_TARGET_LIGHT = "#0e8a34";
+// how close (screen px) the cursor must be for a target to count as the one
+// the release would connect to
+const ACTIVE_SNAP_PX = 48;
+// cursor position in canvas-pixel space, maintained by armDragWatch
+const overlayMouse = { x: NaN, y: NaN, k: 1 };
+
 function drawHighlightOverlay(ctx) {
   if (!hlState.on) return false;
   const canvas = app.canvas;
   const targets = highlightTargets(canvas);
-  if (!targets.length) return false;
-  const t = (performance.now() % 1000) / 1000;
-  const pulse = 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
-  const rCore = 10 + pulse * 3;
-  const rHalo = 18 + pulse * 10;
-  const lightBg = canvasIsLight();
-  for (const tg of targets) {
-    const [x, y] = graphToScreen(tg.x, tg.y);
-    // darker, saturated tones on a light canvas so the rings stay contrasty
-    const rgb = lightBg
-      ? (tg.taken ? "168,74,86" : "146,92,30")
-      : (tg.taken ? "232,180,184" : "212,165,116");
-    const grad = ctx.createRadialGradient(x, y, rCore * 0.6, x, y, rHalo);
-    grad.addColorStop(0, `rgba(${rgb},${0.45 - 0.2 * pulse})`);
-    grad.addColorStop(1, `rgba(${rgb},0)`);
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.arc(x, y, rHalo, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x, y, rCore, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${rgb},${0.22 + 0.18 * pulse})`;
-    ctx.fill();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = `rgba(${rgb},${0.85 + 0.15 * pulse})`;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x, y, rCore - 2.5, 0, Math.PI * 2);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = lightBg
-      ? `rgba(40,30,20,${0.5 + 0.3 * pulse})`
-      : `rgba(255,255,255,${0.5 + 0.3 * pulse})`;
-    ctx.stroke();
+  if (!targets.length) {
+    hlState.snapLogged = false; // next drag logs its snap measurement again
+    return false;
   }
+  const scale = canvas?.ds?.scale ?? 1;
+  const lightBg = canvasIsLight();
+  // the slot, scaled up a touch beyond its normal size (~4px graph radius),
+  // with a screen-space floor so far-out targets stay hittable-looking
+  const r = Math.max(5.5, 6.5 * scale);
+  // zoom-aware label size: grows a little when zoomed in, but NEVER drops
+  // below a readable screen size when zoomed out
+  const px = Math.max(12, Math.min(22, 14 * scale));
+  ctx.globalAlpha = 1;
+  ctx.textBaseline = "middle";
+  const fallback = lightBg ? "#92621e" : "#d4a574";
+  const activeCol = lightBg ? ACTIVE_TARGET_LIGHT : ACTIVE_TARGET_DARK;
+
+  // which target would the release actually land on? the nearest one to the
+  // cursor within snapping distance. Coordinate spaces differ across frontend
+  // versions and display scaling, so try every plausible mouse position (CSS
+  // pixels, backing-store pixels, graph_mouse) and use whichever agrees best.
+  let activeIdx = -1;
+  {
+    const mice = [];
+    if (Number.isFinite(overlayMouse.x)) {
+      mice.push([overlayMouse.x, overlayMouse.y]);
+      const k = overlayMouse.k || 1;
+      if (Math.abs(k - 1) > 0.01) mice.push([overlayMouse.x * k, overlayMouse.y * k]);
+    }
+    const gm = canvas?.graph_mouse;
+    if (gm && Number.isFinite(gm[0])) mice.push(graphToScreen(gm[0], gm[1]));
+    let best = Infinity;
+    targets.forEach((tg, i) => {
+      const [sx, sy] = graphToScreen(tg.x, tg.y);
+      for (const m of mice) {
+        const d = Math.hypot(sx - m[0], sy - m[1]);
+        if (d < best) { best = d; activeIdx = i; }
+      }
+    });
+    const limit = ACTIVE_SNAP_PX * Math.max(1, overlayMouse.k || 1);
+    if (best > limit) activeIdx = -1;
+    // coordinate-free fallback: LiteGraph itself tracks which node the cursor
+    // is over - hovering a node with compatible slots activates the nearest
+    // (or only) one even if every mouse-space guess above was wrong
+    const over = canvas?.node_over;
+    if (activeIdx < 0 && over) {
+      const own = [];
+      targets.forEach((tg, i) => { if (tg.nodeId === over.id) own.push(i); });
+      if (own.length === 1) activeIdx = own[0];
+      else if (own.length > 1 && mice.length) {
+        let b2 = Infinity;
+        for (const i of own) {
+          const [sx, sy] = graphToScreen(targets[i].x, targets[i].y);
+          for (const m of mice) {
+            const d = Math.hypot(sx - m[0], sy - m[1]);
+            if (d < b2) { b2 = d; activeIdx = i; }
+          }
+        }
+      } else if (own.length > 1) {
+        activeIdx = own[0];
+      }
+    }
+    // once per drag: say what we measured, so a missing green is debuggable
+    if (!hlState.snapLogged) {
+      hlState.snapLogged = true;
+      console.log(
+        `[APNext theme] snap-check: ${mice.length} mouse candidate(s), nearest target `
+        + `${Math.round(best)}px (limit ${Math.round(limit)}px) -> `
+        + (activeIdx >= 0 ? "ACTIVE" : "none"),
+      );
+    }
+  }
+
+  const drawTarget = (tg, isActive) => {
+    const [x, y] = graphToScreen(tg.x, tg.y);
+    const col = isActive ? activeCol : (slotTypeColor(canvas, tg.type) || fallback);
+    const rr = isActive ? r * 1.45 : r;
+    const fpx = isActive ? px * 1.15 : px;
+    ctx.font = `${isActive ? 700 : 600} ${fpx}px 'Segoe UI', ui-sans-serif, system-ui, sans-serif`;
+    if (isActive) {
+      // a wide soft halo + outer ring: unmistakably "this is the one"
+      const grad = ctx.createRadialGradient(x, y, rr * 0.5, x, y, rr * 2.6);
+      grad.addColorStop(0, lightBg ? "rgba(14,138,52,0.35)" : "rgba(109,255,142,0.35)");
+      grad.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.beginPath();
+      ctx.arc(x, y, rr * 2.6, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x, y, rr + 4, 0, Math.PI * 2);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = col;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, rr, 0, Math.PI * 2);
+    ctx.fillStyle = col;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = lightBg ? "rgba(40,30,20,0.9)" : "rgba(10,9,7,0.9)";
+    ctx.stroke();
+    if (tg.taken) {
+      // occupied input: hollow centre as a quiet "this will replace" hint
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(2, rr * 0.42), 0, Math.PI * 2);
+      ctx.fillStyle = lightBg ? "#ffffff" : "#1a1712";
+      ctx.fill();
+    }
+    // the slot's name in a label pill, inputs to the right, outputs to the left
+    const name = tg.name;
+    if (!name) return;
+    const wText = ctx.measureText(name).width;
+    const padX = fpx * 0.45;
+    const h = fpx * 1.5;
+    const left = tg.side === "input" ? x + rr + 6 : x - rr - 6 - wText - padX * 2;
+    const top = y - h / 2;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(left, top, wText + padX * 2, h, h / 2);
+    else ctx.rect(left, top, wText + padX * 2, h);
+    if (isActive) {
+      // inverted pill in the active colour: dark text on bright green
+      ctx.fillStyle = col;
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = lightBg ? "rgba(255,255,255,0.9)" : "rgba(10,9,7,0.9)";
+      ctx.stroke();
+      ctx.fillStyle = lightBg ? "#ffffff" : "#0c1a10";
+    } else {
+      ctx.fillStyle = lightBg ? "rgba(255,255,255,0.93)" : "rgba(16,14,11,0.93)";
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = col;
+      ctx.stroke();
+      ctx.fillStyle = lightBg ? "#2a2118" : "#efe9df";
+    }
+    ctx.fillText(name, left + padX, y + fpx * 0.05);
+  };
+
+  targets.forEach((tg, i) => { if (i !== activeIdx) drawTarget(tg, false); });
+  if (activeIdx >= 0) drawTarget(targets[activeIdx], true); // on top
   return true;
 }
 
@@ -1076,7 +1249,12 @@ function patchDragLinkColor() {
 function applyHighlight(on) {
   hlState.on = !!on;
   hlState.patched = true;
-  if (on) { ensureOverlayLoop(); armDragWatch(); patchDragLinkColor(); }
+  if (on) {
+    console.log("[APNext theme] drop-target overlay v2 (snap colour) active");
+    ensureOverlayLoop();
+    armDragWatch();
+    patchDragLinkColor();
+  }
   dragColor.on = !!on && dragColor.patched;
 }
 
@@ -1097,7 +1275,21 @@ function armDragWatch() {
   if (overlayLoop.armed) return;
   overlayLoop.armed = true;
   document.addEventListener("pointerdown", () => ensureOverlayLoop(), true);
-  document.addEventListener("pointermove", () => { if (dragSources(app.canvas).length) ensureOverlayLoop(); }, true);
+  document.addEventListener("pointermove", (e) => {
+    // track the cursor relative to the canvas element in CSS pixels; the
+    // backing-store factor is kept separately so the snap check can try both
+    // spaces (display scaling changes which one graphToScreen matches)
+    const el = app.canvas?.canvas;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0) {
+        overlayMouse.x = e.clientX - r.left;
+        overlayMouse.y = e.clientY - r.top;
+        overlayMouse.k = el.width / r.width;
+      }
+    }
+    if (dragSources(app.canvas).length) ensureOverlayLoop();
+  }, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -1251,7 +1443,9 @@ function drawFlowSpheres(canvas, ctx, a, b, link, col, start_dir, end_dir, opts)
   const style = wireState.style;
   let pts = null;
   if (isCustomWire(style) && link && a && b && !opts?.disabled) {
-    pts = wirePoints(style, a, b);
+    const lane =
+      style === WIRE_STEP || style === WIRE_SMOOTHSTEP ? stepLane(canvas, link, a, b) : 0;
+    pts = wirePoints(style, a, b, lane);
   }
   const LG = window.LiteGraph;
   const sd = start_dir ?? LG?.RIGHT ?? 4;

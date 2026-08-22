@@ -1,5 +1,6 @@
 # APNext MiniMax-H3 Nodes
 
+from . import dashboard  # noqa: F401  (registers the /apnext/h3/api_workflows route)
 from .base_prompt_writer import H3BasePromptWriter
 from .claude_code_base_writer import H3ClaudeCodeBaseWriter
 from .claude_code_continue_writer import H3ClaudeCodeContinueWriter
@@ -17,12 +18,14 @@ from .scenes_join import H3ScenesJoin
 from .llm_backend import H3LLMBackend
 from .claude_code_music_video_writer import H3ClaudeCodeMusicVideoWriter
 from .claude_code_presentation_writer import H3ClaudeCodePresentationWriter
+from .claude_code_short_film_writer import H3ClaudeCodeShortFilmWriter
 from .music_video_minimal import H3MusicVideoMinimal
 from .scenes_review import H3ScenesReview
 from .scenes_review_gate import H3ScenesReviewGate
 from .song_analysis import H3SongAnalysis
 from .scene_brief import H3SceneBrief
 from .scenes_store import H3ScenesLoad
+from .manual_scenes import H3ManualScenes
 
 NODE_CLASS_MAPPINGS = {
     "H3BasePromptWriter": H3BasePromptWriter,
@@ -42,12 +45,14 @@ NODE_CLASS_MAPPINGS = {
     "H3LLMBackend": H3LLMBackend,
     "H3ClaudeCodeMusicVideoWriter": H3ClaudeCodeMusicVideoWriter,
     "H3ClaudeCodePresentationWriter": H3ClaudeCodePresentationWriter,
+    "H3ClaudeCodeShortFilmWriter": H3ClaudeCodeShortFilmWriter,
     "H3MusicVideoMinimal": H3MusicVideoMinimal,
     "H3ScenesReview": H3ScenesReview,
     "H3ScenesReviewGate": H3ScenesReviewGate,
     "H3SongAnalysis": H3SongAnalysis,
     "H3SceneBrief": H3SceneBrief,
     "H3ScenesLoad": H3ScenesLoad,
+    "H3ManualScenes": H3ManualScenes,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -68,12 +73,14 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3LLMBackend": "APNext H3 LLM Backend (Ollama / local / API)",
     "H3ClaudeCodeMusicVideoWriter": "APNext H3 Music Video Writer",
     "H3ClaudeCodePresentationWriter": "APNext H3 Presentation Writer",
+    "H3ClaudeCodeShortFilmWriter": "APNext H3 Short Film Writer",
     "H3MusicVideoMinimal": "APNext H3 Music Video (Minimal)",
     "H3ScenesReview": "APNext H3 Scenes Review (edit before render)",
     "H3ScenesReviewGate": "APNext H3 Dailies Gate (print / punch up / cut)",
     "H3SongAnalysis": "APNext H3 Song Analysis (BPM / intensity)",
     "H3SceneBrief": "APNext H3 Scene Brief (manual scene)",
     "H3ScenesLoad": "APNext H3 Scenes Load (from disk)",
+    "H3ManualScenes": "APNext H3 Manual Scenes (script → lists)",
 }
 
 # ---------------------------------------------------------------------------
@@ -110,6 +117,10 @@ with_advanced_inputs(H3ClaudeCodeCrossoverWriter,
 with_advanced_inputs(H3ClaudeCodeMusicVideoWriter,
     ("audio", "direction", "lyrics", "performance_mode", "segment_mode", "max_segment_seconds",
      "visual_style", "dialogue_language", *_CC, "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes"))
+with_advanced_inputs(H3ClaudeCodeShortFilmWriter,
+    ("manuscript", "length_mode", "scene_count", "target_minutes", "continuity_mode",
+     "visual_style", "dialogue_language", "prompt_mode", *_CC,
+     "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes"))
 with_advanced_inputs(H3ClaudeCodePresentationWriter,
     ("source_material", "direction", "presentation_format", "scene_count", "duration_mode",
      "scene_duration", "visual_aids", "visual_style", "dialogue_language", *_CC,

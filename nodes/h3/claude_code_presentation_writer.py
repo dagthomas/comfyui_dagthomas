@@ -12,6 +12,7 @@
 # into the finished presentation.
 
 import re
+from concurrent.futures import ThreadPoolExecutor
 
 from ...utils.claude_code import is_interrupt
 from ...utils.image_utils import tensor2pil
@@ -28,6 +29,8 @@ from .claude_code_support import (
     CORE_SKILL,
     claude_code_inputs,
     claude_code_optional_inputs,
+    draft_model_input,
+    resolve_draft_model,
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
@@ -39,6 +42,7 @@ from .music_support import fmt_time, frames_for_seconds
 from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
+    scale_reference_passthrough,
     AUTO,
     LITERAL_CAMERA_DIRECTIVE,
     VISUAL_STYLES,
@@ -378,6 +382,19 @@ class H3ClaudeCodePresentationWriter:
                 "connected, FL otherwise."
             ),
         })
+        optional.update(draft_model_input())
+        optional["parallel_chunks"] = ("BOOLEAN", {
+            "default": True,
+            "tooltip": (
+                "Write the scene chunks concurrently instead of one after another: one "
+                "planning call (by `model`) fixes the synopsis, the Outline and the "
+                "locks, then up to 4 chunks at a time are drafted from that plan (by "
+                "`draft_model`), and one continuity pass repairs any drift. Much faster "
+                "for long talks. Off = the classic serial run where every chunk continues "
+                "one session. Ignored when resume_session_id is set or the whole talk "
+                "fits in one call."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -546,6 +563,8 @@ class H3ClaudeCodePresentationWriter:
         characters_only=True,
         scene_briefs="",
         prior_scenes=(),
+        plan_only=False,
+        plan_text="",
     ):
         n = scene_count
         last = last or n
@@ -566,13 +585,44 @@ class H3ClaudeCodePresentationWriter:
             lines.append("SCENE BRIEFS FROM THE USER - the plan for those scenes:")
             lines.append(briefs)
             lines.append("")
+        if plan_text:
+            lines.append(
+                "THE SYNOPSIS AND OUTLINE - already fixed for this talk in an earlier "
+                "turn. Its cast, wardrobe locks, location locks and per-scene Outline are "
+                "BINDING:"
+            )
+            lines.append(plan_text.strip())
+            lines.append("")
         if first > 1 and prior_scenes:
             lines.append("THE TALK SO FAR - what the scenes you already wrote show:")
             for no, gist in prior_scenes:
                 lines.append(f"  {no:02d}: {gist}")
             lines.append("")
         lines.append("DIRECTIVES:")
-        if first == 1:
+        if plan_only:
+            lines.append(
+                "- Write ONLY the planning document for the whole talk - no scene "
+                "envelopes. It is the synopsis block exactly as the contract defines it: "
+                "`Topic:`, `Cast:`, the wardrobe and location locks, and `Outline:` - one "
+                f"line per scene, all {n} of them, `NN: the single point that scene "
+                "covers + its visual aid (or none)`, covering ALL the key points of the "
+                "source material in teaching order. The scenes are written later from "
+                "this plan, several at a time by different writers who see only this "
+                "document - so it must carry ALL the continuity: exact wardrobe anchors, "
+                "exact location/staging anchors, each scene's point and graphic, and the "
+                "arc from hook to takeaway."
+            )
+        elif plan_text:
+            lines.append(
+                f"- Write scenes {first:02d} to {last:02d} (of {n}) ONLY, following the "
+                "synopsis and Outline above exactly: cover each scene's outline point "
+                "with its visual aid, copy the wardrobe and staging anchors "
+                "character-for-character, and keep the talk building. Other writers "
+                "handle the other scenes from the same plan - never write, restate or "
+                "borrow a scene outside your range. Start directly with the scene "
+                "envelopes; do not write a synopsis block."
+            )
+        elif first == 1:
             lines.append(
                 f"- Write the synopsis block (with the full {n}-scene Outline), then scenes "
                 f"{first:02d} to {last:02d} (of {n}). The remaining scenes are requested in "
@@ -717,6 +767,8 @@ class H3ClaudeCodePresentationWriter:
             lines.append(extra)
         lines.append("")
         lines.append(
+            "Now write the synopsis block with the full Outline, and nothing else."
+            if plan_only else
             "Now write the requested envelopes (and the synopsis block when asked), and nothing else."
         )
         return "\n".join(lines)
@@ -762,9 +814,11 @@ class H3ClaudeCodePresentationWriter:
         scenes_per_call=SCENES_PER_CALL,
         save_scenes=True,
         prompt_mode=None,
+        draft_model="haiku",
+        parallel_chunks=True,
         **cast_slots,
     ):
-        passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
+        passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
         # guide_base_en.md; Auto follows whether pictures are connected. Empty /
@@ -819,17 +873,25 @@ class H3ClaudeCodePresentationWriter:
                 f"director {'on' if director else 'off'}"
             )
 
-            # --- write, in chunks that continue one session -------------------
+            # --- write --------------------------------------------------------
             synopsis = ""
             parsed = []
             session_id = (resume_session_id or "").strip()
             infos = []
-            first = 1
             per_call = max(1, min(8, int(scenes_per_call or 0) or SCENES_PER_CALL))
-            talk_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
+            # draft/synthesis split: `model` plans and repairs, chunk_model drafts
+            chunk_model = resolve_draft_model(draft_model, model, local)
+            parallel = bool(parallel_chunks) and n > per_call and not session_id
+            if bool(parallel_chunks) and n > per_call and session_id:
+                print(
+                    "ℹ️ H3 Presentation Writer: resume_session_id is set - writing "
+                    "serially in that session (parallel_chunks needs a fresh run)."
+                )
 
-            def ask(lo, hi):
-                user_prompt = self._build_user_prompt(
+            def build_prompt(lo, hi, plan_only=False, plan_text="", prior=()):
+                # reads wardrobe/locations at call time, so the locks merged from
+                # the synopsis reach every later prompt
+                return self._build_user_prompt(
                     cast, source_material, direction, presentation_format, n,
                     duration_mode, scene_duration, continuity_mode, visual_aids,
                     visual_style, dialogue_language, wildness, include_soundscape,
@@ -838,69 +900,152 @@ class H3ClaudeCodePresentationWriter:
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
                     image_notes=image_notes, first=lo, last=hi,
                     characters_only=chars_only, scene_briefs=scene_briefs,
-                    prior_scenes=tuple(talk_so_far),
-                )
-                if lo == 1:
-                    user_prompt = with_context(user_prompt, context_text)
-                return run_h3_claude_code(
-                    None if (lo > 1 and session_id) else system_prompt,
-                    user_prompt,
-                    images if lo == 1 else None,
-                    model, research, use_subscription, timeout_seconds,
-                    session_id, working_dir, director, skills=skills, local=local,
+                    prior_scenes=prior, plan_only=plan_only, plan_text=plan_text,
                 )
 
-            while first <= n:
-                last = min(n, first + per_call - 1)
-                try:
-                    text, session_id, info = ask(first, last)
-                except Exception as exc:
-                    # a timed-out multi-scene chunk gets ONE retry at half size;
-                    # anything else (or a single scene timing out) is fatal
-                    if is_interrupt(exc) or "did not finish within" not in str(exc) or last <= first:
-                        raise
-                    half = first + (last - first) // 2
-                    print(
-                        f"⏱️ H3 Presentation Writer: scenes {first:02d}-{last:02d} timed out "
-                        f"after {timeout_seconds}s - retrying as {first:02d}-{half:02d}. "
-                        "Raise timeout_seconds or lower scenes_per_call to avoid this."
+            def merge_locks(text):
+                # restate the locks the model just fixed in every follow-up
+                # prompt, so later scenes copy the same anchors verbatim
+                nonlocal wardrobe, locations
+                w_locks = parse_wardrobe_lock(text)
+                if w_locks:
+                    wardrobe = merge_wardrobe(
+                        wardrobe, [f"{k}: {', '.join(v)}" for k, v in w_locks.items()]
                     )
-                    last = half
-                    text, session_id, info = ask(first, last)
-                infos.append(info)
-                chunk_synopsis, chunk = parse_scenes(text, scene_duration)
-                if first == 1:
-                    synopsis = chunk_synopsis
-                    # restate the locks the model just fixed in every follow-up
-                    # chunk's prompt, so later scenes copy the same anchors
-                    # verbatim instead of drifting from memory
-                    w_locks = parse_wardrobe_lock(synopsis)
-                    if w_locks:
-                        wardrobe = merge_wardrobe(
-                            wardrobe, [f"{k}: {', '.join(v)}" for k, v in w_locks.items()]
+                l_locks = parse_location_lock(text)
+                if l_locks:
+                    locations = merge_wardrobe(
+                        locations, [f"{k}: {', '.join(v)}" for k, v in l_locks.items()]
+                    )
+
+            if parallel:
+                # one plan call (strong model) -> chunks drafted concurrently
+                # (draft model, fresh sessions) -> one continuity repair below
+                ranges = [(lo, min(n, lo + per_call - 1)) for lo in range(1, n + 1, per_call)]
+                workers = min(4, len(ranges))
+                print(
+                    f"⚡ H3 Presentation Writer: parallel run - plan with '{model}', then "
+                    f"{len(ranges)} chunk(s) drafted with '{chunk_model}', up to {workers} at once."
+                )
+                plan_prompt = with_context(build_prompt(1, n, plan_only=True), context_text)
+                text, session_id, info = run_h3_claude_code(
+                    system_prompt, plan_prompt, images, model, research, use_subscription,
+                    timeout_seconds, "", working_dir, director, skills=skills, local=local,
+                )
+                infos.append(f"plan: {info}")
+                synopsis = (text or "").strip()
+                if not synopsis:
+                    raise ValueError("the planning call returned no synopsis / Outline.")
+                merge_locks(synopsis)
+
+                def write_range(lo, hi, depth=0):
+                    user_prompt = build_prompt(lo, hi, plan_text=synopsis)
+                    try:
+                        text, _sid, info = run_h3_claude_code(
+                            system_prompt, user_prompt, images, chunk_model, research,
+                            use_subscription, timeout_seconds, "", working_dir, director,
+                            skills=skills, local=local,
                         )
-                    l_locks = parse_location_lock(synopsis)
-                    if l_locks:
-                        locations = merge_wardrobe(
-                            locations, [f"{k}: {', '.join(v)}" for k, v in l_locks.items()]
+                    except Exception as exc:
+                        if (is_interrupt(exc) or "did not finish within" not in str(exc)
+                                or hi <= lo or depth >= 2):
+                            raise
+                        mid = lo + (hi - lo) // 2
+                        print(
+                            f"⏱️ H3 Presentation Writer: scenes {lo:02d}-{hi:02d} timed out - "
+                            f"splitting into {lo:02d}-{mid:02d} and {mid + 1:02d}-{hi:02d}."
                         )
-                if not chunk:
-                    raise ValueError(f"the model returned no scenes for {first:02d}-{last:02d}.")
-                got = [(no, d, p) for no, d, p in chunk]
-                # renumber defensively onto the requested range
-                for k, (_no, d, p) in enumerate(got[: last - first + 1]):
-                    idx = first + k
-                    parsed.append((idx, float(d), p))
-                    talk_so_far.append((idx, _scene_gist(p)))
-                if len(got) < last - first + 1:
-                    print(f"⚠️ H3 Presentation Writer: asked for scenes {first:02d}-{last:02d}, got {len(got)}.")
-                first = first + max(1, min(len(got), last - first + 1))
+                        a_scenes, a_infos = write_range(lo, mid, depth + 1)
+                        b_scenes, b_infos = write_range(mid + 1, hi, depth + 1)
+                        return a_scenes + b_scenes, a_infos + b_infos
+                    _syn, chunk = parse_scenes(text, scene_duration)
+                    if not chunk:
+                        raise ValueError(f"the model returned no scenes for {lo:02d}-{hi:02d}.")
+                    got = chunk[: hi - lo + 1]
+                    if len(got) < hi - lo + 1:
+                        print(f"⚠️ H3 Presentation Writer: asked for scenes {lo:02d}-{hi:02d}, got {len(got)}.")
+                    scenes_out = [(lo + k, float(d), p) for k, (_no, d, p) in enumerate(got)]
+                    return scenes_out, [info]
+
+                errors = []
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    futures = [pool.submit(write_range, lo, hi) for lo, hi in ranges]
+                    for future in futures:
+                        try:
+                            scenes_out, chunk_infos = future.result()
+                        except Exception as exc:
+                            errors.append(exc)
+                            continue
+                        parsed.extend(scenes_out)
+                        infos.extend(chunk_infos)
+                if errors:
+                    raise errors[0]
+                parsed.sort(key=lambda item: item[0])
+            else:
+                first = 1
+                talk_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
+
+                def ask(lo, hi):
+                    user_prompt = build_prompt(lo, hi, prior=tuple(talk_so_far))
+                    if lo == 1:
+                        user_prompt = with_context(user_prompt, context_text)
+                    return run_h3_claude_code(
+                        None if (lo > 1 and session_id) else system_prompt,
+                        user_prompt,
+                        images if lo == 1 else None,
+                        model if lo == 1 else chunk_model,
+                        research, use_subscription, timeout_seconds,
+                        session_id, working_dir, director, skills=skills, local=local,
+                    )
+
+                while first <= n:
+                    last = min(n, first + per_call - 1)
+                    try:
+                        text, session_id, info = ask(first, last)
+                    except Exception as exc:
+                        # a timed-out multi-scene chunk gets ONE retry at half size;
+                        # anything else (or a single scene timing out) is fatal
+                        if is_interrupt(exc) or "did not finish within" not in str(exc) or last <= first:
+                            raise
+                        half = first + (last - first) // 2
+                        print(
+                            f"⏱️ H3 Presentation Writer: scenes {first:02d}-{last:02d} timed out "
+                            f"after {timeout_seconds}s - retrying as {first:02d}-{half:02d}. "
+                            "Raise timeout_seconds or lower scenes_per_call to avoid this."
+                        )
+                        last = half
+                        text, session_id, info = ask(first, last)
+                    infos.append(info)
+                    chunk_synopsis, chunk = parse_scenes(text, scene_duration)
+                    if first == 1:
+                        synopsis = chunk_synopsis
+                        merge_locks(synopsis)
+                    if not chunk:
+                        raise ValueError(f"the model returned no scenes for {first:02d}-{last:02d}.")
+                    got = [(no, d, p) for no, d, p in chunk]
+                    # renumber defensively onto the requested range
+                    for k, (_no, d, p) in enumerate(got[: last - first + 1]):
+                        idx = first + k
+                        parsed.append((idx, float(d), p))
+                        talk_so_far.append((idx, _scene_gist(p)))
+                    if len(got) < last - first + 1:
+                        print(f"⚠️ H3 Presentation Writer: asked for scenes {first:02d}-{last:02d}, got {len(got)}.")
+                    first = first + max(1, min(len(got), last - first + 1))
 
             if len(parsed) != n:
                 print(f"⚠️ H3 Presentation Writer: asked for {n} scene(s), parsed {len(parsed)}.")
 
             # --- continuity check (wardrobe + locations), one repair turn --------
             def repair(prompt):
+                if parallel:
+                    # the plan session never saw the drafted scenes, so the
+                    # repair turn carries them along
+                    prompt = (
+                        "The talk's scenes as currently written (drafted from the plan "
+                        "you fixed earlier in this session):\n\n"
+                        + scenes_to_text("", parsed)
+                        + "\n\n" + prompt
+                    )
                 text, _, repair_info = run_h3_claude_code(
                     system_prompt, prompt, None, model, False, use_subscription, timeout_seconds,
                     session_id, working_dir, director, skills=skills, local=local,

@@ -139,17 +139,28 @@ class H3ScenesReview:
 
         # Continue with an editor that was filled from DIFFERENT incoming
         # scenes (the cast, direction, lyrics or seed changed upstream since
-        # the review): the edits are for stale data - re-review with the
-        # fresh scenes instead of silently rendering the old text.
+        # the review): the edits belong to stale data - render the FRESH
+        # scenes and refill the editor, never the old text. A new run always
+        # produces a new video; pin the writer's seed to edit before render.
         if mode == MODE_CONTINUE and edited.strip() and scenes:
             m = _FP_RE.search(edited)
             if m and m.group(1) != _fingerprint(scenes):
                 print(
                     "♻️ H3 Scenes Review: the incoming scenes changed since the editor was "
-                    "filled (new cast / direction / seed upstream). Re-reviewing with the "
-                    "fresh scenes - the previous edits belonged to the old data."
+                    "filled (new cast / direction / seed upstream) - rendering the fresh "
+                    "scenes; the previous edits belonged to the old data. Pin the writer's "
+                    "seed to a fixed value to edit before rendering."
                 )
-                mode = MODE_REVIEW
+                edited = ""
+                try:
+                    from server import PromptServer
+                    PromptServer.instance.send_sync(
+                        "apnext.h3.scenes_review",
+                        {"node": str(uid), "text": serialize_scenes(scenes),
+                         "count": len(scenes), "stopped": False},
+                    )
+                except Exception:
+                    pass
 
         if mode == MODE_REVIEW:
             text = serialize_scenes(scenes)
@@ -166,8 +177,16 @@ class H3ScenesReview:
                 "been rendered. Edit the text in the node, then queue again (the mode is now "
                 "Continue). The Recreate button asks the writer for a fresh draft instead."
             )
-            import comfy.model_management
-            raise comfy.model_management.InterruptProcessingException()
+            # Block only what is DOWNSTREAM of this node (the render) instead of
+            # interrupting the whole prompt: previews / Show Text nodes wired to
+            # the writer's other outputs (scenes_text, synopsis, script...) still
+            # execute, so a Review stop never blanks them.
+            try:
+                from comfy_execution.graph import ExecutionBlocker
+                return ([ExecutionBlocker(None)], ExecutionBlocker(None))
+            except ImportError:
+                import comfy.model_management
+                raise comfy.model_management.InterruptProcessingException()
 
         # Continue: the editor text is authoritative; empty editor = pass-through
         out = parse_scenes_text(edited) if edited.strip() else list(scenes)

@@ -8,8 +8,8 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5049.3
+        -1490,
+        5050
       ],
       "size": [
         640,
@@ -50,8 +50,8 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5189.3
+        -1490,
+        5190
       ],
       "size": [
         650,
@@ -165,8 +165,8 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490.0,
-        4859.3
+        -1490,
+        4860
       ],
       "size": [
         640,
@@ -246,8 +246,8 @@
       "id": 131,
       "type": "ComfyMathExpression",
       "pos": [
-        -1450.0,
-        6021.3
+        -1450,
+        6020
       ],
       "size": [
         225,
@@ -438,8 +438,8 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490.0,
-        4699.3
+        -1490,
+        4700
       ],
       "size": [
         640,
@@ -481,8 +481,8 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1053.7,
-        4487.1
+        -1050,
+        4490
       ],
       "size": [
         270,
@@ -567,12 +567,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -726.0,
-        4488.2
+        -730,
+        4490
       ],
       "size": [
         425,
-        317.984375
+        318
       ],
       "flags": {},
       "order": 18,
@@ -624,12 +624,12 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1486.8,
-        4918.2
+        1490,
+        4920
       ],
       "size": [
-        1458.46875,
-        978.625
+        1458,
+        979
       ],
       "flags": {},
       "order": 28,
@@ -666,8 +666,8 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1153.3,
-        4918.8
+        1150,
+        4920
       ],
       "size": [
         270,
@@ -714,8 +714,8 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        158.0,
-        5096.9
+        160,
+        5100
       ],
       "size": [
         230,
@@ -774,8 +774,8 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        822.9,
-        5106.4
+        820,
+        5110
       ],
       "size": [
         230,
@@ -815,8 +815,8 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        475.0,
-        4919.4
+        480,
+        4920
       ],
       "size": [
         230,
@@ -856,8 +856,8 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1480.0,
-        5469.3
+        -1480,
+        5470
       ],
       "size": [
         270,
@@ -905,8 +905,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -181.3,
-        5615.0
+        -180,
+        5620
       ],
       "size": [
         847,
@@ -943,15 +943,15 @@
         ""
       ],
       "widgets_values_named": {
-        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> \u2014 neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure \u2014 sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
+        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> — neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure — sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
       }
     },
     {
       "id": 157,
       "type": "PrimitiveFloat",
       "pos": [
-        -1490.0,
-        5329.3
+        -1490,
+        5330
       ],
       "size": [
         270,
@@ -982,8 +982,8 @@
       "id": 158,
       "type": "TimePromptNode",
       "pos": [
-        -1522.4,
-        5709.3
+        -1520,
+        5710
       ],
       "size": [
         330,
@@ -1037,8 +1037,8 @@
       "id": 159,
       "type": "ScenePromptNode",
       "pos": [
-        -1521.3,
-        6091.3
+        -1520,
+        6090
       ],
       "size": [
         330,
@@ -1094,8 +1094,8 @@
       "id": 160,
       "type": "FeelingsPromptNode",
       "pos": [
-        -1521.1,
-        6455.3
+        -1520,
+        6460
       ],
       "size": [
         330,
@@ -1149,8 +1149,8 @@
       "id": 161,
       "type": "CinematicPromptNode",
       "pos": [
-        -1493.1,
-        6767.3
+        -1490,
+        6770
       ],
       "size": [
         330,
@@ -1210,8 +1210,8 @@
       "id": 162,
       "type": "H3BasePromptWriter",
       "pos": [
-        -1151.3,
-        5585.0
+        -1150,
+        5580
       ],
       "size": [
         420,
@@ -1289,7 +1289,8 @@
           "name": "h3_prompt",
           "type": "STRING",
           "links": [
-            318
+            316,
+            317
           ]
         },
         {
@@ -1360,8 +1361,8 @@
       "id": 163,
       "type": "MarkdownNote",
       "pos": [
-        -1123.1,
-        6355.0
+        -1120,
+        6360
       ],
       "size": [
         700,
@@ -1383,57 +1384,11 @@
       "bgcolor": "#000"
     },
     {
-      "id": 164,
-      "type": "H3ScenesReview",
-      "pos": [
-        -691.3,
-        5600.0
-      ],
-      "size": [
-        470,
-        420
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "link": 318
-        }
-      ],
-      "outputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "links": [
-            316,
-            317
-          ],
-          "slot_index": 0
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "title": "H3 Scenes Review (edit before render)",
-      "properties": {
-        "Node name for S&R": "H3ScenesReview"
-      },
-      "widgets_values": [
-        "Review (stop here and edit)",
-        ""
-      ]
-    },
-    {
       "id": 165,
       "type": "ImageScale",
       "pos": [
-        445.8,
-        4718.8
+        450,
+        4720
       ],
       "size": [
         315,
@@ -1459,7 +1414,7 @@
           "slot_index": 0
         }
       ],
-      "title": "Fix H3 528px \u2192 960\u00d7540",
+      "title": "Fix H3 528px → 960×540",
       "properties": {
         "Node name for S&R": "ImageScale"
       },
@@ -1474,8 +1429,8 @@
       "id": 166,
       "type": "RTXVideoSuperResolution",
       "pos": [
-        800.8,
-        4718.8
+        800,
+        4720
       ],
       "size": [
         315,
@@ -1501,7 +1456,7 @@
           "slot_index": 0
         }
       ],
-      "title": "RTX VSR 2\u00d7 \u2192 1920\u00d71080",
+      "title": "RTX VSR 2× → 1920×1080",
       "properties": {
         "Node name for S&R": "RTXVideoSuperResolution"
       },
@@ -1739,7 +1694,7 @@
     ],
     [
       316,
-      164,
+      162,
       0,
       136,
       8,
@@ -1747,17 +1702,9 @@
     ],
     [
       317,
-      164,
-      0,
-      153,
-      0,
-      "STRING"
-    ],
-    [
-      318,
       162,
       0,
-      164,
+      153,
       0,
       "STRING"
     ],
@@ -1783,10 +1730,10 @@
       "id": 1,
       "title": "Models",
       "bounding": [
-        -1506.0,
-        4625.3,
-        682.0,
-        790.0
+        -1520,
+        4610,
+        710,
+        820
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1795,10 +1742,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -276.0,
-        4836.0,
-        680.0,
-        650.0
+        -290,
+        4820,
+        710,
+        680
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1807,10 +1754,10 @@
       "id": 3,
       "title": "Conditioning",
       "bounding": [
-        -766.0,
-        4866.0,
-        442.0,
-        444.0
+        -780,
+        4850,
+        470,
+        480
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1819,10 +1766,10 @@
       "id": 4,
       "title": "Decoding and create video",
       "bounding": [
-        459.0,
-        4845.4,
-        609.9,
-        337.0
+        450,
+        4830,
+        630,
+        370
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1831,10 +1778,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1538.4,
-        5395.3,
-        2220.1,
-        1318.0
+        -1550,
+        5240,
+        2250,
+        1500
       ],
       "color": "#3f789e",
       "flags": {}

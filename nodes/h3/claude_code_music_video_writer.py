@@ -13,6 +13,7 @@
 
 import random
 import re
+from concurrent.futures import ThreadPoolExecutor
 
 from ...utils.claude_code import is_interrupt
 from ...utils.image_utils import tensor2pil
@@ -29,15 +30,18 @@ from .claude_code_support import (
     CORE_SKILL,
     claude_code_inputs,
     claude_code_optional_inputs,
+    draft_model_input,
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
+    resolve_draft_model,
     run_h3_claude_code,
 )
 from .claude_code_crossover_writer import CAST_SOCKETS, cast_wardrobe, merge_wardrobe, parse_cast
 from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
+    scale_reference_passthrough,
     AUTO,
     LITERAL_CAMERA_DIRECTIVE,
     VISUAL_STYLES,
@@ -383,6 +387,20 @@ class H3ClaudeCodeMusicVideoWriter:
                 "connected, FL otherwise."
             ),
         })
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(draft_model_input())
+        optional["parallel_chunks"] = ("BOOLEAN", {
+            "default": True,
+            "tooltip": (
+                "Write the scene chunks concurrently instead of one after another: one "
+                "planning call (by `model`) fixes the synopsis, the locks and a per-scene "
+                "plan, then up to 4 chunks at a time are drafted from that plan (by "
+                "`draft_model`), and one continuity pass repairs any drift. Much faster "
+                "for long songs. Off = the classic serial run where every chunk continues "
+                "one session. Ignored when resume_session_id is set or the whole song "
+                "fits in one call."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -560,6 +578,8 @@ class H3ClaudeCodeMusicVideoWriter:
         plot_picks=(),
         ending_picks=(),
         profile=None,
+        plan_only=False,
+        plan_text="",
     ):
         last = last or len(segments)
         n = len(segments)
@@ -586,7 +606,7 @@ class H3ClaudeCodeMusicVideoWriter:
             lyr = lyrics_for_segment(placed_lyrics, s, e)
             sung = [l for l in lyr if l[1] and not l[1].startswith("#")]
             tags = [l[1][1:] for l in lyr if l[1].startswith("#")]
-            marker = "  <-- write this one" if first <= i <= last else ""
+            marker = "" if plan_only else ("  <-- write this one" if first <= i <= last else "")
             lines.append(
                 f"PIECE {i:02d}: {fmt_time(s)}-{fmt_time(e)} | duration {e - s:.2f} | energy {label}"
                 + (f" | section {'/'.join(tags)}" if tags else "") + marker
@@ -597,13 +617,42 @@ class H3ClaudeCodeMusicVideoWriter:
             else:
                 lines.append("    [instrumental]")
         lines.append("")
+        if plan_text:
+            lines.append(
+                "THE SYNOPSIS AND SCENE PLAN - already fixed for this video in an earlier "
+                "turn. Its cast, wardrobe locks, location locks and motifs are BINDING, and "
+                "its per-scene plan is the story:"
+            )
+            lines.append(plan_text.strip())
+            lines.append("")
         if first > 1 and prior_scenes:
             lines.append("THE STORY SO FAR - what the scenes you already wrote show:")
             for no, gist in prior_scenes:
                 lines.append(f"  {no:02d}: {gist}")
             lines.append("")
         lines.append("DIRECTIVES:")
-        if first == 1:
+        if plan_only:
+            lines.append(
+                "- Write ONLY the planning document for the whole video - no scene "
+                "envelopes. First the synopsis block exactly as the contract defines it "
+                "(Synopsis, Cast, Concept, Motifs, and the wardrobe and location locks), "
+                f"then a section `SCENE PLAN:` with one line per piece, all {n} of them: "
+                "`NN: setting | what happens | how it advances the story`. The scenes are "
+                "written later from this plan, several at a time by different writers who "
+                "see only this document - so it must carry ALL the continuity: exact "
+                "wardrobe anchors, exact location anchors, the motif wording, the chorus "
+                "look, and the full arc from opening image to payoff."
+            )
+        elif plan_text:
+            lines.append(
+                f"- Write scenes {first:02d} to {last:02d} (of {n}) ONLY, following the "
+                "synopsis and SCENE PLAN above exactly: stage each scene's plan line, copy "
+                "the wardrobe and location anchors character-for-character, and keep the "
+                "arc moving. Other writers handle the other scenes from the same plan - "
+                "never write, restate or borrow a scene outside your range. Start directly "
+                "with the scene envelopes; do not write a synopsis block."
+            )
+        elif first == 1:
             lines.append(
                 f"- Write the synopsis block, then scenes {first:02d} to {last:02d} (of {n}). "
                 "The remaining scenes are requested in follow-up turns; plan the whole video now."
@@ -775,6 +824,8 @@ class H3ClaudeCodeMusicVideoWriter:
             lines.append(extra)
         lines.append("")
         lines.append(
+            "Now write the synopsis block and the SCENE PLAN, and nothing else."
+            if plan_only else
             "Now write the requested envelopes (and the synopsis block when asked), and nothing else."
         )
         return "\n".join(lines), wild_label
@@ -820,9 +871,11 @@ class H3ClaudeCodeMusicVideoWriter:
         scenes_per_call=4,
         save_scenes=True,
         prompt_mode=None,
+        draft_model="haiku",
+        parallel_chunks=True,
         **cast_slots,
     ):
-        passthrough = tuple(cast_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
+        passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
         # guide_base_en.md; Auto follows whether pictures are connected. Empty /
@@ -908,89 +961,190 @@ class H3ClaudeCodeMusicVideoWriter:
                 f"research {'on' if research else 'off'} | director {'on' if director else 'off'} | seed {current_seed}"
             )
 
-            # --- write, in chunks that continue one session -------------------
+            # --- write --------------------------------------------------------
             synopsis = ""
             parsed = []
             session_id = (resume_session_id or "").strip()
             infos = []
-            first = 1
             per_call = max(1, min(8, int(scenes_per_call or 0) or SCENES_PER_CALL))
-            story_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
+            # draft/synthesis split: `model` plans and repairs, chunk_model drafts
+            chunk_model = resolve_draft_model(draft_model, model, local)
+            parallel = bool(parallel_chunks) and n > per_call and not session_id
+            if bool(parallel_chunks) and n > per_call and session_id:
+                print(
+                    "ℹ️ H3 Music Video Writer: resume_session_id is set - writing "
+                    "serially in that session (parallel_chunks needs a fresh run)."
+                )
 
-            def ask(lo, hi):
+            def build_prompt(lo, hi, rng_, plan_only=False, plan_text="", prior=()):
+                # reads wardrobe/locations at call time, so the locks merged from
+                # the synopsis reach every later prompt
                 user_prompt, _wild = self._build_user_prompt(
                     cast, direction, segments, labels, frames, placed, performance_mode,
                     shots_per_scene, visual_style, dialogue_language, wildness,
-                    directions_with_research(extra_instructions, research), rng,
+                    directions_with_research(extra_instructions, research), rng_,
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
                     image_notes=image_notes, first=lo, last=hi, total_seconds=total_seconds,
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
-                    prior_scenes=tuple(story_so_far),
-                    plot_picks=plot_picks, ending_picks=ending_picks,
-                    profile=profile,
+                    prior_scenes=prior, plot_picks=plot_picks, ending_picks=ending_picks,
+                    profile=profile, plan_only=plan_only, plan_text=plan_text,
                 )
-                if lo == 1:
-                    user_prompt = with_context(user_prompt, context_text)
-                return run_h3_claude_code(
-                    None if (lo > 1 and session_id) else system_prompt,
-                    user_prompt,
-                    images if lo == 1 else None,
-                    model, research, use_subscription, timeout_seconds,
-                    session_id, working_dir, director, skills=skills, local=local,
-                )
+                return user_prompt
 
-            while first <= n:
-                last = min(n, first + per_call - 1)
-                try:
-                    text, session_id, info = ask(first, last)
-                except Exception as exc:
-                    # a timed-out multi-scene chunk gets ONE retry at half size;
-                    # anything else (or a single scene timing out) is fatal
-                    if is_interrupt(exc) or "did not finish within" not in str(exc) or last <= first:
-                        raise
-                    half = first + (last - first) // 2
-                    print(
-                        f"⏱️ H3 Music Video Writer: scenes {first:02d}-{last:02d} timed out "
-                        f"after {timeout_seconds}s - retrying as {first:02d}-{half:02d}. "
-                        "Raise timeout_seconds or lower scenes_per_call to avoid this."
+            def merge_locks(text):
+                # restate the locks the model just fixed in every follow-up
+                # prompt, so later scenes copy the same anchors verbatim
+                # instead of drifting from memory
+                nonlocal wardrobe, locations
+                w_locks = parse_wardrobe_lock(text)
+                if w_locks:
+                    wardrobe = merge_wardrobe(
+                        wardrobe, [f"{k}: {', '.join(v)}" for k, v in w_locks.items()]
                     )
-                    last = half
-                    text, session_id, info = ask(first, last)
-                infos.append(info)
-                chunk_synopsis, chunk = parse_scenes(text, durations[first - 1])
-                if first == 1:
-                    synopsis = chunk_synopsis
-                    # restate the locks the model just fixed in every follow-up
-                    # chunk's prompt, so later scenes copy the same anchors
-                    # verbatim instead of drifting from memory
-                    w_locks = parse_wardrobe_lock(synopsis)
-                    if w_locks:
-                        wardrobe = merge_wardrobe(
-                            wardrobe, [f"{k}: {', '.join(v)}" for k, v in w_locks.items()]
+                l_locks = parse_location_lock(text)
+                if l_locks:
+                    locations = merge_wardrobe(
+                        locations, [f"{k}: {', '.join(v)}" for k, v in l_locks.items()]
+                    )
+
+            if parallel:
+                # one plan call (strong model) -> chunks drafted concurrently
+                # (draft model, fresh sessions) -> one continuity repair below
+                ranges = [(lo, min(n, lo + per_call - 1)) for lo in range(1, n + 1, per_call)]
+                workers = min(4, len(ranges))
+                print(
+                    f"⚡ H3 Music Video Writer: parallel run - plan with '{model}', then "
+                    f"{len(ranges)} chunk(s) drafted with '{chunk_model}', up to {workers} at once."
+                )
+                plan_prompt = with_context(build_prompt(1, n, rng, plan_only=True), context_text)
+                text, session_id, info = run_h3_claude_code(
+                    system_prompt, plan_prompt, images, model, research, use_subscription,
+                    timeout_seconds, "", working_dir, director, skills=skills, local=local,
+                )
+                infos.append(f"plan: {info}")
+                synopsis = (text or "").strip()
+                if not synopsis:
+                    raise ValueError("the planning call returned no synopsis / scene plan.")
+                merge_locks(synopsis)
+
+                def write_range(lo, hi, depth=0):
+                    rng_ = random.Random(f"{current_seed}:{lo}:{hi}")
+                    user_prompt = build_prompt(lo, hi, rng_, plan_text=synopsis)
+                    try:
+                        text, _sid, info = run_h3_claude_code(
+                            system_prompt, user_prompt, images, chunk_model, research,
+                            use_subscription, timeout_seconds, "", working_dir, director,
+                            skills=skills, local=local,
                         )
-                    l_locks = parse_location_lock(synopsis)
-                    if l_locks:
-                        locations = merge_wardrobe(
-                            locations, [f"{k}: {', '.join(v)}" for k, v in l_locks.items()]
+                    except Exception as exc:
+                        # a timed-out multi-scene chunk is split in two and both
+                        # halves rewritten; anything else is fatal
+                        if (is_interrupt(exc) or "did not finish within" not in str(exc)
+                                or hi <= lo or depth >= 2):
+                            raise
+                        mid = lo + (hi - lo) // 2
+                        print(
+                            f"⏱️ H3 Music Video Writer: scenes {lo:02d}-{hi:02d} timed out "
+                            f"after {timeout_seconds}s - splitting into {lo:02d}-{mid:02d} "
+                            f"and {mid + 1:02d}-{hi:02d}."
                         )
-                if not chunk:
-                    raise ValueError(f"the model returned no scenes for pieces {first:02d}-{last:02d}.")
-                got = [(no, d, p) for no, d, p in chunk]
-                # renumber defensively onto the requested range
-                for k, (no, _d, p) in enumerate(got[: last - first + 1]):
-                    idx = first + k
-                    parsed.append((idx, durations[idx - 1], p))
-                    story_so_far.append((idx, _scene_gist(p)))
-                if len(got) < last - first + 1:
-                    print(f"⚠️ H3 Music Video Writer: asked for scenes {first:02d}-{last:02d}, got {len(got)}.")
-                first = first + max(1, min(len(got), last - first + 1))
+                        a_scenes, a_infos = write_range(lo, mid, depth + 1)
+                        b_scenes, b_infos = write_range(mid + 1, hi, depth + 1)
+                        return a_scenes + b_scenes, a_infos + b_infos
+                    _syn, chunk = parse_scenes(text, durations[lo - 1])
+                    if not chunk:
+                        raise ValueError(f"the model returned no scenes for pieces {lo:02d}-{hi:02d}.")
+                    got = chunk[: hi - lo + 1]
+                    if len(got) < hi - lo + 1:
+                        print(f"⚠️ H3 Music Video Writer: asked for scenes {lo:02d}-{hi:02d}, got {len(got)}.")
+                    # renumber defensively onto the requested range
+                    scenes_out = [
+                        (lo + k, durations[lo + k - 1], p) for k, (_no, _d, p) in enumerate(got)
+                    ]
+                    return scenes_out, [info]
+
+                errors = []
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    futures = [pool.submit(write_range, lo, hi) for lo, hi in ranges]
+                    for future in futures:
+                        try:
+                            scenes_out, chunk_infos = future.result()
+                        except Exception as exc:
+                            errors.append(exc)
+                            continue
+                        parsed.extend(scenes_out)
+                        infos.extend(chunk_infos)
+                if errors:
+                    raise errors[0]
+                parsed.sort(key=lambda item: item[0])
+            else:
+                # the classic serial run: chunks continue one session; `model`
+                # writes the first chunk (with the synopsis), chunk_model the rest
+                first = 1
+                story_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
+
+                def ask(lo, hi):
+                    user_prompt = build_prompt(lo, hi, rng, prior=tuple(story_so_far))
+                    if lo == 1:
+                        user_prompt = with_context(user_prompt, context_text)
+                    return run_h3_claude_code(
+                        None if (lo > 1 and session_id) else system_prompt,
+                        user_prompt,
+                        images if lo == 1 else None,
+                        model if lo == 1 else chunk_model,
+                        research, use_subscription, timeout_seconds,
+                        session_id, working_dir, director, skills=skills, local=local,
+                    )
+
+                while first <= n:
+                    last = min(n, first + per_call - 1)
+                    try:
+                        text, session_id, info = ask(first, last)
+                    except Exception as exc:
+                        # a timed-out multi-scene chunk gets ONE retry at half size;
+                        # anything else (or a single scene timing out) is fatal
+                        if is_interrupt(exc) or "did not finish within" not in str(exc) or last <= first:
+                            raise
+                        half = first + (last - first) // 2
+                        print(
+                            f"⏱️ H3 Music Video Writer: scenes {first:02d}-{last:02d} timed out "
+                            f"after {timeout_seconds}s - retrying as {first:02d}-{half:02d}. "
+                            "Raise timeout_seconds or lower scenes_per_call to avoid this."
+                        )
+                        last = half
+                        text, session_id, info = ask(first, last)
+                    infos.append(info)
+                    chunk_synopsis, chunk = parse_scenes(text, durations[first - 1])
+                    if first == 1:
+                        synopsis = chunk_synopsis
+                        merge_locks(synopsis)
+                    if not chunk:
+                        raise ValueError(f"the model returned no scenes for pieces {first:02d}-{last:02d}.")
+                    got = [(no, d, p) for no, d, p in chunk]
+                    # renumber defensively onto the requested range
+                    for k, (no, _d, p) in enumerate(got[: last - first + 1]):
+                        idx = first + k
+                        parsed.append((idx, durations[idx - 1], p))
+                        story_so_far.append((idx, _scene_gist(p)))
+                    if len(got) < last - first + 1:
+                        print(f"⚠️ H3 Music Video Writer: asked for scenes {first:02d}-{last:02d}, got {len(got)}.")
+                    first = first + max(1, min(len(got), last - first + 1))
 
             if len(parsed) != n:
                 print(f"⚠️ H3 Music Video Writer: {n} piece(s) but {len(parsed)} scene(s) parsed.")
 
             # --- continuity check (wardrobe + locations), one repair turn --------
             def repair(prompt):
+                if parallel:
+                    # the plan session never saw the drafted scenes, so the
+                    # repair turn carries them along
+                    prompt = (
+                        "The video's scenes as currently written (drafted from the plan "
+                        "you fixed earlier in this session):\n\n"
+                        + scenes_to_text("", parsed)
+                        + "\n\n" + prompt
+                    )
                 text, _, repair_info = run_h3_claude_code(
                     system_prompt, prompt, None, model, False, use_subscription, timeout_seconds,
                     session_id, working_dir, director, skills=skills, local=local,

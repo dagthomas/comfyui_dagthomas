@@ -284,7 +284,9 @@ app.registerExtension({
       if (w) w.value = text || "";
       const mode = widgetOf(node, "mode");
       if (mode) mode.value = MODE_CONTINUE; // the next queue renders the editor text
-      node._h3Review?.setWaiting(true); // glow until the user acts
+      // glow until the user acts - unless this is just a refresh of the editor
+      // with scenes that are already rendering (stopped: false)
+      node._h3Review?.setWaiting(ev.detail?.stopped !== false);
       app.canvas?.setDirty?.(true, true);
     });
     // any new queue means the user has acted: stop the glow everywhere
@@ -324,7 +326,29 @@ app.registerExtension({
         }
       }
 
+      const writerOf = () => {
+        const inp = (node.inputs || []).find((i) => i.name === "scenes");
+        const links = node.graph?.links;
+        const link =
+          links && inp?.link != null
+            ? (typeof links.get === "function" ? links.get(inp.link) : links[inp.link])
+            : null;
+        return link ? node.graph?.getNodeById?.(link.origin_id) : null;
+      };
       const btnContinue = this.addWidget("button", "▶ Continue - render this text", null, () => {
+        // Editing before render relies on ComfyUI reusing the writer's CACHED
+        // scenes, which needs a fixed seed. The seed is NEVER changed here -
+        // with seed -1 the writer rewrites on every queue and the fresh scenes
+        // simply render (the stale edits are discarded); warn so the edit isn't
+        // lost by surprise.
+        const seed = writerOf()?.widgets?.find((x) => x.name === "seed");
+        if (seed && seed.value === -1) {
+          console.warn(
+            "[H3 Scenes Review] the writer's seed is -1, so this queue writes a FRESH draft " +
+            "and renders it - edits made to the old draft are discarded. Pin the writer's " +
+            "seed to a fixed value to edit before rendering.",
+          );
+        }
         const mode = widgetOf(node, "mode");
         if (mode) mode.value = MODE_CONTINUE;
         node._h3Review?.setWaiting(false);

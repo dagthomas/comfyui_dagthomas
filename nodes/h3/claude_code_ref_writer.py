@@ -27,6 +27,7 @@ from .claude_code_support import (
 )
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
+    scale_reference_passthrough,
     AUTO,
     CAMERA_AMPLITUDES,
     CAMERA_MOTIONS,
@@ -211,7 +212,7 @@ class H3ClaudeCodeRefWriter(H3RefPromptWriter):
         )
         log_template_vars(template_vars, template_summary, idea, reference_notes, extra_instructions, custom_dialogue_language, custom_visual_style)
         context_text, context_entries = build_context(image_slots)
-        passthrough = tuple(image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES)
+        passthrough = scale_reference_passthrough(image_slots, self._IMAGE_OUTPUT_NAMES)
         try:
             dialogue_language = resolve_dialogue_language(
                 dialogue_language, custom_dialogue_language

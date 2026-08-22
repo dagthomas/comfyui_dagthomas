@@ -8,8 +8,8 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5019.6
+        -1490,
+        5020
       ],
       "size": [
         640,
@@ -50,8 +50,8 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490.0,
-        5159.6
+        -1490,
+        5160
       ],
       "size": [
         650,
@@ -92,8 +92,8 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260.0,
-        5140.8
+        -260,
+        5140
       ],
       "size": [
         370,
@@ -126,8 +126,8 @@
       "id": 126,
       "type": "BasicGuider",
       "pos": [
-        -260.0,
-        5010.8
+        -260,
+        5010
       ],
       "size": [
         360,
@@ -165,8 +165,8 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490.0,
-        4829.6
+        -1490,
+        4830
       ],
       "size": [
         640,
@@ -210,8 +210,8 @@
       "id": 129,
       "type": "RandomNoise",
       "pos": [
-        -260.0,
-        4850.8
+        -260,
+        4850
       ],
       "size": [
         360,
@@ -246,8 +246,8 @@
       "id": 131,
       "type": "ComfyMathExpression",
       "pos": [
-        -1450.0,
-        5991.6
+        -1450,
+        5990
       ],
       "size": [
         225,
@@ -438,8 +438,8 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490.0,
-        4669.6
+        -1490,
+        4670
       ],
       "size": [
         640,
@@ -481,8 +481,8 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1053.7,
-        4485.6
+        -1050,
+        4490
       ],
       "size": [
         270,
@@ -523,8 +523,8 @@
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -260.0,
-        5280.8
+        -260,
+        5280
       ],
       "size": [
         370,
@@ -567,12 +567,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -726.0,
-        4488.2
+        -730,
+        4490
       ],
       "size": [
         425,
-        317.984375
+        318
       ],
       "flags": {},
       "order": 18,
@@ -624,12 +624,12 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1486.8,
-        4918.2
+        1490,
+        4920
       ],
       "size": [
-        1458.46875,
-        978.625
+        1458,
+        979
       ],
       "flags": {},
       "order": 28,
@@ -666,8 +666,8 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1153.3,
-        4918.8
+        1150,
+        4920
       ],
       "size": [
         270,
@@ -714,8 +714,8 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        158.0,
-        5096.9
+        160,
+        5100
       ],
       "size": [
         230,
@@ -774,8 +774,8 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        822.9,
-        5106.4
+        820,
+        5110
       ],
       "size": [
         230,
@@ -815,8 +815,8 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        475.0,
-        4919.4
+        480,
+        4920
       ],
       "size": [
         230,
@@ -856,8 +856,8 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1480.0,
-        5439.6
+        -1480,
+        5440
       ],
       "size": [
         270,
@@ -905,8 +905,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -188.4,
-        5970.8
+        -190,
+        5970
       ],
       "size": [
         847,
@@ -943,7 +943,7 @@
         ""
       ],
       "widgets_values_named": {
-        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> \u2014 neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure \u2014 sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
+        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> — neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure — sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
       },
       "title": "refined prompt (goes to the video node)"
     },
@@ -951,8 +951,8 @@
       "id": 157,
       "type": "PrimitiveFloat",
       "pos": [
-        -1490.0,
-        5299.6
+        -1490,
+        5300
       ],
       "size": [
         270,
@@ -983,8 +983,8 @@
       "id": 158,
       "type": "TimePromptNode",
       "pos": [
-        -1510.4,
-        5679.6
+        -1510,
+        5680
       ],
       "size": [
         330,
@@ -1038,8 +1038,8 @@
       "id": 159,
       "type": "ScenePromptNode",
       "pos": [
-        -1505.9,
-        6061.6
+        -1510,
+        6060
       ],
       "size": [
         330,
@@ -1095,8 +1095,8 @@
       "id": 160,
       "type": "FeelingsPromptNode",
       "pos": [
-        -1504.9,
-        6425.6
+        -1500,
+        6430
       ],
       "size": [
         330,
@@ -1150,8 +1150,8 @@
       "id": 161,
       "type": "CinematicPromptNode",
       "pos": [
-        -1498.4,
-        6737.6
+        -1500,
+        6740
       ],
       "size": [
         330,
@@ -1211,8 +1211,8 @@
       "id": 162,
       "type": "H3ClaudeCodeBaseWriter",
       "pos": [
-        -1134.9,
-        5724.8
+        -1130,
+        5720
       ],
       "size": [
         420,
@@ -1432,8 +1432,8 @@
       "id": 164,
       "type": "H3LLMBackend",
       "pos": [
-        -1129.4,
-        5364.8
+        -1130,
+        5360
       ],
       "size": [
         420,
@@ -1470,14 +1470,14 @@
         8000,
         false
       ],
-      "title": "H3 LLM Backend \u2014 one backend, two nodes"
+      "title": "H3 LLM Backend — one backend, two nodes"
     },
     {
       "id": 165,
       "type": "H3ClaudeCodeRefiner",
       "pos": [
-        -669.2,
-        5561.9
+        -670,
+        5560
       ],
       "size": [
         420,
@@ -1521,7 +1521,8 @@
           "name": "h3_prompt",
           "type": "STRING",
           "links": [
-            325
+            322,
+            323
           ]
         },
         {
@@ -1587,14 +1588,14 @@
         "",
         ""
       ],
-      "title": "H3 Refiner \u2014 same backend, resumes the local session"
+      "title": "H3 Refiner — same backend, resumes the local session"
     },
     {
       "id": 166,
       "type": "H3PromptPreview",
       "pos": [
-        -674.9,
-        6151.9
+        -670,
+        6150
       ],
       "size": [
         420,
@@ -1634,8 +1635,8 @@
       "id": 167,
       "type": "MarkdownNote",
       "pos": [
-        -1128.4,
-        6554.8
+        -1130,
+        6550
       ],
       "size": [
         900,
@@ -1648,64 +1649,18 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "# Writer \u2192 Refiner on one local backend\n\nOne **H3 LLM Backend** (`ollama:qwen3:8b`) feeds both the **H3 Claude Code Writer** and the **H3 Claude Code Refiner** through their `llm` sockets. The writer drafts the prompt from the context nodes (Time / Scene / Feelings / Cinematic), the refiner revises it with your instruction, and the refined prompt is what the video node renders.\n\n- `session_id` \u2192 `session_id`: with a local model the writer keeps a text-only session under ComfyUI's temp folder, so the refiner continues the same conversation (the guide and the draft are already in context) exactly like it does with Claude Code.\n- Swap the backend's `model_name` to anything the router knows (`lmstudio:\u2026`, `local:\u2026`, `claude:\u2026`, `gpt:\u2026`) and both nodes follow.\n- `{vars}` work in every text box: connect an H3 Characters node to a `context_N` socket and write `{character1}`.\n\nBoth previews show the draft and the refined prompt side by side."
+        "# Writer → Refiner on one local backend\n\nOne **H3 LLM Backend** (`ollama:qwen3:8b`) feeds both the **H3 Claude Code Writer** and the **H3 Claude Code Refiner** through their `llm` sockets. The writer drafts the prompt from the context nodes (Time / Scene / Feelings / Cinematic), the refiner revises it with your instruction, and the refined prompt is what the video node renders.\n\n- `session_id` → `session_id`: with a local model the writer keeps a text-only session under ComfyUI's temp folder, so the refiner continues the same conversation (the guide and the draft are already in context) exactly like it does with Claude Code.\n- Swap the backend's `model_name` to anything the router knows (`lmstudio:…`, `local:…`, `claude:…`, `gpt:…`) and both nodes follow.\n- `{vars}` work in every text box: connect an H3 Characters node to a `context_N` socket and write `{character1}`.\n\nBoth previews show the draft and the refined prompt side by side."
       ],
       "color": "#3d3222",
       "bgcolor": "#1e1c17",
-      "title": "APNext \u2014 LLM Backend"
-    },
-    {
-      "id": 168,
-      "type": "H3ScenesReview",
-      "pos": [
-        -150.0,
-        5480.8
-      ],
-      "size": [
-        470,
-        420
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "link": 325
-        }
-      ],
-      "outputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "links": [
-            322,
-            323
-          ],
-          "slot_index": 0
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "title": "H3 Scenes Review (edit before render)",
-      "properties": {
-        "Node name for S&R": "H3ScenesReview"
-      },
-      "widgets_values": [
-        "Review (stop here and edit)",
-        ""
-      ]
+      "title": "APNext — LLM Backend"
     },
     {
       "id": 169,
       "type": "ImageScale",
       "pos": [
-        445.8,
-        4718.8
+        450,
+        4720
       ],
       "size": [
         315,
@@ -1731,7 +1686,7 @@
           "slot_index": 0
         }
       ],
-      "title": "Fix H3 528px \u2192 960\u00d7540",
+      "title": "Fix H3 528px → 960×540",
       "properties": {
         "Node name for S&R": "ImageScale"
       },
@@ -1746,8 +1701,8 @@
       "id": 170,
       "type": "RTXVideoSuperResolution",
       "pos": [
-        800.8,
-        4718.8
+        800,
+        4720
       ],
       "size": [
         315,
@@ -1773,7 +1728,7 @@
           "slot_index": 0
         }
       ],
-      "title": "RTX VSR 2\u00d7 \u2192 1920\u00d71080",
+      "title": "RTX VSR 2× → 1920×1080",
       "properties": {
         "Node name for S&R": "RTXVideoSuperResolution"
       },
@@ -2043,7 +1998,7 @@
     ],
     [
       322,
-      168,
+      165,
       0,
       136,
       8,
@@ -2051,7 +2006,7 @@
     ],
     [
       323,
-      168,
+      165,
       0,
       153,
       0,
@@ -2062,14 +2017,6 @@
       162,
       0,
       166,
-      0,
-      "STRING"
-    ],
-    [
-      325,
-      165,
-      0,
-      168,
       0,
       "STRING"
     ],
@@ -2095,10 +2042,10 @@
       "id": 1,
       "title": "Models",
       "bounding": [
-        -1506.0,
-        4595.6,
-        812.6,
-        1075.2
+        -1520,
+        4580,
+        840,
+        1100
       ],
       "color": "#3f789e",
       "flags": {}
@@ -2107,10 +2054,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -276.0,
-        4776.8,
-        680.0,
-        650.0
+        -290,
+        4760,
+        710,
+        680
       ],
       "color": "#3f789e",
       "flags": {}
@@ -2119,10 +2066,10 @@
       "id": 3,
       "title": "Conditioning",
       "bounding": [
-        -766.0,
-        4866.0,
-        442.0,
-        444.0
+        -780,
+        4850,
+        470,
+        480
       ],
       "color": "#3f789e",
       "flags": {}
@@ -2131,10 +2078,10 @@
       "id": 4,
       "title": "Decoding and create video",
       "bounding": [
-        459.0,
-        4845.4,
-        609.9,
-        337.0
+        450,
+        4830,
+        630,
+        370
       ],
       "color": "#3f789e",
       "flags": {}
@@ -2143,10 +2090,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1526.4,
-        5290.8,
-        2201.0,
-        1580.0
+        -1540,
+        5190,
+        2230,
+        1690
       ],
       "color": "#3f789e",
       "flags": {}

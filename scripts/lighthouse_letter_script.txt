@@ -1,0 +1,174 @@
+=== SCENE 01 | duration: 12.5 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, dim amber bulb light inside a cramped wooden garage at night, rain hammering on a corrugated metal roof beyond the open doors. A medium-wide shot frames <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, kneeling at the open rear doors of her old mail van interior - cracked brown vinyl driver's seat on the LEFT, a wooden dashboard with round brass gauges in the center, a loose wood panel in the rear cargo wall, a small brass mail scale bolted to the passenger side on the RIGHT, a rain-streaked windshield facing forward. The camera pushes in with small amplitude at slow speed as her fingers work a flathead screwdriver behind the loose wood panel in the rear cargo wall and pry it fully away, exposing a narrow gap stuffed with a single yellowed envelope.
+
+[Shot 2] At 00:05.500, the camera cuts to a close-up of the weathered hands of <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, lifting the envelope free beside the loose wood panel in the rear cargo wall, dust sliding off its brittle, sun-faded surface as she turns it over between her fingers. Her eyes widen and her breath catches as recognition crosses her face.
+
+[Shot 3] At 00:09.000, the shot cuts to a close two-shot of <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, her face beside the open loose wood panel in the rear cargo wall, rain-light flickering across her cheek from the open doors behind her; she presses the envelope flat against her palm and rises to her feet, jaw set with quiet resolve.
+
+overall_soundscape: Heavy rain drums on the corrugated roof and pools in gutters outside the open garage doors. The old wood panel creaks and splinters faintly as it comes loose, followed by the dry rustle of aged paper and Maja's held, uneven breath.
+
+non_diegetic_music: A single sustained low cello note, very quiet, joined by one soft piano chord struck slowly as the envelope is lifted, both fading almost to silence by the end.
+=== END SCENE 01 ===
+
+=== SCENE 02 | duration: 10.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, sodium-orange streetlight glow through sheeting rain outside the garage at night. A wide shot frames <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, climbing into the driver's seat of her mail van interior - cracked brown vinyl driver's seat on the LEFT, a wooden dashboard with round brass gauges in the center, a loose wood panel in the rear cargo wall, a small brass mail scale bolted to the passenger side on the RIGHT, a rain-streaked windshield facing forward, the envelope propped against the brass mail scale on the RIGHT. She turns the ignition key; the engine grinds twice and dies. The camera holds a static shot as she pumps the pedal and turns the key again, and the engine coughs into a rough, uneven idle. Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, pats the dashboard and, in a low, dry voice roughened by decades outdoors (S1), says: <d>[English] Come on, old girl.</d>
+
+[Shot 2] At 00:06.000, the camera cuts to a wide shot from outside the garage as the van's headlights cut on through the downpour and it rolls forward out of the doors with <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, visible at the wheel, wipers beating hard against the glass, turning left onto the wet coastal lane and vanishing into the rain and dark.
+
+overall_soundscape: The engine grinds, sputters, and catches into a rattling idle before settling into a steady rough rhythm. Rain hisses against the windshield and the metal roof, and the wipers thump in a slow, uneven beat as the van pulls away.
+
+non_diegetic_music: The low cello sustains and thickens, joined by a slow, spare upright-bass pulse that begins to keep pace with the idling engine, still quiet.
+=== END SCENE 02 ===
+
+=== SCENE 03 | duration: 11.5 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, near-total darkness at night on the coast road - a narrow asphalt road hugging the LEFT edge of a black cliff, a low stone guard wall on the RIGHT above the sea, tall wind-bent grass lining the roadside, sheets of rain crossing the headlight beams. A wide tracking shot follows the mail van as it climbs the winding road, headlights sweeping across the low stone guard wall on the RIGHT with each curve. The camera arcs around the front of the van with small amplitude at slow speed, revealing <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, gripping the wheel with both hands and leaning forward to see through the rain-smeared windshield.
+
+[Shot 2] At 00:04.500, the shot cuts to a close-up inside the mail van interior - cracked brown vinyl driver's seat on the LEFT, a wooden dashboard with round brass gauges in the center, a loose wood panel in the rear cargo wall, a small brass mail scale bolted to the passenger side on the RIGHT, a rain-streaked windshield facing forward - as the engine sputters, the headlights dim for a moment, and the dashboard gauges flicker. <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, glances down at the envelope propped against the brass mail scale on the RIGHT, then back to the road, her grip tightening.
+
+[Shot 3] At 00:08.000, the camera cuts to an exterior low-angle shot on the coast road - a narrow asphalt road hugging the LEFT edge of a black cliff, a low stone guard wall on the RIGHT above the sea, tall wind-bent grass lining the roadside, sheets of rain crossing the headlight beams - as the van crests a rise and pushes on through a heavier sheet of rain, headlights steady again, wipers beating fast, the dark shape of the lighthouse exterior - a tall white cylindrical tower with a red iron gallery rail near the top, a small stone keeper's cottage attached at its base on the LEFT, a wooden jetty visible on the RIGHT leading into dark water, a single exterior lantern glowing beside the cottage door - becoming faintly visible in the far background above the cliffline.
+
+overall_soundscape: Rain lashes the windshield in shifting gusts while the engine runs in a strained, uneven growl that briefly sputters and recovers. Tires hiss over wet asphalt and the wipers beat in a fast, insistent rhythm throughout.
+
+non_diegetic_music: The cello and upright bass swell in volume and tempo together, joined by a single restrained snare-drum pulse that mirrors the wipers, building steadily without resolving.
+=== END SCENE 03 ===
+
+=== SCENE 04 | duration: 9.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, driving rain lit by a single exterior lantern beside a cottage door at night, at the lighthouse exterior - a tall white cylindrical tower with a red iron gallery rail near the top, a small stone keeper's cottage attached at its base on the LEFT, a wooden jetty visible on the RIGHT leading into dark water, a single exterior lantern glowing beside the cottage door. A wide establishing shot reveals the tower's beam sweeping steadily overhead as the mail van stops at the foot of the tower and <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, steps out into the rain, envelope held flat against her chest under one arm. The camera trucks left with small amplitude at slow speed, following her across the wet stones toward the cottage door beside the glowing lantern.
+
+[Shot 2] At 00:05.000, the camera cuts to a close shot at the lighthouse exterior, beneath the single exterior lantern glowing beside the cottage door, on <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, rain dripping from the edge of her coat's hood, as she raises a fist and knocks twice against the heavy wooden door. She lowers her hand, waits, and glances up toward the tower's turning beam sweeping across the wet stone above her.
+
+overall_soundscape: Rain falls steadily around the lighthouse and drips from the eaves of the cottage roof. Maja's boots splash against wet stone, and two firm knocks sound against the heavy wooden door, followed by quiet, expectant silence beneath the falling rain.
+
+non_diegetic_music: The bass and cello sustain quietly into a single held chord, and the snare pulse fades out completely, leaving one soft, suspended piano note as she knocks.
+=== END SCENE 04 ===
+
+=== SCENE 05 | duration: 8.5 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, warm lamplight spilling from a cracked-open doorway into driving rain at night, at the lighthouse exterior - a tall white cylindrical tower with a red iron gallery rail near the top, a small stone keeper's cottage attached at its base on the LEFT, a wooden jetty visible on the RIGHT leading into dark water, a single exterior lantern glowing beside the cottage door. The heavy wooden door swings inward and <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, appears in the doorway holding an oil lamp, squinting out at the rain-soaked visitor. The camera holds a static shot as he takes in <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, standing drenched on the doorstep. Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, in a low, gravelled voice roughened by years of sea wind (S2), says: <d>[English] Bit late for a delivery.</d>
+
+[Shot 2] At 00:04.500, the camera cuts to a close shot at the lighthouse exterior, beneath the single exterior lantern glowing beside the cottage door, on <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, rain still dripping from the edge of her hood, as she lifts the envelope slightly into view between them and answers in a low, dry voice roughened by decades outdoors (S1): <d>[English] It's been late for forty years.</d> <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, his eyebrows draw together in confusion, then he steps back from the doorway and pulls the door wider, gesturing her inside with his free hand.
+
+overall_soundscape: Rain continues to fall steadily around the doorway, dripping from the lantern's iron bracket. The door creaks open on its hinges, and Espen's boots shift against the threshold as he steps back to let Maja pass.
+
+non_diegetic_music: The held cello and upright-bass chord loosens into a slow, questioning three-note piano phrase that repeats twice, quiet and unresolved.
+=== END SCENE 05 ===
+
+=== SCENE 06 | duration: 13.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, firelight flickering from a small iron stove inside a cramped stone-walled cottage room at night, rain still audible against a single round window. A medium shot frames <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, setting his oil lamp on a rough wooden table as <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, unbuttons her coat and steps further into the room. The camera pushes in with small amplitude at slow speed as she draws the envelope from beneath her coat and holds it out flat on her open palm. Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines (S1), says: <d>[English] I found it wedged behind a panel in my old van. It's addressed here, to you.</d>
+
+[Shot 2] At 00:06.000, the shot cuts to a close-up of the weathered hand of <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, taking the envelope, his thumb brushing over the faded ink on its front. His breath catches and his eyes glisten as he studies the handwriting. Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, his voice suddenly unsteady (S2), says: <d>[English] That's her hand. That's my wife's hand.</d>
+
+[Shot 3] At 00:09.500, the camera cuts to a two-shot as <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, lowers himself slowly onto a wooden bench beside the table, turning the unopened envelope over between his fingers, while <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, watches quietly from across the table, her hands folded in front of her.
+
+overall_soundscape: The iron stove ticks and pops softly while rain patters against the round window. Espen's bench creaks under his weight, and the stiff old envelope makes a faint dry crackle as he turns it between his fingers.
+
+non_diegetic_music: The piano phrase resolves into a single slow, sustained chord shared with the cello, both holding steady and quiet as he sits down.
+=== END SCENE 06 ===
+
+=== SCENE 07 | duration: 8.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, dim bulb light strung along a narrow spiral stair inside the lighthouse tower at night, a rhythmic mechanical hum from the turning lamp growing louder from above. A low-angle shot frames <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, climbing the iron spiral stair with the unopened envelope held in one hand, <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, following two steps behind him. The camera tilts up with small amplitude at slow speed, tracking their ascent past the curving stone wall toward a widening glow of white light above.
+
+[Shot 2] At 00:04.000, the camera cuts to a close shot on the boots of <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, reaching the final iron step as he climbs through the narrow spiral stair opening in the floor on the LEFT into the lamp room - a rotating brass lamp mechanism with a large Fresnel lens in the center, a circular iron walkway with a low rail around the glass, rain-speckled curved windows on all sides, a narrow spiral stair opening in the floor on the LEFT - the sweeping white beam briefly crossing his face and beard.
+
+overall_soundscape: The mechanical hum of the turning lamp deepens with each step upward, mixed with the ring of boots on iron stair treads and the fading patter of rain from below.
+
+non_diegetic_music: The sustained cello and piano chord thins to a single held cello note, rising almost imperceptibly in pitch as the climb continues.
+=== END SCENE 07 ===
+
+=== SCENE 08 | duration: 14.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, sweeping white light crossing rain-speckled glass at night inside the lamp room - a rotating brass lamp mechanism with a large Fresnel lens in the center, a circular iron walkway with a low rail around the glass, rain-speckled curved windows on all sides, a narrow spiral stair opening in the floor on the LEFT. A wide shot frames <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, standing beside the turning lens with <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, a step behind him near the narrow spiral stair opening in the floor on the LEFT. The camera arcs slowly around them with small amplitude at slow speed as the beam sweeps past, alternating warm lamp light and shadow across their faces. Espen breaks the envelope's seal with his thumb and unfolds a single sheet of paper, his hands trembling slightly.
+
+[Shot 2] At 00:06.000, the shot cuts to a close-up inside the lamp room on the face of <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, lit by the passing beam of the rotating brass lamp mechanism with a large Fresnel lens in the center, as his eyes move slowly across the page. In a low, halting voice thick with feeling (S2), he reads aloud: <d>[English] I was never angry. Come home.</d>
+
+[Shot 3] At 00:10.500, the camera cuts to a close two-shot inside the lamp room as <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, lowers the letter to his chest, his lips parting in a stunned, wavering breath caught between a laugh and a sob, while <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, watches him from beside the narrow spiral stair opening in the floor on the LEFT, her expression softening.
+
+overall_soundscape: The rotating lamp mechanism hums steadily while rain ticks against the curved windows in slow pulses. Paper crackles softly as the envelope tears open, and Espen's breath catches audibly in the quiet that follows.
+
+non_diegetic_music: The single cello note is joined by a slow, rising piano figure that climbs in small steps and swells gently in volume, holding just short of resolution as he lowers the letter.
+=== END SCENE 08 ===
+
+=== SCENE 09 | duration: 11.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, sweeping white light crossing rain-speckled glass at night inside the lamp room - a rotating brass lamp mechanism with a large Fresnel lens in the center, a circular iron walkway with a low rail around the glass, rain-speckled curved windows on all sides, a narrow spiral stair opening in the floor on the LEFT. A close shot frames <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, the letter still open in his hand as a short, broken laugh breaks loose from him even as tears run freely into his beard. The camera holds a static shot as his shoulders shake between the laugh and the crying.
+
+[Shot 2] At 00:04.000, the shot cuts to a medium shot on the circular iron walkway with a low rail around the glass as <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, steps toward <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, and rests a hand gently on his shoulder, saying nothing, her own eyes glistening as she watches him.
+
+[Shot 3] At 00:07.500, the camera cuts to a wide shot inside the lamp room - a rotating brass lamp mechanism with a large Fresnel lens in the center, a circular iron walkway with a low rail around the glass, rain-speckled curved windows on all sides, a narrow spiral stair opening in the floor on the LEFT - of <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, and <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, standing together beside the turning lens, the beam sweeping past and lighting their faces in slow, steady pulses as Espen presses the letter briefly against his chest.
+
+overall_soundscape: The lamp mechanism continues its steady mechanical hum, and rain still ticks faintly against the curved windows outside. Espen's breath comes in short, uneven bursts between a laugh and a sob, and the letter's paper rustles softly against his sweater.
+
+non_diegetic_music: The rising piano figure reaches its highest note and holds there with the sustained cello beneath it, both ringing quietly without resolving.
+=== END SCENE 09 ===
+
+=== SCENE 10 | duration: 13.0 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, the sweeping beam now slower and softer against rain-speckled glass at night inside the lamp room - a rotating brass lamp mechanism with a large Fresnel lens in the center, a circular iron walkway with a low rail around the glass, rain-speckled curved windows on all sides, a narrow spiral stair opening in the floor on the LEFT. A medium shot frames <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, seated on the low rail edge wiping his eyes with the back of his wrist, the folded letter resting on his knee. <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, draws a battered metal thermos from her coat's inner pocket and unscrews its cup-shaped cap. The camera holds a static shot as she tips steaming coffee into the cap and passes it to him.
+
+[Shot 2] At 00:06.000, the shot cuts to a close-up on <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, wrapping both hands around the warm cup, looking down at it, then up at <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines. In a low, gravelled voice roughened by years of sea wind (S2), he says: <d>[English] Forty years late.</d>
+
+[Shot 3] At 00:09.500, the camera cuts to a close-up on <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, a small, warm smile forming at the corners of her mouth as she pours a second cup for herself, replying in a low, dry voice roughened by decades outdoors (S1): <d>[English] Post's like that.</d> Steam curls from both cups between her and <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, as the beam continues its slow sweep overhead.
+
+overall_soundscape: The lamp mechanism hums at a slower, steadier pace, and rain outside the windows has thinned to a light patter. Coffee glugs softly from the thermos, and the metal cup's cap clinks faintly as it changes hands.
+
+non_diegetic_music: The cello and piano soften into a gentle, unhurried two-note exchange, quiet and warm, settling into a steady, unforced rhythm.
+=== END SCENE 10 ===
+
+=== SCENE 11 | duration: 13.5 ===
+subject_definitions:
+<Subject 1> is Maja, the retired postwoman in her 60s, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines.
+<Subject 2> is Espen, the lighthouse keeper in his 70s, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots.
+
+integrated_multimodal_description:
+[Shot 1] Live-action, 35mm cinematic film aesthetic, the first pale grey light of dawn rising behind thinning rain clouds, at the lighthouse exterior - a tall white cylindrical tower with a red iron gallery rail near the top, a small stone keeper's cottage attached at its base on the LEFT, a wooden jetty visible on the RIGHT leading into dark water, a single exterior lantern glowing beside the cottage door. A wide shot frames <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, and <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, stepping out together onto the gallery behind the red iron gallery rail near the top, coffee cups still in hand. The camera pulls out with small amplitude at slow speed, widening to reveal the last drops of rain thinning to nothing over the dark water near the wooden jetty on the RIGHT.
+
+[Shot 2] At 00:06.500, the shot cuts to a close-up on the lamp room's rotating brass lamp mechanism with a large Fresnel lens in the center as its rotation slows and the bright beam dims, fading out entirely as the growing daylight overtakes it through the rain-speckled curved windows on all sides.
+
+[Shot 3] At 00:09.500, the camera cuts to a wide shot at the lighthouse exterior, from the red iron gallery rail near the top, as the sun's first warm light spreads low across the water near the wooden jetty visible on the RIGHT, catching <Subject 2> Espen, wearing cream-white coarse wool sweater with a raised cable knit, charcoal-grey canvas trousers, thick white beard, deep-set pale-blue eyes, black rubber boots, and <Subject 1> Maja, wearing bright-yellow rubberized oilskin coat, dark-navy knit trousers, black rubber boots, steel-grey hair pulled into a tight bun, weathered kind face with deep laugh lines, standing quietly side by side, her old mail van visible parked at the base of the small stone keeper's cottage attached at its base on the LEFT far below, the sky brightening steadily around them.
+
+overall_soundscape: The last light rain fades into silence and distant waves settle into a calm, even wash against the jetty below. A faint mechanical click sounds as the lamp mechanism powers down, followed by quiet birdsong beginning somewhere along the cliffside.
+
+non_diegetic_music: The cello and piano exchange slows further into long, spaced-out notes, joined briefly by a single warm sustained string chord that holds and gradually fades to silence.
+=== END SCENE 11 ===
