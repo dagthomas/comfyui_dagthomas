@@ -43,6 +43,7 @@ from .claude_code_support import (
 from .claude_code_crossover_writer import (
     CAST_SOCKETS, cast_wardrobe, log_cast, log_wardrobe_locks, merge_wardrobe, parse_cast,
 )
+from .lyrics_transcribe import transcribe_song_lyrics
 from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
@@ -472,6 +473,23 @@ class H3ClaudeCodeMusicVideoWriter:
                 "so a new run invents something different instead of collapsing onto the "
                 "model's favourite ideas. The LLM has no memory between runs - similar "
                 "briefs otherwise produce near-identical videos. 0 = off."
+            ),
+        })
+        optional["transcribe_lyrics"] = ("BOOLEAN", {
+            "default": True,
+            "tooltip": (
+                "When the lyrics box is empty, transcribe the song with Whisper "
+                "(openai/whisper-large-v3-turbo via transformers; ~1.6 GB download on "
+                "first use) into timed `[m:ss] line` lyrics, so the scenes still sing "
+                "the real words and lyric-timed cuts work. Wire a vocal stem into "
+                "`vocals` for a cleaner transcription than the full mix."
+            ),
+        })
+        optional["vocals"] = ("AUDIO", {
+            "tooltip": (
+                "Optional vocal stem (e.g. AudioSeparation's vocals output) used only "
+                "for lyric transcription - much cleaner than transcribing the full "
+                "mix. Ignored when lyrics are typed in or transcribe_lyrics is off."
             ),
         })
 
@@ -993,6 +1011,8 @@ class H3ClaudeCodeMusicVideoWriter:
         parallel_chunks=True,
         project_name="",
         avoid_previous=6,
+        transcribe_lyrics=True,
+        vocals=None,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -1026,6 +1046,21 @@ class H3ClaudeCodeMusicVideoWriter:
         log_cast("H3 Music Video Writer", cast)
         wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
         log_wardrobe_locks("H3 Music Video Writer", wardrobe)
+
+        if not (lyrics or "").strip() and transcribe_lyrics:
+            source = vocals if vocals is not None else audio
+            lyrics = transcribe_song_lyrics(source)
+            if lyrics:
+                print(
+                    f"🎤 H3 Music Video Writer: no lyrics given - transcribed "
+                    f"{len(lyrics.splitlines())} timed line(s) from the "
+                    f"{'vocal stem' if vocals is not None else 'song'} with Whisper."
+                )
+            else:
+                print(
+                    "🎤 H3 Music Video Writer: no lyrics given and transcription "
+                    "returned nothing - writing the video as instrumental."
+                )
 
         # --- cut the song -------------------------------------------------
         parsed_lyrics = parse_lyrics(lyrics)

@@ -1046,7 +1046,8 @@
         "haiku",
         true,
         "",
-        6
+        6,
+        true
       ],
       "title": "H3 Music Video Writer"
     },

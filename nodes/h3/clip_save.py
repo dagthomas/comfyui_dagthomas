@@ -25,19 +25,35 @@ _FORMATS = ["mp4", "mkv", "webm"]
 _CODEC_FOR = {"mp4": "h264", "mkv": "h264", "webm": "av1"}
 
 
+def save_frames(images, audio, filename_prefix, fps, format):
+    """Mux one clip's frames (+ optional AUDIO) and write it under the output
+    directory; returns the file path. Shared by H3SaveClip and H3DeRopeSave."""
+    width, height = int(images.shape[2]), int(images.shape[1])
+    full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
+        filename_prefix, folder_paths.get_output_directory(), width, height
+    )
+    file = f"{filename}_{counter:05}_.{Types.VideoContainer.get_extension(format)}"
+    path = os.path.join(full_output_folder, file)
+
+    frame_count = int(images.shape[0])
+    video = InputImpl.VideoFromComponents(
+        Types.VideoComponents(images=images, audio=audio, frame_rate=Fraction(fps))
+    )
+    video.save_to(
+        path,
+        format=Types.VideoContainer(format),
+        codec=Types.VideoCodec(_CODEC_FOR[format]),
+    )
+    del video
+    logging.info(f"💾 H3 clip saved: {path} ({frame_count} frames @ {width}x{height})")
+    return path
+
+
 class H3SaveClip:
     @classmethod
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "samples": ("LATENT", {
-                    "tooltip": (
-                        "The sampler's output latent (the H3 AV latent). With a list of "
-                        "scenes wired in, the node runs once per scene and saves each "
-                        "clip before decoding the next."
-                    ),
-                }),
-                "vae": ("VAE", {"tooltip": "The MiniMax H3 video VAE."}),
                 "filename_prefix": ("STRING", {
                     "default": "video/H3",
                     "tooltip": (
@@ -52,6 +68,22 @@ class H3SaveClip:
                 "format": (_FORMATS, {"tooltip": "mp4/mkv use H.264, webm uses AV1."}),
             },
             "optional": {
+                "samples": ("LATENT", {
+                    "tooltip": (
+                        "The sampler's output latent (the H3 AV latent). With a list of "
+                        "scenes wired in, the node runs once per scene and saves each "
+                        "clip before decoding the next. Needs `vae`. Ignored when "
+                        "`images` is wired."
+                    ),
+                }),
+                "vae": ("VAE", {"tooltip": "The MiniMax H3 video VAE (required with samples)."}),
+                "images": ("IMAGE", {
+                    "tooltip": (
+                        "Already-decoded frames (e.g. from H3 Exact Recover after a "
+                        "de-rope pass). Wired, they are saved directly and "
+                        "samples/vae are ignored."
+                    ),
+                }),
                 "audio": ("AUDIO", {
                     "tooltip": (
                         "This clip's soundtrack - wire the writer's `audio_segments` list "
@@ -74,27 +106,20 @@ class H3SaveClip:
         "instead of all of them - and clips already saved survive a mid-run OOM."
     )
 
-    def save(self, samples, vae, filename_prefix, fps, format, audio=None):
-        images = vae.decode(samples["samples"])
-        if len(images.shape) == 5:  # combine video batches, same as core VAE Decode
-            images = images.reshape(-1, images.shape[-3], images.shape[-2], images.shape[-1])
+    def save(self, filename_prefix, fps, format, samples=None, vae=None, audio=None, images=None):
+        if images is None:
+            if samples is None or vae is None:
+                raise ValueError(
+                    "H3 Save Clip: wire either samples + vae (decode here) or "
+                    "images (already decoded)."
+                )
+            latent = samples["samples"]
+            if latent.is_nested:  # H3 AV latent: video stream first, same as core VAE Decode
+                latent = latent.unbind()[0]
+            images = vae.decode(latent)
+            if len(images.shape) == 5:  # combine video batches, same as core VAE Decode
+                images = images.reshape(-1, images.shape[-3], images.shape[-2], images.shape[-1])
 
-        width, height = int(images.shape[2]), int(images.shape[1])
-        full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(
-            filename_prefix, folder_paths.get_output_directory(), width, height
-        )
-        file = f"{filename}_{counter:05}_.{Types.VideoContainer.get_extension(format)}"
-        path = os.path.join(full_output_folder, file)
-
-        frame_count = int(images.shape[0])
-        video = InputImpl.VideoFromComponents(
-            Types.VideoComponents(images=images, audio=audio, frame_rate=Fraction(fps))
-        )
-        video.save_to(
-            path,
-            format=Types.VideoContainer(format),
-            codec=Types.VideoCodec(_CODEC_FOR[format]),
-        )
-        del video, images  # free this clip's frames before the next list item decodes
-        logging.info(f"💾 H3 Save Clip: {path} ({frame_count} frames @ {width}x{height})")
+        path = save_frames(images, audio, filename_prefix, fps, format)
+        del images  # free this clip's frames before the next list item decodes
         return (path,)

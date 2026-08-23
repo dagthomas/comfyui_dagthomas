@@ -29,6 +29,14 @@ from .manual_scenes import H3ManualScenes
 from .mouth_guard import H3MouthGuard
 from .refine_encode import H3RefineEncode
 from .clip_save import H3SaveClip
+from .derope import H3DeRopeSave
+
+# Vendored V3-API node by Fred Bliss (fbjr) - needs comfy_api.latest (any
+# current ComfyUI); guarded so the rest of the pack survives without it.
+try:
+    from .awq_encoder_loader import MiniMaxH3AWQEncoderLoader
+except ImportError:
+    MiniMaxH3AWQEncoderLoader = None
 
 NODE_CLASS_MAPPINGS = {
     "H3BasePromptWriter": H3BasePromptWriter,
@@ -59,6 +67,7 @@ NODE_CLASS_MAPPINGS = {
     "H3MouthGuard": H3MouthGuard,
     "H3RefineEncode": H3RefineEncode,
     "H3SaveClip": H3SaveClip,
+    "H3DeRopeSave": H3DeRopeSave,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -90,7 +99,14 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3MouthGuard": "APNext H3 Mouth Guard (protect lips in refine)",
     "H3RefineEncode": "APNext H3 Refine Encode (v2v AV latent)",
     "H3SaveClip": "APNext H3 Save Clip (decode → disk, low memory)",
+    "H3DeRopeSave": "APNext H3 De-Rope + Save Clip (Motion Lab by matlowai)",
 }
+
+if MiniMaxH3AWQEncoderLoader is not None:
+    NODE_CLASS_MAPPINGS["MiniMaxH3AWQEncoderLoader"] = MiniMaxH3AWQEncoderLoader
+    NODE_DISPLAY_NAME_MAPPINGS["MiniMaxH3AWQEncoderLoader"] = (
+        "Load MiniMax H3 Compressed-Tensors AWQ Encoder (by fbjr)"
+    )
 
 # ---------------------------------------------------------------------------
 # Simple vs advanced form. Everything not listed here is hidden behind the

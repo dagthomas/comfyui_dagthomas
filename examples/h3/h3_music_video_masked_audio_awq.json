@@ -1,8 +1,8 @@
 {
-  "id": "8b1f3a64-72c9-4e05-b3d8-f96a02e47c15",
+  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
   "last_node_id": 192,
-  "last_link_id": 410,
+  "last_link_id": 408,
   "nodes": [
     {
       "id": 119,
@@ -25,7 +25,7 @@
           "type": "VAE",
           "links": [
             273,
-            408
+            406
           ]
         }
       ],
@@ -163,14 +163,14 @@
     },
     {
       "id": 128,
-      "type": "CLIPLoader",
+      "type": "MiniMaxH3AWQEncoderLoader",
       "pos": [
         -1490,
         4930
       ],
       "size": [
-        640,
-        120
+        420,
+        82
       ],
       "flags": {},
       "order": 5,
@@ -186,7 +186,7 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "CLIPLoader",
+        "Node name for S&R": "MiniMaxH3AWQEncoderLoader",
         "models": [
           {
             "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
@@ -196,15 +196,15 @@
         ]
       },
       "widgets_values": [
-        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
-        "minimax",
+        "qwen3vl_32b_minimax_h3_w4a16_awq.safetensors",
         "default"
       ],
       "widgets_values_named": {
         "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "type": "minimax",
         "device": "default"
-      }
+      },
+      "title": "AWQ W4A16 encoder (by fbjr)"
     },
     {
       "id": 129,
@@ -606,7 +606,7 @@
           "name": "output",
           "type": "LATENT",
           "links": [
-            407
+            405
           ]
         },
         {
@@ -805,7 +805,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Original sound:** every saved clip carries its ORIGINAL slice of the song (the writer's `audio_segments`, cut on the same frame grid) - not the model-generated audio, and in the masked workflow not the vocals-only stem. Wire Create Video's `audio` back to VAE Decode Audio if you want to hear what the model generated.\n\n**Scene briefs (custom scenes):** the chained **H3 Scene Brief** nodes are YOUR plan - brief 1 is pinned to scene 01, the unpinned ones fill the following pieces in order; every remaining piece stays the model's to invent within the concept. Each brief is binding: its location, cast and camera wish are honoured, adapted to that piece's lyric lines, duration and energy.\n\n**Dailies Gate variant:** the run HOLDS live at the gate instead of stopping - **▶ Print it** renders with your hand edits, **✍ Punch-up** rewrites selected takes through the writer's own model session using your notes, **🎲 New take** asks for a different version, **↩ Undo** rolls a rewrite back, **✋ Cut** ends the run. No re-queueing; `session_id` wired into the gate is what enables the AI rewrites. The writer's seed is **-1 (randomize)** here, so EVERY queue writes a brand-new video - nothing is reused from earlier runs."
+        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Original sound:** every saved clip carries its ORIGINAL slice of the song (the writer's `audio_segments`, cut on the same frame grid) - not the model-generated audio, and in the masked workflow not the vocals-only stem. Wire Create Video's `audio` back to VAE Decode Audio if you want to hear what the model generated."
       ],
       "title": "How this works",
       "color": "#222",
@@ -866,12 +866,6 @@
           "type": "IMAGE",
           "link": null,
           "shape": 7
-        },
-        {
-          "name": "scene_briefs",
-          "type": "STRING",
-          "link": 336,
-          "shape": 7
         }
       ],
       "outputs": [
@@ -879,15 +873,13 @@
           "name": "scenes",
           "type": "STRING",
           "links": [
-            326
+            321
           ]
         },
         {
           "name": "durations",
           "type": "FLOAT",
-          "links": [
-            404
-          ]
+          "links": null
         },
         {
           "name": "lengths",
@@ -900,7 +892,7 @@
           "name": "audio_segments",
           "type": "AUDIO",
           "links": [
-            409
+            407
           ]
         },
         {
@@ -938,9 +930,7 @@
         {
           "name": "session_id",
           "type": "STRING",
-          "links": [
-            405
-          ]
+          "links": null
         },
         {
           "name": "info",
@@ -1004,7 +994,7 @@
           "name": "project_name",
           "type": "STRING",
           "links": [
-            410
+            408
           ],
           "slot_index": 22
         }
@@ -1090,78 +1080,6 @@
         null
       ],
       "title": "Load the song"
-    },
-    {
-      "id": 165,
-      "type": "H3ScenesReviewGate",
-      "pos": [
-        -550,
-        5640
-      ],
-      "size": [
-        470,
-        560
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "link": 326
-        },
-        {
-          "name": "durations",
-          "type": "FLOAT",
-          "link": 404,
-          "shape": 7
-        },
-        {
-          "name": "session_id",
-          "type": "STRING",
-          "link": 405,
-          "shape": 7
-        },
-        {
-          "name": "llm",
-          "type": "APNEXT_LLM",
-          "link": null,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "scenes",
-          "type": "STRING",
-          "links": [
-            321
-          ]
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "status",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "title": "H3 Dailies Gate — print / punch up / cut",
-      "properties": {
-        "Node name for S&R": "H3ScenesReviewGate",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        true,
-        0.0,
-        "sonnet",
-        true,
-        600,
-        false
-      ]
     },
     {
       "id": 166,
@@ -1381,141 +1299,6 @@
       }
     },
     {
-      "id": 171,
-      "type": "H3SceneBrief",
-      "pos": [
-        -1850,
-        5560
-      ],
-      "size": [
-        330,
-        210
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "brief_in",
-          "type": "STRING",
-          "link": null,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "briefs",
-          "type": "STRING",
-          "links": [
-            334
-          ]
-        }
-      ],
-      "title": "Scene Brief 1 (pinned to scene 01)",
-      "properties": {
-        "Node name for S&R": "H3SceneBrief",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        "Cold open: a rusted rooftop door bursts outward and Lena steps into the rain, red umbrella opening, the neon city sprawling behind her.",
-        1,
-        "the rooftop",
-        "Lena",
-        "",
-        "one slow push-in, no cuts"
-      ]
-    },
-    {
-      "id": 172,
-      "type": "H3SceneBrief",
-      "pos": [
-        -1850,
-        5790
-      ],
-      "size": [
-        330,
-        210
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "brief_in",
-          "type": "STRING",
-          "link": 334,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "briefs",
-          "type": "STRING",
-          "links": [
-            335
-          ]
-        }
-      ],
-      "title": "Scene Brief 2",
-      "properties": {
-        "Node name for S&R": "H3SceneBrief",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        "Lena walks the parapet edge like a tightrope, arms out, singing straight into the lens as rain streaks through the backlight.",
-        0,
-        "the rooftop",
-        "Lena",
-        "",
-        "handheld, close"
-      ]
-    },
-    {
-      "id": 173,
-      "type": "H3SceneBrief",
-      "pos": [
-        -1850,
-        6020
-      ],
-      "size": [
-        330,
-        210
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "brief_in",
-          "type": "STRING",
-          "link": 335,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "briefs",
-          "type": "STRING",
-          "links": [
-            336
-          ]
-        }
-      ],
-      "title": "Scene Brief 3",
-      "properties": {
-        "Node name for S&R": "H3SceneBrief",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [
-        "First chorus: the giant pink billboard flickers on and floods the whole rooftop; wide shot, Lena tiny against the glow, umbrella tumbling away in the wind.",
-        0,
-        "the rooftop",
-        "Lena",
-        "",
-        "wide, slow crane up"
-      ]
-    },
-    {
       "id": 192,
       "type": "H3SaveClip",
       "pos": [
@@ -1533,17 +1316,17 @@
         {
           "name": "samples",
           "type": "LATENT",
-          "link": 407
+          "link": 405
         },
         {
           "name": "vae",
           "type": "VAE",
-          "link": 408
+          "link": 406
         },
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 409
+          "link": 407
         },
         {
           "name": "filename_prefix",
@@ -1551,7 +1334,7 @@
           "widget": {
             "name": "filename_prefix"
           },
-          "link": 410
+          "link": 408
         }
       ],
       "outputs": [
@@ -1711,7 +1494,7 @@
     ],
     [
       321,
-      165,
+      163,
       0,
       136,
       8,
@@ -1732,14 +1515,6 @@
       136,
       11,
       "INT"
-    ],
-    [
-      326,
-      163,
-      0,
-      165,
-      0,
-      "STRING"
     ],
     [
       327,
@@ -1790,47 +1565,7 @@
       "AUDIO"
     ],
     [
-      334,
-      171,
-      0,
-      172,
-      0,
-      "STRING"
-    ],
-    [
-      335,
-      172,
-      0,
-      173,
-      0,
-      "STRING"
-    ],
-    [
-      336,
-      173,
-      0,
-      163,
-      7,
-      "STRING"
-    ],
-    [
-      404,
-      163,
-      1,
-      165,
-      1,
-      "FLOAT"
-    ],
-    [
       405,
-      163,
-      10,
-      165,
-      2,
-      "STRING"
-    ],
-    [
-      407,
       125,
       0,
       192,
@@ -1838,7 +1573,7 @@
       "LATENT"
     ],
     [
-      408,
+      406,
       119,
       0,
       192,
@@ -1846,7 +1581,7 @@
       "VAE"
     ],
     [
-      409,
+      407,
       163,
       3,
       192,
@@ -1854,7 +1589,7 @@
       "AUDIO"
     ],
     [
-      410,
+      408,
       163,
       22,
       192,
@@ -1916,9 +1651,9 @@
       "title": "User Inputs",
       "bounding": [
         -1880,
-        4830,
+        5510,
         2720,
-        1980
+        1300
       ],
       "color": "#3f789e",
       "flags": {}

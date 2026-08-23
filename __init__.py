@@ -588,6 +588,29 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.clip_save import H3SaveClip
+    NEW_MAPPINGS["H3SaveClip"] = H3SaveClip
+    NEW_DISPLAY_MAPPINGS["H3SaveClip"] = "APNext H3 Save Clip (decode → disk, low memory)"
+except Exception:
+    pass
+
+try:
+    # Fused Motion Lab de-rope pass - algorithm by matlowai (ComfyUI-MAINodes)
+    from .nodes.h3.derope import H3DeRopeSave
+    NEW_MAPPINGS["H3DeRopeSave"] = H3DeRopeSave
+    NEW_DISPLAY_MAPPINGS["H3DeRopeSave"] = "APNext H3 De-Rope + Save Clip (Motion Lab by matlowai)"
+except Exception:
+    pass
+
+try:
+    # Vendored W4A16 AWQ encoder loader - original node by Fred Bliss (fbjr)
+    from .nodes.h3.awq_encoder_loader import MiniMaxH3AWQEncoderLoader
+    NEW_MAPPINGS["MiniMaxH3AWQEncoderLoader"] = MiniMaxH3AWQEncoderLoader
+    NEW_DISPLAY_MAPPINGS["MiniMaxH3AWQEncoderLoader"] = "Load MiniMax H3 Compressed-Tensors AWQ Encoder (by fbjr)"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}
