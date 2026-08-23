@@ -27,6 +27,9 @@ from .claude_code_support import (
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
+    project_name_input,
+    project_name_prefix,
+    resolve_project_name,
     run_h3_claude_code,
 )
 from .template_vars import collect_template_vars, expand_all, log_template_vars
@@ -168,10 +171,12 @@ class H3ClaudeCodeScenesWriter:
         optional.update(local_llm_inputs())
         optional.update(typed_reference_inputs())
         optional.update(context_inputs())
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(project_name_input())
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
-    RETURN_TYPES = ("STRING", "FLOAT", "STRING", "STRING", "INT", "STRING", "STRING")
+    RETURN_TYPES = ("STRING", "FLOAT", "STRING", "STRING", "INT", "STRING", "STRING", "STRING")
     RETURN_NAMES = (
         "scenes",
         "durations",
@@ -180,8 +185,9 @@ class H3ClaudeCodeScenesWriter:
         "scene_count",
         "session_id",
         "info",
+        "project_name",
     )
-    OUTPUT_IS_LIST = (True, True, False, False, False, False, False)
+    OUTPUT_IS_LIST = (True, True, False, False, False, False, False, False)
     FUNCTION = "write_scenes"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -394,8 +400,11 @@ class H3ClaudeCodeScenesWriter:
         locations="",
         llm=None,
         scene_briefs="",
+        project_name="",
         **reference_slots,
     ):
+        project_name = resolve_project_name(project_name, seed)
+        print(f"🎬 H3 Scenes Writer | project: {project_name}")
         template_vars, template_summary = collect_template_vars(reference_slots)
         idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations, scene_briefs = expand_all(
             template_vars, idea, extra_instructions, wardrobe, custom_dialogue_language, custom_visual_style, locations, scene_briefs
@@ -494,6 +503,7 @@ class H3ClaudeCodeScenesWriter:
                 len(scenes),
                 session_id,
                 info,
+                project_name_prefix(project_name),
             )
 
         except Exception as exc:
@@ -504,4 +514,4 @@ class H3ClaudeCodeScenesWriter:
 
             print(traceback.format_exc())
             message = f"Error occurred while writing the H3 scenes: {exc}"
-            return ([message], [float(scene_duration)], message, "", 0, "", "error")
+            return ([message], [float(scene_duration)], message, "", 0, "", "error", project_name_prefix(project_name))

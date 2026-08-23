@@ -1,15 +1,15 @@
 {
-  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "id": "d4b7e2a9-63f1-48c5-8b2a-97e04c15af38",
   "revision": 0,
-  "last_node_id": 167,
-  "last_link_id": 325,
+  "last_node_id": 216,
+  "last_link_id": 519,
   "nodes": [
     {
       "id": 119,
       "type": "VAELoader",
       "pos": [
         -1490,
-        5190
+        5120
       ],
       "size": [
         640,
@@ -51,7 +51,7 @@
       "type": "VAELoader",
       "pos": [
         -1490,
-        5330
+        5260
       ],
       "size": [
         650,
@@ -67,7 +67,8 @@
           "type": "VAE",
           "links": [
             250,
-            274
+            274,
+            329
           ]
         }
       ],
@@ -92,15 +93,15 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260.0,
-        5200.0
+        -260,
+        5300
       ],
       "size": [
         370,
         70
       ],
       "flags": {},
-      "order": 19,
+      "order": 18,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -116,31 +117,28 @@
         "Node name for S&R": "KSamplerSelect"
       },
       "widgets_values": [
-        "res_multistep"
-      ],
-      "widgets_values_named": {
-        "sampler_name": "res_multistep"
-      }
+        "euler"
+      ]
     },
     {
       "id": 126,
       "type": "BasicGuider",
       "pos": [
-        -260.0,
-        5070.0
+        -260,
+        5170
       ],
       "size": [
         360,
         60
       ],
       "flags": {},
-      "order": 20,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
           "name": "model",
           "type": "MODEL",
-          "link": 284
+          "link": 518
         },
         {
           "name": "conditioning",
@@ -166,7 +164,7 @@
       "type": "CLIPLoader",
       "pos": [
         -1490,
-        5000
+        4930
       ],
       "size": [
         640,
@@ -210,15 +208,15 @@
       "id": 129,
       "type": "RandomNoise",
       "pos": [
-        -260.0,
-        4910.0
+        -260,
+        5010
       ],
       "size": [
         360,
         90
       ],
       "flags": {},
-      "order": 21,
+      "order": 20,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -243,78 +241,18 @@
       }
     },
     {
-      "id": 131,
-      "type": "ComfyMathExpression",
-      "pos": [
-        -1450,
-        6110
-      ],
-      "size": [
-        225,
-        0
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "a",
-          "name": "values.a",
-          "type": "FLOAT,INT,BOOLEAN",
-          "link": 317
-        },
-        {
-          "label": "b",
-          "name": "values.b",
-          "shape": 7,
-          "type": "FLOAT,INT,BOOLEAN",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "FLOAT",
-          "type": "FLOAT",
-          "links": []
-        },
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [
-            275
-          ]
-        },
-        {
-          "name": "BOOL",
-          "type": "BOOLEAN",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ComfyMathExpression"
-      },
-      "widgets_values": [
-        "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
-      ],
-      "widgets_values_named": {
-        "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
-      }
-    },
-    {
       "id": 136,
       "type": "MiniMaxH3ReferenceToVideo",
       "pos": [
-        -750,
-        4800
+        -750.0,
+        4940.0
       ],
       "size": [
         410,
         354
       ],
       "flags": {},
-      "order": 14,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
@@ -373,7 +311,7 @@
           "widget": {
             "name": "prompt"
           },
-          "link": 316
+          "link": 321
         },
         {
           "name": "width",
@@ -397,7 +335,7 @@
           "widget": {
             "name": "length"
           },
-          "link": 275
+          "link": 323
         }
       ],
       "outputs": [
@@ -439,7 +377,7 @@
       "type": "UNETLoader",
       "pos": [
         -1490,
-        4840
+        4770
       ],
       "size": [
         640,
@@ -454,7 +392,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            287
+            510
           ]
         }
       ],
@@ -478,66 +416,24 @@
       }
     },
     {
-      "id": 143,
-      "type": "PathchSageAttentionKJ",
-      "pos": [
-        -1050,
-        4490
-      ],
-      "size": [
-        270,
-        114
-      ],
-      "flags": {},
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 287
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            288
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PathchSageAttentionKJ"
-      },
-      "widgets_values": [
-        "auto",
-        false
-      ],
-      "widgets_values_named": {
-        "sage_attention": "auto",
-        "allow_compile": false
-      }
-    },
-    {
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -200,
-        5340
+        -260,
+        5440
       ],
       "size": [
         370,
         130
       ],
       "flags": {},
-      "order": 22,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
           "name": "model",
           "type": "MODEL",
-          "link": 285
+          "link": 517
         }
       ],
       "outputs": [
@@ -554,71 +450,9 @@
       },
       "widgets_values": [
         "simple",
-        14,
+        4,
         1
-      ],
-      "widgets_values_named": {
-        "scheduler": "simple",
-        "steps": 25,
-        "denoise": 1
-      }
-    },
-    {
-      "id": 141,
-      "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
-      "pos": [
-        -730,
-        4410
-      ],
-      "size": [
-        425,
-        318
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 288
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            284,
-            285
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "MiniMaxH3MemoryEfficientSolAttentionPatch"
-      },
-      "widgets_values": [
-        true,
-        1,
-        4096,
-        false,
-        "diag",
-        false,
-        "exact_kv",
-        "exact_kv",
-        ""
-      ],
-      "widgets_values_named": {
-        "enabled": true,
-        "tau": 1,
-        "min_tokens": 4096,
-        "strict": false,
-        "thresh_type": "diag",
-        "int8_qk": false,
-        "int8_pv": "exact_kv",
-        "sink_conditioning": "exact_kv",
-        "dense_blocks": ""
-      }
+      ]
     },
     {
       "id": 92,
@@ -632,7 +466,7 @@
         979
       ],
       "flags": {},
-      "order": 27,
+      "order": 26,
       "mode": 0,
       "inputs": [
         {
@@ -646,7 +480,7 @@
           "widget": {
             "name": "filename_prefix"
           },
-          "link": 325
+          "link": 519
         }
       ],
       "outputs": [
@@ -674,7 +508,7 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1150,
+        1160,
         4920
       ],
       "size": [
@@ -682,19 +516,19 @@
         110
       ],
       "flags": {},
-      "order": 26,
+      "order": 25,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 322
+          "link": 402
         },
         {
           "name": "audio",
           "shape": 7,
           "type": "AUDIO",
-          "link": 293
+          "link": 403
         }
       ],
       "outputs": [
@@ -730,7 +564,7 @@
         140
       ],
       "flags": {},
-      "order": 23,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -756,7 +590,7 @@
         {
           "name": "latent_image",
           "type": "LATENT",
-          "link": 271
+          "link": 331
         }
       ],
       "outputs": [
@@ -783,7 +617,7 @@
       "type": "VAEDecodeAudio",
       "pos": [
         820,
-        5110
+        5120
       ],
       "size": [
         230,
@@ -792,7 +626,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 25,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -810,9 +644,7 @@
         {
           "name": "AUDIO",
           "type": "AUDIO",
-          "links": [
-            293
-          ]
+          "links": []
         }
       ],
       "properties": {
@@ -833,7 +665,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 24,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
@@ -852,7 +684,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            300
+            402
           ]
         }
       ],
@@ -864,15 +696,15 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1490,
-        5670
+        -1480,
+        6020
       ],
       "size": [
         270,
         170
       ],
       "flags": {},
-      "order": 10,
+      "order": 11,
       "mode": 0,
       "showAdvanced": false,
       "inputs": [],
@@ -913,21 +745,21 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -150,
-        5630
+        -40,
+        5640
       ],
       "size": [
         847,
         818
       ],
       "flags": {},
-      "order": 18,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
           "name": "text",
           "type": "STRING",
-          "link": 318
+          "link": 322
         },
         {
           "name": "image_1",
@@ -958,8 +790,8 @@
       "id": 157,
       "type": "H3Characters",
       "pos": [
-        -1540,
-        5470
+        -1490,
+        5820
       ],
       "size": [
         330,
@@ -1001,7 +833,7 @@
           "name": "cast",
           "type": "STRING",
           "links": [
-            311
+            320
           ]
         },
         {
@@ -1015,127 +847,86 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Walter White — Bryan Cranston (Breaking Bad)",
+        "✏️ custom (type in custom_character)",
         "(all)",
         0,
         "fixed",
-        "",
-        ""
+        "Lena: a singer in her early 30s, platinum pixie cut, sharp cheekbones",
+        "red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings"
       ],
-      "title": "APNext H3 Characters",
+      "title": "H3 Characters — custom performer + wardrobe",
       "color": "#232",
       "bgcolor": "#353"
     },
     {
-      "id": 158,
-      "type": "H3Characters",
+      "id": 161,
+      "type": "MarkdownNote",
       "pos": [
-        -1540,
-        5910
+        -1850,
+        6260
       ],
       "size": [
-        330,
-        130
+        700,
+        260
       ],
       "flags": {},
-      "order": 8,
+      "order": 10,
       "mode": 0,
-      "inputs": [
-        {
-          "name": "cast_in",
-          "type": "STRING",
-          "shape": 7,
-          "link": 311
-        }
-      ],
-      "outputs": [
-        {
-          "name": "character",
-          "type": "STRING",
-          "links": []
-        },
-        {
-          "name": "actor",
-          "type": "STRING",
-          "links": []
-        },
-        {
-          "name": "franchise",
-          "type": "STRING",
-          "links": []
-        },
-        {
-          "name": "file_path",
-          "type": "STRING",
-          "links": []
-        },
-        {
-          "name": "cast",
-          "type": "STRING",
-          "links": [
-            312
-          ]
-        },
-        {
-          "name": "wardrobe",
-          "type": "STRING",
-          "links": null
-        }
-      ],
+      "inputs": [],
+      "outputs": [],
       "properties": {
-        "Node name for S&R": "H3Characters",
-        "cnr_id": "comfyui_dagthomas"
+        "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "Michael Scott — Steve Carell (The Office)",
-        "(all)",
-        0,
-        "fixed",
-        "",
-        ""
+        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Original sound:** every saved clip carries its ORIGINAL slice of the song (the writer's `audio_segments`, cut on the same frame grid) - not the model-generated audio, and in the masked workflow not the vocals-only stem. Wire Create Video's `audio` back to VAE Decode Audio if you want to hear what the model generated.\n\n**Turbo variant:** the render chain carries the speed setup from the reference graph - `minimax_h3_turbo_v4_step600_ema.safetensors` LoRA, chunked feed-forward, Sage + LowVRAM + SoL attention, EasyCache and Spectrum, sampled with euler at 4 steps. Needs the packs providing those nodes (Spectrum-MiniMax-H3, the SoL/turbo patch packs) and the turbo LoRA in models/loras."
       ],
-      "title": "APNext H3 Characters",
-      "color": "#232",
-      "bgcolor": "#353"
+      "title": "How this works",
+      "color": "#222",
+      "bgcolor": "#000"
     },
     {
-      "id": 159,
-      "type": "H3ClaudeCodeCrossoverWriter",
+      "id": 163,
+      "type": "H3ClaudeCodeMusicVideoWriter",
       "pos": [
-        -1170,
-        5470
+        -1110,
+        5600
       ],
       "size": [
-        420,
-        700
+        520,
+        1180
       ],
       "flags": {},
-      "order": 12,
+      "order": 0,
       "mode": 0,
       "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 319
+        },
         {
           "name": "cast_1",
           "type": "STRING",
-          "shape": 7,
-          "link": 312
+          "link": 320,
+          "shape": 7
         },
         {
           "name": "cast_2",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": null,
+          "shape": 7
         },
         {
           "name": "cast_3",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": null,
+          "shape": 7
         },
         {
           "name": "cast_4",
           "type": "STRING",
-          "shape": 7,
-          "link": null
+          "link": null,
+          "shape": 7
         },
         {
           "name": "llm",
@@ -1154,50 +945,70 @@
         {
           "name": "scenes",
           "type": "STRING",
-          "shape": 6,
           "links": [
-            314
+            321
           ]
         },
         {
           "name": "durations",
           "type": "FLOAT",
-          "shape": 6,
+          "links": null
+        },
+        {
+          "name": "lengths",
+          "type": "INT",
           "links": [
-            315
+            323
           ]
+        },
+        {
+          "name": "audio_segments",
+          "type": "AUDIO",
+          "links": [
+            403
+          ]
+        },
+        {
+          "name": "segment_table",
+          "type": "STRING",
+          "links": null
         },
         {
           "name": "scenes_text",
           "type": "STRING",
           "links": [
-            319
+            322
           ]
         },
         {
           "name": "synopsis",
           "type": "STRING",
-          "links": []
+          "links": null
         },
         {
           "name": "cast",
           "type": "STRING",
-          "links": []
+          "links": null
         },
         {
           "name": "scene_count",
           "type": "INT",
-          "links": []
+          "links": null
+        },
+        {
+          "name": "song_seconds",
+          "type": "FLOAT",
+          "links": null
         },
         {
           "name": "session_id",
           "type": "STRING",
-          "links": []
+          "links": null
         },
         {
           "name": "info",
           "type": "STRING",
-          "links": []
+          "links": null
         },
         {
           "name": "image_1",
@@ -1245,36 +1056,46 @@
           "links": null
         },
         {
+          "name": "clip_starts",
+          "type": "FLOAT",
+          "links": [
+            328
+          ],
+          "slot_index": 21
+        },
+        {
           "name": "project_name",
           "type": "STRING",
           "links": [
-            325
+            519
           ],
-          "slot_index": 17
+          "slot_index": 22
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeCrossoverWriter",
+        "Node name for S&R": "H3ClaudeCodeMusicVideoWriter",
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "Michael Scott has hired Walter White as a chemistry consultant for a Dunder Mifflin 'paper science' seminar. Walter takes it far too seriously.",
         "",
-        5,
-        "Vary 5-15s (let Claude pace each scene)",
-        "Independent clips (hard cuts, T2V openers)",
+        "",
+        "Performance (the singer lip-syncs the lyrics on camera)",
+        "Auto (cut on the music)",
         15.0,
+        5.2,
         "Auto",
         "Live-action, 35mm cinematic film aesthetic",
         "English",
-        35,
+        45,
         "sonnet",
         false,
         true,
         true,
         1800,
-        1,
-        "fixed",
+        -1,
+        "randomize",
+        "",
+        "",
         "",
         "",
         "",
@@ -1283,318 +1104,646 @@
         "",
         "",
         "",
-        "",
+        false,
         "Characters only (ignore picture backgrounds)",
-        ""
+        "Masked latent (song injected into the audio latent)",
+        true,
+        4,
+        "Ref2VA (bind reference images)",
+        "haiku",
+        true,
+        "",
+        6
       ],
-      "title": "APNext H3 Crossover Writer",
-      "color": "#223",
-      "bgcolor": "#335"
+      "title": "H3 Music Video Writer"
     },
     {
-      "id": 160,
-      "type": "H3ScenePick",
+      "id": 164,
+      "type": "LoadAudio",
       "pos": [
-        -660,
-        5380
+        -1490,
+        5400
       ],
       "size": [
-        300,
-        110
+        315,
+        124
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            319,
+            327,
+            401
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "",
+        null,
+        null
+      ],
+      "title": "Load the song"
+    },
+    {
+      "id": 166,
+      "type": "AudioSeparation",
+      "pos": [
+        -1490,
+        5600
+      ],
+      "size": [
+        315,
+        150
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 327
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Bass",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "Drums",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "Other",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "Vocals",
+          "type": "AUDIO",
+          "links": [
+            330
+          ],
+          "slot_index": 3
+        }
+      ],
+      "title": "Vocal stem (better lip-sync)",
+      "properties": {
+        "Node name for S&R": "AudioSeparation"
+      },
+      "widgets_values": [
+        "linear",
+        10.0,
+        0.1
+      ]
+    },
+    {
+      "id": 167,
+      "type": "MiniMaxH3SongMaskedAVContext",
+      "pos": [
+        -270,
+        4720
+      ],
+      "size": [
+        370,
+        220
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 271
+        },
+        {
+          "name": "audio_vae",
+          "type": "VAE",
+          "link": 329
+        },
+        {
+          "name": "master_audio",
+          "type": "AUDIO",
+          "link": 330
+        },
+        {
+          "name": "clip_start_seconds",
+          "type": "FLOAT",
+          "link": 328,
+          "widget": {
+            "name": "clip_start_seconds"
+          }
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": null
+        },
+        {
+          "name": "source_frames",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "source_latent",
+          "type": "LATENT",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            331
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "trim_frames",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "clip_audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "title": "Song → audio latent (protected)",
+      "properties": {
+        "Node name for S&R": "MiniMaxH3SongMaskedAVContext"
+      },
+      "widgets_values": [
+        0.0,
+        0,
+        24.0,
+        "disabled"
+      ]
+    },
+    {
+      "id": 168,
+      "type": "MarkdownNote",
+      "pos": [
+        -280,
+        4420
+      ],
+      "size": [
+        370,
+        230
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Masked-audio lip-sync",
+      "properties": {},
+      "widgets_values": [
+        "**Masked-audio music video** - the strongest lip-sync H3 can do.\n\nEach clip's exact slice of the song is encoded with the audio VAE and written straight into the H3 audio latent, protected from denoising (mask 0). The video is generated against the real, frozen vocal - lip-sync is enforced by the model, not requested by the prompt.\n\n- The song is **not** connected to `ref_audio` (that is on purpose).\n- The **vocal stem** (AudioSeparation) is injected so instruments don't mask the voice; the final soundtrack is still the full mix via Scenes Join `replace_audio`.\n- The writer's `audio_mode` is set to *Masked latent*, so the prompts reference the protected master-song audio instead of `<Audio 1>`.\n- `clip_starts` from the writer gives every clip its exact offset in the master song.\n\nNeeds ComfyUI-H3-Motion-Context-MultiRef and audio-separation-nodes-comfyui."
+      ]
+    },
+    {
+      "id": 191,
+      "type": "H3SongAnalysis",
+      "pos": [
+        -1140,
+        5400
+      ],
+      "size": [
+        340,
+        160
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 401
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "profile",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "intensity",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "label",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Song Analysis — BPM / intensity",
+      "properties": {
+        "Node name for S&R": "H3SongAnalysis",
+        "cnr_id": "comfyui_dagthomas"
+      }
+    },
+    {
+      "id": 210,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -1500.0,
+        4270.0
+      ],
+      "size": [
+        625,
+        114
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 510
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            511
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.31.1"
+      },
+      "widgets_values": [
+        "minimax_h3_turbo_v4_step600_ema.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "minimax_h3_turbo_v4_step600_ema.safetensors",
+        "strength_model": 1
+      }
+    },
+    {
+      "id": 211,
+      "type": "MiniMaxChunkFeedForward",
+      "pos": [
+        -1160.0,
+        4270.0
+      ],
+      "size": [
+        316,
+        114
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 511
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            512
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxChunkFeedForward",
+        "cnr_id": "ComfyUI-KJNodes",
+        "ver": "073efb07419f56cc714e099a82e49fbc23ad9263"
+      },
+      "widgets_values": [
+        2,
+        4096
+      ],
+      "widgets_values_named": {
+        "chunks": 2,
+        "seq_threshold": 4096
+      }
+    },
+    {
+      "id": 212,
+      "type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+      "pos": [
+        -820.0,
+        4270.0
+      ],
+      "size": [
+        320,
+        58
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 512
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            513
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+        "cnr_id": "ComfyUI-KJNodes",
+        "ver": "6ab7e8130e449ed2c0037589bcf84146ceb7fc9c"
+      }
+    },
+    {
+      "id": 213,
+      "type": "MiniMaxLowVRAMAttention",
+      "pos": [
+        -480.0,
+        4270.0
+      ],
+      "size": [
+        318,
+        86
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 513
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            514
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxLowVRAMAttention",
+        "cnr_id": "ComfyUI-KJNodes",
+        "ver": "073efb07419f56cc714e099a82e49fbc23ad9263"
+      },
+      "widgets_values": [
+        4
+      ],
+      "widgets_values_named": {
+        "head_chunks": 4
+      }
+    },
+    {
+      "id": 214,
+      "type": "SolAttnPatch",
+      "pos": [
+        -1500.0,
+        4460.0
+      ],
+      "size": [
+        270,
+        422
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 514
+        },
+        {
+          "name": "tau_profile",
+          "type": "STRING",
+          "shape": 7,
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            515
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SolAttnPatch",
+        "aux_id": "kijai/ComfyUI-SolAttn_triton",
+        "ver": "842c4eaa7d91dbaef3fee3ccdbf36a39521e82fc"
+      },
+      "widgets_values": [
+        1.5,
+        0.2,
+        0.9,
+        4096,
+        true,
+        "exact_kv_and_rows",
+        false,
+        "2d_frame",
+        true,
+        false,
+        false,
+        "39-43"
+      ],
+      "widgets_values_named": {
+        "tau": 1.5,
+        "start_percent": 0.2,
+        "end_percent": 0.9,
+        "min_tokens": 4096,
+        "int8_qk": true,
+        "sink_conditioning": "exact_kv_and_rows",
+        "morton": false,
+        "morton_curve": "2d_frame",
+        "int8_pv": true,
+        "verbose": false,
+        "use_tma": false,
+        "dense_blocks": "39-43"
+      }
+    },
+    {
+      "id": 215,
+      "type": "EasyCache",
+      "pos": [
+        -1160.0,
+        4460.0
+      ],
+      "size": [
+        257,
+        130
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 515
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            516
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EasyCache",
+        "cnr_id": "comfy-core",
+        "ver": "0.31.1"
+      },
+      "widgets_values": [
+        0.2,
+        0.15,
+        0.95,
+        false
+      ],
+      "widgets_values_named": {
+        "reuse_threshold": 0.2,
+        "start_percent": 0.15,
+        "end_percent": 0.95,
+        "verbose": false
+      }
+    },
+    {
+      "id": 216,
+      "type": "SpectrumApplyMiniMaxH3",
+      "pos": [
+        -820.0,
+        4460.0
+      ],
+      "size": [
+        329,
+        758
       ],
       "flags": {},
       "order": 16,
       "mode": 0,
       "inputs": [
         {
-          "name": "scenes",
-          "type": "STRING",
-          "link": 314
-        },
-        {
-          "name": "durations",
-          "type": "FLOAT",
-          "shape": 7,
-          "link": 315
-        },
-        {
-          "name": "index",
-          "type": "INT",
-          "widget": {
-            "name": "index"
-          },
-          "link": 313
+          "name": "model",
+          "type": "MODEL",
+          "link": 516
         }
       ],
       "outputs": [
         {
-          "name": "scene",
-          "type": "STRING",
+          "name": "MODEL",
+          "type": "MODEL",
           "links": [
-            316,
-            318
-          ]
-        },
-        {
-          "name": "duration",
-          "type": "FLOAT",
-          "links": [
-            317
-          ]
-        },
-        {
-          "name": "index",
-          "type": "INT",
-          "links": [
-            323
-          ]
-        },
-        {
-          "name": "count",
-          "type": "INT",
-          "links": [
-            324
+            517,
+            518
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ScenePick",
-        "cnr_id": "comfyui_dagthomas"
+        "Node name for S&R": "SpectrumApplyMiniMaxH3",
+        "cnr_id": "comfyui-spectrum-minimax-h3",
+        "ver": "0.2.6"
       },
       "widgets_values": [
-        0
-      ],
-      "title": "APNext H3 Scene Pick",
-      "color": "#332",
-      "bgcolor": "#553"
-    },
-    {
-      "id": 161,
-      "type": "PrimitiveInt",
-      "pos": [
-        -660,
-        5220
-      ],
-      "size": [
-        300,
-        90
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [
-            313
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PrimitiveInt"
-      },
-      "widgets_values": [
+        true,
+        0.5,
+        1,
+        0.1,
+        2,
+        0.75,
+        1,
+        1,
+        8,
+        false,
+        "system_ram",
+        true,
+        false,
+        false,
+        true,
         0,
-        "increment"
+        "system_ram",
+        "off",
+        0.65,
+        false,
+        false,
+        "coordinate_rls",
+        "hard_clip",
+        0.4,
+        "no_attenuation"
       ],
-      "title": "Scene index (increments per run)",
-      "color": "#332",
-      "bgcolor": "#553"
-    },
-    {
-      "id": 162,
-      "type": "MarkdownNote",
-      "pos": [
-        -1490,
-        6240
-      ],
-      "size": [
-        700,
-        260
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "MarkdownNote"
-      },
-      "widgets_values": [
-        "### Crossover - write 5, render 1\nThe writer produces 5 scenes with Claude choosing each duration. **H3 Scene Pick** collapses the list to one scene by `index` (0-based) so only that clip renders; its `duration` drives the frame count.\n\nThe writer's `seed` is **fixed** so its output is cached, and `index` is driven by a PrimitiveInt on **increment**: set the Run button's batch count to 5 (or use auto-queue) and each queued run renders the next scene without calling Claude again."
-      ],
-      "title": "How this works",
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
-      "id": 163,
-      "type": "H3PromptPreview",
-      "pos": [
-        -710,
-        6050
-      ],
-      "size": [
-        520,
-        440
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "text",
-          "type": "STRING",
-          "link": 319
-        },
-        {
-          "name": "image_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        }
-      ],
-      "outputs": [
-        {
-          "name": "text",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "H3PromptPreview",
-        "cnr_id": "comfyui_dagthomas"
-      },
-      "widgets_values": [],
-      "title": "H3 Prompt Preview"
-    },
-    {
-      "id": 165,
-      "type": "ImageScale",
-      "pos": [
-        450,
-        4720
-      ],
-      "size": [
-        315,
-        130
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 300
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            321
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "Fix H3 528px → 960×540",
-      "properties": {
-        "Node name for S&R": "ImageScale"
-      },
-      "widgets_values": [
-        "bilinear",
-        960,
-        540,
-        "disabled"
-      ]
-    },
-    {
-      "id": 166,
-      "type": "RTXVideoSuperResolution",
-      "pos": [
-        800,
-        4720
-      ],
-      "size": [
-        315,
-        120
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 321
-        }
-      ],
-      "outputs": [
-        {
-          "name": "upscaled_images",
-          "type": "IMAGE",
-          "links": [
-            322
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "RTX VSR 2× → 1920×1080",
-      "properties": {
-        "Node name for S&R": "RTXVideoSuperResolution"
-      },
-      "widgets_values": [
-        "scale by multiplier",
-        2.0,
-        "HIGH"
-      ]
-    },
-    {
-      "id": 167,
-      "type": "H3SceneCounter",
-      "pos": [
-        -300,
-        5210
-      ],
-      "size": [
-        250,
-        170
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "index",
-          "type": "INT",
-          "link": 323
-        },
-        {
-          "name": "count",
-          "type": "INT",
-          "link": 324
-        }
-      ],
-      "outputs": [
-        {
-          "name": "status",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "remaining",
-          "type": "INT",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "H3SceneCounter"
-      },
-      "widgets_values": []
+      "widgets_values_named": {
+        "enabled": true,
+        "blend_weight": 0.5,
+        "degree": 1,
+        "ridge_lambda": 0.1,
+        "window_size": 2,
+        "flex_window": 0.75,
+        "warmup_steps": 1,
+        "tail_actual_steps": 1,
+        "max_history": 8,
+        "debug": false,
+        "history_storage": "system_ram",
+        "bootstrap_first_forecast": true,
+        "anchor_residual_feedback": false,
+        "selective_rollback_correction": false,
+        "offline_smoothing_replay": true,
+        "audio_blend_weight": 0,
+        "offline_archive_storage": "system_ram",
+        "model_aware_mode": "off",
+        "model_aware_risk_threshold": 0.65,
+        "model_aware_trust_shrinkage": false,
+        "model_aware_replay_generic_correction": false,
+        "generic_correction_mode": "coordinate_rls",
+        "generic_correction_limiter": "hard_clip",
+        "generic_correction_limit": 0.4,
+        "generic_correction_attenuation": "no_attenuation"
+      }
     }
   ],
   "links": [
@@ -1658,8 +1807,8 @@
       271,
       136,
       1,
-      125,
-      4,
+      167,
+      0,
       "LATENT"
     ],
     [
@@ -1685,14 +1834,6 @@
       136,
       2,
       "VAE"
-    ],
-    [
-      275,
-      131,
-      1,
-      136,
-      11,
-      "INT"
     ],
     [
       276,
@@ -1727,46 +1868,6 @@
       "LATENT"
     ],
     [
-      284,
-      141,
-      0,
-      126,
-      0,
-      "MODEL"
-    ],
-    [
-      285,
-      141,
-      0,
-      124,
-      0,
-      "MODEL"
-    ],
-    [
-      287,
-      127,
-      0,
-      143,
-      0,
-      "MODEL"
-    ],
-    [
-      288,
-      143,
-      0,
-      141,
-      0,
-      "MODEL"
-    ],
-    [
-      293,
-      121,
-      0,
-      146,
-      1,
-      "AUDIO"
-    ],
-    [
       294,
       146,
       0,
@@ -1775,121 +1876,185 @@
       "VIDEO"
     ],
     [
-      300,
-      122,
+      319,
+      164,
       0,
-      165,
+      163,
       0,
-      "IMAGE"
+      "AUDIO"
     ],
     [
-      311,
+      320,
       157,
       4,
-      158,
-      0,
-      "STRING"
-    ],
-    [
-      312,
-      158,
-      4,
-      159,
-      0,
-      "STRING"
-    ],
-    [
-      313,
-      161,
-      0,
-      160,
-      2,
-      "INT"
-    ],
-    [
-      314,
-      159,
-      0,
-      160,
-      0,
-      "STRING"
-    ],
-    [
-      315,
-      159,
+      163,
       1,
-      160,
-      1,
-      "FLOAT"
+      "STRING"
     ],
     [
-      316,
-      160,
+      321,
+      163,
       0,
       136,
       8,
       "STRING"
     ],
     [
-      317,
-      160,
-      1,
-      131,
-      0,
-      "FLOAT"
-    ],
-    [
-      318,
-      160,
-      0,
+      322,
+      163,
+      5,
       153,
       0,
       "STRING"
     ],
     [
-      319,
-      159,
-      2,
+      323,
       163,
-      0,
-      "STRING"
+      2,
+      136,
+      11,
+      "INT"
     ],
     [
-      321,
-      165,
+      327,
+      164,
       0,
       166,
       0,
-      "IMAGE"
+      "AUDIO"
     ],
     [
-      322,
+      331,
+      167,
+      0,
+      125,
+      4,
+      "LATENT"
+    ],
+    [
+      329,
+      120,
+      0,
+      167,
+      1,
+      "VAE"
+    ],
+    [
+      330,
       166,
+      3,
+      167,
+      2,
+      "AUDIO"
+    ],
+    [
+      328,
+      163,
+      21,
+      167,
+      3,
+      "FLOAT"
+    ],
+    [
+      401,
+      164,
+      0,
+      191,
+      0,
+      "AUDIO"
+    ],
+    [
+      402,
+      122,
       0,
       146,
       0,
       "IMAGE"
     ],
     [
-      323,
-      160,
-      2,
-      167,
-      0,
-      "INT"
-    ],
-    [
-      324,
-      160,
+      403,
+      163,
       3,
-      167,
+      146,
       1,
-      "INT"
+      "AUDIO"
     ],
     [
-      325,
-      159,
-      17,
+      510,
+      127,
+      0,
+      210,
+      0,
+      "MODEL"
+    ],
+    [
+      511,
+      210,
+      0,
+      211,
+      0,
+      "MODEL"
+    ],
+    [
+      512,
+      211,
+      0,
+      212,
+      0,
+      "MODEL"
+    ],
+    [
+      513,
+      212,
+      0,
+      213,
+      0,
+      "MODEL"
+    ],
+    [
+      514,
+      213,
+      0,
+      214,
+      0,
+      "MODEL"
+    ],
+    [
+      515,
+      214,
+      0,
+      215,
+      0,
+      "MODEL"
+    ],
+    [
+      516,
+      215,
+      0,
+      216,
+      0,
+      "MODEL"
+    ],
+    [
+      517,
+      216,
+      0,
+      124,
+      0,
+      "MODEL"
+    ],
+    [
+      518,
+      216,
+      0,
+      126,
+      0,
+      "MODEL"
+    ],
+    [
+      519,
+      163,
+      22,
       92,
       1,
       "STRING"
@@ -1901,9 +2066,9 @@
       "title": "Models",
       "bounding": [
         -1520,
-        4750,
-        710,
-        680
+        4680,
+        750,
+        910
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1912,10 +2077,10 @@
       "id": 2,
       "title": "Sampling",
       "bounding": [
-        -330,
-        4820,
-        750,
-        680
+        -300,
+        4630,
+        720,
+        970
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1925,9 +2090,9 @@
       "title": "Conditioning",
       "bounding": [
         -780,
-        4710,
+        4850,
         470,
-        810
+        480
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1939,7 +2104,7 @@
         450,
         4830,
         630,
-        370
+        380
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1948,10 +2113,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1570,
-        4630,
-        2370,
-        1900
+        -1880,
+        5510,
+        2720,
+        1300
       ],
       "color": "#3f789e",
       "flags": {}

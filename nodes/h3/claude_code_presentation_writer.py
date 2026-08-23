@@ -34,12 +34,17 @@ from .claude_code_support import (
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
+    project_name_input,
+    project_name_prefix,
+    resolve_project_name,
     run_h3_claude_code,
 )
-from .claude_code_crossover_writer import CAST_SOCKETS, cast_wardrobe, merge_wardrobe, parse_cast
+from .claude_code_crossover_writer import (
+    CAST_SOCKETS, cast_wardrobe, log_cast, log_wardrobe_locks, merge_wardrobe, parse_cast,
+)
 from .claude_code_music_video_writer import _scene_gist
 from .music_support import fmt_time, frames_for_seconds
-from .scenes_store import save_scene_bundle
+from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     scale_reference_passthrough,
@@ -395,6 +400,17 @@ class H3ClaudeCodePresentationWriter:
                 "fits in one call."
             ),
         })
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(project_name_input())
+        optional["avoid_previous"] = ("INT", {
+            "default": 6, "min": 0, "max": 20,
+            "tooltip": (
+                "Anti-repetition: feed the synopses of this many previous saved runs "
+                "(output/apnext_scenes/) back to the model as stagings that are USED UP, "
+                "so a new run picks a different presenter, venue and visual-aid staging "
+                "(the facts stay verbatim regardless). 0 = off."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -402,6 +418,7 @@ class H3ClaudeCodePresentationWriter:
     RETURN_TYPES = (
         ("STRING", "FLOAT", "INT", "STRING", "STRING", "STRING", "STRING", "INT", "FLOAT", "STRING", "STRING")
         + _IMAGE_OUTPUT_TYPES
+        + ("STRING",)
     )
     RETURN_NAMES = (
         "scenes",
@@ -415,8 +432,8 @@ class H3ClaudeCodePresentationWriter:
         "total_seconds",
         "session_id",
         "info",
-    ) + _IMAGE_OUTPUT_NAMES
-    OUTPUT_IS_LIST = (True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES))
+    ) + _IMAGE_OUTPUT_NAMES + ("project_name",)
+    OUTPUT_IS_LIST = (True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES)) + (False,)
     FUNCTION = "write_presentation"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -566,6 +583,7 @@ class H3ClaudeCodePresentationWriter:
         prior_scenes=(),
         plan_only=False,
         plan_text="",
+        avoid_synopses=(),
     ):
         n = scene_count
         last = last or n
@@ -743,6 +761,16 @@ class H3ClaudeCodePresentationWriter:
             "same board, same inset style, same title styling) so the talk reads as one "
             "production."
         )
+        # only the planning turn needs the avoid-list; chunk turns follow the plan
+        if avoid_synopses and (plan_only or (first == 1 and not plan_text)):
+            lines.append(
+                "- ALREADY MADE - THESE STAGINGS ARE USED UP: earlier runs produced the "
+                "talks below. The facts stay verbatim, but do not reuse their presenter, "
+                "venue, format or visual-aid staging - make clearly different staging "
+                "choices this time:"
+            )
+            for i, syn in enumerate(avoid_synopses, 1):
+                lines.append(f"    ({i}) {syn}")
         if briefs:
             lines.append(
                 "- SCENE BRIEFS ARE BINDING: a numbered brief is the plan for that scene - "
@@ -817,8 +845,12 @@ class H3ClaudeCodePresentationWriter:
         prompt_mode=None,
         draft_model="haiku",
         parallel_chunks=True,
+        project_name="",
+        avoid_previous=6,
         **cast_slots,
     ):
+        project_name = resolve_project_name(project_name, seed)
+        print(f"📊 H3 Presentation Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
@@ -846,7 +878,9 @@ class H3ClaudeCodePresentationWriter:
         cast_blocks = [cast_slots.get(name) for name in CAST_SOCKETS] + [extra_cast]
         cast = parse_cast(*cast_blocks)
         cast_text = "\n".join(cast)
+        log_cast("H3 Presentation Writer", cast)
         wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
+        log_wardrobe_locks("H3 Presentation Writer", wardrobe)
 
         n = int(scene_count)
         fallback_durations = [float(scene_duration)] * n
@@ -858,6 +892,9 @@ class H3ClaudeCodePresentationWriter:
 
             dialogue_language = resolve_dialogue_language(dialogue_language, custom_dialogue_language)
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
+            avoid = tuple(recent_synopses("H3ClaudeCodePresentationWriter", int(avoid_previous or 0)))
+            if avoid:
+                print(f"🔁 H3 Presentation Writer: steering away from {len(avoid)} previous synopsis(es).")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             skills = PRESENTATION_SKILLS if ref_mode else BASE_SKILLS
@@ -902,6 +939,7 @@ class H3ClaudeCodePresentationWriter:
                     image_notes=image_notes, first=lo, last=hi,
                     characters_only=chars_only, scene_briefs=scene_briefs,
                     prior_scenes=prior, plan_only=plan_only, plan_text=plan_text,
+                    avoid_synopses=avoid,
                 )
 
             def merge_locks(text):
@@ -1090,12 +1128,13 @@ class H3ClaudeCodePresentationWriter:
                 save_scene_bundle(
                     "H3ClaudeCodePresentationWriter", synopsis, scenes, segments, durations,
                     lengths, starts, cast_text, total_seconds, scenes_text, table, info,
+                    project_name=project_name,
                 )
 
             return (
                 scenes, durations, lengths, scenes_text, synopsis, script,
                 cast_text, n, total_seconds, session_id, info,
-            ) + passthrough
+            ) + passthrough + (project_name_prefix(project_name),)
 
         except Exception as exc:
             if is_interrupt(exc):
@@ -1107,4 +1146,4 @@ class H3ClaudeCodePresentationWriter:
             return (
                 [message] * n, fallback_durations, fallback_lengths, message, "", "",
                 cast_text, n, float(sum(fallback_durations)), "", "error",
-            ) + passthrough
+            ) + passthrough + (project_name_prefix(project_name),)

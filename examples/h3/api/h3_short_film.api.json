@@ -129,7 +129,10 @@
   "92": {
     "class_type": "SaveVideo",
     "inputs": {
-      "filename_prefix": "video/MiniMax_H3",
+      "filename_prefix": [
+        "163",
+        20
+      ],
       "format": "auto",
       "codec": "auto",
       "video": [
@@ -259,7 +262,9 @@
       "cast_1": [
         "157",
         4
-      ]
+      ],
+      "project_name": "",
+      "avoid_previous": 6
     }
   },
   "165": {

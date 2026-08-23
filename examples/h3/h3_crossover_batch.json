@@ -1,8 +1,8 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 165,
-  "last_link_id": 321,
+  "last_node_id": 166,
+  "last_link_id": 326,
   "nodes": [
     {
       "id": 119,
@@ -24,8 +24,8 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            251,
-            273
+            273,
+            324
           ]
         }
       ],
@@ -621,96 +621,6 @@
       }
     },
     {
-      "id": 92,
-      "type": "SaveVideo",
-      "pos": [
-        1490,
-        4920
-      ],
-      "size": [
-        1458,
-        979
-      ],
-      "flags": {},
-      "order": 26,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 294
-        }
-      ],
-      "outputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveVideo"
-      },
-      "widgets_values": [
-        "video/MiniMax_H3",
-        "auto",
-        "auto"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "video/MiniMax_H3",
-        "format": "auto",
-        "codec": "auto"
-      }
-    },
-    {
-      "id": 146,
-      "type": "CreateVideo",
-      "pos": [
-        1160,
-        4920
-      ],
-      "size": [
-        270,
-        110
-      ],
-      "flags": {},
-      "order": 25,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 321
-        },
-        {
-          "name": "audio",
-          "shape": 7,
-          "type": "AUDIO",
-          "link": 318
-        }
-      ],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            294
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CreateVideo"
-      },
-      "widgets_values": [
-        24,
-        8
-      ],
-      "widgets_values_named": {
-        "fps": 24,
-        "bit_depth": 8
-      }
-    },
-    {
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
@@ -756,8 +666,8 @@
           "name": "output",
           "type": "LATENT",
           "links": [
-            280,
-            281
+            281,
+            323
           ]
         },
         {
@@ -803,53 +713,12 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            293
+            325
           ]
         }
       ],
       "properties": {
         "Node name for S&R": "VAEDecodeAudio"
-      }
-    },
-    {
-      "id": 122,
-      "type": "VAEDecode",
-      "pos": [
-        480,
-        4920
-      ],
-      "size": [
-        230,
-        60
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 23,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 280
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 251
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            300
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEDecode"
       }
     },
     {
@@ -1307,6 +1176,14 @@
           "name": "image_9",
           "type": "IMAGE",
           "links": null
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": [
+            326
+          ],
+          "slot_index": 17
         }
       ],
       "properties": {
@@ -1340,7 +1217,8 @@
         "",
         "",
         "",
-        "Characters only (ignore picture backgrounds)"
+        "Characters only (ignore picture backgrounds)",
+        ""
       ],
       "title": "APNext H3 Crossover Writer",
       "color": "#223",
@@ -1373,155 +1251,59 @@
       "bgcolor": "#000"
     },
     {
-      "id": 162,
-      "type": "H3ScenesJoin",
+      "id": 166,
+      "type": "H3SaveClip",
       "pos": [
-        820,
-        4900
+        1490,
+        4920
       ],
       "size": [
-        300,
+        340,
         150
       ],
       "flags": {},
-      "order": 0,
+      "order": 26,
       "mode": 0,
       "inputs": [
         {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 300
+          "name": "samples",
+          "type": "LATENT",
+          "link": 323
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 324
         },
         {
           "name": "audio",
           "type": "AUDIO",
-          "shape": 7,
-          "link": 293
+          "link": 325
         },
         {
-          "name": "replace_audio",
-          "type": "AUDIO",
-          "link": null,
-          "shape": 7
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": 326
         }
       ],
       "outputs": [
         {
-          "name": "images",
-          "type": "IMAGE",
-          "links": [
-            317
-          ]
-        },
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": [
-            318
-          ]
-        },
-        {
-          "name": "frame_count",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "scene_count",
-          "type": "INT",
+          "name": "file_path",
+          "type": "STRING",
           "links": null
         }
       ],
+      "title": "H3 Save Clip - one clip at a time, straight to disk",
       "properties": {
-        "Node name for S&R": "H3ScenesJoin",
-        "cnr_id": "comfyui_dagthomas"
+        "Node name for S&R": "H3SaveClip"
       },
       "widgets_values": [
-        0,
-        "resize to first scene"
-      ],
-      "title": "H3 Scenes Join — all scenes → one video"
-    },
-    {
-      "id": 164,
-      "type": "ImageScale",
-      "pos": [
-        460,
-        4720
-      ],
-      "size": [
-        315,
-        130
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 317
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            320
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "Fix H3 528px → 960×540",
-      "properties": {
-        "Node name for S&R": "ImageScale"
-      },
-      "widgets_values": [
-        "bilinear",
-        960,
-        540,
-        "disabled"
-      ]
-    },
-    {
-      "id": 165,
-      "type": "RTXVideoSuperResolution",
-      "pos": [
-        810,
-        4710
-      ],
-      "size": [
-        315,
-        120
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 320
-        }
-      ],
-      "outputs": [
-        {
-          "name": "upscaled_images",
-          "type": "IMAGE",
-          "links": [
-            321
-          ],
-          "slot_index": 0
-        }
-      ],
-      "title": "RTX VSR 2× → 1920×1080",
-      "properties": {
-        "Node name for S&R": "RTXVideoSuperResolution"
-      },
-      "widgets_values": [
-        "scale by multiplier",
-        2.0,
-        "HIGH"
+        "video/MiniMax_H3",
+        24.0,
+        "mp4"
       ]
     }
   ],
@@ -1531,14 +1313,6 @@
       120,
       0,
       121,
-      1,
-      "VAE"
-    ],
-    [
-      251,
-      119,
-      0,
-      122,
       1,
       "VAE"
     ],
@@ -1639,14 +1413,6 @@
       "INT"
     ],
     [
-      280,
-      125,
-      0,
-      122,
-      0,
-      "LATENT"
-    ],
-    [
       281,
       125,
       0,
@@ -1685,30 +1451,6 @@
       141,
       0,
       "MODEL"
-    ],
-    [
-      293,
-      121,
-      0,
-      162,
-      1,
-      "AUDIO"
-    ],
-    [
-      294,
-      146,
-      0,
-      92,
-      0,
-      "VIDEO"
-    ],
-    [
-      300,
-      122,
-      0,
-      162,
-      0,
-      "IMAGE"
     ],
     [
       311,
@@ -1759,36 +1501,36 @@
       "STRING"
     ],
     [
-      317,
-      162,
+      323,
+      125,
       0,
-      164,
+      166,
       0,
-      "IMAGE"
+      "LATENT"
     ],
     [
-      318,
-      162,
+      324,
+      119,
+      0,
+      166,
       1,
-      146,
-      1,
+      "VAE"
+    ],
+    [
+      325,
+      121,
+      0,
+      166,
+      2,
       "AUDIO"
     ],
     [
-      320,
-      164,
-      0,
-      165,
-      0,
-      "IMAGE"
-    ],
-    [
-      321,
-      165,
-      0,
-      146,
-      0,
-      "IMAGE"
+      326,
+      160,
+      17,
+      166,
+      3,
+      "STRING"
     ]
   ],
   "groups": [

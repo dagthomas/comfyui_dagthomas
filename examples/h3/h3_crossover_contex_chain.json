@@ -2106,6 +2106,11 @@
           "name": "image_9",
           "type": "IMAGE",
           "links": null
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": null
         }
       ],
       "properties": {
@@ -2139,7 +2144,8 @@
         "",
         "",
         "",
-        "Characters only (ignore picture backgrounds)"
+        "Characters only (ignore picture backgrounds)",
+        ""
       ],
       "title": "APNext H3 Crossover Writer",
       "color": "#223",

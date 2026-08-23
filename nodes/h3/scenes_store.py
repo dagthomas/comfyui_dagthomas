@@ -19,6 +19,7 @@ import re
 import time
 
 from ...utils.constants import CUSTOM_CATEGORY
+from .claude_code_support import project_name_prefix
 from .music_support import slice_audio
 
 _KIND = "apnext_h3_scenes"
@@ -39,7 +40,8 @@ def _slug(text, fallback):
 
 
 def save_scene_bundle(source, synopsis, scenes, segments, durations, lengths,
-                      clip_starts, cast, song_seconds, scenes_text, segment_table, info):
+                      clip_starts, cast, song_seconds, scenes_text, segment_table, info,
+                      project_name=""):
     """Write one self-contained JSON bundle; returns the path (or None on failure)."""
     try:
         bundle = {
@@ -47,6 +49,7 @@ def save_scene_bundle(source, synopsis, scenes, segments, durations, lengths,
             "version": 1,
             "created": time.strftime("%Y-%m-%d %H:%M:%S"),
             "source": source,
+            "project_name": project_name or "",
             "synopsis": synopsis or "",
             "scenes": [str(s) for s in scenes],
             "segments": [[float(a), float(b)] for a, b in (segments or [])],
@@ -60,7 +63,10 @@ def save_scene_bundle(source, synopsis, scenes, segments, durations, lengths,
             "segment_table": segment_table or "",
             "info": info or "",
         }
-        name = f"{time.strftime('%Y%m%d_%H%M%S')}_{_slug(synopsis, source.lower())}.json"
+        proj = re.sub(r"[^a-z0-9]+", "-", (project_name or "").lower()).strip("-")[:32]
+        name = f"{time.strftime('%Y%m%d_%H%M%S')}_" \
+               + (f"{proj}_" if proj else "") \
+               + f"{_slug(synopsis, source.lower())}.json"
         path = os.path.join(scenes_dir(), name)
         with open(path, "w", encoding="utf-8") as f:
             json.dump(bundle, f, indent=1, ensure_ascii=False)
@@ -69,6 +75,37 @@ def save_scene_bundle(source, synopsis, scenes, segments, durations, lengths,
     except Exception as exc:  # never fail the run over a backup
         print(f"⚠️ H3 scenes save failed: {exc}")
         return None
+
+
+def recent_synopses(source, limit):
+    """
+    The synopses of the newest saved bundles from `source` (a writer class
+    name), newest first - the writers feed these back as an avoid-list so a
+    new run does not reinvent the previous run's concept. The LLM has no
+    memory between runs; without this, identical briefs collapse onto the
+    model's favourite ideas and every video comes out the same.
+    """
+    out = []
+    if limit <= 0:
+        return out
+    try:
+        d = scenes_dir()
+        for fname in _list_saved():
+            try:
+                with open(os.path.join(d, fname), encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            if data.get("kind") != _KIND or data.get("source") != source:
+                continue
+            syn = " ".join((data.get("synopsis") or "").split())
+            if syn:
+                out.append(syn[:450])
+            if len(out) >= limit:
+                break
+    except Exception:
+        pass
+    return out
 
 
 def _list_saved():
@@ -108,11 +145,11 @@ class H3ScenesLoad:
         }
 
     RETURN_TYPES = ("STRING", "FLOAT", "INT", "AUDIO", "STRING", "STRING", "STRING",
-                    "STRING", "INT", "FLOAT", "STRING", "FLOAT")
+                    "STRING", "INT", "FLOAT", "STRING", "FLOAT", "STRING")
     RETURN_NAMES = ("scenes", "durations", "lengths", "audio_segments", "segment_table",
                     "scenes_text", "synopsis", "cast", "scene_count", "song_seconds",
-                    "info", "clip_starts")
-    OUTPUT_IS_LIST = (True, True, True, True, False, False, False, False, False, False, False, True)
+                    "info", "clip_starts", "project_name")
+    OUTPUT_IS_LIST = (True, True, True, True, False, False, False, False, False, False, False, True, False)
     FUNCTION = "load"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -177,4 +214,5 @@ class H3ScenesLoad:
             data.get("segment_table", ""), data.get("scenes_text", ""),
             data.get("synopsis", ""), data.get("cast", ""), len(scenes),
             float(data.get("song_seconds") or 0.0), info, clip_starts,
+            project_name_prefix(str(data.get("project_name") or "")),
         )

@@ -1,8 +1,8 @@
 {
   "id": "7e3a9c50-2b16-4f88-a4d1-c95e60b823d7",
   "revision": 0,
-  "last_node_id": 216,
-  "last_link_id": 518,
+  "last_node_id": 217,
+  "last_link_id": 523,
   "nodes": [
     {
       "id": 119,
@@ -24,8 +24,8 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            251,
-            273
+            273,
+            521
           ]
         }
       ],
@@ -454,96 +454,6 @@
       ]
     },
     {
-      "id": 92,
-      "type": "SaveVideo",
-      "pos": [
-        1490,
-        4920
-      ],
-      "size": [
-        1458,
-        979
-      ],
-      "flags": {},
-      "order": 26,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 294
-        }
-      ],
-      "outputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveVideo"
-      },
-      "widgets_values": [
-        "video/MiniMax_H3",
-        "auto",
-        "auto"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "video/MiniMax_H3",
-        "format": "auto",
-        "codec": "auto"
-      }
-    },
-    {
-      "id": 146,
-      "type": "CreateVideo",
-      "pos": [
-        1160,
-        4920
-      ],
-      "size": [
-        270,
-        110
-      ],
-      "flags": {},
-      "order": 25,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 401
-        },
-        {
-          "name": "audio",
-          "shape": 7,
-          "type": "AUDIO",
-          "link": 402
-        }
-      ],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            294
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CreateVideo"
-      },
-      "widgets_values": [
-        24,
-        8
-      ],
-      "widgets_values_named": {
-        "fps": 24,
-        "bit_depth": 8
-      }
-    },
-    {
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
@@ -589,8 +499,8 @@
           "name": "output",
           "type": "LATENT",
           "links": [
-            280,
-            281
+            281,
+            520
           ]
         },
         {
@@ -636,53 +546,12 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            402
+            522
           ]
         }
       ],
       "properties": {
         "Node name for S&R": "VAEDecodeAudio"
-      }
-    },
-    {
-      "id": 122,
-      "type": "VAEDecode",
-      "pos": [
-        480,
-        4920
-      ],
-      "size": [
-        230,
-        60
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 23,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 280
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 251
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            401
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEDecode"
       }
     },
     {
@@ -1032,6 +901,14 @@
           "name": "image_9",
           "type": "IMAGE",
           "links": null
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": [
+            523
+          ],
+          "slot_index": 20
         }
       ],
       "properties": {
@@ -1072,7 +949,9 @@
         4,
         "Ref2VA (bind reference images)",
         "haiku",
-        true
+        true,
+        "",
+        6
       ],
       "title": "H3 Short Film Writer"
     },
@@ -1450,6 +1329,62 @@
         "generic_correction_limit": 0.4,
         "generic_correction_attenuation": "no_attenuation"
       }
+    },
+    {
+      "id": 217,
+      "type": "H3SaveClip",
+      "pos": [
+        1490,
+        4920
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 520
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 521
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 522
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": 523
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "H3 Save Clip - one clip at a time, straight to disk",
+      "properties": {
+        "Node name for S&R": "H3SaveClip"
+      },
+      "widgets_values": [
+        "video/MiniMax_H3",
+        24.0,
+        "mp4"
+      ]
     }
   ],
   "links": [
@@ -1458,14 +1393,6 @@
       120,
       0,
       121,
-      1,
-      "VAE"
-    ],
-    [
-      251,
-      119,
-      0,
-      122,
       1,
       "VAE"
     ],
@@ -1558,28 +1485,12 @@
       "INT"
     ],
     [
-      280,
-      125,
-      0,
-      122,
-      0,
-      "LATENT"
-    ],
-    [
       281,
       125,
       0,
       121,
       0,
       "LATENT"
-    ],
-    [
-      294,
-      146,
-      0,
-      92,
-      0,
-      "VIDEO"
     ],
     [
       320,
@@ -1612,22 +1523,6 @@
       136,
       11,
       "INT"
-    ],
-    [
-      401,
-      122,
-      0,
-      146,
-      0,
-      "IMAGE"
-    ],
-    [
-      402,
-      121,
-      0,
-      146,
-      1,
-      "AUDIO"
     ],
     [
       510,
@@ -1700,6 +1595,38 @@
       126,
       0,
       "MODEL"
+    ],
+    [
+      520,
+      125,
+      0,
+      217,
+      0,
+      "LATENT"
+    ],
+    [
+      521,
+      119,
+      0,
+      217,
+      1,
+      "VAE"
+    ],
+    [
+      522,
+      121,
+      0,
+      217,
+      2,
+      "AUDIO"
+    ],
+    [
+      523,
+      163,
+      20,
+      217,
+      3,
+      "STRING"
     ]
   ],
   "groups": [

@@ -2,7 +2,7 @@
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
   "last_node_id": 165,
-  "last_link_id": 322,
+  "last_link_id": 323,
   "nodes": [
     {
       "id": 119,
@@ -639,6 +639,14 @@
           "name": "video",
           "type": "VIDEO",
           "link": 294
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": 323
         }
       ],
       "outputs": [
@@ -1079,6 +1087,14 @@
           "name": "info",
           "type": "STRING",
           "links": []
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": [
+            323
+          ],
+          "slot_index": 7
         }
       ],
       "properties": {
@@ -1114,6 +1130,7 @@
         "",
         "",
         true,
+        "",
         "",
         "",
         ""
@@ -1700,6 +1717,14 @@
       165,
       1,
       "INT"
+    ],
+    [
+      323,
+      157,
+      7,
+      92,
+      1,
+      "STRING"
     ]
   ],
   "groups": [

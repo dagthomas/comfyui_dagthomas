@@ -33,14 +33,19 @@ from .claude_code_support import (
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
+    project_name_input,
+    project_name_prefix,
     resolve_draft_model,
+    resolve_project_name,
     run_h3_claude_code,
 )
-from .claude_code_crossover_writer import CAST_SOCKETS, cast_wardrobe, merge_wardrobe, parse_cast
+from .claude_code_crossover_writer import (
+    CAST_SOCKETS, cast_wardrobe, log_cast, log_wardrobe_locks, merge_wardrobe, parse_cast,
+)
 from .claude_code_music_video_writer import _scene_gist
 from .claude_code_presentation_writer import _extract_script, _scene_table
 from .music_support import fmt_time, frames_for_seconds
-from .scenes_store import save_scene_bundle
+from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     AUTO,
@@ -236,6 +241,17 @@ class H3ClaudeCodeShortFilmWriter:
                 "fits in one call."
             ),
         })
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(project_name_input())
+        optional["avoid_previous"] = ("INT", {
+            "default": 6, "min": 0, "max": 20,
+            "tooltip": (
+                "Anti-repetition: feed the synopses of this many previous saved runs "
+                "(output/apnext_scenes/) back to the model as concepts that are USED UP, "
+                "so where the manuscript leaves choices open a new run makes different "
+                "ones. 0 = off."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -243,6 +259,7 @@ class H3ClaudeCodeShortFilmWriter:
     RETURN_TYPES = (
         ("STRING", "FLOAT", "INT", "STRING", "STRING", "STRING", "STRING", "INT", "FLOAT", "STRING", "STRING")
         + _IMAGE_OUTPUT_TYPES
+        + ("STRING",)
     )
     RETURN_NAMES = (
         "scenes",
@@ -256,8 +273,8 @@ class H3ClaudeCodeShortFilmWriter:
         "total_seconds",
         "session_id",
         "info",
-    ) + _IMAGE_OUTPUT_NAMES
-    OUTPUT_IS_LIST = (True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES))
+    ) + _IMAGE_OUTPUT_NAMES + ("project_name",)
+    OUTPUT_IS_LIST = (True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES)) + (False,)
     FUNCTION = "write_film"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -360,7 +377,7 @@ class H3ClaudeCodeShortFilmWriter:
         include_non_diegetic_music, extra_instructions, rng,
         wardrobe="", locations="", image_labels=(), image_notes="",
         first=1, last=None, characters_only=True, scene_briefs="", prior_scenes=(),
-        plan_only=False, plan_text="",
+        plan_only=False, plan_text="", avoid_synopses=(),
     ):
         last = last or n
         briefs = (scene_briefs or "").strip()
@@ -435,6 +452,14 @@ class H3ClaudeCodeShortFilmWriter:
             f"structure, turn near scene {max(1, round(n * 0.25)):02d} and scene "
             f"{max(2, round(n * 0.75)):02d}."
         )
+        distinct = min(6, max(2, n // 5))
+        lines.append(
+            "- THE FILM MOVES: unless the manuscript explicitly pins the story to one "
+            f"place, use at least {distinct} clearly distinct settings across the {n} "
+            "scenes - a new place, or a visible transformation of a previous one - so "
+            "the film never plays as people talking in a single room. Lock only the "
+            "places that actually recur; everything else travels."
+        )
         if target_seconds:
             lines.append(
                 f"- LENGTH TARGET: the finished film must land close to "
@@ -469,6 +494,14 @@ class H3ClaudeCodeShortFilmWriter:
         )
         if image_labels:
             labels_s = ", ".join(f"<Picture {i}>" for i in image_labels)
+            wardrobe_clause = (
+                " Take each pictured person's wardrobe lock from what the picture shows "
+                "and restate it in the shots."
+                if not (wardrobe or "").strip() else
+                " The picture fixes a person's face, hair and build, while the written "
+                "wardrobe lock below fixes the clothes - where they differ, the written "
+                "lock wins."
+            )
             lines.append(
                 f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; "
                 "the video model receives the same pictures under the same labels in every "
@@ -478,6 +511,7 @@ class H3ClaudeCodeShortFilmWriter:
                    if characters_only else
                    "Decide what each shows (use the notes below); bind pictured people to "
                    "their <Picture k> in subject_definitions.")
+                + wardrobe_clause
             )
             notes = (image_notes or "").strip()
             if notes:
@@ -485,6 +519,24 @@ class H3ClaudeCodeShortFilmWriter:
                 lines.extend(f"    {n_.strip()}" for n_ in notes.splitlines() if n_.strip())
         lines.append(f"- {wardrobe_directive(wardrobe)}")
         lines.append(f"- {locations_directive(locations)}")
+        lines.append(
+            "- ONE FACE PER CHARACTER: every person on camera is exactly one named "
+            "character (bound to their own <Picture k> when pictured), keeping that one "
+            "person's face, hair, build and wardrobe anchors in every appearance. Never "
+            "merge features of two characters or two pictures into one person, never "
+            "give one character's wardrobe or hair to another, and keep each `<d>` line "
+            "with its own speaker - only that character's mouth moves on their line."
+        )
+        # only the planning turn needs the avoid-list; chunk turns follow the plan
+        if avoid_synopses and (plan_only or (first == 1 and not plan_text)):
+            lines.append(
+                "- ALREADY MADE - THESE CONCEPTS ARE USED UP: earlier runs produced the "
+                "films below. Where the manuscript leaves choices open, do not reuse or "
+                "lightly reskin their settings, imagery, motifs or staging - make "
+                "clearly different choices this time:"
+            )
+            for i, syn in enumerate(avoid_synopses, 1):
+                lines.append(f"    ({i}) {syn}")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         if briefs:
             lines.append(
@@ -519,10 +571,13 @@ class H3ClaudeCodeShortFilmWriter:
         include_non_diegetic_music=True, resume_session_id="", working_dir="",
         llm=None, reference_image_use=None, scene_briefs="",
         save_scenes=True, scenes_per_call=SCENES_PER_CALL, prompt_mode=None,
-        draft_model="haiku", parallel_chunks=True,
+        draft_model="haiku", parallel_chunks=True, project_name="",
+        avoid_previous=6,
         **cast_slots,
     ):
         import random
+        project_name = resolve_project_name(project_name, seed)
+        print(f"🎬 H3 Short Film Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
         mode = str(prompt_mode or PROMPT_MODES[1])
@@ -544,7 +599,9 @@ class H3ClaudeCodeShortFilmWriter:
         cast_blocks = [cast_slots.get(name) for name in CAST_SOCKETS] + [extra_cast]
         cast = parse_cast(*cast_blocks)
         cast_text = "\n".join(cast)
+        log_cast("H3 Short Film Writer", cast)
         wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
+        log_wardrobe_locks("H3 Short Film Writer", wardrobe)
 
         target_mode = str(length_mode or "").startswith("Target")
         n = scenes_for_minutes(float(target_minutes)) if target_mode else int(scene_count)
@@ -559,6 +616,9 @@ class H3ClaudeCodeShortFilmWriter:
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
+            avoid = tuple(recent_synopses("H3ClaudeCodeShortFilmWriter", int(avoid_previous or 0)))
+            if avoid:
+                print(f"🔁 H3 Short Film Writer: steering away from {len(avoid)} previous synopsis(es).")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             skills = FILM_SKILLS if ref_mode else BASE_SKILLS
@@ -601,6 +661,7 @@ class H3ClaudeCodeShortFilmWriter:
                     image_notes=image_notes, first=lo, last=hi, characters_only=chars_only,
                     scene_briefs=scene_briefs, prior_scenes=prior,
                     plan_only=plan_only, plan_text=plan_text,
+                    avoid_synopses=avoid,
                 )
 
             def merge_locks(text):
@@ -776,12 +837,13 @@ class H3ClaudeCodeShortFilmWriter:
                 save_scene_bundle(
                     "H3ClaudeCodeShortFilmWriter", synopsis, scenes, segments, durations,
                     lengths, starts, cast_text, total_seconds, scenes_text, table, info,
+                    project_name=project_name,
                 )
 
             return (
                 scenes, durations, lengths, scenes_text, synopsis, script,
                 cast_text, n, total_seconds, session_id, info,
-            ) + passthrough
+            ) + passthrough + (project_name_prefix(project_name),)
 
         except Exception as exc:
             if is_interrupt(exc):
@@ -793,4 +855,4 @@ class H3ClaudeCodeShortFilmWriter:
             return (
                 [message] * n, fallback_durations, fallback_lengths, message, "", "",
                 cast_text, n, float(sum(fallback_durations)), "", "error",
-            ) + passthrough
+            ) + passthrough + (project_name_prefix(project_name),)

@@ -517,6 +517,74 @@ def resolve_draft_model(draft_model, model, local):
     return draft
 
 
+# ---------------------------------------------------------------------------
+# Project names - a memorable cinematography-flavoured tag for a run, so every
+# file the run produces (videos, scene bundles) is visibly from the same
+# project. The front-end (web/js/h3_project_name.js) fills the widget with a
+# fresh one when a node is created; keep the word pools there in the same
+# spirit when editing these.
+# ---------------------------------------------------------------------------
+
+_PROJECT_LOOKS = (
+    "Golden", "Silver", "Amber", "Noir", "Neon", "Velvet", "Crimson", "Cobalt",
+    "Sepia", "Chrome", "Indigo", "Emerald", "Scarlet", "Midnight", "Pastel",
+    "Tungsten", "Halide", "Matte", "Anamorphic", "Technicolor",
+)
+_PROJECT_MOVES = (
+    "Dolly", "Crane", "Zoom", "Orbit", "Boom", "Gimbal", "Rack", "Whip",
+    "Glide", "Pan", "Tilt", "Push", "Steadicam", "Tracking", "Vertigo",
+)
+_PROJECT_GEAR = (
+    "Slate", "Reel", "Lens", "Shutter", "Bokeh", "Gaffer", "Grip", "Rig",
+    "Flare", "Foley", "Scrim", "Frame", "Take", "Clapper", "Montage",
+)
+
+
+def generate_project_name(seed=None):
+    """A random PascalCase name like 'NeonDollyFoley'. A fixed seed (>= 0)
+    always yields the same name, so seeded re-runs keep their project tag."""
+    import random
+    rng = random.Random(seed) if isinstance(seed, int) and seed >= 0 else random.Random()
+    return rng.choice(_PROJECT_LOOKS) + rng.choice(_PROJECT_MOVES) + rng.choice(_PROJECT_GEAR)
+
+
+def project_name_input():
+    return {
+        "project_name": ("STRING", {
+            "default": "",
+            "tooltip": (
+                "A tag for this run - auto-filled with a random name like "
+                "'NeonDollyFoley' when the node is created; type your own to rename "
+                "the project. Wire the node's `project_name` output into Save Video's "
+                "`filename_prefix` and every clip of the run lands in its own subfolder "
+                "(output/video/<name>/), so the output folder shows at a glance which "
+                "videos belong together. Saved "
+                "scene bundles carry it too. Empty = a fresh random name each run "
+                "(stable when `seed` is fixed)."
+            ),
+        }),
+    }
+
+
+def resolve_project_name(project_name, seed=-1):
+    """The user's name, cleaned for filenames; empty generates one from seed."""
+    import re
+    name = re.sub(r'[<>:"\\|?*\x00-\x1f]+', "", str(project_name or "")).strip()
+    name = name.strip("/").strip()
+    return name or generate_project_name(seed)
+
+
+def project_name_prefix(name):
+    """The writers' `project_name` OUTPUT. Wired into Save Video's
+    `filename_prefix`, `video/<name>/<name>` puts every run in its own
+    subfolder of the output directory; logs and saved bundles keep the plain
+    name. A name the user typed with slashes already carries its own folders
+    and is passed through untouched."""
+    if not name:
+        return ""
+    return name if "/" in name else f"video/{name}/{name}"
+
+
 def directions_with_research(extra_instructions, research):
     """Fold the research directive into the user's own extra direction."""
     text = (extra_instructions or "").strip()

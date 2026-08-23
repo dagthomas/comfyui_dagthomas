@@ -26,6 +26,9 @@ from .song_analysis import H3SongAnalysis
 from .scene_brief import H3SceneBrief
 from .scenes_store import H3ScenesLoad
 from .manual_scenes import H3ManualScenes
+from .mouth_guard import H3MouthGuard
+from .refine_encode import H3RefineEncode
+from .clip_save import H3SaveClip
 
 NODE_CLASS_MAPPINGS = {
     "H3BasePromptWriter": H3BasePromptWriter,
@@ -53,6 +56,9 @@ NODE_CLASS_MAPPINGS = {
     "H3SceneBrief": H3SceneBrief,
     "H3ScenesLoad": H3ScenesLoad,
     "H3ManualScenes": H3ManualScenes,
+    "H3MouthGuard": H3MouthGuard,
+    "H3RefineEncode": H3RefineEncode,
+    "H3SaveClip": H3SaveClip,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -81,6 +87,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3SceneBrief": "APNext H3 Scene Brief (manual scene)",
     "H3ScenesLoad": "APNext H3 Scenes Load (from disk)",
     "H3ManualScenes": "APNext H3 Manual Scenes (script → lists)",
+    "H3MouthGuard": "APNext H3 Mouth Guard (protect lips in refine)",
+    "H3RefineEncode": "APNext H3 Refine Encode (v2v AV latent)",
+    "H3SaveClip": "APNext H3 Save Clip (decode → disk, low memory)",
 }
 
 # ---------------------------------------------------------------------------
@@ -109,22 +118,25 @@ with_advanced_inputs(H3ClaudeCodeRefiner,
     ("h3_prompt", "instruction", *_CC, "session_id", "image"))
 with_advanced_inputs(H3ClaudeCodeScenesWriter,
     ("idea", "scene_count", "duration_mode", "continuity_mode", "scene_duration", *_CREATIVE, *_CC,
-     "image", "wardrobe", "locations", "extra_instructions"),
+     "image", "wardrobe", "locations", "extra_instructions", "project_name"),
     also_advanced=_TYPED_REFS)
 with_advanced_inputs(H3ClaudeCodeCrossoverWriter,
     ("direction", "extra_cast", "scene_count", "duration_mode", "continuity_mode", "scene_duration",
-     "visual_style", "dialogue_language", *_CC, "wardrobe", "locations", "extra_instructions", "image_notes"))
+     "visual_style", "dialogue_language", *_CC, "wardrobe", "locations", "extra_instructions", "image_notes",
+     "project_name"))
 with_advanced_inputs(H3ClaudeCodeMusicVideoWriter,
     ("audio", "direction", "lyrics", "performance_mode", "segment_mode", "max_segment_seconds",
-     "visual_style", "dialogue_language", *_CC, "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes"))
+     "visual_style", "dialogue_language", *_CC, "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes",
+     "project_name"))
 with_advanced_inputs(H3ClaudeCodeShortFilmWriter,
     ("manuscript", "length_mode", "scene_count", "target_minutes", "continuity_mode",
      "visual_style", "dialogue_language", "prompt_mode", *_CC,
-     "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes"))
+     "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes", "project_name"))
 with_advanced_inputs(H3ClaudeCodePresentationWriter,
     ("source_material", "direction", "presentation_format", "scene_count", "duration_mode",
      "scene_duration", "visual_aids", "visual_style", "dialogue_language", *_CC,
-     "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes"))
+     "extra_cast", "wardrobe", "locations", "extra_instructions", "image_notes", "project_name"))
 with_advanced_inputs(H3LLMBackend, ("model", "model_name"))
+with_advanced_inputs(H3MouthGuard, ("latent", "masks", "grow_pixels", "protect_audio"))
 with_advanced_inputs(H3ScenesJoin, ("images", "crossfade_frames", "audio", "replace_audio"))
 with_advanced_inputs(H3ScenesToChainPlan, ("scenes", "durations", "prompt_prefix"))

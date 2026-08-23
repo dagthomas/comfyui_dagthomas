@@ -154,9 +154,14 @@ def wardrobe_directive(wardrobe=""):
             "\n" + "\n".join(f"    {line}" for line in lines)
         )
     return (
-        "Wardrobe lock: before scene 01, fix ONE outfit per character - 3-5 anchors - "
-        "and write them as the synopsis `Wardrobe:` lines in exactly this form, one "
-        "character per line, anchors separated by commas:\n"
+        "Wardrobe lock: before scene 01, DESIGN one outfit per character the way a "
+        "costume department would - it fits the concept's genre, era, season and "
+        "setting and the character's role, age and status in the story; its colours "
+        "read on camera against the locked locations (contrast, not camouflage); and "
+        "it is distinctive enough to identify the character in a wide shot. Never "
+        "default to generic modern streetwear when the world suggests otherwise. "
+        "Fix it as 3-5 anchors and write them as the synopsis `Wardrobe:` lines in "
+        "exactly this form, one character per line, anchors separated by commas:\n"
         "    Wardrobe:\n"
         "    Sheldon Cooper: dark-brown corduroy jacket, forest-green cotton T-shirt, "
         "khaki chino trousers, short side-parted brown hair\n"

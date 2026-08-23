@@ -1,15 +1,15 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 163,
-  "last_link_id": 323,
+  "last_node_id": 165,
+  "last_link_id": 322,
   "nodes": [
     {
       "id": 119,
       "type": "VAELoader",
       "pos": [
         -1490,
-        5280
+        5170
       ],
       "size": [
         640,
@@ -24,8 +24,8 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            273,
-            321
+            251,
+            273
           ]
         }
       ],
@@ -51,7 +51,7 @@
       "type": "VAELoader",
       "pos": [
         -1490,
-        5420
+        5310
       ],
       "size": [
         650,
@@ -100,7 +100,7 @@
         70
       ],
       "flags": {},
-      "order": 15,
+      "order": 18,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -134,7 +134,7 @@
         60
       ],
       "flags": {},
-      "order": 16,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -166,7 +166,7 @@
       "type": "CLIPLoader",
       "pos": [
         -1490,
-        5080
+        4980
       ],
       "size": [
         640,
@@ -218,7 +218,7 @@
         90
       ],
       "flags": {},
-      "order": 17,
+      "order": 20,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -246,8 +246,8 @@
       "id": 131,
       "type": "ComfyMathExpression",
       "pos": [
-        -1570.0,
-        5940.0
+        -1450,
+        6090
       ],
       "size": [
         225,
@@ -256,14 +256,14 @@
       "flags": {
         "collapsed": true
       },
-      "order": 10,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
           "label": "a",
           "name": "values.a",
           "type": "FLOAT,INT,BOOLEAN",
-          "link": 312
+          "link": 315
         },
         {
           "label": "b",
@@ -314,7 +314,7 @@
         354
       ],
       "flags": {},
-      "order": 12,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
@@ -373,7 +373,7 @@
           "widget": {
             "name": "prompt"
           },
-          "link": 311
+          "link": 314
         },
         {
           "name": "width",
@@ -439,7 +439,7 @@
       "type": "UNETLoader",
       "pos": [
         -1490,
-        4920
+        4820
       ],
       "size": [
         640,
@@ -489,7 +489,7 @@
         114
       ],
       "flags": {},
-      "order": 11,
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
@@ -531,7 +531,7 @@
         130
       ],
       "flags": {},
-      "order": 18,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -575,7 +575,7 @@
         318
       ],
       "flags": {},
-      "order": 13,
+      "order": 16,
       "mode": 0,
       "inputs": [
         {
@@ -621,6 +621,104 @@
       }
     },
     {
+      "id": 92,
+      "type": "SaveVideo",
+      "pos": [
+        1490,
+        4920
+      ],
+      "size": [
+        1458,
+        979
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 294
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": 322
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/MiniMax_H3",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/MiniMax_H3",
+        "format": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 146,
+      "type": "CreateVideo",
+      "pos": [
+        1160,
+        4920
+      ],
+      "size": [
+        270,
+        110
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 321
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 318
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            294
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        24,
+        8
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": 8
+      }
+    },
+    {
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
@@ -632,7 +730,7 @@
         140
       ],
       "flags": {},
-      "order": 19,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -666,8 +764,8 @@
           "name": "output",
           "type": "LATENT",
           "links": [
-            281,
-            320
+            280,
+            281
           ]
         },
         {
@@ -694,7 +792,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 21,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -713,7 +811,7 @@
           "name": "AUDIO",
           "type": "AUDIO",
           "links": [
-            322
+            293
           ]
         }
       ],
@@ -722,18 +820,59 @@
       }
     },
     {
+      "id": 122,
+      "type": "VAEDecode",
+      "pos": [
+        480,
+        4920
+      ],
+      "size": [
+        230,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 280
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 251
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            300
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1660,
-        5610
+        -1480,
+        5650
       ],
       "size": [
         270,
         170
       ],
       "flags": {},
-      "order": 9,
+      "order": 11,
       "mode": 0,
       "showAdvanced": false,
       "inputs": [],
@@ -774,7 +913,7 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -380,
+        -190,
         5620
       ],
       "size": [
@@ -782,13 +921,13 @@
         818
       ],
       "flags": {},
-      "order": 14,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
           "name": "text",
           "type": "STRING",
-          "link": 313
+          "link": 316
         },
         {
           "name": "image_1",
@@ -817,31 +956,257 @@
     },
     {
       "id": 157,
-      "type": "H3ClaudeCodeScenesWriter",
+      "type": "H3Characters",
       "pos": [
-        -1350,
-        5580
+        -1530,
+        5450
       ],
       "size": [
-        420,
-        760
+        330,
+        130
       ],
       "flags": {},
       "order": 7,
       "mode": 0,
       "inputs": [
         {
-          "name": "image",
-          "type": "IMAGE",
+          "name": "cast_in",
+          "type": "STRING",
+          "shape": 7,
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "character",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "actor",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "franchise",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": [
+            311
+          ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "Sheldon Cooper — Jim Parsons (The Big Bang Theory)",
+        "(all)",
+        0,
+        "fixed",
+        "",
+        ""
+      ],
+      "title": "APNext H3 Characters",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 158,
+      "type": "H3Characters",
+      "pos": [
+        -1530,
+        5890
+      ],
+      "size": [
+        330,
+        130
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "cast_in",
+          "type": "STRING",
+          "shape": 7,
+          "link": 311
+        }
+      ],
+      "outputs": [
+        {
+          "name": "character",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "actor",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "franchise",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": [
+            312
+          ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "Captain Jack Sparrow — Johnny Depp (Pirates of the Caribbean)",
+        "(all)",
+        0,
+        "fixed",
+        "",
+        ""
+      ],
+      "title": "APNext H3 Characters",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 159,
+      "type": "H3Characters",
+      "pos": [
+        -1530,
+        6160
+      ],
+      "size": [
+        330,
+        130
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "cast_in",
+          "type": "STRING",
+          "shape": 7,
+          "link": 312
+        }
+      ],
+      "outputs": [
+        {
+          "name": "character",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "actor",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "franchise",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": [
+            313
+          ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "Dana Scully — Gillian Anderson (The X-Files)",
+        "(all)",
+        0,
+        "fixed",
+        "",
+        ""
+      ],
+      "title": "APNext H3 Characters",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 160,
+      "type": "H3ClaudeCodeCrossoverWriter",
+      "pos": [
+        -1160,
+        5510
+      ],
+      "size": [
+        420,
+        700
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "cast_1",
+          "type": "STRING",
+          "shape": 7,
+          "link": 313
+        },
+        {
+          "name": "cast_2",
+          "type": "STRING",
           "shape": 7,
           "link": null
         },
         {
-          "name": "idea",
+          "name": "cast_3",
           "type": "STRING",
-          "widget": {
-            "name": "idea"
-          },
+          "shape": 7,
+          "link": null
+        },
+        {
+          "name": "cast_4",
+          "type": "STRING",
+          "shape": 7,
           "link": null
         },
         {
@@ -851,55 +1216,7 @@
           "shape": 7
         },
         {
-          "name": "subject_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "subject_2",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "subject_3",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "scenery_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "scenery_2",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "scenery_3",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "object_1",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "object_2",
-          "type": "IMAGE",
-          "link": null,
-          "shape": 7
-        },
-        {
-          "name": "object_3",
+          "name": "image_1",
           "type": "IMAGE",
           "link": null,
           "shape": 7
@@ -911,7 +1228,7 @@
           "type": "STRING",
           "shape": 6,
           "links": [
-            311
+            314
           ]
         },
         {
@@ -919,18 +1236,23 @@
           "type": "FLOAT",
           "shape": 6,
           "links": [
-            312
+            315
           ]
         },
         {
           "name": "scenes_text",
           "type": "STRING",
           "links": [
-            313
+            316
           ]
         },
         {
           "name": "synopsis",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
           "type": "STRING",
           "links": []
         },
@@ -950,35 +1272,74 @@
           "links": []
         },
         {
+          "name": "image_1",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_2",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_3",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_4",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_5",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_6",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_7",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_8",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_9",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
           "name": "project_name",
           "type": "STRING",
           "links": [
-            323
+            322
           ],
-          "slot_index": 7
+          "slot_index": 17
         }
       ],
       "properties": {
-        "Node name for S&R": "H3ClaudeCodeScenesWriter",
+        "Node name for S&R": "H3ClaudeCodeCrossoverWriter",
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "A lighthouse keeper on a storm-lashed island discovers a message in a bottle, reads it by lamplight, and rows out into the surf at dawn to answer it.",
-        4,
+        "A late-night diner. Sheldon is trying to get the waitress to bring the correct ketchup-to-fry ratio; the other two have their own agendas. Comedy, escalating; end on someone walking out with the ketchup bottle.",
+        "",
+        3,
         "Fixed (every scene = scene_duration)",
         "Independent clips (hard cuts, T2V openers)",
-        10.0,
+        15.0,
         "Auto",
-        "Auto",
-        25,
-        "Auto",
-        "Auto",
-        "Auto",
-        true,
+        "Live-action, 35mm cinematic film aesthetic",
         "English",
-        false,
-        true,
-        true,
+        35,
         "sonnet",
         false,
         true,
@@ -989,30 +1350,32 @@
         "",
         "",
         "",
-        "",
         true,
         "",
         "",
         "",
+        "",
+        "",
+        "Characters only (ignore picture backgrounds)",
         ""
       ],
-      "title": "APNext H3 Claude Code Scenes Writer",
+      "title": "APNext H3 Crossover Writer",
       "color": "#223",
       "bgcolor": "#335"
     },
     {
-      "id": 158,
+      "id": 161,
       "type": "MarkdownNote",
       "pos": [
         -1490,
-        6420
+        6360
       ],
       "size": [
         700,
-        220
+        260
       ],
       "flags": {},
-      "order": 8,
+      "order": 10,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -1020,66 +1383,162 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "### Multi-scene story - render every scene\nThe **Scenes Writer** is the Claude Code prompt writer, but it returns `scene_count` consecutive T2VA prompts as a list. The video node renders each one; the preview shows the whole run.\n\nOptional `image` / subject / scenery / object sockets are described into every scene for consistency (T2VA, so nothing becomes <Picture N>)."
+        "### Crossover - render every scene\nChain **H3 Characters** nodes through `cast_in` (or wire several into `cast_1..4`), write your steer in **direction**, pick `scene_count`.\n\n`scenes` and `durations` are **lists**: the video node runs once per scene and every clip is saved. `scenes_text` goes to the preview.\n\nSwap a Characters node to `🎲 random` + a franchise filter to roll a new cast per seed."
       ],
       "title": "How this works",
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 163,
-      "type": "H3SaveClip",
+      "id": 162,
+      "type": "H3ScenesJoin",
       "pos": [
-        1490,
-        4920
+        820,
+        4900
       ],
       "size": [
-        340,
+        300,
         150
       ],
       "flags": {},
-      "order": 23,
+      "order": 0,
       "mode": 0,
       "inputs": [
         {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 320
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 321
+          "name": "images",
+          "type": "IMAGE",
+          "link": 300
         },
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 322
+          "shape": 7,
+          "link": 293
         },
         {
-          "name": "filename_prefix",
-          "type": "STRING",
-          "widget": {
-            "name": "filename_prefix"
-          },
-          "link": 323
+          "name": "replace_audio",
+          "type": "AUDIO",
+          "link": null,
+          "shape": 7
         }
       ],
       "outputs": [
         {
-          "name": "file_path",
-          "type": "STRING",
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            317
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            318
+          ]
+        },
+        {
+          "name": "frame_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
           "links": null
         }
       ],
-      "title": "H3 Save Clip - one clip at a time, straight to disk",
       "properties": {
-        "Node name for S&R": "H3SaveClip"
+        "Node name for S&R": "H3ScenesJoin",
+        "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "video/MiniMax_H3",
-        24.0,
-        "mp4"
+        0,
+        "resize to first scene"
+      ],
+      "title": "H3 Scenes Join — all scenes → one video"
+    },
+    {
+      "id": 164,
+      "type": "ImageScale",
+      "pos": [
+        460,
+        4720
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 317
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            320
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "Fix H3 528px → 960×540",
+      "properties": {
+        "Node name for S&R": "ImageScale"
+      },
+      "widgets_values": [
+        "bilinear",
+        960,
+        540,
+        "disabled"
+      ]
+    },
+    {
+      "id": 165,
+      "type": "RTXVideoSuperResolution",
+      "pos": [
+        810,
+        4710
+      ],
+      "size": [
+        315,
+        120
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 320
+        }
+      ],
+      "outputs": [
+        {
+          "name": "upscaled_images",
+          "type": "IMAGE",
+          "links": [
+            321
+          ],
+          "slot_index": 0
+        }
+      ],
+      "title": "RTX VSR 2× → 1920×1080",
+      "properties": {
+        "Node name for S&R": "RTXVideoSuperResolution"
+      },
+      "widgets_values": [
+        "scale by multiplier",
+        2.0,
+        "HIGH"
       ]
     }
   ],
@@ -1089,6 +1548,14 @@
       120,
       0,
       121,
+      1,
+      "VAE"
+    ],
+    [
+      251,
+      119,
+      0,
+      122,
       1,
       "VAE"
     ],
@@ -1189,6 +1656,14 @@
       "INT"
     ],
     [
+      280,
+      125,
+      0,
+      122,
+      0,
+      "LATENT"
+    ],
+    [
       281,
       125,
       0,
@@ -1229,59 +1704,115 @@
       "MODEL"
     ],
     [
+      293,
+      121,
+      0,
+      162,
+      1,
+      "AUDIO"
+    ],
+    [
+      294,
+      146,
+      0,
+      92,
+      0,
+      "VIDEO"
+    ],
+    [
+      300,
+      122,
+      0,
+      162,
+      0,
+      "IMAGE"
+    ],
+    [
       311,
       157,
+      4,
+      158,
+      0,
+      "STRING"
+    ],
+    [
+      312,
+      158,
+      4,
+      159,
+      0,
+      "STRING"
+    ],
+    [
+      313,
+      159,
+      4,
+      160,
+      0,
+      "STRING"
+    ],
+    [
+      314,
+      160,
       0,
       136,
       8,
       "STRING"
     ],
     [
-      312,
-      157,
+      315,
+      160,
       1,
       131,
       0,
       "FLOAT"
     ],
     [
-      313,
-      157,
+      316,
+      160,
       2,
       153,
       0,
       "STRING"
     ],
     [
-      320,
-      125,
+      317,
+      162,
       0,
-      163,
+      164,
       0,
-      "LATENT"
+      "IMAGE"
     ],
     [
-      321,
-      119,
-      0,
-      163,
+      318,
+      162,
       1,
-      "VAE"
-    ],
-    [
-      322,
-      121,
-      0,
-      163,
-      2,
+      146,
+      1,
       "AUDIO"
     ],
     [
-      323,
-      157,
-      7,
-      163,
-      3,
+      320,
+      164,
+      0,
+      165,
+      0,
+      "IMAGE"
+    ],
+    [
+      321,
+      165,
+      0,
+      146,
+      0,
+      "IMAGE"
+    ],
+    [
+      322,
+      160,
+      17,
+      92,
+      1,
       "STRING"
     ]
   ],
@@ -1291,9 +1822,9 @@
       "title": "Models",
       "bounding": [
         -1520,
-        4830,
+        4730,
         710,
-        690
+        680
       ],
       "color": "#3f789e",
       "flags": {}
@@ -1338,10 +1869,10 @@
       "id": 5,
       "title": "User Inputs",
       "bounding": [
-        -1690,
-        5490,
-        2190,
-        980
+        -1560,
+        4400,
+        2370,
+        2250
       ],
       "color": "#3f789e",
       "flags": {}

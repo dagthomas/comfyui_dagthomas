@@ -11,7 +11,7 @@
 # writer.
 
 from ...utils.constants import CUSTOM_CATEGORY
-from .claude_code_support import claude_code_inputs, local_llm_inputs
+from .claude_code_support import claude_code_inputs, local_llm_inputs, project_name_input
 from .claude_code_music_video_writer import (
     AUDIO_MODES,
     H3ClaudeCodeMusicVideoWriter,
@@ -113,13 +113,15 @@ class H3MusicVideoMinimal:
         optional = {}
         optional.update(local_llm_inputs())
         optional.update(reference_image_inputs())
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(project_name_input())
         return {"required": required, "optional": optional}
 
     _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
     RETURN_TYPES = (
         ("STRING", "FLOAT", "INT", "AUDIO", "STRING", "STRING", "STRING")
         + _IMAGE_OUTPUT_TYPES
-        + ("FLOAT",)
+        + ("FLOAT", "STRING")
     )
     RETURN_NAMES = (
         "scenes",
@@ -129,8 +131,8 @@ class H3MusicVideoMinimal:
         "scenes_text",
         "session_id",
         "info",
-    ) + _IMAGE_OUTPUT_NAMES + ("clip_starts",)
-    OUTPUT_IS_LIST = (True, True, True, True, False, False, False) + (False,) * len(_IMAGE_OUTPUT_NAMES) + (True,)
+    ) + _IMAGE_OUTPUT_NAMES + ("clip_starts", "project_name")
+    OUTPUT_IS_LIST = (True, True, True, True, False, False, False) + (False,) * len(_IMAGE_OUTPUT_NAMES) + (True, False)
     FUNCTION = "write_video"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -152,7 +154,8 @@ class H3MusicVideoMinimal:
         return True
 
     def write_video(self, audio, lyrics, visual_style, performance, pace, wildness,
-                    model, seed, prompt_mode=PROMPT_MODES[1], llm=None, **image_slots):
+                    model, seed, prompt_mode=PROMPT_MODES[1], llm=None, project_name="",
+                    **image_slots):
         writer = H3ClaudeCodeMusicVideoWriter()
         result = writer.write_video(
             audio=audio,
@@ -176,14 +179,15 @@ class H3MusicVideoMinimal:
             scenes_from_lyrics=bool((lyrics or "").strip()),
             audio_mode=AUDIO_MODES[0],
             prompt_mode=prompt_mode,
+            project_name=project_name,
             **{name: image_slots.get(name) for name in self._IMAGE_OUTPUT_NAMES},
         )
         # Full-writer tuple: scenes, durations, lengths, audio_segments, table,
         # scenes_text, synopsis, cast, n, song_seconds, session_id, info,
-        # image_1..9, clip_starts. Keep the rendering essentials.
+        # image_1..9, clip_starts, project_name. Keep the rendering essentials.
         images = result[12:12 + len(self._IMAGE_OUTPUT_NAMES)]
         return (
             result[0], result[1], result[2], result[3],  # scenes, durations, lengths, audio
             result[5],                                    # scenes_text
             result[10], result[11],                       # session_id, info
-        ) + images + (result[-1],)                        # clip_starts
+        ) + images + (result[-2], result[-1])             # clip_starts, project_name

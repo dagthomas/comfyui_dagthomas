@@ -1,8 +1,8 @@
 {
   "id": "9d5e2f80-6c17-4a3b-b2e4-0f8a94c6d357",
   "revision": 0,
-  "last_node_id": 190,
-  "last_link_id": 402,
+  "last_node_id": 191,
+  "last_link_id": 407,
   "nodes": [
     {
       "id": 119,
@@ -24,8 +24,8 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            251,
-            273
+            273,
+            405
           ]
         }
       ],
@@ -66,7 +66,6 @@
           "name": "VAE",
           "type": "VAE",
           "links": [
-            250,
             274
           ]
         }
@@ -561,96 +560,6 @@
       }
     },
     {
-      "id": 92,
-      "type": "SaveVideo",
-      "pos": [
-        1490,
-        4920
-      ],
-      "size": [
-        1458,
-        979
-      ],
-      "flags": {},
-      "order": 26,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 294
-        }
-      ],
-      "outputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveVideo"
-      },
-      "widgets_values": [
-        "video/MiniMax_H3",
-        "auto",
-        "auto"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "video/MiniMax_H3",
-        "format": "auto",
-        "codec": "auto"
-      }
-    },
-    {
-      "id": 146,
-      "type": "CreateVideo",
-      "pos": [
-        1160,
-        4920
-      ],
-      "size": [
-        270,
-        110
-      ],
-      "flags": {},
-      "order": 25,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 401
-        },
-        {
-          "name": "audio",
-          "shape": 7,
-          "type": "AUDIO",
-          "link": 402
-        }
-      ],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            294
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CreateVideo"
-      },
-      "widgets_values": [
-        24,
-        8
-      ],
-      "widgets_values_named": {
-        "fps": 24,
-        "bit_depth": 8
-      }
-    },
-    {
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
@@ -696,8 +605,7 @@
           "name": "output",
           "type": "LATENT",
           "links": [
-            280,
-            281
+            404
           ]
         },
         {
@@ -708,86 +616,6 @@
       ],
       "properties": {
         "Node name for S&R": "SamplerCustomAdvanced"
-      }
-    },
-    {
-      "id": 121,
-      "type": "VAEDecodeAudio",
-      "pos": [
-        820,
-        5120
-      ],
-      "size": [
-        230,
-        60
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 24,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 281
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 250
-        }
-      ],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEDecodeAudio"
-      }
-    },
-    {
-      "id": 122,
-      "type": "VAEDecode",
-      "pos": [
-        480,
-        4920
-      ],
-      "size": [
-        230,
-        60
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 23,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 280
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 251
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            401
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "VAEDecode"
       }
     },
     {
@@ -971,7 +799,7 @@
           "type": "AUDIO",
           "links": [
             324,
-            402
+            406
           ]
         },
         {
@@ -1043,6 +871,14 @@
           "name": "clip_starts",
           "type": "FLOAT",
           "links": null
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": [
+            407
+          ],
+          "slot_index": 17
         }
       ],
       "properties": {
@@ -1058,7 +894,8 @@
         "sonnet",
         -1,
         "randomize",
-        "Ref2VA (bind reference images)"
+        "Ref2VA (bind reference images)",
+        ""
       ],
       "title": "H3 Music Video (Minimal) — lyrics + look + 3 sliders"
     },
@@ -1188,25 +1025,65 @@
         "example.png",
         "image"
       ]
+    },
+    {
+      "id": 191,
+      "type": "H3SaveClip",
+      "pos": [
+        1490,
+        4920
+      ],
+      "size": [
+        340,
+        150
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 404
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 405
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 406
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": 407
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "H3 Save Clip - one clip at a time, straight to disk",
+      "properties": {
+        "Node name for S&R": "H3SaveClip"
+      },
+      "widgets_values": [
+        "video/MiniMax_H3",
+        24.0,
+        "mp4"
+      ]
     }
   ],
   "links": [
-    [
-      250,
-      120,
-      0,
-      121,
-      1,
-      "VAE"
-    ],
-    [
-      251,
-      119,
-      0,
-      122,
-      1,
-      "VAE"
-    ],
     [
       253,
       129,
@@ -1296,22 +1173,6 @@
       "INT"
     ],
     [
-      280,
-      125,
-      0,
-      122,
-      0,
-      "LATENT"
-    ],
-    [
-      281,
-      125,
-      0,
-      121,
-      0,
-      "LATENT"
-    ],
-    [
       284,
       141,
       0,
@@ -1342,14 +1203,6 @@
       141,
       0,
       "MODEL"
-    ],
-    [
-      294,
-      146,
-      0,
-      92,
-      0,
-      "VIDEO"
     ],
     [
       319,
@@ -1400,22 +1253,6 @@
       "AUDIO"
     ],
     [
-      401,
-      122,
-      0,
-      146,
-      0,
-      "IMAGE"
-    ],
-    [
-      402,
-      163,
-      3,
-      146,
-      1,
-      "AUDIO"
-    ],
-    [
       340,
       168,
       0,
@@ -1438,6 +1275,38 @@
       153,
       1,
       "IMAGE"
+    ],
+    [
+      404,
+      125,
+      0,
+      191,
+      0,
+      "LATENT"
+    ],
+    [
+      405,
+      119,
+      0,
+      191,
+      1,
+      "VAE"
+    ],
+    [
+      406,
+      163,
+      3,
+      191,
+      2,
+      "AUDIO"
+    ],
+    [
+      407,
+      163,
+      17,
+      191,
+      3,
+      "STRING"
     ]
   ],
   "groups": [

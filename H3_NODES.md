@@ -39,6 +39,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 Scene Counter](#apnext-h3-scene-counter)
    - [APNext H3 Scenes Join](#apnext-h3-scenes-join)
    - [APNext H3 Scenes → Contex Loop Plan](#apnext-h3-scenes--contex-loop-plan)
+   - [APNext H3 Refine Encode + Mouth Guard (face‑refine second pass)](#apnext-h3-refine-encode--mouth-guard-facerefine-second-pass)
    - [APNext H3 Manual Scenes (script → lists)](#apnext-h3-manual-scenes-script--lists)
    - [APNext H3 Dailies Gate (print / punch up / cut)](#apnext-h3-dailies-gate-print--punch-up--cut)
    - [APNext H3 Song Analysis (BPM / intensity)](#apnext-h3-song-analysis-bpm--intensity)
@@ -127,6 +128,10 @@ Every Claude Code node returns a `session_id`. Feed it to the **Refiner** (`sess
 ### Lists: one element per scene
 
 The multi‑scene writers output `scenes` and `durations` (and, for the music video, `lengths` and `audio_segments`) as **ComfyUI lists**. A video node downstream therefore runs once per element — one queue renders every scene. Use **Scene Pick** to collapse the list to one scene, **Scenes Join** to stitch the rendered clips into one video, or **Scenes → Contex Loop Plan** to hand the scenes to the Contex‑Loop chain for true scene‑to‑scene continuity.
+
+### Project names
+
+Every multi‑scene writer (Scenes, Crossover, Music Video, Music Video Minimal, Presentation, Short Film) carries a `project_name` widget — auto‑filled with a random cinematography‑flavoured tag like `NeonDollyFoley` when the node is created, and freely editable. The name comes back out on the writer's `project_name` output; the example workflows wire it into **Save Video**'s `filename_prefix`, so every clip a run produces is named after its project and the output folder shows at a glance which videos belong together. Saved scene bundles (`save_scenes` → `output/apnext_scenes/`) carry the name too — in the bundle and in its filename — and **Scenes Load** returns it on its own `project_name` output so a re‑render keeps the tag. An empty widget generates a fresh name each run (stable when `seed` is fixed, so seeded re‑runs land in the same project).
 
 ---
 
@@ -308,6 +313,16 @@ Manual scene planning: one node = one scene YOU design — `description` (what h
 
 The fully hand‑authored counterpart of the multi‑scene writers: paste the **finished H3 prompts yourself** and get the same matching lists the writers emit — `scenes`, `durations`, `lengths` (snapped to H3's 5 + 17k frame grid), `scenes_text`, `scene_count`, `total_seconds` — so the render side of any writer workflow plugs in unchanged and **no model is called**. The `script` accepts the writers' `=== SCENE NN | duration: S.S ===` envelopes (duration optional per scene) or bare prompts split wherever a line starts with `subject_definitions:`; per‑scene durations come from the envelope header, then the `durations` box (comma/space separated), then `default_duration`. Unlike **Scene Brief** (a plan a writer expands), Manual Scenes renders your text verbatim.
 
+### APNext H3 Refine Encode + Mouth Guard (face‑refine second pass)
+`H3RefineEncode` + `H3MouthGuard` · workflow: [`h3_face_refine_mouthguard.json`](examples/h3/h3_face_refine_mouthguard.json)
+
+The **mouth‑guarded face‑refine v2v pass**: upscale a rendered pass‑1 clip, re‑encode it, and re‑render it toward reference face images — while the mouth region (and the soundtrack) are **protected from denoising**, so the pass‑1 lip‑sync survives the likeness restore. Without the guard, a Ref2VA refine rewrites the mouth and the character stops talking.
+
+- **Refine Encode** builds the clean AV latent: the upscaled pass‑1 frames go through the H3 video VAE (frame count trimmed to the 17k+5 grid, dims must be /32), and the pass‑1 audio is copied verbatim from the pass‑1 latent (`source_latent`, preferred) or encoded from an `audio` track. Its `frame_count`/`width`/`height` outputs wire straight into **MiniMax H3 Reference to Video** (whose own LATENT output is discarded — only its conditioning is used).
+- **Mouth Guard** takes a per‑frame **lips mask** — core ComfyUI's `Detect Face Landmarks (MediaPipe)` → `Draw Face Mask (MediaPipe)` with `regions=custom`, lips only (one‑time setup: download `mediapipe_face_fp32.safetensors` from `https://huggingface.co/Comfy-Org/mediapipe/resolve/main/detection/mediapipe_face_fp32.safetensors` into `models/detection/`) — reduces it onto the H3 latent grid (16× spatial, the cyclic 1,4,4,4,4 temporal groups), grows and feathers it, and installs it as the latent's nested noise mask (lips = preserve, `protect_audio` locks the soundtrack). `mask_preview` shows the protected region per frame; `report` prints the geometry.
+- **Sampling**: `RandomNoise` + `BasicScheduler` with `denoise` ≈ 0.35–0.5 (the refine strength). **Never a DisableNoise / pre‑noised flow** (e.g. the latent‑upscaler's combined re‑noise): the sampler restores protected regions from the *input* latent, so a pre‑noised input would preserve noise instead of lips.
+- **Quality**: when `ComfyUI-H3-Motion-Context-MultiRef` is installed the guard also enables its H3 mask engine (protected tokens run at the model's clean‑conditioning timestep — same mechanism as keyframes; clean boundary). Without it the mouth is still preserved by the sampler's inpaint blend, just seamier. Mask granularity is ~32 source pixels, so refine at **2×** (the workflow default) — small faces then give the mouth enough latent cells. The example also carries a muted same‑seed **A/B branch** (no guard) and a muted **pixel composite** branch that pastes the pass‑1 mouth pixels back after decode as a belt‑and‑braces finish.
+
 ### APNext H3 Scenes Load (from disk)
 `H3ScenesLoad` · pairs with the writers' `save_scenes` toggle
 
@@ -395,6 +410,7 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_music_video_minimal_dailies_gate.json`](examples/h3/h3_music_video_minimal_dailies_gate.json) | The **Minimal** music video with the Dailies Gate instead of Scenes Review — the fastest hands‑on loop: sliders → live desk → print/punch‑up. |
 | [`h3_music_video_masked_audio_briefs_dailies_gate.json`](examples/h3/h3_music_video_masked_audio_briefs_dailies_gate.json) | The masked‑latent + Scene Briefs workflow with the Dailies Gate — plan takes by hand, then punch them up live before the expensive render. |
 | [`h3_presentation_dailies_gate.json`](examples/h3/h3_presentation_dailies_gate.json) | The Presentation Writer with the Dailies Gate — check the `script`'s fact fidelity on the desk and punch up takes before rendering the talk. |
+| [`h3_face_refine_mouthguard.json`](examples/h3/h3_face_refine_mouthguard.json) | **Mouth‑guarded face refine**: a rendered pass‑1 clip 2×‑upscaled → **Refine Encode** → Ref2VA re‑render toward face reference images, with the **Mouth Guard** protecting the lips + soundtrack so the lip‑sync survives; MediaPipe lips mask, muted same‑seed A/B and pixel‑composite branches. |
 
 Every music‑video / presentation example defaults to **seed -1 (randomize)** — a queue always writes a brand‑new video (pin the seed to use the Review node's cached Continue flow) — and **saves each scene's clip directly** (VAE Decode → Create Video → Save Video, one file per clip); re‑add **H3 Scenes Join** before Create Video if you want one stitched file. In the music workflows every saved clip carries **its original slice of the song** (the writer's `audio_segments`, frame‑aligned) — never the model's re‑rendered audio, and in the masked workflows never the vocals‑only stem; the presentations keep the generated voice, which is their real soundtrack. The music examples also carry an **H3 Song Analysis** readout next to Load Audio, showing the measured BPM / intensity the writer steers by.
 

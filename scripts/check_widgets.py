@@ -77,4 +77,5 @@ check("h3_music_video_masked_audio_briefs_dailies_gate.json",
 check("h3_presentation_dailies_gate.json",
       {"H3ClaudeCodePresentationWriter", "H3Characters", "H3ScenesReviewGate"})
 check("h3_short_film_manual.json", {"H3ManualScenes", "H3ScenesReview"})
+check("h3_face_refine_mouthguard.json", {"H3MouthGuard", "H3RefineEncode"})
 print("WIDGETS-OK")

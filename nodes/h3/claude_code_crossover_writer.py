@@ -29,8 +29,12 @@ from .claude_code_support import (
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
+    project_name_input,
+    project_name_prefix,
+    resolve_project_name,
     run_h3_claude_code,
 )
+from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .characters import cast_line_name, split_cast_line
 from .common import (
@@ -125,6 +129,27 @@ def cast_wardrobe(*blocks):
             seen.add(name.lower())
             locks.append(f"{name}: {anchors}")
     return locks
+
+
+def log_wardrobe_locks(node_label, wardrobe):
+    """Print the final wardrobe lock block, so a mis-wired cast socket (e.g.
+    the `character` name output instead of `cast`, which carries the wardrobe)
+    is caught at a glance."""
+    if (wardrobe or "").strip():
+        print(f"👔 {node_label} | wardrobe locks:\n"
+              + "\n".join(f"    {l}" for l in wardrobe.splitlines() if l.strip()))
+    else:
+        print(f"👔 {node_label} | no wardrobe locks reached the writer - the model invents "
+              "outfits. If you set wardrobe on H3 Characters, wire its `cast` output "
+              "(not `character`) into cast_N.")
+
+
+def log_cast(node_label, cast):
+    """Print the parsed cast lines, so a phantom member (a chained cast_in,
+    a second cast socket, leftover extra_cast text) is caught at a glance."""
+    if cast:
+        print(f"🎭 {node_label} | cast ({len(cast)}):\n"
+              + "\n".join(f"    {c}" for c in cast))
 
 
 def merge_wardrobe(user_wardrobe, cast_locks):
@@ -266,6 +291,18 @@ class H3ClaudeCodeCrossoverWriter:
                 "briefs fill in order; scenes without a brief stay the model's to invent."
             ),
         })
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(project_name_input())
+        optional["avoid_previous"] = ("INT", {
+            "default": 6, "min": 0, "max": 20,
+            "tooltip": (
+                "Anti-repetition: feed the synopses of this many previous saved runs "
+                "(output/apnext_scenes/) back to the model as concepts that are USED UP, "
+                "so a new run invents something different instead of collapsing onto the "
+                "model's favourite ideas. The LLM has no memory between runs - similar "
+                "briefs otherwise produce near-identical stories. 0 = off."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -273,6 +310,7 @@ class H3ClaudeCodeCrossoverWriter:
     RETURN_TYPES = (
         ("STRING", "FLOAT", "STRING", "STRING", "STRING", "INT", "STRING", "STRING")
         + _IMAGE_OUTPUT_TYPES
+        + ("STRING",)
     )
     RETURN_NAMES = (
         "scenes",
@@ -283,8 +321,8 @@ class H3ClaudeCodeCrossoverWriter:
         "scene_count",
         "session_id",
         "info",
-    ) + _IMAGE_OUTPUT_NAMES
-    OUTPUT_IS_LIST = (True, True) + (False,) * (6 + len(_IMAGE_OUTPUT_NAMES))
+    ) + _IMAGE_OUTPUT_NAMES + ("project_name",)
+    OUTPUT_IS_LIST = (True, True) + (False,) * (6 + len(_IMAGE_OUTPUT_NAMES)) + (False,)
     FUNCTION = "write_scenes"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -385,6 +423,7 @@ class H3ClaudeCodeCrossoverWriter:
         locations="",
         characters_only=True,
         scene_briefs="",
+        avoid_synopses=(),
     ):
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast]
@@ -443,6 +482,14 @@ class H3ClaudeCodeCrossoverWriter:
             )
         if image_labels:
             labels = ", ".join(f"<Picture {i}>" for i in image_labels)
+            wardrobe_clause = (
+                "take their wardrobe lock from what the picture shows, and restate it "
+                "in the shots."
+                if not (wardrobe or "").strip() else
+                "the picture fixes their face, hair and build, while the written "
+                "wardrobe lock below fixes the clothes - where they differ, the written "
+                "lock wins."
+            )
             lines.append(
                 f"- Reference pictures: {len(image_labels)} attached, in order {labels}; the "
                 "video model receives the same pictures under the same labels in every "
@@ -450,13 +497,12 @@ class H3ClaudeCodeCrossoverWriter:
                 + (
                     characters_only_directive() + " Match faces and costumes to the cast, "
                     "bind pictured characters to their <Picture k> in subject_definitions, "
-                    "take their wardrobe lock from what the picture shows, and restate it "
-                    "in the shots."
+                    + wardrobe_clause
                     if characters_only else
                     "Decide what each one shows (use the notes below, else match faces "
                     "and costumes to the cast); bind pictured characters to their <Picture k> in "
-                    "subject_definitions, take their wardrobe lock from what the picture shows, "
-                    "and restate it in the shots. Unmatched pictures are locations or props: "
+                    "subject_definitions, " + wardrobe_clause +
+                    " Unmatched pictures are locations or props: "
                     "define them as `<Picture k> is ...` and use them where the story needs them."
                 )
             )
@@ -474,6 +520,15 @@ class H3ClaudeCodeCrossoverWriter:
         lines.append(
             "- The character with the most dialogue in a scene is <Subject 1> in that scene."
         )
+        if avoid_synopses:
+            lines.append(
+                "- ALREADY MADE - THESE CONCEPTS ARE USED UP: earlier runs produced the "
+                "stories below. Do not reuse or lightly reskin their premises, settings, "
+                "motifs, plot beats or endings - invent something clearly different this "
+                "time:"
+            )
+            for i, syn in enumerate(avoid_synopses, 1):
+                lines.append(f"    ({i}) {syn}")
         wild_lines, wild_label = wildness_directive(wildness, rng)
         lines += [f"- {w}" for w in wild_lines]
         extra = (extra_instructions or "").strip()
@@ -521,8 +576,12 @@ class H3ClaudeCodeCrossoverWriter:
         llm=None,
         reference_image_use=None,
         scene_briefs="",
+        project_name="",
+        avoid_previous=6,
         **cast_slots,
     ):
+        project_name = resolve_project_name(project_name, seed)
+        print(f"🎬 H3 Crossover Writer | project: {project_name}")
         # The same tensors go back out on image_1..image_9 so the video node
         # can be wired from here; Claude gets downscaled copies.
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
@@ -538,7 +597,9 @@ class H3ClaudeCodeCrossoverWriter:
         cast_blocks = [cast_slots.get(name) for name in CAST_SOCKETS] + [extra_cast]
         cast = parse_cast(*cast_blocks)
         cast_text = "\n".join(cast)
+        log_cast("H3 Crossover Writer", cast)
         wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
+        log_wardrobe_locks("H3 Crossover Writer", wardrobe)
         try:
             if not cast:
                 raise ValueError(
@@ -552,6 +613,9 @@ class H3ClaudeCodeCrossoverWriter:
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
+            avoid = tuple(recent_synopses("H3ClaudeCodeCrossoverWriter", int(avoid_previous or 0)))
+            if avoid:
+                print(f"🔁 H3 Crossover Writer: steering away from {len(avoid)} previous synopsis(es).")
 
             user_prompt, wild_label = self._build_user_prompt(
                 cast,
@@ -572,6 +636,7 @@ class H3ClaudeCodeCrossoverWriter:
                 locations=locations,
                 characters_only=characters_only_refs(reference_image_use),
                 scene_briefs=scene_briefs,
+                avoid_synopses=avoid,
             )
             user_prompt = with_context(user_prompt, context_text)
 
@@ -619,6 +684,12 @@ class H3ClaudeCodeCrossoverWriter:
             durations = [d for _, d, _ in parsed]
             scenes_text = scenes_to_text(synopsis, parsed)
 
+            save_scene_bundle(
+                "H3ClaudeCodeCrossoverWriter", synopsis, scenes, [], durations,
+                [], [], cast_text, sum(durations), scenes_text, "", info,
+                project_name=project_name,
+            )
+
             return (
                 scenes,
                 durations,
@@ -628,7 +699,7 @@ class H3ClaudeCodeCrossoverWriter:
                 len(scenes),
                 session_id,
                 info,
-            ) + passthrough
+            ) + passthrough + (project_name_prefix(project_name),)
 
         except Exception as exc:
             if is_interrupt(exc):
@@ -640,4 +711,4 @@ class H3ClaudeCodeCrossoverWriter:
             message = f"Error occurred while writing crossover scenes: {exc}"
             return (
                 [message], [float(scene_duration)], message, "", cast_text, 0, "", "error"
-            ) + passthrough
+            ) + passthrough + (project_name_prefix(project_name),)

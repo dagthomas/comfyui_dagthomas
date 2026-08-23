@@ -34,11 +34,16 @@ from .claude_code_support import (
     local_llm_inputs,
     local_llm_options,
     directions_with_research,
+    project_name_input,
+    project_name_prefix,
     resolve_draft_model,
+    resolve_project_name,
     run_h3_claude_code,
 )
-from .claude_code_crossover_writer import CAST_SOCKETS, cast_wardrobe, merge_wardrobe, parse_cast
-from .scenes_store import save_scene_bundle
+from .claude_code_crossover_writer import (
+    CAST_SOCKETS, cast_wardrobe, log_cast, log_wardrobe_locks, merge_wardrobe, parse_cast,
+)
+from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     scale_reference_passthrough,
@@ -142,6 +147,20 @@ PLOT_ARCHETYPES = [
     "repairing something broken - a car, a friendship, a neon sign",
     "a wedding, funeral or festival crashed and transformed",
     "teaching someone to dance, sing or drive while the world reacts",
+    "a delivery that must arrive before the last chorus, against everything",
+    "an audition or try-out in front of the wrong audience",
+    "a rumour spreading through a neighbourhood and mutating as it goes",
+    "moving out - a whole life carried down the stairs one box at a time",
+    "a lookalike or double causing chaos the performer gets blamed for",
+    "one long apology, staged bigger and bigger until it is accepted",
+    "a strike, walkout or mutiny that turns into a celebration",
+    "a treasure map, scavenger hunt or trail of clues through everyday places",
+    "a curse or lucky streak that switches owners every chorus",
+    "the last night of a closing place - shop, rink, cinema, pool - lived hard",
+    "an interrupted journey: a commute derailed into an adventure",
+    "a swap gone sideways - a bag, a jacket, a phone taken by mistake",
+    "a small lie that must be physically maintained as it snowballs",
+    "the performer versus a machine, a bureaucracy or the weather - and winning ugly",
 ]
 
 ENDING_MOVES = [
@@ -157,6 +176,48 @@ ENDING_MOVES = [
     "a door, a case or a curtain closes on the action",
     "the performer joins the crowd and disappears INTO it, not away from it",
     "the last note freezes on contact - a catch, a kiss, a handshake, a fist on a wall",
+    "the thing built, carried or fought over all video finally gets USED",
+    "someone else picks up the song - the world carries on without the performer",
+    "the payoff lands in the background while the performer, oblivious, keeps going",
+    "the mess is cleaned up in seconds of screen time - except one deliberate trace",
+    "the antagonist and the performer end up laughing at the same thing",
+    "morning light hits the aftermath and makes it beautiful",
+    "the video's running gag pays off one last time, bigger than ever",
+    "an exchange completes: the object from scene 01 finally changes hands for keeps",
+    "the camera stays behind as everyone leaves, holding on what they made",
+    "the loudest moment cuts to the quietest one - one breath, then black",
+    "a repeat of the first gesture of the video, now meaning the opposite",
+    "the performer breaks their own rule from scene 01, and it feels earned",
+]
+
+# Visual worlds (era / subculture / palette / texture), sampled per seed like
+# the plots above - suggestions the model may take or beat, so runs stop
+# defaulting to the same contemporary-urban-neon look.
+WORLD_FLAVORS = [
+    "1970s Polaroid suburbia - faded lawns, station wagons, kitchen formica",
+    "wet neon fish-market at night, crushed ice and hand-painted price signs",
+    "VHS public-access TV studio with cardboard sets and hard tube-light colour",
+    "a 1990s hypermarket after hours - strip light, shrink-wrap, endless aisles",
+    "brutalist swimming baths, chlorine haze and tiled echo",
+    "an allotment village of sheds, hosepipes and prize vegetables",
+    "overnight ferry interior - patterned carpet, fruit machines, sodium deck light",
+    "a paper-lantern night market in monsoon drizzle",
+    "an amateur wrestling hall with folding chairs and a hand-sewn banner",
+    "1960s space-age motel - kidney pools, atomic signage, mint and coral",
+    "a working laundrette at 3am, drum-light and folded towels",
+    "county-fair demolition derby, dust, bunting and butter sculpture",
+    "a grand old cinema mid-demolition, one chandelier still up",
+    "snowed-in petrol station diner on a mountain pass",
+    "a shipping-container port at golden hour, gantry cranes like animals",
+    "pirate-radio tower block - coat hangers, tin foil, bass through concrete",
+    "a botanical greenhouse gone feral inside a dead shopping mall",
+    "backstage at a regional theatre pantomime - ropes, gels, glitter dust",
+    "a chalk-cliff seaside town out of season, shuttered arcades and gulls",
+    "an all-night bakery - flour dust in warm light, steel tables, proofing racks",
+    "a 1980s office tower after the last shift - CRTs, ashtrays, beige everything",
+    "a river barge community with string lights and bicycle ferries",
+    "high-plains rodeo at dusk, sodium floods against a green storm sky",
+    "a telephone-exchange museum of switches, patch cords and clicking relays",
 ]
 
 _ANTI_CLICHE_DIRECTIVE = (
@@ -401,6 +462,18 @@ class H3ClaudeCodeMusicVideoWriter:
                 "fits in one call."
             ),
         })
+        # appended LAST so saved workflows keep their widget positions
+        optional.update(project_name_input())
+        optional["avoid_previous"] = ("INT", {
+            "default": 6, "min": 0, "max": 20,
+            "tooltip": (
+                "Anti-repetition: feed the synopses of this many previous saved runs "
+                "(output/apnext_scenes/) back to the model as concepts that are USED UP, "
+                "so a new run invents something different instead of collapsing onto the "
+                "model's favourite ideas. The LLM has no memory between runs - similar "
+                "briefs otherwise produce near-identical videos. 0 = off."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -413,7 +486,7 @@ class H3ClaudeCodeMusicVideoWriter:
     RETURN_TYPES = (
         ("STRING", "FLOAT", "INT", "AUDIO", "STRING", "STRING", "STRING", "STRING", "INT", "FLOAT", "STRING", "STRING")
         + _IMAGE_OUTPUT_TYPES
-        + ("FLOAT",)
+        + ("FLOAT", "STRING")
     )
     RETURN_NAMES = (
         "scenes",
@@ -428,8 +501,8 @@ class H3ClaudeCodeMusicVideoWriter:
         "song_seconds",
         "session_id",
         "info",
-    ) + _IMAGE_OUTPUT_NAMES + ("clip_starts",)
-    OUTPUT_IS_LIST = (True, True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES)) + (True,)
+    ) + _IMAGE_OUTPUT_NAMES + ("clip_starts", "project_name")
+    OUTPUT_IS_LIST = (True, True, True, True) + (False,) * (8 + len(_IMAGE_OUTPUT_NAMES)) + (True, False)
     FUNCTION = "write_video"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
@@ -578,9 +651,11 @@ class H3ClaudeCodeMusicVideoWriter:
         prior_scenes=(),
         plot_picks=(),
         ending_picks=(),
+        world_picks=(),
         profile=None,
         plan_only=False,
         plan_text="",
+        avoid_synopses=(),
     ):
         last = last or len(segments)
         n = len(segments)
@@ -752,6 +827,24 @@ class H3ClaudeCodeMusicVideoWriter:
             "scene; recurring locations restate their anchors; the chorus pieces share one "
             "signature look; the last scene resolves the concept."
         )
+        lines.append(
+            "- ONE FACE PER PERFORMER: every person on camera is exactly one named CAST "
+            "member (bound to their own <Picture k> when pictured), keeping that one "
+            "person's face, hair, build and wardrobe anchors in every appearance. Never "
+            "merge features of two cast members or two pictures into one person, never "
+            "give one performer's wardrobe or hair to another, and never let an identity "
+            "drift between scenes - restate each performer's own anchors in every scene "
+            "they appear in."
+        )
+        lines.append(
+            "- WHO SINGS WHAT: when the lyrics carry voice or singer tags ([Voice 1], "
+            "[Verse - name], duet marks) or the cast lists several performers, fix the "
+            "mapping in the synopsis as a `Voices:` line (each tag -> exactly one cast "
+            "member) and keep it for the whole video: a tagged line is lip-synced ONLY "
+            "by its owner - nobody else mouths it, and the camera holds the OWNER while "
+            "the line lasts. Untagged lines belong to the lead. With one singer in the "
+            "cast, that one performer sings every line."
+        )
         if briefs:
             lines.append(
                 "- SCENE BRIEFS ARE BINDING: a numbered brief is the plan for that piece - "
@@ -773,6 +866,12 @@ class H3ClaudeCodeMusicVideoWriter:
             "spectacle - and the bridge breaking the pattern completely. Lock only the places "
             "that actually recur; everything else travels."
         )
+        lines.append(
+            "- NO SCENE REPEATS ITSELF: no two non-chorus scenes share the same "
+            "setting-plus-staging combination, and consecutive scenes never open on the "
+            "same framing of the same subject - change the place, the distance, the angle "
+            "or who moves first. Only the chorus signature look is allowed to rhyme."
+        )
         plots = "; ".join(plot_picks) if plot_picks else (
             "a transformation, a chase, a heist, a ritual"
         )
@@ -789,6 +888,24 @@ class H3ClaudeCodeMusicVideoWriter:
                 f"shot like it matters. Strong shapes for this song: {'; '.join(ending_picks)}. "
                 "Pick one of these, or beat them."
             )
+        if world_picks:
+            lines.append(
+                "- WORLD: unless the user's concept already fixes the setting, consider "
+                f"grounding the video in a world like: {'; '.join(world_picks)} - or a "
+                "world of your own that fits this song better. Whatever you choose, commit "
+                "to its era, palette and textures in every scene instead of defaulting to "
+                "a generic contemporary city."
+            )
+        # only the planning turn needs the avoid-list; chunk turns follow the plan
+        if avoid_synopses and (plan_only or (first == 1 and not plan_text)):
+            lines.append(
+                "- ALREADY MADE - THESE CONCEPTS ARE USED UP: earlier runs produced the "
+                "videos below. Do not reuse or lightly reskin their premises, settings, "
+                "motifs, plot beats or endings - invent something clearly different this "
+                "time:"
+            )
+            for i, syn in enumerate(avoid_synopses, 1):
+                lines.append(f"    ({i}) {syn}")
         lines.append(f"- {_ANTI_CLICHE_DIRECTIVE}")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         if profile:
@@ -874,8 +991,12 @@ class H3ClaudeCodeMusicVideoWriter:
         prompt_mode=None,
         draft_model="haiku",
         parallel_chunks=True,
+        project_name="",
+        avoid_previous=6,
         **cast_slots,
     ):
+        project_name = resolve_project_name(project_name, seed)
+        print(f"🎬 H3 Music Video Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
@@ -902,7 +1023,9 @@ class H3ClaudeCodeMusicVideoWriter:
         cast_blocks = [cast_slots.get(name) for name in CAST_SOCKETS] + [extra_cast]
         cast = parse_cast(*cast_blocks)
         cast_text = "\n".join(cast)
+        log_cast("H3 Music Video Writer", cast)
         wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
+        log_wardrobe_locks("H3 Music Video Writer", wardrobe)
 
         # --- cut the song -------------------------------------------------
         parsed_lyrics = parse_lyrics(lyrics)
@@ -946,6 +1069,11 @@ class H3ClaudeCodeMusicVideoWriter:
             # is steered toward the same story and the same ending
             plot_picks = tuple(rng.sample(PLOT_ARCHETYPES, 3))
             ending_picks = tuple(rng.sample(ENDING_MOVES, 2))
+            # sampled AFTER the plot/ending picks, so existing seeds keep them
+            world_picks = tuple(rng.sample(WORLD_FLAVORS, 2))
+            avoid = tuple(recent_synopses("H3ClaudeCodeMusicVideoWriter", int(avoid_previous or 0)))
+            if avoid:
+                print(f"🔁 H3 Music Video Writer: steering away from {len(avoid)} previous synopsis(es).")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             masked_audio = str(audio_mode or "").startswith("Masked")
@@ -989,7 +1117,9 @@ class H3ClaudeCodeMusicVideoWriter:
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
                     prior_scenes=prior, plot_picks=plot_picks, ending_picks=ending_picks,
+                    world_picks=world_picks,
                     profile=profile, plan_only=plan_only, plan_text=plan_text,
+                    avoid_synopses=avoid,
                 )
                 return user_prompt
 
@@ -1174,12 +1304,13 @@ class H3ClaudeCodeMusicVideoWriter:
                 save_scene_bundle(
                     "H3ClaudeCodeMusicVideoWriter", synopsis, scenes, segments, durations,
                     frames, clip_starts, cast_text, total_seconds, scenes_text, table, info,
+                    project_name=project_name,
                 )
 
             return (
                 scenes, durations, frames, audio_segments, table, scenes_text, synopsis,
                 cast_text, n, float(total_seconds), session_id, info,
-            ) + passthrough + (clip_starts,)
+            ) + passthrough + (clip_starts, project_name_prefix(project_name))
 
         except Exception as exc:
             if is_interrupt(exc):
@@ -1191,7 +1322,7 @@ class H3ClaudeCodeMusicVideoWriter:
             return (
                 [message] * n, durations, frames, audio_segments, table, message, "", cast_text,
                 n, float(total_seconds), "", "error",
-            ) + passthrough + (clip_starts,)
+            ) + passthrough + (clip_starts, project_name_prefix(project_name))
 
 
 def seconds_for(frames):

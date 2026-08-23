@@ -155,7 +155,8 @@ class H3Characters:
                         "(`dark-brown corduroy jacket, forest-green cotton T-shirt, khaki chinos, "
                         "small silver ring in the LEFT nostril`). Travels with the cast line into "
                         "the Crossover / Music Video writers, which copy it word-for-word into "
-                        "every shot. Empty = the writer invents one."
+                        "every shot. Empty = the writer designs a scene-fitting outfit itself "
+                        "(matched to the concept's genre, era and setting) and locks it."
                     ),
                 }),
                 "cast_in": ("STRING", {

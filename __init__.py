@@ -574,6 +574,20 @@ try:
 except Exception:
     pass
 
+try:
+    from .nodes.h3.mouth_guard import H3MouthGuard
+    NEW_MAPPINGS["H3MouthGuard"] = H3MouthGuard
+    NEW_DISPLAY_MAPPINGS["H3MouthGuard"] = "APNext H3 Mouth Guard (protect lips in refine)"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.refine_encode import H3RefineEncode
+    NEW_MAPPINGS["H3RefineEncode"] = H3RefineEncode
+    NEW_DISPLAY_MAPPINGS["H3RefineEncode"] = "APNext H3 Refine Encode (v2v AV latent)"
+except Exception:
+    pass
+
 # Combine mappings (modular nodes + dynamic nodes)
 NODE_CLASS_MAPPINGS = {**NEW_MAPPINGS, **DYNAMIC_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS = {**NEW_DISPLAY_MAPPINGS, **DYNAMIC_DISPLAY_MAPPINGS}
