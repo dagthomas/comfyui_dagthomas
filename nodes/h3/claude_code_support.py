@@ -501,8 +501,10 @@ def resolve_draft_model(draft_model, model, local):
     run is a plain Claude Code run: a Codex / router / override backend keeps
     one model throughout (their sessions cannot be shared across backends).
     """
-    draft = (draft_model or "").strip()
-    if not draft or draft == SAME_AS_MODEL:
+    # Workflows saved before this widget existed restore it as '' - fall back
+    # to the widget's default rather than failing validation.
+    draft = (draft_model or "").strip() or "haiku"
+    if draft == SAME_AS_MODEL:
         return model
     effective = resolve_backend_model(model, (local or {}).get("model_override", ""))
     if ((local or {}).get("model_override") or "").strip() or is_codex_model(effective) \

@@ -274,7 +274,9 @@ class H3ClaudeCodeShortFilmWriter:
         return float("nan") if seed == -1 else seed
 
     @classmethod
-    def VALIDATE_INPUTS(cls, prompt_mode=None):
+    def VALIDATE_INPUTS(cls, prompt_mode=None, draft_model=None):
+        # '' from workflows saved before these widgets existed is accepted;
+        # resolve_draft_model falls back to haiku.
         return True
 
     # ------------------------------------------------------------------

@@ -445,9 +445,10 @@ class H3ClaudeCodeMusicVideoWriter:
         return float("nan") if seed == -1 else seed
 
     @classmethod
-    def VALIDATE_INPUTS(cls, prompt_mode=None):
-        # Workflows saved before this widget existed restore it as '' - accept
-        # anything here; write_video coerces empty/unknown values to Auto.
+    def VALIDATE_INPUTS(cls, prompt_mode=None, draft_model=None):
+        # Workflows saved before these widgets existed restore them as '' -
+        # accept anything here; write_video coerces empty/unknown prompt_mode
+        # values to Auto and resolve_draft_model falls back to haiku.
         return True
 
     # ------------------------------------------------------------------
