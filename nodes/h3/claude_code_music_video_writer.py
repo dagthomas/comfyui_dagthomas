@@ -45,7 +45,7 @@ from .claude_code_crossover_writer import (
 )
 from .lyrics_transcribe import transcribe_song_lyrics
 from .scenes_store import recent_synopses, save_scene_bundle
-from .sound_events import parse_events, segment_event_lines
+from .sound_events import parse_events, segment_event_lines, sync_key_lines
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     PROMPT_MODES,
@@ -743,16 +743,29 @@ class H3ClaudeCodeMusicVideoWriter:
         lines.append("DIRECTIVES:")
         if beats:
             lines.append(
-                "- SOUND: the `[+s]` lines under each piece are MEASURED hits in that clip - "
-                "BASS HIT and IMPACT are single strikes, DROP is the beat arriving, STOP is "
-                "the music cutting out, BUILD is a riser, SECTION is the arrangement turning. "
-                "Stage the picture ON them, at those seconds: cut, or land a camera move, a "
-                "light change, a step, a door, a head turn, a spark. A heavy hit deserves a "
-                "hard visual event; a light one deserves an accent, not a cut. A STOP should "
-                "freeze or empty the frame, a DROP should open it up, a BUILD should tighten "
-                "toward the drop that follows. Write the timing into the shot description "
-                "(\"on the beat at 2.1 s the ...\") so it is unmistakable - and never invent "
-                "hits that are not listed."
+                "- SOUND: the `[+s]` lines under each piece are MEASURED moments in that "
+                "clip, timed from the clip's own start. Each one reads "
+                "`[+s] TYPE | size | what the music does` - the third column is the sound "
+                "itself, in plain words, and the size (light/solid/heavy) is how big it "
+                "actually is in the mix. Stage the picture ON those seconds."
+            )
+            lines.append(
+                "- SYNC: every listed moment needs something VISIBLE happening on it, and "
+                "it is almost never a cut - one shot is usually the whole clip, so the "
+                "picture has to MOVE on the beat instead. Prefer physical effects the "
+                "camera can see land: a shockwave through dust or water, a gust of wind, a "
+                "blast, sparks, a light snapping on or off, fabric and hair thrown, the "
+                "ground pulsing, the camera shaken. What each kind wants:"
+            )
+            lines.extend(sync_key_lines(beats, indent="    "))
+            lines.append(
+                "  Scale the response to the size: a heavy moment earns a whole-frame "
+                "event, a light one earns a glint or a flicker - staging every hit at full "
+                "force reads as noise and the drops stop meaning anything. Write the timing "
+                "and the effect into the shot description itself (\"at 2.1 s the bass hits "
+                "and dust jumps off the floor in a ring\") so it is unmistakable. Never "
+                "invent moments that are not listed, and never describe the sound as sound - "
+                "H3 is given the real song, so what you write is what the picture DOES."
             )
         if plan_only:
             lines.append(

@@ -60,19 +60,120 @@ EVENT_TYPES = ("DROP", "STOP", "SECTION", "BUILD", "IMPACT", "BASS HIT", "ACCENT
 
 _STRUCTURAL = ("DROP", "STOP", "SECTION", "BUILD")
 
-_NOTES = {
-    "DROP": "the beat enters - full energy",
-    "STOP": "the music cuts out",
-    "SECTION": "the section changes",
-    "BUILD": "a riser into the next drop",
-    "IMPACT": "a broadband slam",
-    "BASS HIT": "",
-    "ACCENT": "a bright top-end accent",
+# What each event SOUNDS like, in plain words, at (light, solid, heavy).
+#
+# The bare token is for the parser and for sorting; this is what the model
+# actually reads. "DROP" is a word in a column - "a big DROP in the music" is
+# something a director can stage, and the size word is doing real work: the
+# same token at 0.2 and at 0.95 are not the same event and must not read alike.
+# The token stays in the phrase, in caps, so the prose and the column are
+# unmistakably the same moment.
+_SOUND = {
+    "DROP": (
+        "a small DROP - the beat slips back in",
+        "a big DROP in the music - full energy returns",
+        "a huge DROP - the whole track opens up at once",
+    ),
+    "STOP": (
+        "a brief STOP - the music thins out",
+        "a STOP - the music cuts out",
+        "a dead STOP - the track falls to nothing",
+    ),
+    "SECTION": (
+        "a light SECTION turn - the arrangement shifts",
+        "a SECTION change - a new part of the song",
+        "a hard SECTION turn - the song becomes another song",
+    ),
+    "BUILD": (
+        "a short BUILD - a slow lift toward the drop",
+        "a BUILD - a riser winding up into the drop",
+        "a long BUILD - pressure climbing all the way to the drop",
+    ),
+    "IMPACT": (
+        "a light IMPACT - a sharp crack",
+        "an IMPACT - a slam across the whole mix",
+        "a huge IMPACT - a blast, the loudest kind of hit",
+    ),
+    "BASS HIT": (
+        "a light BASS HIT - a soft kick",
+        "a solid BASS HIT - a kick with weight behind it",
+        "a heavy BASS HIT - a low blow you feel in the chest",
+    ),
+    "ACCENT": (
+        "a faint ACCENT - a tick up top",
+        "an ACCENT - a bright hat or snare",
+        "a hard ACCENT - a cymbal crash",
+    ),
+}
+
+# What to put ON the moment, per type - stated ONCE, in the table's key and in
+# the writer's directives, never per line. At 120 events the same sentence
+# repeated on every row is most of the prompt budget and none of the
+# information.
+#
+# Deliberately EFFECTS-first. A 9-second H3 clip can rarely afford a cut - one
+# shot is usually the whole clip - so the picture has to MOVE on the beat
+# instead: a shockwave, a gust, a blast, dust jumping, light snapping off.
+# Those are things a video model can actually render on a named second, and
+# they are what "sync the picture to the music" means when cutting is off the
+# table.
+_SYNC = {
+    "DROP": (
+        "open the frame on it - a blast of light, a shockwave rolling out through "
+        "dust or water, wind slamming in, the camera released into motion, a crowd "
+        "erupting, everything that was still now moving"
+    ),
+    "STOP": (
+        "empty or still the frame - motion freezes, the wind dies, dust hangs in "
+        "the air, lights snap off, a held breath, sudden silence made visible"
+    ),
+    "SECTION": (
+        "change the world - new location, new light, new lens, new weather; the "
+        "look of the shot turns here and does not turn back"
+    ),
+    "BUILD": (
+        "tighten toward the drop - the push-in accelerates, hair and dust lift, "
+        "wind rises, strobes quicken, the frame closing in as the pressure climbs"
+    ),
+    "IMPACT": (
+        "a hard physical event - something strikes, a blast, glass, sparks, a body "
+        "landing, a shockwave ring punched outward, the camera shaken by it"
+    ),
+    "BASS HIT": (
+        "one visible pulse - a step or a stomp, dust jumping off the floor, a light "
+        "throb, a ripple ring across water, fabric snapping, the ground answering"
+    ),
+    "ACCENT": (
+        "a small bright accent - a glint, a spark, a lens flare crossing frame, a "
+        "flick of the eyes; an accent, never a cut"
+    ),
 }
 
 
 def _strength_label(value):
     return "heavy" if value >= 0.66 else "solid" if value >= 0.33 else "light"
+
+
+def _strength_tier(value):
+    return 2 if value >= 0.66 else 1 if value >= 0.33 else 0
+
+
+def _sound_note(kind, strength):
+    """The plain-words description of one event, sized by its strength."""
+    tiers = _SOUND.get(kind)
+    return tiers[_strength_tier(strength)] if tiers else ""
+
+
+def sync_key_lines(events, indent="  "):
+    """
+    The staging key for whichever event kinds actually occur in `events`.
+
+    Only the kinds present: a key that explains STOP to a track that never
+    stops is teaching the model about a moment it will never be asked to
+    stage, and it will find somewhere to use it anyway.
+    """
+    present = [k for k in EVENT_TYPES if any(e.get("type") == k for e in events)]
+    return [f"{indent}{k:<9} {_SYNC[k]}" for k in present if _SYNC.get(k)]
 
 
 # ----------------------------------------------------------------------
@@ -473,7 +574,9 @@ def detect_events(
 ):
     """
     Every labelled moment in the song, as
-    [{"t": seconds, "type": str, "strength": 0..1, "label": str, "note": str}].
+    [{"t": seconds, "type": str, "strength": 0..1, "label": str, "note": str,
+      "sync": str}] - `note` describes what the music does at that instant in
+    plain words, `sync` is what the picture should do about it.
 
     Sorted by time. When `max_events` bites, structural events (drops, stops,
     sections, builds) are kept whole and the hit stream is thinned to the
@@ -522,7 +625,8 @@ def detect_events(
             "type": kind,
             "strength": round(float(s), 2),
             "label": _strength_label(s),
-            "note": _NOTES.get(kind, ""),
+            "note": _sound_note(kind, s),
+            "sync": _SYNC.get(kind, ""),
         }
         for t, kind, s in found
         if float(t) <= duration and float(s) >= min_strength or kind in _STRUCTURAL
@@ -550,14 +654,24 @@ _LINE_RE = re.compile(
 )
 
 
-def events_table(events, duration=0.0, profile=None):
-    """The readable, re-parseable table. One event per line, absolute times."""
+def events_table(events, duration=0.0, profile=None, key=True):
+    """
+    The readable, re-parseable table. One event per line, absolute times.
+
+    The `#` header carries the staging key once, for the kinds that occur. It
+    is a comment, so `parse_events` skips it and the table still round-trips.
+    """
     lines = []
     if profile:
         from .music_support import profile_line
         lines.append(f"# {profile_line(profile)}")
     if duration:
         lines.append(f"# {fmt_time(duration)} of audio, {len(events)} event(s)")
+    if key and events:
+        keyed = sync_key_lines(events, indent="#   ")
+        if keyed:
+            lines.append("# SYNC KEY - what the picture should do on each kind of moment:")
+            lines.extend(keyed)
     for e in events:
         row = f"[{fmt_time(e['t'])}] {e['type']:<9} | {e['label']}"
         if e.get("note"):
@@ -593,7 +707,10 @@ def parse_events(text):
                     "type": str(e.get("type", "EVENT")).upper(),
                     "strength": strength,
                     "label": str(e.get("label") or _strength_label(strength)),
-                    "note": str(e.get("note") or ""),
+                    "note": str(e.get("note") or _sound_note(
+                        str(e.get("type", "")).upper(), strength)),
+                    "sync": str(e.get("sync") or _SYNC.get(
+                        str(e.get("type", "")).upper(), "")),
                 })
             out.sort(key=lambda e: e["t"])
             return out
@@ -608,12 +725,16 @@ def parse_events(text):
         if not m:
             continue
         minutes, seconds, kind, label, note = m.groups()
+        kind = kind.strip()
+        strength = {"light": 0.2, "solid": 0.5, "heavy": 0.9}.get((label or "").lower(), 0.5)
         out.append({
             "t": int(minutes) * 60 + float(seconds),
-            "type": kind.strip(),
-            "strength": {"light": 0.2, "solid": 0.5, "heavy": 0.9}.get((label or "").lower(), 0.5),
+            "type": kind,
+            "strength": strength,
             "label": (label or "solid").lower(),
-            "note": (note or "").strip(),
+            "note": (note or "").strip() or _sound_note(kind, strength),
+            # never written per row - the table carries it once, in the key
+            "sync": _SYNC.get(kind, ""),
         })
     out.sort(key=lambda e: e["t"])
     return out
@@ -640,11 +761,18 @@ def events_for_segment(events, start, end, limit=8):
 
 
 def segment_event_lines(events, start, end, limit=8):
-    """`events_for_segment` as the indented `[+s]` lines the writer's brief uses."""
+    """
+    `events_for_segment` as the indented `[+s]` lines the writer's brief uses.
+
+    Same three columns as the table so the two read as one format. The note
+    rides along - it is per-event and sized - while the sync guidance does
+    not: that is per KIND, and the writer states it once in its directives.
+    """
     lines = []
     for e in events_for_segment(events, start, end, limit):
-        note = f" - {e['note']}" if e.get("note") else ""
-        lines.append(f"    [+{e['offset']:5.2f}s] {e['type']} ({e['label']}){note}")
+        note = e.get("note") or _sound_note(e.get("type", ""), e.get("strength", 0.5))
+        row = f"    [+{e['offset']:5.2f}s] {e['type']:<9} | {e['label']}"
+        lines.append(f"{row} | {note}" if note else row)
     return lines
 
 
