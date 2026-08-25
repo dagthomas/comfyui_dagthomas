@@ -21,6 +21,7 @@ from .claude_code_music_video_writer import (
 from .music_support import SEGMENT_MODES
 from .common import (
     AUTO,
+    PROMPT_MODE_TOOLTIP,
     DIALOGUE_LANGUAGES,
     VISUAL_STYLES,
     reference_image_inputs,
@@ -103,11 +104,7 @@ class H3MusicVideoMinimal:
             }),
             "prompt_mode": (PROMPT_MODES, {
                 "default": PROMPT_MODES[1],  # Ref2VA - the pre-switch behaviour
-                "tooltip": (
-                    "REF writes against the reference-image guide (<Picture N> binds the "
-                    "performer photo); FL writes against the base guide, everything from "
-                    "scratch in words. Auto: REF when a picture is connected, FL otherwise."
-                ),
+                "tooltip": PROMPT_MODE_TOOLTIP,
             }),
         }
         optional = {}

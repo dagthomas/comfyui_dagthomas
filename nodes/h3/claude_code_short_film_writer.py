@@ -48,6 +48,10 @@ from .music_support import fmt_time, frames_for_seconds
 from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
+    PROMPT_MODES,
+    PROMPT_MODE_TOOLTIP,
+    blind_reference_directive,
+    resolve_prompt_mode,
     AUTO,
     LITERAL_CAMERA_DIRECTIVE,
     VISUAL_STYLES,
@@ -86,12 +90,6 @@ from .scenes_support import (
 )
 
 FILM_SKILLS = (CORE_SKILL, "h3-ref2va", "h3-style-craft")
-
-PROMPT_MODES = [
-    "Auto (Ref with images, FL without)",
-    "Ref2VA (bind reference images)",
-    "FL / T2VA (from scratch - pictures ignored)",
-]
 
 LENGTH_MODES = [
     "Scene count (use scene_count)",
@@ -222,11 +220,7 @@ class H3ClaudeCodeShortFilmWriter:
         # appended LAST so saved workflows keep their widget positions
         optional["prompt_mode"] = (PROMPT_MODES, {
             "default": PROMPT_MODES[1],  # Ref2VA
-            "tooltip": (
-                "Ref (guide_ref_en.md) binds attached pictures as <Picture N>; FL / "
-                "T2VA (guide_base_en.md) creates everything from scratch in words. "
-                "Auto picks Ref when images are connected."
-            ),
+            "tooltip": PROMPT_MODE_TOOLTIP,
         })
         optional.update(draft_model_input())
         optional["parallel_chunks"] = ("BOOLEAN", {
@@ -375,7 +369,7 @@ class H3ClaudeCodeShortFilmWriter:
         self, cast, manuscript, n, target_seconds, continuity_mode, visual_style,
         dialogue_language, wildness, include_on_screen_text, include_soundscape,
         include_non_diegetic_music, extra_instructions, rng,
-        wardrobe="", locations="", image_labels=(), image_notes="",
+        wardrobe="", locations="", image_labels=(), image_notes="", blind_refs=False,
         first=1, last=None, characters_only=True, scene_briefs="", prior_scenes=(),
         plan_only=False, plan_text="", avoid_synopses=(),
     ):
@@ -494,25 +488,32 @@ class H3ClaudeCodeShortFilmWriter:
         )
         if image_labels:
             labels_s = ", ".join(f"<Picture {i}>" for i in image_labels)
-            wardrobe_clause = (
-                " Take each pictured person's wardrobe lock from what the picture shows "
-                "and restate it in the shots."
-                if not (wardrobe or "").strip() else
-                " The picture fixes a person's face, hair and build, while the written "
-                "wardrobe lock below fixes the clothes - where they differ, the written "
-                "lock wins."
-            )
-            lines.append(
-                f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; "
-                "the video model receives the same pictures under the same labels in every "
-                "scene. "
-                + (characters_only_directive() + " Bind pictured people to their <Picture k> "
-                   "in subject_definitions."
-                   if characters_only else
-                   "Decide what each shows (use the notes below); bind pictured people to "
-                   "their <Picture k> in subject_definitions.")
-                + wardrobe_clause
-            )
+            if blind_refs:
+                lines.append(
+                    f"- Reference pictures: {len(image_labels)} attached to the VIDEO model, in "
+                    f"order {labels_s}; it receives the same pictures under the same labels in "
+                    "every scene. " + blind_reference_directive()
+                )
+            else:
+                wardrobe_clause = (
+                    " Take each pictured person's wardrobe lock from what the picture shows "
+                    "and restate it in the shots."
+                    if not (wardrobe or "").strip() else
+                    " The picture fixes a person's face, hair and build, while the written "
+                    "wardrobe lock below fixes the clothes - where they differ, the written "
+                    "lock wins."
+                )
+                lines.append(
+                    f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; "
+                    "the video model receives the same pictures under the same labels in every "
+                    "scene. "
+                    + (characters_only_directive() + " Bind pictured people to their <Picture k> "
+                       "in subject_definitions."
+                       if characters_only else
+                       "Decide what each shows (use the notes below); bind pictured people to "
+                       "their <Picture k> in subject_definitions.")
+                    + wardrobe_clause
+                )
             notes = (image_notes or "").strip()
             if notes:
                 lines.append("- Picture notes from the user:")
@@ -580,12 +581,20 @@ class H3ClaudeCodeShortFilmWriter:
         print(f"🎬 H3 Short Film Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)
-        mode = str(prompt_mode or PROMPT_MODES[1])
-        ref_mode = bool(references) if mode.startswith("Auto") else mode.startswith("Ref")
+        ref_mode, show_pictures = resolve_prompt_mode(prompt_mode, bool(references))
         if not ref_mode and references:
-            print(f"ℹ️ H3 Short Film Writer: FL prompt mode - {len(references)} picture(s) ignored for writing.")
+            print(
+                f"ℹ️ H3 Short Film Writer: FL prompt mode - the {len(references)} connected "
+                "picture(s) are ignored for writing (they still pass through the image outputs)."
+            )
             references = []
-        images = [downscale_for_vision(pil) for _, pil in references] or None
+        elif references and not show_pictures:
+            print(
+                f"ℹ️ H3 Short Film Writer: blind Ref2VA - {len(references)} picture(s) are bound "
+                "as <Picture N> for the video model, but not shown to the writer; it describes "
+                "them from the cast lines and image_notes."
+            )
+        images = ([downscale_for_vision(pil) for _, pil in references] or None) if show_pictures else None
         image_labels = tuple(range(1, len(references) + 1))
 
         template_vars, template_summary = collect_template_vars(cast_slots)
@@ -658,6 +667,7 @@ class H3ClaudeCodeShortFilmWriter:
                     include_non_diegetic_music,
                     directions_with_research(extra_instructions, research), rng_,
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
+                    blind_refs=not show_pictures,
                     image_notes=image_notes, first=lo, last=hi, characters_only=chars_only,
                     scene_briefs=scene_briefs, prior_scenes=prior,
                     plan_only=plan_only, plan_text=plan_text,

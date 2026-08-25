@@ -9,6 +9,7 @@
 import base64
 import io
 import os
+import re
 import socket
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -298,11 +299,22 @@ def split_model(model_name):
     return "gpt", model_name.strip()
 
 
-def _http_client():
+# How long one generation may take. A cloud call answers in seconds; a 30B model
+# on a home GPU writing four H3 scenes runs for many minutes, so local providers
+# get a much longer leash.
+_CLOUD_REQUEST_TIMEOUT = float(os.environ.get("APNEXT_LLM_REQUEST_TIMEOUT", "180"))
+_LOCAL_REQUEST_TIMEOUT = float(os.environ.get("APNEXT_LOCAL_LLM_REQUEST_TIMEOUT", "900"))
+
+
+def _request_timeout(provider):
+    return _LOCAL_REQUEST_TIMEOUT if provider in _LOCAL_PROVIDERS else _CLOUD_REQUEST_TIMEOUT
+
+
+def _http_client(timeout=_CLOUD_REQUEST_TIMEOUT):
     if httpx is None:
         return None
     try:
-        return httpx.Client(timeout=180.0)
+        return httpx.Client(timeout=timeout)
     except TypeError:
         return httpx.Client()
 
@@ -329,7 +341,7 @@ def _get_openai_compatible_client(provider, base_url_override=None):
         return cached
 
     kwargs = {"api_key": api_key}
-    http_client = _http_client()
+    http_client = _http_client(_request_timeout(provider))
     if http_client is not None:
         kwargs["http_client"] = http_client
     if base_url:
@@ -367,6 +379,40 @@ def _get_gemini_client():
     return client
 
 
+# ----------------------------------------------------------------------
+# Reasoning models
+# ----------------------------------------------------------------------
+
+# Hybrid reasoning models (Qwen3, DeepSeek-R1 distills, ...) put their thinking
+# in a <think> block ahead of the answer. Cloud providers return reasoning on a
+# separate channel, but an OpenAI-compatible local server usually leaves it
+# inline, where it corrupts every downstream parser - an H3 scene envelope
+# rehearsed inside a thought would be read as a real scene. Strip it here.
+_THINK_BLOCK_RE = re.compile(
+    r"\s*<(think|thinking|reasoning)>.*?</\1>\s*", re.DOTALL | re.IGNORECASE
+)
+_THINK_CLOSE_RE = re.compile(
+    r"^.*?</(?:think|thinking|reasoning)>\s*", re.DOTALL | re.IGNORECASE
+)
+_THINK_OPEN_RE = re.compile(r"<(?:think|thinking|reasoning)>", re.IGNORECASE)
+
+
+def strip_reasoning(text):
+    """The answer with any inline <think>...</think> reasoning removed."""
+    if not text or "<" not in text:
+        return text
+
+    cleaned = _THINK_BLOCK_RE.sub("\n", text).strip()
+    # A server that swallows the opening tag leaves a bare `</think>`: everything
+    # ahead of it is thought, not answer.
+    if not _THINK_OPEN_RE.search(cleaned) and _THINK_CLOSE_RE.match(cleaned):
+        cleaned = _THINK_CLOSE_RE.sub("", cleaned).strip()
+
+    # An unterminated block means the answer was cut off mid-thought; there is
+    # nothing better to hand back than what arrived.
+    return cleaned or text.strip()
+
+
 def _encode_png(image):
     """PIL image -> raw PNG bytes."""
     buffer = io.BytesIO()
@@ -396,6 +442,92 @@ def _history_as_text(history):
         lines.append(f"[{label}]\n{turn['content']}")
     lines.append("[User]\n")
     return "\n\n".join(lines)
+
+
+def _ollama_api_root(base_url=None):
+    """Ollama's own API root; `resolve_base_url` returns the OpenAI-shim `/v1`."""
+    url = resolve_base_url("ollama", base_url)
+    return url[:-3].rstrip("/") if url.endswith("/v1") else url
+
+
+def _post_json(url, payload, timeout):
+    """POST JSON and return the decoded reply, raising with the server's text."""
+    if httpx is not None:
+        response = httpx.post(url, json=payload, timeout=timeout)
+    else:
+        import requests
+
+        response = requests.post(url, json=payload, timeout=timeout)
+
+    if response.status_code != 200:
+        raise RuntimeError(f"{url} returned HTTP {response.status_code}: {response.text[:400]}")
+
+    try:
+        return response.json()
+    except ValueError as exc:
+        raise RuntimeError(f"{url} returned a non-JSON reply: {response.text[:400]}") from exc
+
+
+def _call_ollama_native(
+    model, user_prompt, system_prompt, images, temperature, seed, max_tokens,
+    base_url=None, history=None, num_ctx=0, think=None,
+):
+    """
+    One turn through Ollama's own `/api/chat` instead of its OpenAI shim.
+
+    The shim exposes no way to set `num_ctx`, and Ollama's default context is
+    picked from free VRAM - as little as 4k. The H3 system prompt alone is
+    9-15k tokens, so on a small default the rules the model must follow are
+    silently truncated away and it writes nothing usable. This path sets the
+    context explicitly, and can switch a hybrid reasoning model's thinking off
+    (`think`), which is both faster and cleaner than stripping it afterwards.
+    """
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.extend(_text_history(history))
+
+    turn = {"role": "user", "content": user_prompt}
+    if images:
+        # The native API takes bare base64 strings, not data: URLs.
+        turn["images"] = [base64.b64encode(_encode_png(i)).decode("utf-8") for i in images]
+    messages.append(turn)
+
+    options = {"temperature": temperature, "num_predict": max_tokens}
+    if num_ctx:
+        options["num_ctx"] = int(num_ctx)
+    if seed is not None and seed != -1:
+        options["seed"] = seed
+
+    payload = {"model": model, "messages": messages, "stream": False, "options": options}
+    if think is not None:
+        payload["think"] = bool(think)
+
+    url = f"{_ollama_api_root(base_url)}/api/chat"
+    try:
+        data = _post_json(url, payload, _LOCAL_REQUEST_TIMEOUT)
+    except RuntimeError as exc:
+        # Models without a thinking mode reject the flag outright; the request is
+        # perfectly good without it.
+        if think is not None and "think" in str(exc).lower():
+            payload.pop("think", None)
+            data = _post_json(url, payload, _LOCAL_REQUEST_TIMEOUT)
+        else:
+            vision_hint = (
+                " The model also has to be vision-capable to accept the attached image(s)."
+                if images
+                else ""
+            )
+            raise RuntimeError(
+                f"Ollama call to {url} failed: {exc} Check the server is running and that "
+                f"'{model}' is pulled (`ollama pull {model}`).{vision_hint}"
+            ) from exc
+
+    if isinstance(data, dict) and data.get("error"):
+        raise RuntimeError(f"Ollama returned an error: {data['error']}")
+
+    message = (data or {}).get("message") or {}
+    return strip_reasoning((message.get("content") or "").strip())
 
 
 def _call_openai_compatible(
@@ -450,7 +582,8 @@ def _call_openai_compatible(
             ) from exc
         raise
 
-    return (response.choices[0].message.content or "").strip()
+    text = (response.choices[0].message.content or "").strip()
+    return strip_reasoning(text) if provider in _LOCAL_PROVIDERS else text
 
 
 def _call_claude(model, user_prompt, system_prompt, images, temperature, max_tokens, history=None):
@@ -518,6 +651,8 @@ def call_llm(
     max_tokens=4000,
     base_url=None,
     history=None,
+    num_ctx=0,
+    think=None,
 ):
     """
     Send a prompt to whichever provider `model_name` selects.
@@ -528,13 +663,31 @@ def call_llm(
 
     `images` is a list of PIL images; providers that support vision receive them
     inline. `base_url` overrides where a local provider (`ollama:`, `lmstudio:`,
-    `local:`) is reached and is ignored for the cloud providers. Raises on
-    failure so callers can decide how to surface the error.
+    `local:`) is reached and is ignored for the cloud providers.
+
+    `num_ctx` (context window) and `think` (hybrid reasoning on/off) are Ollama
+    settings its OpenAI-compatible shim does not expose; passing either sends
+    the call through Ollama's own API instead. Both are ignored by every other
+    provider. Raises on failure so callers can decide how to surface the error.
     """
     resolved = resolve_model(model_name)
     provider, model = split_model(resolved)
 
-    if provider in _OPENAI_COMPATIBLE or provider in _LOCAL_PROVIDERS:
+    if provider == "ollama" and (num_ctx or think is not None):
+        text = _call_ollama_native(
+            model,
+            user_prompt,
+            system_prompt,
+            images,
+            temperature,
+            seed,
+            max_tokens,
+            base_url=base_url,
+            history=history,
+            num_ctx=num_ctx,
+            think=think,
+        )
+    elif provider in _OPENAI_COMPATIBLE or provider in _LOCAL_PROVIDERS:
         text = _call_openai_compatible(
             provider,
             model,

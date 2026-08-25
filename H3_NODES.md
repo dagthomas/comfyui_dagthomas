@@ -43,6 +43,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 Manual Scenes (script → lists)](#apnext-h3-manual-scenes-script--lists)
    - [APNext H3 Dailies Gate (print / punch up / cut)](#apnext-h3-dailies-gate-print--punch-up--cut)
    - [APNext H3 Song Analysis (BPM / intensity)](#apnext-h3-song-analysis-bpm--intensity)
+   - [APNext H3 Sound Events (bass hits / drops / stops)](#apnext-h3-sound-events-bass-hits--drops--stops)
    - [APNext H3 Resolution Planner (Crop Only)](#apnext-h3-resolution-planner-crop-only)
 7. [Viewing](#viewing)
    - [APNext H3 Prompt Preview](#apnext-h3-prompt-preview)
@@ -86,7 +87,7 @@ Every H3 node opens in a **short form** — the inputs you touch on every run (i
 
 The Claude Code block on every Claude Code node: `model`, `research` (web research before writing — agent CLIs only; on Codex it enables the web-search tool), `director` (loads the H3 director skills from `data/h3/skills` with their reference libraries — both CLIs read them from disk), `use_subscription` (hide the API key so the CLI bills your seat: `ANTHROPIC_API_KEY` for Claude Code, `OPENAI_API_KEY` for Codex), `timeout_seconds`, `seed`, and optional `resume_session_id` / `working_dir`. Sessions stick to their backend: Claude Code ids resume with Claude Code, `codex-` ids with Codex, `local-` ids with the same local model — feeding one to the wrong backend gives a clear error.
 
-When a node runs **off‑CLI** (Ollama etc.): `research` is ignored; the director skills are pasted into the system prompt (turn on the backend's `inline_skill_references` to paste the whole reference library too — much better prompts, needs a large context window: raise Ollama's `num_ctx`); `session_id` still works through a text‑only local session kept under ComfyUI's temp folder. A Claude Code session id cannot be resumed with a local model and vice versa — the error says so.
+When a node runs **off‑CLI** (Ollama etc.): `research` is ignored; the director skills are pasted into the system prompt (turn on the backend's `inline_skill_references` to paste the whole reference library too — much better prompts, but it pushes the system prompt past 45k tokens, so raise the backend's `num_ctx` to match); `session_id` still works through a text‑only local session kept under ComfyUI's temp folder. A Claude Code session id cannot be resumed with a local model and vice versa — the error says so.
 
 ### Template variables
 
@@ -201,7 +202,7 @@ A **cast** (from H3 Characters nodes on `cast_1..4`, or typed in `extra_cast`) +
 - Outputs `scenes` **(list)**, `durations` **(list)**, `scenes_text`, `synopsis`, `cast` (merged), `scene_count`, `session_id`, `info`, `image_1..9`.
 
 ### APNext H3 Music Video Writer
-`H3ClaudeCodeMusicVideoWriter` · Claude Code / `llm` · workflows: [`h3_music_video.json`](examples/h3/h3_music_video.json), [`h3_music_video_masked_audio.json`](examples/h3/h3_music_video_masked_audio.json), [`h3_music_video_masked_audio_briefs.json`](examples/h3/h3_music_video_masked_audio_briefs.json) (masked latent + Scene Briefs)
+`H3ClaudeCodeMusicVideoWriter` · Claude Code / `llm` · workflows: [`h3_music_video.json`](examples/h3/h3_music_video.json), [`h3_music_video_masked_audio.json`](examples/h3/h3_music_video_masked_audio.json), [`h3_music_video_masked_audio_briefs.json`](examples/h3/h3_music_video_masked_audio_briefs.json) (masked latent + Scene Briefs), [`h3_music_video_masked_audio_ollama.json`](examples/h3/h3_music_video_masked_audio_ollama.json) / [`h3_music_video_masked_audio_ollama_blindref.json`](examples/h3/h3_music_video_masked_audio_ollama_blindref.json) / [`h3_music_video_masked_audio_ollama_textonly.json`](examples/h3/h3_music_video_masked_audio_ollama_textonly.json) (written locally by Ollama)
 
 Turns a **song** into a whole music video:
 
@@ -210,7 +211,7 @@ Turns a **song** into a whole music video:
 3. **Writes one scene per piece** (four‑section prompt): the piece is `<Audio 1>`, reused 1:1 as the clip’s soundtrack; `performance_mode` *Performance* has the singer lip‑sync the piece’s lyric lines on camera (`<Subject 1> sings <d>[English] exact line</d> in sync with <Audio 1>`), *Narrative* answers the lyric with pictures, *Mixed* alternates; quiet pieces get long intimate shots, loud/peak pieces more cuts and the chorus look. Per‑seed plot and ending suggestions keep runs varied, and stock clichés (outer‑space imagery, camera‑into‑the‑mouth body journeys, walking‑away endings) are banned unless the concept asks. Long songs are written in chunks — by default **in parallel** (`parallel_chunks`, on): one planning call by `model` fixes the synopsis, the locks and a per‑scene plan, then up to 4 chunks at a time are drafted from that plan by `draft_model` (default **haiku** — several times faster than sonnet at drafting), and one continuity pass by `model` repairs any drift. Turn `parallel_chunks` off for the classic serial run where every chunk continues one session (`draft_model` still drafts chunks 2+ there; `same as model` disables the split entirely).
 4. Emits matching **lists**: `scenes` → the video node’s `prompt`; `lengths` (frame counts) → `length`; `audio_segments` → `ref_audio_1`; `durations`; plus `segment_table` (`01  0:00.00 – 0:15.08  (15.08s, 362 frames)  energy: peak  lyrics: …`), `scenes_text`, `synopsis`, `cast`, `scene_count`, `song_seconds`, `session_id`, `info`, `image_1..9`.
 
-Inputs: `audio` (Load Audio), `direction` (the concept), `lyrics` (`[0:15] line`, `0:15 line` or LRC `[00:15.20] line` for exact sync; `[Chorus]` tags kept; untimed lines spread evenly; empty = instrumental), `dialogue_language` (lyric language), cast (`cast_1..4` / `extra_cast` — an H3 Characters node in ✏️ custom mode with a `wardrobe` is made for the performer), locks, images, the Claude Code block, `llm`. Finish with **Scenes Join** (`replace_audio` = the song) → Create Video → Save Video. Code: `nodes/h3/claude_code_music_video_writer.py`, `nodes/h3/music_support.py`.
+Inputs: `audio` (Load Audio), `direction` (the concept), `lyrics` (`[0:15] line`, `0:15 line` or LRC `[00:15.20] line` for exact sync; `[Chorus]` tags kept; untimed lines spread evenly; empty = instrumental), `dialogue_language` (lyric language), cast (`cast_1..4` / `extra_cast` — an H3 Characters node in ✏️ custom mode with a `wardrobe` is made for the performer), locks, images, the Claude Code block, `llm`, and `sound_events` (an [H3 Sound Events](#apnext-h3-sound-events-bass-hits--drops--stops) node — every piece's brief then lists the bass hits, drops and stops inside that clip, timed from its own start, and the scenes are staged on them). Finish with **Scenes Join** (`replace_audio` = the song) → Create Video → Save Video. Code: `nodes/h3/claude_code_music_video_writer.py`, `nodes/h3/music_support.py`.
 
 ### APNext H3 Music Video (Minimal)
 `H3MusicVideoMinimal` · Claude Code / Codex / `llm` · workflow: [`h3_music_video_minimal.json`](examples/h3/h3_music_video_minimal.json)
@@ -267,13 +268,26 @@ Character / actor / franchise lookup from `data/h3/characters.tsv`, or your own 
 - Shoutout to [malcolmrey](https://huggingface.co/malcolmrey) for the crossover ideas and for finding valid characters — his [various dataset](https://huggingface.co/datasets/malcolmrey/various) is a great place to mine cast entries that the video model actually knows.
 
 ### APNext H3 LLM Backend (Ollama / local / API)
-`H3LLMBackend` · workflows: [`h3_llm_backend_crossover.json`](examples/h3/h3_llm_backend_crossover.json), [`h3_llm_backend_writer_refiner.json`](examples/h3/h3_llm_backend_writer_refiner.json)
+`H3LLMBackend` · workflows: [`h3_llm_backend_crossover.json`](examples/h3/h3_llm_backend_crossover.json), [`h3_llm_backend_writer_refiner.json`](examples/h3/h3_llm_backend_writer_refiner.json), [`h3_music_video_masked_audio_ollama.json`](examples/h3/h3_music_video_masked_audio_ollama.json), [`h3_music_video_masked_audio_ollama_textonly.json`](examples/h3/h3_music_video_masked_audio_ollama_textonly.json)
 
 One node that says *“write with THIS model”* for every Claude Code H3 node. Drag its **pink** `llm` output into any number of writers’ `llm` sockets.
 
 - `model`: every `ollama:` / `lmstudio:` / `local:` model your servers were serving at page load, the cloud API models, `auto-detect`, or **custom** + `model_name` (`ollama:qwen3:14b`, `lmstudio:qwen/qwen3-8b`, `local:my-model`, `claude:claude-sonnet-5`, `gpt:gpt-5.6`; a bare Ollama tag like `qwen3:8b` is understood).
+- **`num_ctx`** (Ollama only, default **32768**) — the context window the model is loaded with. **This is the setting that decides whether a local run works at all.** An H3 system prompt is ≈9k tokens text‑only and ≈15k with reference images, before your song, cast and lyrics; Ollama picks its own default from free VRAM — as little as **4k** — and silently truncates everything past it, starting with the rules the model is meant to follow. The result is not an error, it is a bad prompt. `0` leaves the server default alone. Ollama’s OpenAI‑compatible endpoint cannot set this, so a non‑zero `num_ctx` (or a `thinking` choice) sends the call through Ollama’s own `/api/chat` instead.
+- **`thinking`** (Ollama only, default **off**) — whether a hybrid reasoning model (Qwen3, DeepSeek‑R1, gpt‑oss…) reasons before answering. Off is much faster and the H3 rules are already in the system prompt. Any `<think>` block that arrives inline is stripped before parsing either way, on every local provider.
+- **📏 Show 1024 tokens** — a button on the node. Opens a modal with (1) a real block of exactly 1024 tokens, cut from the H3 guide and **counted with your own model’s tokenizer**, (2) what an H3 run actually spends against this node’s `num_ctx`, and (3) every pulled model’s KV‑cache cost per token, how much context fits in **this** machine’s VRAM and RAM, its `vision` / `thinking` / `tools` capabilities, and a **benchmark** button that measures real tokens/sec and the GPU/CPU split on the spot.
 - `base_url` (LAN box / other port; empty = the prefix default or `OLLAMA_BASE_URL` / `LMSTUDIO_BASE_URL` / `LOCAL_LLM_BASE_URL`), `temperature`, `max_tokens` (multi‑scene runs need room), `inline_skill_references`.
 - Outputs `llm` and `model_used`. Unplug the socket and the writer is back on Claude Code.
+
+**Vision, and how to do without it.** The writers’ `prompt_mode` decides two separate things — whether the pictures are bound as `<Picture N>`, and whether the *writing* model is shown them:
+
+| `prompt_mode` | Writer sees the picture | Video model gets it | Needs a vision model |
+|---|---|---|---|
+| **Ref2VA** | yes | yes | **yes** |
+| **Ref2VA blind** | no | yes | no |
+| **FL / T2VA** | no | no | no |
+
+**Ref2VA blind** is the one to reach for on a local model. Face consistency across clips comes from the picture reaching the *video* model, not from the writer having looked at it — so a text‑only model (a small quantised one, an uncensored fine‑tune, anything without the `vision` capability) still gets full reference‑image rendering. The writer is told explicitly that it cannot see the pictures, must never guess at their contents, and must take who is in each one from the cast lines and `image_notes` (`Image 1: Mara, the lead singer`); an unnoted picture binds to the cast member in the same position. Blind mode still uses the reference guide, so the system prompt is ≈15k rather than ≈9k tokens — but it sends no image data at all. The token modal tags every pulled model with `vision` / `thinking` / `tools`, read from its own metadata.
 
 ---
 
@@ -351,6 +365,28 @@ Wire the writer's `scenes` in, plus `durations` (keeps rewritten takes on their 
 
 The Music Video Writer's sound measurement as a **visible readout**: wire the song in and the node shows `~124 BPM | driving (intensity 68/100) | moderate dynamics (9 dB) | 2.7 onset spikes/s` right on the canvas — tempo from the autocorrelated onset envelope (0 = no steady pulse), aggression 0–100 from transient spikes + sustained loudness + punch, and the dynamics spread. Use it to sanity‑check a song before a long run or to pick `wildness` / `performance` settings; outputs `audio` (pass‑through), `profile` (the one‑liner, wireable into any STRING/context input), `bpm`, `intensity`, `label`. The writers measure this themselves either way — this node just makes it visible. Code: `nodes/h3/song_analysis.py`, maths in `nodes/h3/music_support.py`.
 
+### APNext H3 Sound Events (bass hits / drops / stops)
+`H3SoundEvents` · in every masked‑audio music‑video example, between Load Audio and the writer
+
+**Where the hits are**, so the picture can be staged ON the music rather than near it. Wire the song in and the node finds and labels every moment worth cutting on, with the second it lands at:
+
+```
+# ~156.5 BPM | mid-energy (intensity 57/100) | compressed dynamics (5.3 dB)
+[0:00.01] DROP      | heavy | the beat enters - full energy
+[0:00.30] BASS HIT  | heavy
+[0:03.63] BASS HIT  | solid
+[0:20.14] BUILD     | heavy | a riser into the next drop
+[0:27.99] STOP      | heavy | the music cuts out
+```
+
+Seven labels: **BASS HIT** (kick / low hit), **IMPACT** (crash, slam, snare that lands like a punch), **DROP** (the beat arriving), **STOP** (the music cutting out), **BUILD** (a riser into a drop), **SECTION** (the arrangement turning), **ACCENT** (bright top‑end — off by default, it floods).
+
+Wire `events` into the **Music Video Writer**'s `sound_events` socket and each piece's brief carries only the hits inside *that clip*, timed **from the clip's own start** — `[+2.10s] BASS HIT (heavy)` — which is something a director can stage; `[1:47.3]` is not. The writer is told to land a cut, a camera hit, a light change or a move on them, to open the frame on a DROP, freeze or empty it on a STOP, tighten through a BUILD, and never to invent a hit that is not listed.
+
+Widgets: `sensitivity` (0.25 hair‑trigger … 2.0 strict — it divides the median factor every detector scores against), `min_gap_seconds` (refractory gap, 0.18 s keeps a kick and its trailing snare apart), `max_events` (a cap so a 4‑minute track cannot bury the prompt — structure is always kept, only the hit stream is thinned), `min_strength`, and one toggle per detector. Outputs `audio` (pass‑through), `events` (the table), `events_json`, `summary`, `count`; the writer's `events_per_scene` caps how many reach any one brief.
+
+**How it works.** The detectors are the ones fitted against real tracks in [graphgen](https://github.com/dagthomas)'s `AudioEngine`, ported from real‑time Web Audio to a whole‑song torch pass — band‑limited **spectral flux** (positive per‑bin rises over 20–250 Hz) against an **adaptive median floor** for bass hits, since a kick lifts every low bin at once while a bassline note change moves only a few; time‑domain **RMS rise** for impacts, because a slam is a broadband transient the FFT smears out; and **signed loudness novelty** (the 1.5 s after minus the 1.5 s before) for drops and stops. Offline improves on the original twice over: the median window is *centred* on each frame instead of trailing it, and thresholds are relative to the whole track, so the first bar scores as accurately as the last. Where both hit detectors fire on one drum the label is settled by **which band dominates** in linear energy — low is a BASS HIT, bright is an IMPACT — so one hit never appears twice under two names. Pure torch, no librosa; ~0.5 s for a 200 s song. Code: `nodes/h3/sound_events.py`.
+
 ### APNext H3 Resolution Planner (Crop Only)
 `H3ResolutionPlannerCropOnly` · by gabbo
 
@@ -401,6 +437,9 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_music_video.json`](examples/h3/h3_music_video.json) | Load Audio → **Music Video Writer** (custom performer + wardrobe from a Characters node) → clips (`lengths` → `length`, `audio_segments` → `ref_audio_1`) → each clip saved directly (VAE Decode → Create Video → Save Video). |
 | [`h3_music_video_masked_audio.json`](examples/h3/h3_music_video_masked_audio.json) | The strongest lip‑sync: writer in `audio_mode` = *Masked latent* → **AudioSeparation** vocal stem + `clip_starts` → **H3 Song Audio + Masked Video Context** (the song slice written into the H3 audio latent, protected from denoising) → sampler → each clip saved directly. The song is deliberately *not* wired to `ref_audio`. Needs ComfyUI‑H3‑Motion‑Context‑MultiRef + audio‑separation‑nodes. |
 | [`h3_music_video_masked_audio_briefs.json`](examples/h3/h3_music_video_masked_audio_briefs.json) | The masked‑latent music video **plus custom scenes**: three chained **H3 Scene Brief** nodes → the writer's `scene_briefs` — brief 1 pinned to scene 01, the rest filling in order, every unplanned piece still the model's to invent. |
+| [`h3_music_video_masked_audio_ollama.json`](examples/h3/h3_music_video_masked_audio_ollama.json) | The masked‑latent music video **written entirely locally**: an **H3 LLM Backend** on `ollama:qwen3.8:27b` (`num_ctx` 32768, thinking off) drives the writer — no API key, nothing leaves the machine. The model is multimodal, so a performer photo goes to both the writer’s `image_1` and the video node’s `ref_image_0` and `prompt_mode` is **Ref2VA**. Notes on the canvas cover the Ollama setup and the local‑model settings. |
+| [`h3_music_video_masked_audio_ollama_blindref.json`](examples/h3/h3_music_video_masked_audio_ollama_blindref.json) | **Blind Ref2VA** — the performer photo reaches the video node as `<Picture 1>` and is rendered normally, but the writer never sees a pixel and takes who is in it from `image_notes`. Reference‑image quality on a model with **no vision at all**; the usual pick for a local or uncensored model. |
+| [`h3_music_video_masked_audio_ollama_textonly.json`](examples/h3/h3_music_video_masked_audio_ollama_textonly.json) | The same local run with **no images anywhere** — `prompt_mode` = **FL / T2VA**, so it works on any text model. You write the performer, the wardrobe, the locations and the concept; whatever you leave out, the model invents differently in every scene. |
 | [`h3_music_video_masked_audio_turbo.json`](examples/h3/h3_music_video_masked_audio_turbo.json) | The masked‑latent music video with a **speed render chain**: turbo LoRA → chunked feed‑forward → Sage + LowVRAM + SoL attention → EasyCache → Spectrum, sampled with **euler at 4 steps**. Needs the Spectrum / SoL / turbo patch packs and the turbo LoRA. |
 | [`h3_short_film.json`](examples/h3/h3_short_film.json) | **Short Film Writer**: a manuscript adapted into a whole film — scene count or target length, verbatim dialogue, Beats plan, generated dialogue/score as the film's sound, each clip saved directly. `h3_short_film_turbo.json` renders the same with the 4‑step turbo chain. |
 | [`h3_short_film_manual.json`](examples/h3/h3_short_film_manual.json) | The turbo short film with **hand‑authored scenes**: an **H3 Manual Scenes** node holds the whole script (the 11‑scene *Lighthouse Letter* example) — edit the envelopes, no LLM call, render directly with the 4‑step turbo chain. |
@@ -412,7 +451,7 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_presentation_dailies_gate.json`](examples/h3/h3_presentation_dailies_gate.json) | The Presentation Writer with the Dailies Gate — check the `script`'s fact fidelity on the desk and punch up takes before rendering the talk. |
 | [`h3_face_refine_mouthguard.json`](examples/h3/h3_face_refine_mouthguard.json) | **Mouth‑guarded face refine**: a rendered pass‑1 clip 2×‑upscaled → **Refine Encode** → Ref2VA re‑render toward face reference images, with the **Mouth Guard** protecting the lips + soundtrack so the lip‑sync survives; MediaPipe lips mask, muted same‑seed A/B and pixel‑composite branches. |
 
-Every music‑video / presentation example defaults to **seed -1 (randomize)** — a queue always writes a brand‑new video (pin the seed to use the Review node's cached Continue flow) — and **saves each scene's clip directly** (VAE Decode → Create Video → Save Video, one file per clip); re‑add **H3 Scenes Join** before Create Video if you want one stitched file. In the music workflows every saved clip carries **its original slice of the song** (the writer's `audio_segments`, frame‑aligned) — never the model's re‑rendered audio, and in the masked workflows never the vocals‑only stem; the presentations keep the generated voice, which is their real soundtrack. The music examples also carry an **H3 Song Analysis** readout next to Load Audio, showing the measured BPM / intensity the writer steers by.
+Every music‑video / presentation example defaults to **seed -1 (randomize)** — a queue always writes a brand‑new video (pin the seed to use the Review node's cached Continue flow) — and **saves each scene's clip directly** (VAE Decode → Create Video → Save Video, one file per clip); re‑add **H3 Scenes Join** before Create Video if you want one stitched file. In the music workflows every saved clip carries **its original slice of the song** (the writer's `audio_segments`, frame‑aligned) — never the model's re‑rendered audio, and in the masked workflows never the vocals‑only stem; the presentations keep the generated voice, which is their real soundtrack. The music examples also carry an **H3 Song Analysis** readout next to Load Audio, showing the measured BPM / intensity the writer steers by, and every masked‑audio (latent‑audio) example now also carries an **H3 Sound Events** node feeding the writer's `sound_events` socket, so each scene is written against the bass hits, drops and stops that actually land inside its own clip.
 
 Every example has an **H3 Prompt Preview** wired to the writer’s prompt / scenes‑text output.
 

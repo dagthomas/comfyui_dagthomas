@@ -540,6 +540,13 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.sound_events import H3SoundEvents
+    NEW_MAPPINGS["H3SoundEvents"] = H3SoundEvents
+    NEW_DISPLAY_MAPPINGS["H3SoundEvents"] = "APNext H3 Sound Events (bass hits / drops / stops)"
+except Exception:
+    pass
+
+try:
     from .nodes.h3.scene_counter import H3SceneCounter
     NEW_MAPPINGS["H3SceneCounter"] = H3SceneCounter
     NEW_DISPLAY_MAPPINGS["H3SceneCounter"] = "APNext H3 Scene Counter"

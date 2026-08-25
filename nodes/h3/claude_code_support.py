@@ -212,8 +212,9 @@ def local_llm_options(llm=None):
     The backend settings an H3 node passes through to `run_h3_claude_code`.
 
     `llm` is the dict an `APNext H3 LLM Backend` node puts on its output (model,
-    base_url, temperature, inline_references, max_tokens). None = nothing
-    connected, so the node's own model dropdown decides.
+    base_url, temperature, inline_references, max_tokens, and the Ollama-only
+    num_ctx / think). None = nothing connected, so the node's own model dropdown
+    decides.
     """
     llm = dict(llm or {})
     return {
@@ -222,6 +223,8 @@ def local_llm_options(llm=None):
         "temperature": float(llm.get("temperature", 1.0) or 0.0),
         "inline_references": bool(llm.get("inline_references", False)),
         "max_tokens": int(llm.get("max_tokens", 8000) or 8000),
+        "num_ctx": int(llm.get("num_ctx", 0) or 0),
+        "think": llm.get("think"),
     }
 
 
@@ -327,6 +330,8 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
         max_tokens=local.get("max_tokens", 8000),
         base_url=local.get("base_url") or None,
         history=history,
+        num_ctx=local.get("num_ctx", 0),
+        think=local.get("think"),
     )
     duration = time.monotonic() - started
 

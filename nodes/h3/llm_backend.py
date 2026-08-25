@@ -24,6 +24,11 @@ from ...utils.llm_router import (
 from .claude_code_support import LLM_SOCKET_TYPE, list_codex_models
 
 _CUSTOM = "custom (use model_name below)"
+
+# Hybrid reasoning models (Qwen3, DeepSeek-R1, ...) think before answering.
+# The thinking is dead weight here - the H3 format is spelled out in the system
+# prompt - and on a local box it can triple the wall-clock time of a run.
+_THINKING = ["off (faster - recommended)", "on", "model default"]
 _KNOWN_PREFIXES = set(LOCAL_PROVIDERS) | {"claude", "gpt", "gemini", "grok", "groq", "codex", CLAUDE_CODE_PROVIDER}
 
 
@@ -92,6 +97,30 @@ class H3LLMBackend:
                         "(OLLAMA_CONTEXT_LENGTH or a Modelfile), the official guide alone is ~12k tokens."
                     ),
                 }),
+                # appended LAST so saved workflows keep their widget positions
+                "num_ctx": ("INT", {
+                    "default": 32768, "min": 0, "max": 1048576, "step": 1024,
+                    "tooltip": (
+                        "Ollama only: the context window to load the model with. Ollama picks "
+                        "its own default from free VRAM - as little as 4k - and an H3 system "
+                        "prompt is 9-15k tokens on its own, so on a small default the writing "
+                        "rules are silently cut off and the scenes come back unusable. 32k is "
+                        "enough for a text-only run, 40k+ with reference images or "
+                        "inline_skill_references. 0 = leave the server's default alone. "
+                        "Ignored by every other provider (LM Studio, vLLM and the cloud APIs "
+                        "set their context elsewhere)."
+                    ),
+                }),
+                "thinking": (_THINKING, {
+                    "default": _THINKING[0],
+                    "tooltip": (
+                        "Ollama only: whether a hybrid reasoning model (Qwen3, DeepSeek-R1, "
+                        "gpt-oss, ...) reasons before answering. Off is much faster and the "
+                        "H3 rules are already in the system prompt. Any <think> block that "
+                        "does arrive is stripped before parsing either way. Models with no "
+                        "thinking mode ignore this."
+                    ),
+                }),
             },
         }
 
@@ -105,7 +134,8 @@ class H3LLMBackend:
         "an API model instead of the Claude Code CLI."
     )
 
-    def build(self, model, model_name, base_url, temperature, max_tokens, inline_skill_references):
+    def build(self, model, model_name, base_url, temperature, max_tokens,
+              inline_skill_references, num_ctx=0, thinking=None):
         chosen = (model_name or "").strip() if model == _CUSTOM else (model or "").strip()
         if not chosen:
             raise ValueError("H3 LLM Backend: pick a model or fill in model_name.")
@@ -114,11 +144,15 @@ class H3LLMBackend:
             if prefix not in _KNOWN_PREFIXES:
                 # 'qwen3:8b' / 'llama3.1' are Ollama tags, not provider strings
                 chosen = f"ollama:{chosen}"
+        mode = str(thinking or _THINKING[0])
         llm = {
             "model": chosen,
             "base_url": (base_url or "").strip(),
             "temperature": float(temperature),
             "max_tokens": int(max_tokens),
             "inline_references": bool(inline_skill_references),
+            "num_ctx": int(num_ctx or 0),
+            # None = say nothing and let the model do whatever it does by default
+            "think": None if mode.startswith("model default") else mode.startswith("on"),
         }
         return (llm, chosen)

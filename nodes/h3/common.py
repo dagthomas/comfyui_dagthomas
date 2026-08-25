@@ -580,6 +580,79 @@ MAX_REFERENCE_IMAGES = 9
 REFERENCE_IMAGE_NAMES = tuple(f"image_{i}" for i in range(1, MAX_REFERENCE_IMAGES + 1))
 
 
+# Which official prompt guide the scenes follow, and whether the writing model
+# is shown the reference pictures at all. Ref (guide_ref_en.md) binds the
+# attached pictures as <Picture N>; FL (guide_base_en.md) writes everything from
+# scratch in words.
+#
+# "Ref2VA blind" is the middle setting, and the reason the two decisions are
+# separate: the video model still receives every picture under the same label,
+# but the writer never sees one. It is what makes a model WITHOUT VISION - a
+# text-only local model, an uncensored fine-tune, a small quantised model -
+# usable with reference images, and it is also cheaper: no image is encoded
+# into the prompt at all.
+PROMPT_MODES = [
+    "Auto (Ref with images, FL without)",
+    "Ref2VA (bind reference images)",
+    "Ref2VA blind (bind pictures, model never sees them)",
+    "FL / T2VA (from scratch - pictures ignored)",
+]
+
+
+PROMPT_MODE_TOOLTIP = (
+    "Which official prompt guide the scenes follow, and whether the WRITING model is "
+    "shown the reference pictures.\n\n"
+    "Ref2VA (guide_ref_en.md): pictures are bound as <Picture N> and also sent to the "
+    "writer, so it describes the real face. Needs a vision-capable model.\n\n"
+    "Ref2VA blind: the video model still receives every picture under the same label, "
+    "but the writer never sees one - it takes who is in each picture from the cast "
+    "lines and image_notes. Use it with any model WITHOUT vision (a text-only local "
+    "model, an uncensored fine-tune), and write an `Image 1: ...` note per picture.\n\n"
+    "FL / T2VA (guide_base_en.md): everything from scratch in words. Pictures are "
+    "ignored entirely and no <Picture N> label is written - they still pass through "
+    "the image outputs.\n\n"
+    "Auto picks Ref2VA when pictures are connected, FL otherwise."
+)
+
+
+def resolve_prompt_mode(prompt_mode, has_references):
+    """
+    (ref_mode, show_pictures) for one `prompt_mode` choice.
+
+    `ref_mode` - write against guide_ref_en.md and label the pictures
+    <Picture N>. `show_pictures` - additionally send the pixels to the writing
+    model, which only a vision-capable model can accept.
+
+    An empty / missing value (a workflow saved before the widget existed)
+    resolves to plain Ref2VA, the pre-switch behaviour.
+    """
+    mode = str(prompt_mode or PROMPT_MODES[1])
+    if mode.startswith("Auto"):
+        return has_references, has_references
+    ref = mode.startswith("Ref")
+    return ref, ref and "blind" not in mode.lower()
+
+
+def blind_reference_directive():
+    """
+    The picture rules for a writer that cannot see the pictures.
+
+    Without this a blind model happily invents what is in a photo it was never
+    shown - "a woman in a red dress against a sunset" - and the video model
+    then gets a prompt describing someone other than the person attached.
+    """
+    return (
+        "You CANNOT see these pictures - they are attached to the video model, not to you. "
+        "Never describe, guess at or invent what any picture contains, and never write "
+        "phrases like 'as seen in the picture'. Write every person's appearance from the "
+        "CAST lines, the wardrobe lock and the picture notes ONLY, then attach the label to "
+        "the person the notes name, e.g. `<Subject 1> Mara (S1) <Picture 1>, a woman in her "
+        "early 30s with a platinum pixie cut, wearing ...`. A picture with no note belongs "
+        "to the cast member in the same position in cast order. If nothing identifies a "
+        "picture, still bind it in order and describe that person from the brief."
+    )
+
+
 def reference_image_inputs():
     """Optional IMAGE sockets image_1..image_9. Keep them last so the UI can autogrow."""
     return {

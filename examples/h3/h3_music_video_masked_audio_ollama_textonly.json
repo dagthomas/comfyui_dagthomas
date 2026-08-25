@@ -1,8 +1,8 @@
 {
-  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "id": "b2d8e1c3-7c42-4f99-8a15-3be62daf8802",
   "revision": 0,
-  "last_node_id": 193,
-  "last_link_id": 410,
+  "last_node_id": 196,
+  "last_link_id": 411,
   "nodes": [
     {
       "id": 119,
@@ -778,10 +778,10 @@
         "(all)",
         0,
         "fixed",
-        "Lena: a singer in her early 30s, platinum pixie cut, sharp cheekbones",
-        "red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings"
+        "Lead singer: Mara, a woman in her early 30s, platinum pixie cut, sharp cheekbones, pale grey eyes, a small scar through her left eyebrow",
+        "Lead singer: red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings, chipped black nail polish"
       ],
-      "title": "H3 Characters — custom performer + wardrobe",
+      "title": "H3 Characters - type the performer here",
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -805,7 +805,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Original sound:** every saved clip carries its ORIGINAL slice of the song (the writer's `audio_segments`, cut on the same frame grid) - not the model-generated audio, and in the masked workflow not the vocals-only stem. Wire Create Video's `audio` back to VAE Decode Audio if you want to hear what the model generated."
+        "# H3 Music Video - masked audio, written locally by Ollama\n\nThe song is the clock. The writer cuts it into 5-15 s pieces on the music (timed\nlyrics make cuts land before a line), writes one H3 scene per piece, and emits\nmatching lists - `scenes`, `lengths`, `audio_segments`, `clip_starts` - that the\nvideo node renders one clip at a time.\n\n**Masked audio** is what makes the lip-sync work: each clip's real slice of the\nsong is encoded and written straight into the H3 audio latent with the mask held\nat 0, so the model generates picture against a frozen, real vocal instead of being\nasked politely to sync. That is why the song is *not* wired to `ref_audio`.\n\n**What is different here:** the scenes are written by a local model. The **Ollama\nbackend** node overrides the writer's `model` dropdown - the Claude Code CLI is\nnever called, no API key is needed, nothing leaves this machine. It is a **text-only** run: no pictures anywhere, so it works on any text model - the look comes entirely from what you type.\n\n**Output:** every piece is decoded and saved as its own file by H3 Save Clip,\ncarrying its original slice of the song. Stitch them externally, or add\n**H3 Scenes Join** with `replace_audio` = the LoadAudio output for one file with\nthe full mix.\n\n**Seed:** the writer's seed is -1 (randomize) - every queue writes a brand-new\nvideo. Set a fixed number to re-render the same scenes.\n"
       ],
       "title": "How this works",
       "color": "#222",
@@ -858,7 +858,7 @@
         {
           "name": "llm",
           "type": "APNEXT_LLM",
-          "link": null,
+          "link": 409,
           "shape": 7
         },
         {
@@ -870,7 +870,7 @@
         {
           "name": "sound_events",
           "type": "STRING",
-          "link": 410,
+          "link": 411,
           "shape": 7
         }
       ],
@@ -1010,8 +1010,8 @@
         "cnr_id": "comfyui_dagthomas"
       },
       "widgets_values": [
-        "",
-        "",
+        "A lone driver leaving a rain-soaked city at 2 a.m. Neon and sodium light smear across the wet asphalt and the windscreen; the skyline shrinks in the mirrors. The chorus opens up to the wide empty bridge, the verses stay tight inside the car. It ends on the first grey light of dawn over still water.",
+        "[0:00] City lights are bleeding through the window\n[0:06] I keep the engine running just in case\n[0:12] Every road out of here has your name on it\n[0:18] So I drive until the morning takes my place\n",
         "Performance (the singer lip-syncs the lyrics on camera)",
         "Auto (cut on the music)",
         15.0,
@@ -1027,11 +1027,11 @@
         1800,
         -1,
         "randomize",
+        "Lead singer: Mara, a woman in her early 30s, platinum pixie cut, sharp cheekbones, pale grey eyes, a small scar through her left eyebrow",
         "",
         "",
-        "",
-        "",
-        "",
+        "Lead singer: red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings, chipped black nail polish",
+        "Interior of a 1990s sedan at night: dark dash with one lit gauge cluster, black leather steering wheel, rain beading on the side glass",
         true,
         "",
         "",
@@ -1041,16 +1041,16 @@
         "Characters only (ignore picture backgrounds)",
         "Masked latent (song injected into the audio latent)",
         true,
-        4,
-        "Ref2VA (bind reference images)",
+        2,
+        "FL / T2VA (from scratch - pictures ignored)",
         "haiku",
-        true,
+        false,
         "",
-        6,
+        0,
         true,
         6
       ],
-      "title": "H3 Music Video Writer"
+      "title": "H3 Music Video Writer - text only (FL / T2VA)"
     },
     {
       "id": 164,
@@ -1075,7 +1075,7 @@
             319,
             327,
             401,
-            409
+            410
           ]
         }
       ],
@@ -1364,6 +1364,100 @@
     },
     {
       "id": 193,
+      "type": "H3LLMBackend",
+      "pos": [
+        -1490,
+        6260
+      ],
+      "size": [
+        400,
+        210
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "links": [
+            409
+          ]
+        },
+        {
+          "name": "model_used",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Ollama backend - qwen3.8:27b writes the scenes",
+      "properties": {
+        "Node name for S&R": "H3LLMBackend"
+      },
+      "widgets_values": [
+        "custom (use model_name below)",
+        "ollama:qwen3.8:27b",
+        "",
+        0.9,
+        8000,
+        false,
+        32768,
+        "off (faster - recommended)"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 194,
+      "type": "MarkdownNote",
+      "pos": [
+        -2600,
+        5510
+      ],
+      "size": [
+        700,
+        940
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "title": "Ollama setup",
+      "properties": {},
+      "widgets_values": [
+        "# Ollama setup - read this first\n\nThe whole video is written by **ollama:qwen3.8:27b** on this machine. Nothing is sent anywhere.\n\n```\nollama pull qwen3.8:27b\nollama serve\n```\n\nThen reload the ComfyUI page so the backend node can see the model.\n\n## num_ctx is the setting that matters\n\nThe H3 system prompt is **9k tokens** (text-only) to **15k tokens** (with reference\nimages) before your song, cast and lyrics are added. Ollama picks its own context\nfrom free VRAM - as little as 4k - and **silently truncates** everything past it,\nstarting with the rules the model is supposed to follow. The result is not an\nerror, it is a bad prompt.\n\nThe **Ollama backend** node sets `num_ctx` explicitly (32768 here). Press\n**📏 Show 1024 tokens** on that node to see what a token actually is, what an H3\nrun spends, and how much context fits in this machine's VRAM and RAM.\n\n## The other two settings\n\n- **thinking = off.** qwen3.8 reasons before answering by default. The H3 rules are\n  already in the system prompt, so the reasoning is pure wall-clock cost. Any\n  `<think>` block that does arrive is stripped before parsing either way.\n- **scenes_per_call = 2, parallel_chunks = off.** One local model, one GPU: four\n  concurrent chunks just queue behind each other. Small serial chunks finish inside\n  the timeout and each one keeps the whole conversation in context.\n  (`parallel_chunks = on` only pays off with `OLLAMA_NUM_PARALLEL` raised.)\n\n## Local-model tips\n\n- Keep **locations** to one or two entries. The continuity pass asks the model to\n  honour every location anchor in every scene, and a local model will obey too\n  literally - cramming all of them into one shot.\n- Give the performer a **name** in `extra_cast` (\"Lead singer: Mara, ...\").\n  Without one the model invents a new name for them in each chunk.\n- A 27B model at Q4 takes ~20-40 s per scene chunk. A 3-minute song is\n  ~18 pieces, so budget 5-10 minutes for the writing pass.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "id": 195,
+      "type": "MarkdownNote",
+      "pos": [
+        -2600,
+        6500
+      ],
+      "size": [
+        700,
+        620
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "title": "Text only - you describe everything",
+      "properties": {},
+      "widgets_values": [
+        "# Text only - you describe everything\n\nNo images anywhere in this graph. `prompt_mode` is **FL / T2VA**, the guide that\nbuilds the shot out of words alone, so it runs on any text model - plain\n`qwen3`, `llama3.1`, `mistral`, a 7B on a laptop. Nothing is sent to a vision\nmodel, because there is nothing to send.\n\nThe trade: **the model only knows what you type.** Whatever you leave out, it\ninvents, and it invents something different in every scene. Fill in all four:\n\n- **extra_cast** - who they are. Give them a NAME, an age, hair, face. Without a\n  name a local model renames them halfway through the video.\n- **wardrobe** - the exact outfit, down to the details you want repeated. This is\n  locked and restated to the model in every chunk, so it is what holds a look\n  together across 18 clips.\n- **locations** - where it happens. Keep it to **one or two** entries: the\n  continuity pass asks for every anchor in every scene, and a local model obeys\n  too literally, cramming all of them into one shot.\n- **direction** - the concept, the arc, what the chorus looks like against the\n  verses.\n\n`enforce_wardrobe` is on: after the scenes are written, a repair pass checks the\nwardrobe and location anchors and asks the model to fix whatever drifted.\n\nSwitching a text-only run to reference images later: connect a LoadImage to\n`image_1` (and to the video node's `ref_image_0`), set `prompt_mode = Ref2VA`,\nand point the backend at a model with the `vision` capability.\n"
+      ],
+      "color": "#3a2a4a",
+      "bgcolor": "#2a1e35",
+      "inputs": [],
+      "outputs": []
+    },
+    {
+      "id": 196,
       "type": "H3SoundEvents",
       "pos": [
         -1490,
@@ -1380,7 +1474,7 @@
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 409
+          "link": 410
         }
       ],
       "outputs": [
@@ -1393,7 +1487,7 @@
           "name": "events",
           "type": "STRING",
           "links": [
-            410
+            411
           ]
         },
         {
@@ -1675,15 +1769,23 @@
     ],
     [
       409,
+      193,
+      0,
+      163,
+      5,
+      "APNEXT_LLM"
+    ],
+    [
+      410,
       164,
       0,
-      193,
+      196,
       0,
       "AUDIO"
     ],
     [
-      410,
-      193,
+      411,
+      196,
       1,
       163,
       7,

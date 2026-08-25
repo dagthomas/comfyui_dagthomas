@@ -47,6 +47,10 @@ from .music_support import fmt_time, frames_for_seconds
 from .scenes_store import recent_synopses, save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
+    PROMPT_MODES,
+    PROMPT_MODE_TOOLTIP,
+    blind_reference_directive,
+    resolve_prompt_mode,
     scale_reference_passthrough,
     AUTO,
     LITERAL_CAMERA_DIRECTIVE,
@@ -90,12 +94,6 @@ PRESENTATION_SKILLS = (CORE_SKILL, "h3-ref2va", "h3-style-craft")
 
 # REF writes against the reference-image guide (<Picture N> binds the
 # presenter photo); FL writes against the base guide, from scratch in words.
-PROMPT_MODES = [
-    "Auto (Ref with images, FL without)",
-    "Ref2VA (bind reference images)",
-    "FL / T2VA (from scratch - pictures ignored)",
-]
-
 _SCENE_FIELDS = (
     "subject_definitions",
     "integrated_multimodal_description",
@@ -379,13 +377,7 @@ class H3ClaudeCodePresentationWriter:
         # appended LAST so saved workflows keep their widget positions
         optional["prompt_mode"] = (PROMPT_MODES, {
             "default": PROMPT_MODES[1],  # Ref2VA - the pre-switch behaviour
-            "tooltip": (
-                "Which official prompt guide the scenes follow. Ref (guide_ref_en.md) "
-                "binds the attached pictures as <Picture N> - use it with a presenter "
-                "photo. FL / T2VA (guide_base_en.md) creates the presenter from scratch "
-                "in words; pictures are ignored. Auto picks Ref when images are "
-                "connected, FL otherwise."
-            ),
+            "tooltip": PROMPT_MODE_TOOLTIP,
         })
         optional.update(draft_model_input())
         optional["parallel_chunks"] = ("BOOLEAN", {
@@ -575,6 +567,7 @@ class H3ClaudeCodePresentationWriter:
         wardrobe="",
         locations="",
         image_labels=(),
+        blind_refs=False,
         image_notes="",
         first=1,
         last=None,
@@ -733,22 +726,29 @@ class H3ClaudeCodePresentationWriter:
         )
         if image_labels:
             labels_s = ", ".join(f"<Picture {i}>" for i in image_labels)
-            wardrobe_clause = (
-                " and take their wardrobe lock from the picture."
-                if not (wardrobe or "").strip() else
-                "; the picture fixes their face, hair and build, while the written "
-                "wardrobe lock below fixes the clothes - where they differ, the written "
-                "lock wins."
-            )
-            lines.append(
-                f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; the "
-                "video model receives the same pictures under the same labels in every scene. "
-                + (characters_only_directive() + " Bind pictured people to their "
-                   "<Picture k> in subject_definitions" + wardrobe_clause
-                   if characters_only else
-                   "Decide what each shows (use the notes below); bind pictured people to "
-                   "their <Picture k> in subject_definitions" + wardrobe_clause)
-            )
+            if blind_refs:
+                lines.append(
+                    f"- Reference pictures: {len(image_labels)} attached to the VIDEO model, in "
+                    f"order {labels_s}; it receives the same pictures under the same labels in "
+                    "every scene. " + blind_reference_directive()
+                )
+            else:
+                wardrobe_clause = (
+                    " and take their wardrobe lock from the picture."
+                    if not (wardrobe or "").strip() else
+                    "; the picture fixes their face, hair and build, while the written "
+                    "wardrobe lock below fixes the clothes - where they differ, the written "
+                    "lock wins."
+                )
+                lines.append(
+                    f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; the "
+                    "video model receives the same pictures under the same labels in every scene. "
+                    + (characters_only_directive() + " Bind pictured people to their "
+                       "<Picture k> in subject_definitions" + wardrobe_clause
+                       if characters_only else
+                       "Decide what each shows (use the notes below); bind pictured people to "
+                       "their <Picture k> in subject_definitions" + wardrobe_clause)
+                )
             notes = (image_notes or "").strip()
             if notes:
                 lines.append("- Picture notes from the user:")
@@ -856,15 +856,20 @@ class H3ClaudeCodePresentationWriter:
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
         # guide_base_en.md; Auto follows whether pictures are connected. Empty /
         # missing (stale workflows) defaults to Ref - the pre-switch behaviour.
-        mode = str(prompt_mode or PROMPT_MODES[1])
-        ref_mode = bool(references) if mode.startswith("Auto") else mode.startswith("Ref")
+        ref_mode, show_pictures = resolve_prompt_mode(prompt_mode, bool(references))
         if not ref_mode and references:
             print(
                 f"ℹ️ H3 Presentation Writer: FL prompt mode - the {len(references)} connected "
                 "picture(s) are ignored for writing (they still pass through the image outputs)."
             )
             references = []
-        images = [downscale_for_vision(pil) for _, pil in references] or None
+        elif references and not show_pictures:
+            print(
+                f"ℹ️ H3 Presentation Writer: blind Ref2VA - {len(references)} picture(s) are bound "
+                "as <Picture N> for the video model, but not shown to the writer; it describes "
+                "them from the cast lines and image_notes."
+            )
+        images = ([downscale_for_vision(pil) for _, pil in references] or None) if show_pictures else None
         image_labels = tuple(range(1, len(references) + 1))
         template_vars, template_summary = collect_template_vars(cast_slots)
         (source_material, direction, extra_cast, wardrobe, locations, extra_instructions,
@@ -936,6 +941,7 @@ class H3ClaudeCodePresentationWriter:
                     include_non_diegetic_music,
                     directions_with_research(extra_instructions, research),
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
+                    blind_refs=not show_pictures,
                     image_notes=image_notes, first=lo, last=hi,
                     characters_only=chars_only, scene_briefs=scene_briefs,
                     prior_scenes=prior, plan_only=plan_only, plan_text=plan_text,

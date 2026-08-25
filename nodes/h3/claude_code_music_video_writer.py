@@ -45,8 +45,13 @@ from .claude_code_crossover_writer import (
 )
 from .lyrics_transcribe import transcribe_song_lyrics
 from .scenes_store import recent_synopses, save_scene_bundle
+from .sound_events import parse_events, segment_event_lines
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
+    PROMPT_MODES,
+    PROMPT_MODE_TOOLTIP,
+    blind_reference_directive,
+    resolve_prompt_mode,
     scale_reference_passthrough,
     AUTO,
     LITERAL_CAMERA_DIRECTIVE,
@@ -119,12 +124,6 @@ AUDIO_MODES = [
 # binds attached pictures as <Picture N> - use it when reference images of
 # the performer(s) are connected. FL (guide_base_en.md, the T2VA/FL2VA
 # family) creates everything from scratch in words - no <Picture N> labels.
-PROMPT_MODES = [
-    "Auto (Ref with images, FL without)",
-    "Ref2VA (bind reference images)",
-    "FL / T2VA (from scratch - pictures ignored)",
-]
-
 SHOTS_PER_SCENE = [AUTO, "1", "2", "3", "4"]
 
 # Identical example plots and ending advice in every run steer the model into
@@ -440,14 +439,7 @@ class H3ClaudeCodeMusicVideoWriter:
         # appended LAST so saved workflows keep their widget positions
         optional["prompt_mode"] = (PROMPT_MODES, {
             "default": PROMPT_MODES[1],  # Ref2VA - the pre-switch behaviour
-            "tooltip": (
-                "Which official prompt guide the scenes follow. Ref (guide_ref_en.md) "
-                "binds the attached pictures as <Picture N> - use it when reference "
-                "images of the performer(s) are connected. FL / T2VA (guide_base_en.md) "
-                "creates everything from scratch in words - pictures are ignored and no "
-                "<Picture N> labels are written. Auto picks Ref when images are "
-                "connected, FL otherwise."
-            ),
+            "tooltip": PROMPT_MODE_TOOLTIP,
         })
         # appended LAST so saved workflows keep their widget positions
         optional.update(draft_model_input())
@@ -483,6 +475,26 @@ class H3ClaudeCodeMusicVideoWriter:
                 "first use) into timed `[m:ss] line` lyrics, so the scenes still sing "
                 "the real words and lyric-timed cuts work. Wire a vocal stem into "
                 "`vocals` for a cleaner transcription than the full mix."
+            ),
+        })
+        # appended LAST so saved workflows keep their widget positions
+        optional["sound_events"] = ("STRING", {
+            "forceInput": True,
+            "tooltip": (
+                "The `events` (or `events_json`) output of an APNext H3 Sound Events node. "
+                "Every piece's brief then carries the bass hits, impacts, drops, builds and "
+                "stops that land INSIDE that clip, timed from the clip's own start, and the "
+                "model is told to stage the picture on them - a cut, a camera hit, a light "
+                "change, a move that lands on the beat. Leave it unconnected and the scenes "
+                "are written from the song's energy profile alone, as before."
+            ),
+        })
+        optional["events_per_scene"] = ("INT", {
+            "default": 6, "min": 1, "max": 20,
+            "tooltip": (
+                "How many hits at most to list per piece. A dense bar can hold twenty, and "
+                "listing them all buries the rest of the brief; the strongest are kept, and "
+                "drops/stops/builds always survive the cut."
             ),
         })
         optional["vocals"] = ("AUDIO", {
@@ -658,6 +670,9 @@ class H3ClaudeCodeMusicVideoWriter:
         wardrobe="",
         locations="",
         image_labels=(),
+        blind_refs=False,
+        beats=(),
+        beats_per_scene=6,
         image_notes="",
         first=1,
         last=None,
@@ -710,6 +725,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     lines.append(f"    [+{t - s:5.2f}s {'exact' if exact else '~'}] {line}")
             else:
                 lines.append("    [instrumental]")
+            lines.extend(segment_event_lines(beats, s, e, beats_per_scene))
         lines.append("")
         if plan_text:
             lines.append(
@@ -725,6 +741,19 @@ class H3ClaudeCodeMusicVideoWriter:
                 lines.append(f"  {no:02d}: {gist}")
             lines.append("")
         lines.append("DIRECTIVES:")
+        if beats:
+            lines.append(
+                "- SOUND: the `[+s]` lines under each piece are MEASURED hits in that clip - "
+                "BASS HIT and IMPACT are single strikes, DROP is the beat arriving, STOP is "
+                "the music cutting out, BUILD is a riser, SECTION is the arrangement turning. "
+                "Stage the picture ON them, at those seconds: cut, or land a camera move, a "
+                "light change, a step, a door, a head turn, a spark. A heavy hit deserves a "
+                "hard visual event; a light one deserves an accent, not a cut. A STOP should "
+                "freeze or empty the frame, a DROP should open it up, a BUILD should tighten "
+                "toward the drop that follows. Write the timing into the shot description "
+                "(\"on the beat at 2.1 s the ...\") so it is unmistakable - and never invent "
+                "hits that are not listed."
+            )
         if plan_only:
             lines.append(
                 "- Write ONLY the planning document for the whole video - no scene "
@@ -810,22 +839,29 @@ class H3ClaudeCodeMusicVideoWriter:
         )
         if image_labels:
             labels_s = ", ".join(f"<Picture {i}>" for i in image_labels)
-            wardrobe_clause = (
-                " and take their wardrobe lock from the picture."
-                if not (wardrobe or "").strip() else
-                "; the picture fixes their face, hair and build, while the written "
-                "wardrobe lock below fixes the clothes - where they differ, the written "
-                "lock wins."
-            )
-            lines.append(
-                f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; the "
-                "video model receives the same pictures under the same labels in every scene. "
-                + (characters_only_directive() + " Bind pictured performers to their "
-                   "<Picture k> in subject_definitions" + wardrobe_clause
-                   if characters_only else
-                   "Decide what each shows (use the notes below); bind pictured performers to "
-                   "their <Picture k> in subject_definitions" + wardrobe_clause)
-            )
+            if blind_refs:
+                lines.append(
+                    f"- Reference pictures: {len(image_labels)} attached to the VIDEO model, in "
+                    f"order {labels_s}; it receives the same pictures under the same labels in "
+                    "every scene. " + blind_reference_directive()
+                )
+            else:
+                wardrobe_clause = (
+                    " and take their wardrobe lock from the picture."
+                    if not (wardrobe or "").strip() else
+                    "; the picture fixes their face, hair and build, while the written "
+                    "wardrobe lock below fixes the clothes - where they differ, the written "
+                    "lock wins."
+                )
+                lines.append(
+                    f"- Reference pictures: {len(image_labels)} attached, in order {labels_s}; the "
+                    "video model receives the same pictures under the same labels in every scene. "
+                    + (characters_only_directive() + " Bind pictured performers to their "
+                       "<Picture k> in subject_definitions" + wardrobe_clause
+                       if characters_only else
+                       "Decide what each shows (use the notes below); bind pictured performers to "
+                       "their <Picture k> in subject_definitions" + wardrobe_clause)
+                )
             notes = (image_notes or "").strip()
             if notes:
                 lines.append("- Picture notes from the user:")
@@ -1013,6 +1049,8 @@ class H3ClaudeCodeMusicVideoWriter:
         avoid_previous=6,
         transcribe_lyrics=True,
         vocals=None,
+        sound_events="",
+        events_per_scene=6,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -1022,15 +1060,20 @@ class H3ClaudeCodeMusicVideoWriter:
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
         # guide_base_en.md; Auto follows whether pictures are connected. Empty /
         # missing (stale workflows) defaults to Ref - the pre-switch behaviour.
-        mode = str(prompt_mode or PROMPT_MODES[1])
-        ref_mode = bool(references) if mode.startswith("Auto") else mode.startswith("Ref")
+        ref_mode, show_pictures = resolve_prompt_mode(prompt_mode, bool(references))
         if not ref_mode and references:
             print(
                 f"ℹ️ H3 Music Video Writer: FL prompt mode - the {len(references)} connected "
                 "picture(s) are ignored for writing (they still pass through the image outputs)."
             )
             references = []
-        images = [downscale_for_vision(pil) for _, pil in references] or None
+        elif references and not show_pictures:
+            print(
+                f"ℹ️ H3 Music Video Writer: blind Ref2VA - {len(references)} picture(s) are bound "
+                "as <Picture N> for the video model, but not shown to the writer; it describes "
+                "them from the cast lines and image_notes."
+            )
+        images = ([downscale_for_vision(pil) for _, pil in references] or None) if show_pictures else None
         image_labels = tuple(range(1, len(references) + 1))
         template_vars, template_summary = collect_template_vars(cast_slots)
         (direction, lyrics, extra_cast, wardrobe, locations, extra_instructions, image_notes,
@@ -1063,6 +1106,21 @@ class H3ClaudeCodeMusicVideoWriter:
                 )
 
         # --- cut the song -------------------------------------------------
+        beats = parse_events(sound_events)
+        if beats:
+            kinds = {}
+            for e in beats:
+                kinds[e["type"]] = kinds.get(e["type"], 0) + 1
+            print(
+                "🥁 H3 Music Video Writer | sound events: "
+                + ", ".join(f"{v} {k.lower()}" for k, v in kinds.items())
+            )
+        elif (sound_events or "").strip():
+            print(
+                "⚠️ H3 Music Video Writer: sound_events is connected but nothing parsed out "
+                "of it - wire the Sound Events node's `events` or `events_json` output."
+            )
+
         parsed_lyrics = parse_lyrics(lyrics)
         timed = [t for t, _ in parsed_lyrics if t is not None]
         lyrics_driven = bool(scenes_from_lyrics)
@@ -1148,6 +1206,8 @@ class H3ClaudeCodeMusicVideoWriter:
                     shots_per_scene, visual_style, dialogue_language, wildness,
                     directions_with_research(extra_instructions, research), rng_,
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
+                    blind_refs=not show_pictures,
+                    beats=beats, beats_per_scene=events_per_scene,
                     image_notes=image_notes, first=lo, last=hi, total_seconds=total_seconds,
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
