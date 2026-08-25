@@ -77,36 +77,6 @@ def save_scene_bundle(source, synopsis, scenes, segments, durations, lengths,
         return None
 
 
-def recent_synopses(source, limit):
-    """
-    The synopses of the newest saved bundles from `source` (a writer class
-    name), newest first - the writers feed these back as an avoid-list so a
-    new run does not reinvent the previous run's concept. The LLM has no
-    memory between runs; without this, identical briefs collapse onto the
-    model's favourite ideas and every video comes out the same.
-    """
-    out = []
-    if limit <= 0:
-        return out
-    try:
-        d = scenes_dir()
-        for fname in _list_saved():
-            try:
-                with open(os.path.join(d, fname), encoding="utf-8") as f:
-                    data = json.load(f)
-            except Exception:
-                continue
-            if data.get("kind") != _KIND or data.get("source") != source:
-                continue
-            syn = " ".join((data.get("synopsis") or "").split())
-            if syn:
-                out.append(syn[:450])
-            if len(out) >= limit:
-                break
-    except Exception:
-        pass
-    return out
-
 
 def _list_saved():
     try:

@@ -44,8 +44,8 @@ from .claude_code_crossover_writer import (
     CAST_SOCKETS, cast_wardrobe, log_cast, log_wardrobe_locks, merge_wardrobe, parse_cast,
 )
 from .lyrics_transcribe import transcribe_song_lyrics
-from .scenes_store import recent_synopses, save_scene_bundle
-from .sound_events import parse_events, segment_event_lines, sync_key_lines
+from .scenes_store import save_scene_bundle
+from .sound_events import parse_events, segment_event_lines
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     PROMPT_MODES,
@@ -91,6 +91,7 @@ from .scenes_support import (
     LOCATIONS_TOOLTIP,
     enforce_continuity,
     enforce_continuity_chunked,
+    report_description_lengths,
     locations_directive,
     parse_location_lock,
     parse_wardrobe_lock,
@@ -458,13 +459,14 @@ class H3ClaudeCodeMusicVideoWriter:
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
         optional["avoid_previous"] = ("INT", {
-            "default": 6, "min": 0, "max": 20,
+            "default": 0, "min": 0, "max": 20,
             "tooltip": (
-                "Anti-repetition: feed the synopses of this many previous saved runs "
-                "(output/apnext_scenes/) back to the model as concepts that are USED UP, "
-                "so a new run invents something different instead of collapsing onto the "
-                "model's favourite ideas. The LLM has no memory between runs - similar "
-                "briefs otherwise produce near-identical videos. 0 = off."
+                "NO LONGER USED - every run is a clean slate. This once fed the synopses "
+                "of previous saved runs back to the model as concepts that were USED UP, "
+                "but quoting an old logline under a 'do not reuse' header primes the idea "
+                "far more reliably than it forbids it: the run reproduced what it was told "
+                "to avoid, got saved, and fed itself back. The slot stays so saved "
+                "workflows keep their widget positions; the value is ignored."
             ),
         })
         optional["transcribe_lyrics"] = ("BOOLEAN", {
@@ -688,7 +690,6 @@ class H3ClaudeCodeMusicVideoWriter:
         profile=None,
         plan_only=False,
         plan_text="",
-        avoid_synopses=(),
     ):
         last = last or len(segments)
         n = len(segments)
@@ -743,29 +744,37 @@ class H3ClaudeCodeMusicVideoWriter:
         lines.append("DIRECTIVES:")
         if beats:
             lines.append(
-                "- SOUND: the `[+s]` lines under each piece are MEASURED moments in that "
-                "clip, timed from the clip's own start. Each one reads "
-                "`[+s] TYPE | size | what the music does` - the third column is the sound "
-                "itself, in plain words, and the size (light/solid/heavy) is how big it "
-                "actually is in the mix. Stage the picture ON those seconds."
+                "- SOUND: the bracket lines under each piece are MEASURED moments in "
+                "that clip, timed from the clip's own start - "
+                "`[+start ->+land ->+settle s] TYPE | size`. TYPE is what the music does "
+                "there; size (light/solid/heavy) is how big it is in the mix."
             )
             lines.append(
-                "- SYNC: every listed moment needs something VISIBLE happening on it, and "
-                "it is almost never a cut - one shot is usually the whole clip, so the "
-                "picture has to MOVE on the beat instead. Prefer physical effects the "
-                "camera can see land: a shockwave through dust or water, a gust of wind, a "
-                "blast, sparks, a light snapping on or off, fabric and hair thrown, the "
-                "ground pulsing, the camera shaken. What each kind wants:"
+                "- SYNC: give every listed moment something VISIBLE. WHAT is your call - "
+                "an object, a body, the light, the camera, an effect the scene already "
+                "has a reason to contain. Only scale it to the size, so a heavy moment "
+                "reads bigger than a light one and the big ones still mean something."
             )
-            lines.extend(sync_key_lines(beats, indent="    "))
             lines.append(
-                "  Scale the response to the size: a heavy moment earns a whole-frame "
-                "event, a light one earns a glint or a flicker - staging every hit at full "
-                "force reads as noise and the drops stop meaning anything. Write the timing "
-                "and the effect into the shot description itself (\"at 2.1 s the bass hits "
-                "and dust jumps off the floor in a ring\") so it is unmistakable. Never "
-                "invent moments that are not listed, and never describe the sound as sound - "
-                "H3 is given the real song, so what you write is what the picture DOES."
+                "- THE THREE NUMBERS ARE THE TIMING, and they are the whole point. `land` "
+                "is the second the sound is on. START the move on the FIRST number so it "
+                "PEAKS exactly on the second, and let it settle through the third. "
+                "Anything described as beginning on the beat reads LATE - the eye "
+                "registers the peak of a move, not its first frame - and that is what "
+                "makes a finished video drift off its own song. Write it as three clauses "
+                "with the seconds stated (\"at 1.8 s ... lands on 2.1 s ... still "
+                "settling at 2.45 s\"); never state only the middle number."
+            )
+            lines.append(
+                "- `<opens already moving>` means the wind-up began before this clip: "
+                "open on a first frame ALREADY in motion, never from rest. `<lands in the "
+                "next clip>` means the peak falls past this clip's end: climb to the last "
+                "frame and do NOT resolve it here."
+            )
+            lines.append(
+                "- Never invent moments that are not listed, never move one to a rounder "
+                "second, and never describe the sound as sound - H3 is given the real "
+                "song, so what you write is what the picture DOES."
             )
         if plan_only:
             lines.append(
@@ -822,7 +831,11 @@ class H3ClaudeCodeMusicVideoWriter:
                 "the lens (or in a clear profile) with the mouth fully visible - no hands, "
                 "microphones, hair, shadows or props covering it - and readable mouth and "
                 f"jaw movement locked to {audio_ref} from the first frame of the line to the "
-                "last. Frame sung lines MEDIUM CLOSE-UP or closer (the face large in frame) "
+                "last. State that lock ONCE per scene, at the first sung line; the later "
+                "lines just carry their `<d>...</d>` and what the performer is doing - "
+                "repeating the same lip-sync sentence for every line is a third of the "
+                "scene's word budget spent saying one thing four times. "
+                "Frame sung lines MEDIUM CLOSE-UP or closer (the face large in frame) "
                 "and keep the camera slow and smooth while a line lasts; save wide shots and "
                 "fast moves for the instrumental moments. Never cut away from the singer in "
                 "the middle of a sung line."
@@ -963,16 +976,17 @@ class H3ClaudeCodeMusicVideoWriter:
                 "to its era, palette and textures in every scene instead of defaulting to "
                 "a generic contemporary city."
             )
-        # only the planning turn needs the avoid-list; chunk turns follow the plan
-        if avoid_synopses and (plan_only or (first == 1 and not plan_text)):
-            lines.append(
-                "- ALREADY MADE - THESE CONCEPTS ARE USED UP: earlier runs produced the "
-                "videos below. Do not reuse or lightly reskin their premises, settings, "
-                "motifs, plot beats or endings - invent something clearly different this "
-                "time:"
-            )
-            for i, syn in enumerate(avoid_synopses, 1):
-                lines.append(f"    ({i}) {syn}")
+        lines.append(
+            "- LENGTH - H3's own budget, and it is a ceiling, not a target to fill: "
+            "`integrated_multimodal_description` is 350-500 words for the WHOLE scene, "
+            "every shot together; `overall_soundscape` is 1-4 sentences; "
+            "`non_diegetic_music` is 1-3 sentences; `subject_definitions` is one line per "
+            "subject. Spend those words on what the camera sees that is NEW in this "
+            "scene. Never spend them repeating an outfit the `<Subject N>` label already "
+            "carries, re-listing a room an earlier shot already fixed, or restating "
+            "anything the scene has established - that is the padding that pushes a "
+            "description past its budget and buys nothing."
+        )
         lines.append(f"- {_ANTI_CLICHE_DIRECTIVE}")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         if profile:
@@ -1059,7 +1073,7 @@ class H3ClaudeCodeMusicVideoWriter:
         draft_model="haiku",
         parallel_chunks=True,
         project_name="",
-        avoid_previous=6,
+        avoid_previous=0,
         transcribe_lyrics=True,
         vocals=None,
         sound_events="",
@@ -1177,9 +1191,6 @@ class H3ClaudeCodeMusicVideoWriter:
             ending_picks = tuple(rng.sample(ENDING_MOVES, 2))
             # sampled AFTER the plot/ending picks, so existing seeds keep them
             world_picks = tuple(rng.sample(WORLD_FLAVORS, 2))
-            avoid = tuple(recent_synopses("H3ClaudeCodeMusicVideoWriter", int(avoid_previous or 0)))
-            if avoid:
-                print(f"🔁 H3 Music Video Writer: steering away from {len(avoid)} previous synopsis(es).")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             masked_audio = str(audio_mode or "").startswith("Masked")
@@ -1227,7 +1238,6 @@ class H3ClaudeCodeMusicVideoWriter:
                     prior_scenes=prior, plot_picks=plot_picks, ending_picks=ending_picks,
                     world_picks=world_picks,
                     profile=profile, plan_only=plan_only, plan_text=plan_text,
-                    avoid_synopses=avoid,
                 )
                 return user_prompt
 
@@ -1394,13 +1404,16 @@ class H3ClaudeCodeMusicVideoWriter:
             if len(parsed) == n and n <= SCENES_PER_CALL:
                 synopsis, parsed, info = enforce_continuity(
                     enforce_wardrobe, synopsis, parsed, n, durations[0], session_id, info, repair,
+                    cast=cast,
                 )
             else:
                 # multi-chunk runs: a full re-emit is too long, so one repair
                 # turn re-emits only the violating scenes and splices them in
                 parsed, info = enforce_continuity_chunked(
-                    enforce_wardrobe, synopsis, parsed, session_id, info, repair,
+                    enforce_wardrobe, synopsis, parsed, session_id, info, repair, cast=cast,
                 )
+
+            info = f"{info} | {report_description_lengths([p for _, _, p in parsed])}"
 
             # pad / trim to exactly one scene per piece so the lists stay aligned
             scenes = [p for _, _, p in parsed][:n]

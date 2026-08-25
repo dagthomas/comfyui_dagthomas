@@ -22,6 +22,9 @@
 #   * builds       a sustained upward loudness ramp that lands on a drop.
 #   * sections     the same novelty over a 4 s window - verse/chorus turns.
 #
+# What the picture should DO about any of it is not decided here. This node
+# reports what the music does and when; the writer stages it.
+#
 # Offline changes two things for the better: the median window can be CENTRED
 # on each frame instead of trailing it, and every threshold is relative to the
 # whole track rather than to whatever has played so far, so the first bar is
@@ -106,47 +109,39 @@ _SOUND = {
     ),
 }
 
-# What to put ON the moment, per type - stated ONCE, in the table's key and in
-# the writer's directives, never per line. At 120 events the same sentence
-# repeated on every row is most of the prompt budget and none of the
-# information.
+# How long BEFORE the sound the picture has to START moving, per kind, at
+# (light, solid, heavy).
 #
-# Deliberately EFFECTS-first. A 9-second H3 clip can rarely afford a cut - one
-# shot is usually the whole clip - so the picture has to MOVE on the beat
-# instead: a shockwave, a gust, a blast, dust jumping, light snapping off.
-# Those are things a video model can actually render on a named second, and
-# they are what "sync the picture to the music" means when cutting is off the
-# table.
-_SYNC = {
-    "DROP": (
-        "open the frame on it - a blast of light, a shockwave rolling out through "
-        "dust or water, wind slamming in, the camera released into motion, a crowd "
-        "erupting, everything that was still now moving"
-    ),
-    "STOP": (
-        "empty or still the frame - motion freezes, the wind dies, dust hangs in "
-        "the air, lights snap off, a held breath, sudden silence made visible"
-    ),
-    "SECTION": (
-        "change the world - new location, new light, new lens, new weather; the "
-        "look of the shot turns here and does not turn back"
-    ),
-    "BUILD": (
-        "tighten toward the drop - the push-in accelerates, hair and dust lift, "
-        "wind rises, strobes quicken, the frame closing in as the pressure climbs"
-    ),
-    "IMPACT": (
-        "a hard physical event - something strikes, a blast, glass, sparks, a body "
-        "landing, a shockwave ring punched outward, the camera shaken by it"
-    ),
-    "BASS HIT": (
-        "one visible pulse - a step or a stomp, dust jumping off the floor, a light "
-        "throb, a ripple ring across water, fabric snapping, the ground answering"
-    ),
-    "ACCENT": (
-        "a small bright accent - a glint, a spark, a lens flare crossing frame, a "
-        "flick of the eyes; an accent, never a cut"
-    ),
+# This is the whole reason a "synced" video reads out of sync. What a viewer
+# perceives as the moment of an effect is its PEAK, not its first frame - so a
+# move told to begin ON the beat peaks a fifth of a second late, on every hit,
+# in every clip, and the finished video drifts off the music even though the
+# audio is sample-aligned. Every event therefore goes to the writer as a
+# WINDOW - start the move here, land it on the beat, settle it by there - and
+# these are the lead times. Ordinary animation anticipation, scaled by how big
+# the sound is: a cymbal tick needs two frames of warning, a full drop needs a
+# held breath.
+_LEAD = {
+    "DROP": (0.55, 0.85, 1.20),
+    "STOP": (0.40, 0.60, 0.85),
+    "SECTION": (0.30, 0.40, 0.55),
+    "BUILD": (0.90, 1.40, 2.00),
+    "IMPACT": (0.32, 0.45, 0.60),
+    "BASS HIT": (0.20, 0.28, 0.36),
+    "ACCENT": (0.08, 0.12, 0.16),
+}
+
+# ...and how long AFTER it the aftermath runs. Dust does not stop in the air on
+# the frame after the kick, and a move that ends the instant it lands is the
+# other half of looking mechanical.
+_TAIL = {
+    "DROP": (0.55, 0.80, 1.10),
+    "STOP": (0.50, 0.75, 1.10),
+    "SECTION": (0.35, 0.45, 0.60),
+    "BUILD": (0.0, 0.0, 0.0),   # a build's follow-through IS the drop
+    "IMPACT": (0.35, 0.50, 0.70),
+    "BASS HIT": (0.22, 0.30, 0.40),
+    "ACCENT": (0.10, 0.14, 0.18),
 }
 
 
@@ -164,16 +159,32 @@ def _sound_note(kind, strength):
     return tiers[_strength_tier(strength)] if tiers else ""
 
 
-def sync_key_lines(events, indent="  "):
-    """
-    The staging key for whichever event kinds actually occur in `events`.
+def _tiered(table, kind, strength):
+    """The (light, solid, heavy) value for one event, or 0 for an unknown kind."""
+    tiers = table.get(kind)
+    return tiers[_strength_tier(strength)] if tiers else 0.0
 
-    Only the kinds present: a key that explains STOP to a track that never
-    stops is teaching the model about a moment it will never be asked to
-    stage, and it will find somewhere to use it anyway.
+
+def event_window(event):
     """
-    present = [k for k in EVENT_TYPES if any(e.get("type") == k for e in events)]
-    return [f"{indent}{k:<9} {_SYNC[k]}" for k in present if _SYNC.get(k)]
+    (start, land, settle) in absolute song seconds for one event.
+
+    `land` is the second the sound is on. `start` is when the picture has to
+    begin moving for its peak to arrive there, and `settle` is where the
+    aftermath finishes. A BUILD needs no guessed lead: the detector already
+    knows the drop it ramps into, so its window is the real ramp.
+    """
+    kind = event.get("type", "")
+    strength = float(event.get("strength", 0.5))
+    land = float(event.get("t", 0.0))
+    until = event.get("until")
+    if kind == "BUILD" and until is not None:
+        return land, float(until), float(until)
+    return (
+        max(0.0, land - _tiered(_LEAD, kind, strength)),
+        land,
+        land + _tiered(_TAIL, kind, strength),
+    )
 
 
 # ----------------------------------------------------------------------
@@ -626,11 +637,22 @@ def detect_events(
             "strength": round(float(s), 2),
             "label": _strength_label(s),
             "note": _sound_note(kind, s),
-            "sync": _SYNC.get(kind, ""),
         }
         for t, kind, s in found
         if float(t) <= duration and float(s) >= min_strength or kind in _STRUCTURAL
     ]
+
+    # A BUILD's own `t` is where the ramp STARTS - the quietest point of the
+    # run-up - so on its own it says nothing about where the pressure is meant
+    # to be released. Pair it with the drop it climbs into and the writer gets
+    # the real window instead of a guessed lead.
+    drop_times = sorted(e["t"] for e in events if e["type"] == "DROP")
+    for e in events:
+        if e["type"] != "BUILD":
+            continue
+        landing = next((d for d in drop_times if d > e["t"] + 1e-6), None)
+        if landing is not None:
+            e["until"] = round(float(landing), 2)
 
     cap = max(1, int(max_events))
     if len(events) > cap:
@@ -650,16 +672,19 @@ def detect_events(
 # ----------------------------------------------------------------------
 
 _LINE_RE = re.compile(
-    r"^\s*\[(\d+):(\d{2}(?:\.\d+)?)\]\s+([A-Z][A-Z ]*[A-Z]|[A-Z])\s*(?:\|\s*(\w+))?\s*(?:\|\s*(.*))?$"
+    r"^\s*\[(\d+):(\d{2}(?:\.\d+)?)\]\s+([A-Z][A-Z ]*[A-Z]|[A-Z])\s*"
+    # optional landing time: a BUILD carries the drop it ramps into
+    r"(?:->\s*\[(\d+):(\d{2}(?:\.\d+)?)\]\s*)?"
+    r"(?:\|\s*(\w+))?\s*(?:\|\s*(.*))?$"
 )
 
 
-def events_table(events, duration=0.0, profile=None, key=True):
+def events_table(events, duration=0.0, profile=None):
     """
     The readable, re-parseable table. One event per line, absolute times.
 
-    The `#` header carries the staging key once, for the kinds that occur. It
-    is a comment, so `parse_events` skips it and the table still round-trips.
+    What the picture should DO about each moment is deliberately not here. The
+    writer decides that; this only reports what the music does and when.
     """
     lines = []
     if profile:
@@ -667,13 +692,12 @@ def events_table(events, duration=0.0, profile=None, key=True):
         lines.append(f"# {profile_line(profile)}")
     if duration:
         lines.append(f"# {fmt_time(duration)} of audio, {len(events)} event(s)")
-    if key and events:
-        keyed = sync_key_lines(events, indent="#   ")
-        if keyed:
-            lines.append("# SYNC KEY - what the picture should do on each kind of moment:")
-            lines.extend(keyed)
     for e in events:
-        row = f"[{fmt_time(e['t'])}] {e['type']:<9} | {e['label']}"
+        row = f"[{fmt_time(e['t'])}] {e['type']:<9}"
+        if e.get("until") is not None:
+            # where the ramp is released - a build is a window, not an instant
+            row += f" -> [{fmt_time(e['until'])}]"
+        row += f" | {e['label']}"
         if e.get("note"):
             row += f" | {e['note']}"
         lines.append(row)
@@ -702,16 +726,17 @@ def parse_events(text):
                 if not isinstance(e, dict) or "t" not in e:
                     continue
                 strength = float(e.get("strength", 0.5))
-                out.append({
+                row = {
                     "t": float(e["t"]),
                     "type": str(e.get("type", "EVENT")).upper(),
                     "strength": strength,
                     "label": str(e.get("label") or _strength_label(strength)),
                     "note": str(e.get("note") or _sound_note(
                         str(e.get("type", "")).upper(), strength)),
-                    "sync": str(e.get("sync") or _SYNC.get(
-                        str(e.get("type", "")).upper(), "")),
-                })
+                }
+                if e.get("until") is not None:
+                    row["until"] = float(e["until"])
+                out.append(row)
             out.sort(key=lambda e: e["t"])
             return out
         except (ValueError, TypeError):
@@ -724,32 +749,47 @@ def parse_events(text):
         m = _LINE_RE.match(line)
         if not m:
             continue
-        minutes, seconds, kind, label, note = m.groups()
+        minutes, seconds, kind, until_min, until_sec, label, note = m.groups()
         kind = kind.strip()
         strength = {"light": 0.2, "solid": 0.5, "heavy": 0.9}.get((label or "").lower(), 0.5)
-        out.append({
+        row = {
             "t": int(minutes) * 60 + float(seconds),
             "type": kind,
             "strength": strength,
             "label": (label or "solid").lower(),
             "note": (note or "").strip() or _sound_note(kind, strength),
-            # never written per row - the table carries it once, in the key
-            "sync": _SYNC.get(kind, ""),
-        })
+        }
+        if until_min is not None:
+            row["until"] = int(until_min) * 60 + float(until_sec)
+        out.append(row)
     out.sort(key=lambda e: e["t"])
     return out
 
 
 def events_for_segment(events, start, end, limit=8):
     """
-    The events inside one clip, timed FROM THE CLIP'S OWN START.
+    The events this clip has to stage, timed FROM THE CLIP'S OWN START.
 
     That relative time is the whole point: the writer is describing a 9-second
     shot, and "a bass hit at +2.1 s" is something it can stage, while "a bass
     hit at 1:47.3" is not. Capped per clip, strongest first, so one busy bar
     cannot swamp a scene brief - then re-sorted into time order.
+
+    A clip's events are not simply the ones inside it. A drop landing a third
+    of a second after a cut needs most of a second of wind-up, and all of that
+    wind-up belongs to the OUTGOING clip - which, listing only its own hits,
+    would never hear about it and would end at rest. So an event also counts as
+    this clip's if its window STARTS here, even though it lands in the next
+    one; the outgoing clip climbs into it without resolving, and the incoming
+    clip (which lists the same event, opening mid-move) releases it. That
+    hand-off across the cut is the difference between a video that hits the
+    drop and one that arrives just after it.
     """
-    inside = [e for e in events if start <= e["t"] < end]
+    inside = [
+        e for e in events
+        if start <= e["t"] < end
+        or (e["t"] >= end and event_window(e)[0] < end - 1e-6)
+    ]
     if len(inside) > limit:
         ranked = sorted(
             inside,
@@ -757,22 +797,56 @@ def events_for_segment(events, start, end, limit=8):
         )
         inside = ranked[:limit]
     inside.sort(key=lambda e: e["t"])
-    return [dict(e, offset=round(e["t"] - start, 2)) for e in inside]
+
+    span = max(0.0, end - start)
+    out = []
+    for e in inside:
+        cue, land, settle = event_window(e)
+        out.append(dict(
+            e,
+            offset=round(e["t"] - start, 2),
+            # the staging window, clamped into the clip: nothing outside these
+            # bounds exists as far as this render is concerned
+            cue_offset=round(min(span, max(0.0, cue - start)), 2),
+            land_offset=round(min(span, max(0.0, land - start)), 2),
+            settle_offset=round(min(span, max(0.0, settle - start)), 2),
+            # ...but the fact that it was clamped is itself a staging note. A
+            # wind-up that began in the previous clip means this one opens
+            # mid-move, and a peak past the end means this one must not resolve.
+            opens_wound_up=cue < start - 1e-6,
+            lands_after=land > end + 1e-6,
+        ))
+    # Ordered by where the MOVE starts, not where the sound is. The writer
+    # turns this list into one chronological run of clauses, and the first
+    # clause of every event is its wind-up - so a drop whose pressure starts
+    # building before an earlier kick has to be read, and written, first.
+    out.sort(key=lambda e: (e["cue_offset"], e["land_offset"]))
+    return out
 
 
 def segment_event_lines(events, start, end, limit=8):
     """
-    `events_for_segment` as the indented `[+s]` lines the writer's brief uses.
+    `events_for_segment` as the indented window lines the writer's brief uses.
 
-    Same three columns as the table so the two read as one format. The note
-    rides along - it is per-event and sized - while the sync guidance does
-    not: that is per KIND, and the writer states it once in its directives.
+    THREE numbers, not one - start the move / land it / settle it - all timed
+    from the clip's own start. Handing over the bare instant is what makes a
+    "synced" video read late: a move told to begin on the beat peaks after it.
+
+    Type and size only. WHAT lands on the moment is the writer's decision, not
+    a lookup - the plain-words note the table carries would just be a stronger
+    hint toward the same handful of images in every scene.
     """
     lines = []
     for e in events_for_segment(events, start, end, limit):
-        note = e.get("note") or _sound_note(e.get("type", ""), e.get("strength", 0.5))
-        row = f"    [+{e['offset']:5.2f}s] {e['type']:<9} | {e['label']}"
-        lines.append(f"{row} | {note}" if note else row)
+        row = (
+            f"    [+{e['cue_offset']:5.2f} ->+{e['land_offset']:5.2f}"
+            f" ->+{e['settle_offset']:5.2f}s] {e['type']:<9} | {e['label']}"
+        )
+        if e.get("opens_wound_up"):
+            row += "  <opens already moving>"
+        if e.get("lands_after"):
+            row += "  <lands in the next clip>"
+        lines.append(row)
     return lines
 
 

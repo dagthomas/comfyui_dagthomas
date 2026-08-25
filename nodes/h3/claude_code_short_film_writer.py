@@ -45,7 +45,7 @@ from .claude_code_crossover_writer import (
 from .claude_code_music_video_writer import _scene_gist
 from .claude_code_presentation_writer import _extract_script, _scene_table
 from .music_support import fmt_time, frames_for_seconds
-from .scenes_store import recent_synopses, save_scene_bundle
+from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     PROMPT_MODES,
@@ -238,12 +238,14 @@ class H3ClaudeCodeShortFilmWriter:
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
         optional["avoid_previous"] = ("INT", {
-            "default": 6, "min": 0, "max": 20,
+            "default": 0, "min": 0, "max": 20,
             "tooltip": (
-                "Anti-repetition: feed the synopses of this many previous saved runs "
-                "(output/apnext_scenes/) back to the model as concepts that are USED UP, "
-                "so where the manuscript leaves choices open a new run makes different "
-                "ones. 0 = off."
+                "NO LONGER USED - every run is a clean slate. This once fed the synopses "
+                "of previous saved runs back to the model as concepts that were USED UP, "
+                "but quoting an old logline under a 'do not reuse' header primes the idea "
+                "far more reliably than it forbids it: the run reproduced what it was told "
+                "to avoid, got saved, and fed itself back. The slot stays so saved "
+                "workflows keep their widget positions; the value is ignored."
             ),
         })
 
@@ -371,7 +373,7 @@ class H3ClaudeCodeShortFilmWriter:
         include_non_diegetic_music, extra_instructions, rng,
         wardrobe="", locations="", image_labels=(), image_notes="", blind_refs=False,
         first=1, last=None, characters_only=True, scene_briefs="", prior_scenes=(),
-        plan_only=False, plan_text="", avoid_synopses=(),
+        plan_only=False, plan_text="",
     ):
         last = last or n
         briefs = (scene_briefs or "").strip()
@@ -528,16 +530,6 @@ class H3ClaudeCodeShortFilmWriter:
             "give one character's wardrobe or hair to another, and keep each `<d>` line "
             "with its own speaker - only that character's mouth moves on their line."
         )
-        # only the planning turn needs the avoid-list; chunk turns follow the plan
-        if avoid_synopses and (plan_only or (first == 1 and not plan_text)):
-            lines.append(
-                "- ALREADY MADE - THESE CONCEPTS ARE USED UP: earlier runs produced the "
-                "films below. Where the manuscript leaves choices open, do not reuse or "
-                "lightly reskin their settings, imagery, motifs or staging - make "
-                "clearly different choices this time:"
-            )
-            for i, syn in enumerate(avoid_synopses, 1):
-                lines.append(f"    ({i}) {syn}")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         if briefs:
             lines.append(
@@ -573,7 +565,7 @@ class H3ClaudeCodeShortFilmWriter:
         llm=None, reference_image_use=None, scene_briefs="",
         save_scenes=True, scenes_per_call=SCENES_PER_CALL, prompt_mode=None,
         draft_model="haiku", parallel_chunks=True, project_name="",
-        avoid_previous=6,
+        avoid_previous=0,
         **cast_slots,
     ):
         import random
@@ -625,9 +617,6 @@ class H3ClaudeCodeShortFilmWriter:
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
-            avoid = tuple(recent_synopses("H3ClaudeCodeShortFilmWriter", int(avoid_previous or 0)))
-            if avoid:
-                print(f"🔁 H3 Short Film Writer: steering away from {len(avoid)} previous synopsis(es).")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             skills = FILM_SKILLS if ref_mode else BASE_SKILLS
@@ -671,7 +660,6 @@ class H3ClaudeCodeShortFilmWriter:
                     image_notes=image_notes, first=lo, last=hi, characters_only=chars_only,
                     scene_briefs=scene_briefs, prior_scenes=prior,
                     plan_only=plan_only, plan_text=plan_text,
-                    avoid_synopses=avoid,
                 )
 
             def merge_locks(text):

@@ -34,7 +34,7 @@ from .claude_code_support import (
     resolve_project_name,
     run_h3_claude_code,
 )
-from .scenes_store import recent_synopses, save_scene_bundle
+from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .characters import cast_line_name, split_cast_line
 from .common import (
@@ -294,13 +294,14 @@ class H3ClaudeCodeCrossoverWriter:
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
         optional["avoid_previous"] = ("INT", {
-            "default": 6, "min": 0, "max": 20,
+            "default": 0, "min": 0, "max": 20,
             "tooltip": (
-                "Anti-repetition: feed the synopses of this many previous saved runs "
-                "(output/apnext_scenes/) back to the model as concepts that are USED UP, "
-                "so a new run invents something different instead of collapsing onto the "
-                "model's favourite ideas. The LLM has no memory between runs - similar "
-                "briefs otherwise produce near-identical stories. 0 = off."
+                "NO LONGER USED - every run is a clean slate. This once fed the synopses "
+                "of previous saved runs back to the model as concepts that were USED UP, "
+                "but quoting an old logline under a 'do not reuse' header primes the idea "
+                "far more reliably than it forbids it: the run reproduced what it was told "
+                "to avoid, got saved, and fed itself back. The slot stays so saved "
+                "workflows keep their widget positions; the value is ignored."
             ),
         })
 
@@ -423,7 +424,6 @@ class H3ClaudeCodeCrossoverWriter:
         locations="",
         characters_only=True,
         scene_briefs="",
-        avoid_synopses=(),
     ):
         lines = ["CAST (use these strings verbatim in subject_definitions):"]
         lines += [f"- {c}" for c in cast]
@@ -520,15 +520,6 @@ class H3ClaudeCodeCrossoverWriter:
         lines.append(
             "- The character with the most dialogue in a scene is <Subject 1> in that scene."
         )
-        if avoid_synopses:
-            lines.append(
-                "- ALREADY MADE - THESE CONCEPTS ARE USED UP: earlier runs produced the "
-                "stories below. Do not reuse or lightly reskin their premises, settings, "
-                "motifs, plot beats or endings - invent something clearly different this "
-                "time:"
-            )
-            for i, syn in enumerate(avoid_synopses, 1):
-                lines.append(f"    ({i}) {syn}")
         wild_lines, wild_label = wildness_directive(wildness, rng)
         lines += [f"- {w}" for w in wild_lines]
         extra = (extra_instructions or "").strip()
@@ -577,7 +568,7 @@ class H3ClaudeCodeCrossoverWriter:
         reference_image_use=None,
         scene_briefs="",
         project_name="",
-        avoid_previous=6,
+        avoid_previous=0,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -613,9 +604,6 @@ class H3ClaudeCodeCrossoverWriter:
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
             rng = random.Random(current_seed)
-            avoid = tuple(recent_synopses("H3ClaudeCodeCrossoverWriter", int(avoid_previous or 0)))
-            if avoid:
-                print(f"🔁 H3 Crossover Writer: steering away from {len(avoid)} previous synopsis(es).")
 
             user_prompt, wild_label = self._build_user_prompt(
                 cast,
@@ -636,7 +624,6 @@ class H3ClaudeCodeCrossoverWriter:
                 locations=locations,
                 characters_only=characters_only_refs(reference_image_use),
                 scene_briefs=scene_briefs,
-                avoid_synopses=avoid,
             )
             user_prompt = with_context(user_prompt, context_text)
 

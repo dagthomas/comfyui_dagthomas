@@ -44,7 +44,7 @@ from .claude_code_crossover_writer import (
 )
 from .claude_code_music_video_writer import _scene_gist
 from .music_support import fmt_time, frames_for_seconds
-from .scenes_store import recent_synopses, save_scene_bundle
+from .scenes_store import save_scene_bundle
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     PROMPT_MODES,
@@ -395,12 +395,14 @@ class H3ClaudeCodePresentationWriter:
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
         optional["avoid_previous"] = ("INT", {
-            "default": 6, "min": 0, "max": 20,
+            "default": 0, "min": 0, "max": 20,
             "tooltip": (
-                "Anti-repetition: feed the synopses of this many previous saved runs "
-                "(output/apnext_scenes/) back to the model as stagings that are USED UP, "
-                "so a new run picks a different presenter, venue and visual-aid staging "
-                "(the facts stay verbatim regardless). 0 = off."
+                "NO LONGER USED - every run is a clean slate. This once fed the synopses "
+                "of previous saved runs back to the model as concepts that were USED UP, "
+                "but quoting an old logline under a 'do not reuse' header primes the idea "
+                "far more reliably than it forbids it: the run reproduced what it was told "
+                "to avoid, got saved, and fed itself back. The slot stays so saved "
+                "workflows keep their widget positions; the value is ignored."
             ),
         })
 
@@ -576,7 +578,6 @@ class H3ClaudeCodePresentationWriter:
         prior_scenes=(),
         plan_only=False,
         plan_text="",
-        avoid_synopses=(),
     ):
         n = scene_count
         last = last or n
@@ -761,16 +762,6 @@ class H3ClaudeCodePresentationWriter:
             "same board, same inset style, same title styling) so the talk reads as one "
             "production."
         )
-        # only the planning turn needs the avoid-list; chunk turns follow the plan
-        if avoid_synopses and (plan_only or (first == 1 and not plan_text)):
-            lines.append(
-                "- ALREADY MADE - THESE STAGINGS ARE USED UP: earlier runs produced the "
-                "talks below. The facts stay verbatim, but do not reuse their presenter, "
-                "venue, format or visual-aid staging - make clearly different staging "
-                "choices this time:"
-            )
-            for i, syn in enumerate(avoid_synopses, 1):
-                lines.append(f"    ({i}) {syn}")
         if briefs:
             lines.append(
                 "- SCENE BRIEFS ARE BINDING: a numbered brief is the plan for that scene - "
@@ -846,7 +837,7 @@ class H3ClaudeCodePresentationWriter:
         draft_model="haiku",
         parallel_chunks=True,
         project_name="",
-        avoid_previous=6,
+        avoid_previous=0,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -897,9 +888,6 @@ class H3ClaudeCodePresentationWriter:
 
             dialogue_language = resolve_dialogue_language(dialogue_language, custom_dialogue_language)
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
-            avoid = tuple(recent_synopses("H3ClaudeCodePresentationWriter", int(avoid_previous or 0)))
-            if avoid:
-                print(f"🔁 H3 Presentation Writer: steering away from {len(avoid)} previous synopsis(es).")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             skills = PRESENTATION_SKILLS if ref_mode else BASE_SKILLS
@@ -945,7 +933,6 @@ class H3ClaudeCodePresentationWriter:
                     image_notes=image_notes, first=lo, last=hi,
                     characters_only=chars_only, scene_briefs=scene_briefs,
                     prior_scenes=prior, plan_only=plan_only, plan_text=plan_text,
-                    avoid_synopses=avoid,
                 )
 
             def merge_locks(text):
