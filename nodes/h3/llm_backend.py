@@ -28,6 +28,11 @@ _CUSTOM = "custom (use model_name below)"
 # Hybrid reasoning models (Qwen3, DeepSeek-R1, ...) think before answering.
 # The thinking is dead weight here - the H3 format is spelled out in the system
 # prompt - and on a local box it can triple the wall-clock time of a run.
+_STRUCTURED = [
+    "auto (JSON with a schema on Ollama, text envelopes elsewhere)",
+    "on (ask every backend for JSON)",
+    "off (text envelopes)",
+]
 _THINKING = ["off (faster - recommended)", "on", "model default"]
 _KNOWN_PREFIXES = set(LOCAL_PROVIDERS) | {"claude", "gpt", "gemini", "grok", "groq", "codex", CLAUDE_CODE_PROVIDER}
 
@@ -121,6 +126,25 @@ class H3LLMBackend:
                         "thinking mode ignore this."
                     ),
                 }),
+                "unload_after": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": (
+                        "Ollama only: once a writer has all its scenes, ask Ollama to drop the model "
+                        "from VRAM right away instead of keeping it for its keep_alive window, so the "
+                        "memory is back for the video render that follows. Off keeps it loaded (faster "
+                        "if another writer runs next)."
+                    ),
+                }),
+                "structured_output": (_STRUCTURED, {
+                    "default": _STRUCTURED[0],
+                    "tooltip": (
+                        "How multi-scene answers travel back. auto: on Ollama the reply is JSON "
+                        "constrained by a schema (valid by construction - no envelope to mis-write), "
+                        "other backends keep the text envelopes. on: every backend is asked for JSON "
+                        "(not enforced off Ollama; the text envelopes remain the fallback). off: text "
+                        "envelopes everywhere. The scene text itself is unchanged either way."
+                    ),
+                }),
             },
         }
 
@@ -135,7 +159,7 @@ class H3LLMBackend:
     )
 
     def build(self, model, model_name, base_url, temperature, max_tokens,
-              inline_skill_references, num_ctx=0, thinking=None):
+              inline_skill_references, num_ctx=0, thinking=None, unload_after=True, structured_output=None):
         chosen = (model_name or "").strip() if model == _CUSTOM else (model or "").strip()
         if not chosen:
             raise ValueError("H3 LLM Backend: pick a model or fill in model_name.")
@@ -154,5 +178,7 @@ class H3LLMBackend:
             "num_ctx": int(num_ctx or 0),
             # None = say nothing and let the model do whatever it does by default
             "think": None if mode.startswith("model default") else mode.startswith("on"),
+            "structured": str(structured_output or _STRUCTURED[0]).split(" ", 1)[0],
+            "unload_after": True if unload_after is None else bool(unload_after),
         }
         return (llm, chosen)

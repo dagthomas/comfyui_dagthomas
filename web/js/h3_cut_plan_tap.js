@@ -218,9 +218,10 @@ app.registerExtension({
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const r = onNodeCreated?.apply(this, arguments);
-      this.addWidget("button", "🎮 Tap the cuts", null, () => {
+      const __btn = this.addWidget("button", "🎮 Tap the cuts", null, () => {
         openTap(this).catch((err) => console.error("[APNext tap]", err));
       });
+      __btn.serialize = false;   // a button has no value to save; a saved null would shift later widgets
       return r;
     };
   },

@@ -442,9 +442,10 @@ app.registerExtension({
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const r = onNodeCreated?.apply(this, arguments);
-      this.addWidget("button", "📏 Show 1024 tokens", null, () => {
+      const __btn = this.addWidget("button", "📏 Show 1024 tokens", null, () => {
         openModal(this).catch((err) => console.error("[APNext ctx]", err));
       });
+      __btn.serialize = false;   // a button has no value to save; a saved null would shift later widgets
       return r;
     };
   },

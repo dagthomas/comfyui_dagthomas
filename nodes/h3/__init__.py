@@ -24,6 +24,7 @@ from .claude_code_short_film_writer import H3ClaudeCodeShortFilmWriter
 from .music_video_minimal import H3MusicVideoMinimal
 from .scenes_review import H3ScenesReview
 from .scenes_review_gate import H3ScenesReviewGate
+from .chain_render import H3MusicVideoChainRender
 from .cut_plan import H3CutPlan
 from .sync_check import H3SyncCheck
 from .song_analysis import H3SongAnalysis
@@ -68,6 +69,7 @@ NODE_CLASS_MAPPINGS = {
     "H3SongAnalysis": H3SongAnalysis,
     "H3CutPlan": H3CutPlan,
     "H3SyncCheck": H3SyncCheck,
+    "H3MusicVideoChainRender": H3MusicVideoChainRender,
     "H3SoundEvents": H3SoundEvents,
     "H3SceneBrief": H3SceneBrief,
     "H3ScenesLoad": H3ScenesLoad,
@@ -103,6 +105,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3SongAnalysis": "APNext H3 Song Analysis (BPM / intensity)",
     "H3CutPlan": "APNext H3 Cut Plan (scenes from the music)",
     "H3SyncCheck": "APNext H3 Sync Check (does the picture hit the beat?)",
+    "H3MusicVideoChainRender": "APNext H3 Music Video Chain Render (carry frames between scenes)",
     "H3SoundEvents": "APNext H3 Sound Events (bass hits / drops / stops)",
     "H3SceneBrief": "APNext H3 Scene Brief (manual scene)",
     "H3ScenesLoad": "APNext H3 Scenes Load (from disk)",

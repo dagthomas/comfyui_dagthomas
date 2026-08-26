@@ -26,6 +26,7 @@ from ...utils.apnext_context import (
 )
 from ...utils.constants import CUSTOM_CATEGORY
 from .claude_code_support import (
+    release_local_llm,
     resolve_backend_model,
     BASE_SKILLS,
     CORE_SKILL,
@@ -47,6 +48,7 @@ from .claude_code_crossover_writer import (
 from .lyrics_transcribe import transcribe_song_lyrics
 from .scenes_store import save_scene_bundle
 from .sound_events import parse_events, segment_event_lines
+from .chain_render import flow_flags_from_cut_plan
 from .song_structure import (
     downbeats_in_span,
     section_for_span,
@@ -619,6 +621,7 @@ class H3ClaudeCodeMusicVideoWriter:
         prior_scenes=(),
         profile=None,
         structure=None,
+        flow_flags=(),
         plan_only=False,
         plan_text="",
     ):
@@ -652,9 +655,10 @@ class H3ClaudeCodeMusicVideoWriter:
             if measured and not any(measured.split(" ")[0] in t.lower() for t in tags):
                 tags.append(measured)
             marker = "" if plan_only else ("  <-- write this one" if first <= i <= last else "")
+            continues = " | CONTINUES the previous take" if (i - 1 < len(flow_flags) and flow_flags[i - 1]) else ""
             lines.append(
                 f"PIECE {i:02d}: {fmt_time(s)}-{fmt_time(e)} | duration {e - s:.2f} | energy {label}"
-                + (f" | section {'/'.join(tags)}" if tags else "") + marker
+                + (f" | section {'/'.join(tags)}" if tags else "") + continues + marker
             )
             if sung:
                 for t, line, exact in sung:
@@ -915,6 +919,17 @@ class H3ClaudeCodeMusicVideoWriter:
             "given) and against the other rows of the scene plan: if it would read like "
             "any of them, change where it is, what happens, and how it opens."
         )
+        if any(flow_flags):
+            lines.append(
+                "- CONTINUING PIECES: a piece marked `CONTINUES the previous take` is rendered with "
+                "the last frames of the previous piece pinned to its head - it is the SAME shot "
+                "carrying on, not a new one. Its first sentence opens on the last frame of the "
+                "previous piece and names what is on screen (`Opens on the last frame of the previous "
+                "scene: <Subject 1> still mid-turn at screen-left, the same amber lamplight`), it is "
+                "ONE continuous take with no editorial cut inside, and only what the story changes "
+                "changes. Pieces without the mark open on a hard cut, as usual - that is where the "
+                "big visual switches belong."
+            )
         lines.append(
             "- FIND A PLOT: invent a concrete story told in images, with a visible setup, an "
             "escalation, and a payoff in the final scene - the story this specific song, "
@@ -1115,12 +1130,15 @@ class H3ClaudeCodeMusicVideoWriter:
         lyrics_driven = bool(scenes_from_lyrics)
         structure = _measure_structure(audio)
         planned = parse_cut_plan(cut_plan) if (cut_plan or "").strip() else []
+        flow_flags = ()
         if planned:
             feats = analyse(audio)
             segments = normalise_cut_plan(planned, feats["duration"])
+            flow_flags = tuple(flow_flags_from_cut_plan(cut_plan, len(segments)))
             print(
                 f"✂️ H3 Music Video Writer: {len(segments)} scene(s) from the connected cut plan - "
-                "segment_mode, max_segment_seconds and min_segment_seconds are ignored."
+                "segment_mode, max_segment_seconds and min_segment_seconds are ignored"
+                + (f"; {sum(flow_flags)} piece(s) continue the previous take." if any(flow_flags) else ".")
             )
         elif lyrics_driven and timed:
             segments, feats = segment_by_lyrics(
@@ -1157,6 +1175,7 @@ class H3ClaudeCodeMusicVideoWriter:
         n = len(segments)
         print(f"🎵 H3 Music Video Writer | {fmt_time(total_seconds)} song -> {n} piece(s)\n{table}")
 
+        local = None
         try:
             dialogue_language = resolve_dialogue_language(dialogue_language, custom_dialogue_language)
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
@@ -1206,7 +1225,8 @@ class H3ClaudeCodeMusicVideoWriter:
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
                     prior_scenes=prior,
-                    profile=profile, structure=structure, plan_only=plan_only, plan_text=plan_text,
+                    profile=profile, structure=structure, flow_flags=flow_flags,
+                    plan_only=plan_only, plan_text=plan_text,
                 )
                 return user_prompt
 
@@ -1255,7 +1275,7 @@ class H3ClaudeCodeMusicVideoWriter:
                         text, _sid, info = run_h3_claude_code(
                             system_prompt, user_prompt, images, chunk_model, research,
                             use_subscription, timeout_seconds, "", working_dir, director,
-                            skills=skills, local=local,
+                            skills=skills, local=local, structured="scenes",
                         )
                     except Exception as exc:
                         # a timed-out multi-scene chunk is split in two and both
@@ -1315,6 +1335,7 @@ class H3ClaudeCodeMusicVideoWriter:
                         model if lo == 1 else chunk_model,
                         research, use_subscription, timeout_seconds,
                         session_id, working_dir, director, skills=skills, local=local,
+                        structured="scenes",
                     )
 
                 while first <= n:
@@ -1368,6 +1389,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 text, _, repair_info = run_h3_claude_code(
                     system_prompt, prompt, None, model, False, use_subscription, timeout_seconds,
                     session_id, working_dir, director, skills=skills, local=local,
+                    structured="scenes",
                 )
                 return text, repair_info
 
@@ -1415,6 +1437,8 @@ class H3ClaudeCodeMusicVideoWriter:
                 [message] * n, durations, frames, audio_segments, table, message, "", cast_text,
                 n, float(total_seconds), "", "error",
             ) + passthrough + (clip_starts, project_name_prefix(project_name))
+        finally:
+            release_local_llm(local)
 
 
 def seconds_for(frames):

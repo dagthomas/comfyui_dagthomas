@@ -1468,7 +1468,11 @@
         "",
         1.0,
         8000,
-        false
+        false,
+        32768,
+        "off (faster - recommended)",
+        true,
+        "auto (JSON with a schema on Ollama, text envelopes elsewhere)"
       ],
       "title": "H3 LLM Backend — one backend, two nodes"
     },

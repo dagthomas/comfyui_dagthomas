@@ -941,19 +941,19 @@ class H3SoundEvents:
                     "default": True,
                     "tooltip": "Verse/chorus turns, from the same novelty over a 4 s window.",
                 }),
+                "accents": ("BOOLEAN", {
+                    "default": False,
+                    "tooltip": (
+                        "Hats, snares and cymbals (2-12 kHz flux). Off by default: on most "
+                        "tracks this alone is hundreds of events and it crowds out the rest."
+                    ),
+                }),
                 "rejected": ("STRING", {
                     "default": "",
                     "tooltip": (
                         "Hits you have struck out on the preview timeline (click a tick in "
                         "\U0001F39A Preview events), as seconds separated by spaces. Anything within "
                         "50 ms of a listed time is dropped from the output. Clear to keep everything."
-                    ),
-                }),
-                "accents": ("BOOLEAN", {
-                    "default": False,
-                    "tooltip": (
-                        "Hats, snares and cymbals (2-12 kHz flux). Off by default: on most "
-                        "tracks this alone is hundreds of events and it crowds out the rest."
                     ),
                 }),
             },

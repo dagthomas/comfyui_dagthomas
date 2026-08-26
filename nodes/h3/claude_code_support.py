@@ -225,6 +225,8 @@ def local_llm_options(llm=None):
         "max_tokens": int(llm.get("max_tokens", 8000) or 8000),
         "num_ctx": int(llm.get("num_ctx", 0) or 0),
         "think": llm.get("think"),
+        "structured": str(llm.get("structured") or "auto"),
+        "unload_after": bool(llm.get("unload_after", True)),
     }
 
 
@@ -289,8 +291,44 @@ def save_local_session(session_id, data):
         print(f"⚠️ could not save H3 local session {session_id}: {exc}")
 
 
+def release_local_llm(local):
+    """
+    A writer is done with its model: if the backend asked for it and the model
+    is an Ollama one, have Ollama unload it now so the VRAM is free for the
+    render. Safe to call with None or after a failed run.
+    """
+    local = local or {}
+    model = str(local.get("model_override") or "").strip()
+    if not local.get("unload_after") or not model.lower().startswith("ollama:"):
+        return False
+    from ...utils.llm_router import unload_ollama_model
+    ok = unload_ollama_model(model, local.get("base_url") or None)
+    if ok:
+        print(f"\U0001F9F9 H3: '{model}' unloaded from Ollama - VRAM handed back to the render.")
+    return ok
+
+
+def _structured_plan(model, local, structured):
+    """
+    (schema_or_None, ask_for_json) for this call. `structured` names what the
+    caller expects back ("scenes"); the backend's `structured_output` mode says
+    how far to go: auto = enforce with a schema on Ollama only, on = ask every
+    backend (enforced where possible), off = never.
+    """
+    if not structured:
+        return None, False
+    mode = str((local or {}).get("structured") or "auto").lower()
+    if mode.startswith("off"):
+        return None, False
+    from .scenes_support import SCENES_JSON_SCHEMA
+    on_ollama = str(model or "").lower().startswith("ollama:")
+    if on_ollama:
+        return SCENES_JSON_SCHEMA, True
+    return None, mode.startswith("on")
+
+
 def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
-                   director, skills, local):
+                   director, skills, local, structured=None):
     """One H3 turn through the LLM router (Ollama, LM Studio, local, API models)."""
     resume_session_id = (resume_session_id or "").strip()
     session = load_local_session(resume_session_id) if resume_session_id else None
@@ -320,6 +358,11 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
                 skills, include_references=local.get("inline_references", False)
             )
 
+    schema, ask_json = _structured_plan(model, local, structured)
+    if ask_json:
+        from .scenes_support import scenes_json_instruction
+        user_prompt = (user_prompt or "") + scenes_json_instruction()
+
     started = time.monotonic()
     text, resolved = call_llm(
         model,
@@ -332,6 +375,7 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
         history=history,
         num_ctx=local.get("num_ctx", 0),
         think=local.get("think"),
+        format_schema=schema,
     )
     duration = time.monotonic() - started
 
@@ -633,6 +677,7 @@ def run_h3_claude_code(
     director=False,
     skills=BASE_SKILLS,
     local=None,
+    structured=None,
 ):
     """
     One H3 turn through the CLI - or, when `model` / `local["model_override"]`
@@ -658,6 +703,7 @@ def run_h3_claude_code(
             print(f"ℹ️  research is a Claude Code feature; '{model}' writes without web research.")
         return _run_h3_router(
             system_prompt, user_prompt, images, model, resume_session_id, director, skills, local,
+            structured=structured,
         )
 
     working_dir = (working_dir or "").strip()
@@ -683,6 +729,10 @@ def run_h3_claude_code(
     add_dirs = [SKILLS_ROOT] if director else None
     if director and system_prompt and not resume_session_id:
         system_prompt = system_prompt + director_block(skills)
+    _schema, ask_json = _structured_plan(model, local, structured)
+    if ask_json:   # 'on': the CLI cannot enforce a schema, but Claude writes JSON reliably
+        from .scenes_support import scenes_json_instruction
+        user_prompt = (user_prompt or "") + scenes_json_instruction()
 
     result = run_claude_code(
         user_prompt,

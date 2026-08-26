@@ -4,6 +4,7 @@
 # ask Claude Code for the same envelope layout, split it the same way, and hand
 # the result out as a ComfyUI list. This keeps the contract in one place.
 
+import json
 import re
 
 from .common import strip_code_fence
@@ -753,6 +754,111 @@ def duration_directive(duration_mode, scene_duration):
     )
 
 
+# ---- structured transport ---------------------------------------------------
+# The scene text stays what it is (the labelled fields the video node reads);
+# only the envelope changes: a JSON object instead of === SCENE === markers.
+# On Ollama the schema is enforced by the sampler, so the structure cannot
+# break; elsewhere it is a request the parser checks, falling back to the
+# text envelopes when a model ignores it.
+SCENES_JSON_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "synopsis": {"type": "string"},
+        "scenes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "scene": {"type": "integer"},
+                    "duration": {"type": "number"},
+                    "prompt": {"type": "string"},
+                },
+                "required": ["scene", "prompt"],
+            },
+        },
+    },
+    "required": ["scenes"],
+}
+
+
+def scenes_json_instruction():
+    return (
+        "\n\nOUTPUT FORMAT - JSON, not envelopes: return ONLY one JSON object, nothing before "
+        "or after it, shaped {\"synopsis\": \"<the synopsis block's text when one is asked for, "
+        "otherwise an empty string>\", \"scenes\": [{\"scene\": <number>, \"duration\": "
+        "<seconds>, \"prompt\": \"<that scene's complete text: the labelled fields exactly as "
+        "specified, newlines included>\"}]}. One array item per requested scene, in order. Do "
+        "not add === SCENE === or === END SCENE === lines inside the prompt strings - the JSON "
+        "is the envelope."
+    )
+
+
+_JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
+
+
+def _strip_envelope_lines(prompt):
+    """A model that writes JSON *and* envelopes: drop the marker lines, keep the fields."""
+    kept = [
+        line for line in prompt.splitlines()
+        if not re.match(r"^\s*(?:\*\*)?===\s*(?:END\s+)?(?:SCENE|SYNOPSIS)\b.*===", line, re.IGNORECASE)
+    ]
+    return "\n".join(kept).strip()
+
+
+def parse_scenes_json(text, fallback_duration):
+    """(synopsis, [(number, duration, prompt), ...]) from a JSON reply, or None if it is not one."""
+    raw = (text or "").strip()
+    if not raw:
+        return None
+    candidates = [m.group(1) for m in _JSON_FENCE_RE.finditer(raw)] + [raw]
+    a, b = raw.find("{"), raw.rfind("}")
+    if a >= 0 and b > a:
+        candidates.append(raw[a:b + 1])
+    a, b = raw.find("["), raw.rfind("]")
+    if a >= 0 and b > a:
+        candidates.append(raw[a:b + 1])
+    data = None
+    for cand in candidates:
+        try:
+            data = json.loads(cand)
+            break
+        except ValueError:
+            continue
+    if data is None:
+        return None
+    synopsis = ""
+    items = data
+    if isinstance(data, dict):
+        synopsis = str(data.get("synopsis") or "").strip()
+        items = data.get("scenes")
+    if not isinstance(items, list):
+        return None
+    scenes = []
+    for k, item in enumerate(items, 1):
+        if not isinstance(item, dict):
+            continue
+        prompt = item.get("prompt") or item.get("text") or item.get("body") or ""
+        if not isinstance(prompt, str) or not prompt.strip():
+            continue
+        number = item.get("scene", item.get("number", item.get("no", k)))
+        try:
+            number = int(number)
+        except (TypeError, ValueError):
+            number = k
+        duration = item.get("duration")
+        try:
+            duration = float(duration) if duration is not None else float(fallback_duration)
+        except (TypeError, ValueError):
+            duration = float(fallback_duration)
+        prompt = _strip_envelope_lines(strip_code_fence(prompt))
+        prompt = re.sub(r"\*\*(\w+):\*\*", r"\1:", prompt)
+        scenes.append((number, duration, prompt))
+    if not scenes:
+        return None
+    scenes.sort(key=lambda s: s[0])
+    return synopsis, scenes
+
+
 def parse_scenes(text, fallback_duration):
     """
     Split Claude's answer into (synopsis, [(number, duration, prompt), ...]).
@@ -760,6 +866,10 @@ def parse_scenes(text, fallback_duration):
     Falls back to treating the whole text as one scene if no envelopes are
     found, so a slightly off-format answer still yields something usable.
     """
+    structured = parse_scenes_json(text, fallback_duration)
+    if structured is not None:
+        return structured
+
     synopsis_match = _SYNOPSIS_RE.search(text)
     synopsis = synopsis_match.group(1).strip() if synopsis_match else ""
 

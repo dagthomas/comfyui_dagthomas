@@ -554,6 +554,13 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.chain_render import H3MusicVideoChainRender
+    NEW_MAPPINGS["H3MusicVideoChainRender"] = H3MusicVideoChainRender
+    NEW_DISPLAY_MAPPINGS["H3MusicVideoChainRender"] = "APNext H3 Music Video Chain Render (carry frames between scenes)"
+except Exception:
+    pass
+
+try:
     from .nodes.h3.sync_check import H3SyncCheck
     NEW_MAPPINGS["H3SyncCheck"] = H3SyncCheck
     NEW_DISPLAY_MAPPINGS["H3SyncCheck"] = "APNext H3 Sync Check (does the picture hit the beat?)"

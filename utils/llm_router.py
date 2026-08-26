@@ -474,6 +474,27 @@ def _ollama_api_root(base_url=None):
     return url[:-3].rstrip("/") if url.endswith("/v1") else url
 
 
+def unload_ollama_model(model, base_url=None, timeout=20):
+    """
+    Ask Ollama to unload `model` (an 'ollama:tag' or bare tag) right now, so its
+    VRAM goes back to whatever renders next. Ollama keeps a model loaded for
+    `keep_alive` (5 min by default) after the last request; a generate call
+    with keep_alive 0 and no prompt is the documented way to release it early.
+    Returns True when Ollama acknowledged, False otherwise - never raises.
+    """
+    tag = (model or "").strip()
+    if tag.lower().startswith("ollama:"):
+        tag = tag.split(":", 1)[1]
+    if not tag:
+        return False
+    try:
+        _post_json(f"{_ollama_api_root(base_url)}/api/generate", {"model": tag, "keep_alive": 0}, timeout)
+        return True
+    except Exception as exc:
+        print(f"\u26a0\ufe0f could not unload '{tag}' from Ollama: {exc}")
+        return False
+
+
 def _post_json(url, payload, timeout):
     """POST JSON and return the decoded reply, raising with the server's text."""
     if httpx is not None:
@@ -494,7 +515,7 @@ def _post_json(url, payload, timeout):
 
 def _call_ollama_native(
     model, user_prompt, system_prompt, images, temperature, seed, max_tokens,
-    base_url=None, history=None, num_ctx=0, think=None,
+    base_url=None, history=None, num_ctx=0, think=None, format_schema=None,
 ):
     """
     One turn through Ollama's own `/api/chat` instead of its OpenAI shim.
@@ -524,6 +545,10 @@ def _call_ollama_native(
         options["seed"] = seed
 
     payload = {"model": model, "messages": messages, "stream": False, "options": options}
+    if format_schema:
+        # Ollama constrains the sampler to this JSON schema: the reply is valid
+        # JSON of that shape by construction, not by the model's good will.
+        payload["format"] = format_schema
     if think is not None:
         payload["think"] = bool(think)
 
@@ -677,6 +702,7 @@ def call_llm(
     history=None,
     num_ctx=0,
     think=None,
+    format_schema=None,
 ):
     """
     Send a prompt to whichever provider `model_name` selects.
@@ -697,7 +723,7 @@ def call_llm(
     resolved = resolve_model(model_name)
     provider, model = split_model(resolved)
 
-    if provider == "ollama" and (num_ctx or think is not None):
+    if provider == "ollama" and (num_ctx or think is not None or format_schema):
         text = _call_ollama_native(
             model,
             user_prompt,
@@ -710,6 +736,7 @@ def call_llm(
             history=history,
             num_ctx=num_ctx,
             think=think,
+            format_schema=format_schema,
         )
     elif provider in _OPENAI_COMPATIBLE or provider in _LOCAL_PROVIDERS:
         text = _call_openai_compatible(

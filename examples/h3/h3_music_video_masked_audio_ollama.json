@@ -1402,7 +1402,9 @@
         8000,
         false,
         32768,
-        "off (faster - recommended)"
+        "off (faster - recommended)",
+        true,
+        "auto (JSON with a schema on Ollama, text envelopes elsewhere)"
       ],
       "color": "#232",
       "bgcolor": "#353"

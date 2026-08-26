@@ -423,9 +423,10 @@ app.registerExtension({
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const r = onNodeCreated?.apply(this, arguments);
-      this.addWidget("button", "🎚 Preview events", null, () => {
+      const __btn = this.addWidget("button", "🎚 Preview events", null, () => {
         openModal(this).catch((err) => console.error("[APNext sound events]", err));
       });
+      __btn.serialize = false;   // a button has no value to save; a saved null would shift later widgets
       return r;
     };
   },

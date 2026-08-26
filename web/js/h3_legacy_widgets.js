@@ -84,9 +84,25 @@ function drawTooltip(node, ctx, lines) {
   ctx.restore();
 }
 
+// Nodes whose JS button used to be saved as a trailing `null`: strip those
+// nulls so the real widgets that were added later keep their defaults.
+const BUTTON_NODES = new Set(["H3LLMBackend", "H3SoundEvents", "H3CutPlan"]);
+
 app.registerExtension({
   name: "apnext.h3.legacy_widgets",
   async beforeRegisterNodeDef(nodeType, nodeData) {
+    if (BUTTON_NODES.has(nodeData?.name)) {
+      const configure = nodeType.prototype.configure;
+      nodeType.prototype.configure = function (info) {
+        const values = info?.widgets_values;
+        if (Array.isArray(values) && values.length && values[values.length - 1] === null) {
+          const trimmed = [...values];
+          while (trimmed.length && trimmed[trimmed.length - 1] === null) trimmed.pop();
+          info = { ...info, widgets_values: trimmed };
+        }
+        return configure?.call(this, info);
+      };
+    }
     const rule = REMOVED[nodeData?.name];
     if (!rule) return;
     const displayName = nodeData.display_name || nodeData.name;

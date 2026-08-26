@@ -1263,7 +1263,11 @@
         "",
         0.9,
         12000,
-        false
+        false,
+        32768,
+        "off (faster - recommended)",
+        true,
+        "auto (JSON with a schema on Ollama, text envelopes elsewhere)"
       ],
       "title": "H3 LLM Backend — Ollama (qwen3:14b)"
     },
