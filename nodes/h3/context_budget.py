@@ -31,6 +31,7 @@ except Exception:
     ClientTimeout = None
 
 from .common import load_guide
+from ...utils.llm_router import wildcard_host_to_localhost
 
 # The passage the sample is cut from. The point of the modal is to show what a
 # context window holds, so it is cut from the H3 guide the writers actually
@@ -58,6 +59,8 @@ def _api_root(base_url):
         url = url.strip().rstrip("/")
     if "://" not in url:
         url = f"http://{url}"
+    # OLLAMA_HOST=0.0.0.0 is a bind address, not somewhere to connect to.
+    url = wildcard_host_to_localhost(url)
     if url.endswith("/v1"):
         url = url[:-3].rstrip("/")
     return url

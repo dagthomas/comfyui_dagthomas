@@ -61,6 +61,10 @@ readable action, sound that belongs to the picture.
 - For lateral or tracking motion, distinguish subject motion in world space, camera speed,
   and foreground / midground / background parallax. Do not imply acceleration, teleporting
   or root jumps when constant motion is wanted.
+- Compounding qualities go in a list, not a sentence per adjective: `He stomps his foot on
+  the ground. The stomp is: intense, aggressive, angry, forceful.` (inline or one per line
+  with dashes) beats `He stomps intensely. The stomp is aggressive and angry. The stomp is
+  forceful.` Same effect on the model, far fewer tokens; return to prose for the next beat.
 - I2VA preserves the opening frame and develops forward; FL2VA describes the change and
   lands exactly on the ending frame; L2VA infers a plausible earlier state and converges on
   the last frame. Details are in `h3-base-format`.

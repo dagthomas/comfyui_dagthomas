@@ -525,9 +525,10 @@ def resolve_draft_model(draft_model, model, local):
 # ---------------------------------------------------------------------------
 # Project names - a memorable cinematography-flavoured tag for a run, so every
 # file the run produces (videos, scene bundles) is visibly from the same
-# project. The front-end (web/js/h3_project_name.js) fills the widget with a
-# fresh one when a node is created; keep the word pools there in the same
-# spirit when editing these.
+# project. The front-end (web/js/h3_project_name.js) fills the widget with one
+# when a node is created and swaps in a new one whenever the seed changes;
+# keep the word pools there identical (same words, same order) when editing
+# these, since both sides derive the name from the seed the same way.
 # ---------------------------------------------------------------------------
 
 _PROJECT_LOOKS = (
@@ -545,11 +546,32 @@ _PROJECT_GEAR = (
 )
 
 
+_MASK64 = (1 << 64) - 1
+
+
+def _splitmix64(seed):
+    """Deterministic 64-bit stream (splitmix64). Mirrored in
+    web/js/h3_project_name.js so a seed names the project identically in the
+    UI and in headless/API runs."""
+    state = seed & _MASK64
+    while True:
+        state = (state + 0x9E3779B97F4A7C15) & _MASK64
+        z = state
+        z = ((z ^ (z >> 30)) * 0xBF58476D1CE4E5B9) & _MASK64
+        z = ((z ^ (z >> 27)) * 0x94D049BB133111EB) & _MASK64
+        yield z ^ (z >> 31)
+
+
 def generate_project_name(seed=None):
-    """A random PascalCase name like 'NeonDollyFoley'. A fixed seed (>= 0)
-    always yields the same name, so seeded re-runs keep their project tag."""
+    """A PascalCase name like 'NeonDollyFoley'. A fixed seed (>= 0) always
+    yields the same name - the same one the front-end shows for that seed -
+    so seeded re-runs keep their project tag; anything else is random."""
     import random
-    rng = random.Random(seed) if isinstance(seed, int) and seed >= 0 else random.Random()
+    if isinstance(seed, int) and not isinstance(seed, bool) and seed >= 0:
+        stream = _splitmix64(seed)
+        return "".join(pool[next(stream) % len(pool)]
+                       for pool in (_PROJECT_LOOKS, _PROJECT_MOVES, _PROJECT_GEAR))
+    rng = random.Random()
     return rng.choice(_PROJECT_LOOKS) + rng.choice(_PROJECT_MOVES) + rng.choice(_PROJECT_GEAR)
 
 

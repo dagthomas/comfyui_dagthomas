@@ -127,6 +127,29 @@ _LOCAL_CACHE_TTL = 60.0
 _local_models_cache = {"stamp": None, "models": []}
 
 
+# OLLAMA_HOST is Ollama's *bind* address. People set it to `0.0.0.0:11434` (or
+# `:11434`) so WSL / the LAN can reach the server - but a wildcard is not a
+# destination, and Windows answers a connect() to 0.0.0.0 with WinError 10049.
+_WILDCARD_HOSTS = {"0.0.0.0", "::", "0:0:0:0:0:0:0:0"}
+
+
+def wildcard_host_to_localhost(url):
+    """`http://0.0.0.0:11434` / `http://:11434` -> `http://localhost:11434`."""
+    parts = urlsplit(url)
+    try:
+        host = parts.hostname
+    except ValueError:
+        return url
+    if host and host not in _WILDCARD_HOSTS:
+        return url
+    port = f":{parts.port}" if parts.port else ""
+    if not host and not port:
+        # `http://:11434` has no hostname; urlsplit keeps the port in netloc.
+        port = parts.netloc if parts.netloc.startswith(":") else ""
+    netloc = f"localhost{port}"
+    return url.replace(parts.netloc, netloc, 1)
+
+
 def _normalise_base_url(url):
     """
     Accept the shapes people actually paste: `localhost:11434`, a bare host with
@@ -139,6 +162,7 @@ def _normalise_base_url(url):
 
     if "://" not in url:
         url = f"http://{url}"
+    url = wildcard_host_to_localhost(url)
     if urlsplit(url).path in ("", "/"):
         url = f"{url}/v1"
 
