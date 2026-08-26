@@ -790,7 +790,7 @@ Turns a **song** into a whole music video. The node cuts the audio into consecut
 | `lyrics` | One line per line. `[0:15] line`, `0:15 line` or LRC `[00:15.20] line` make the sync exact; `[Chorus]`-style tags are kept; untimed lines are spread evenly (approximate). Empty = instrumental |
 | `performance_mode` | Performance / Narrative / Mixed |
 | `segment_mode`, `max_segment_seconds`, `min_segment_seconds` | *Auto* cuts on the music inside the allowed range, *Fixed* takes the longest allowed piece each time, *Lyric lines* tries hardest to cut before a line |
-| `shots_per_scene`, `visual_style`, `dialogue_language` (lyric language), `wildness` | As on the other writers |
+| `shots_per_scene`, `visual_style`, `dialogue_language` (lyric language) | As on the other writers - there is no `wildness` dial here: the lyrics and `direction` steer the video |
 | `cast_1..4`, `extra_cast` | The performer(s): H3 Characters (`✏️ custom` + `wardrobe` is made for this) or typed lines such as `Lena: a singer in her 30s with a platinum pixie cut` |
 | `wardrobe`, `locations`, `enforce_wardrobe` | Locks as on the Crossover Writer (cast-carried wardrobe is merged in). For runs of more than 6 scenes the locks are checked and reported but not re-emitted |
 | `image_1..9`, `image_notes` | Reference pictures (the performer's face, the place); passed through to the video node |
@@ -873,6 +873,8 @@ Narration, action and camera language always stay English; only the spoken words
 #### The `wildness` slider
 
 One dial from conservative to unhinged. Above 40 it also injects concrete surreal **events** (not mood words) drawn from a 40-entry pool — selection is driven by `seed`, so the same seed gives the same weirdness.
+
+The **Music Video Writer** and **Music Video (Minimal)** have no `wildness` dial at all - their story, setting and any surreal beats come from the lyrics and `direction` only.
 
 | Range | Band | Behaviour | Random elements |
 |-------|------|-----------|-----------------|

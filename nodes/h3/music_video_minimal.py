@@ -93,14 +93,10 @@ class H3MusicVideoMinimal:
                 "default": 30, "min": 0, "max": 100, "step": 1,
                 "tooltip": _PACE_TOOLTIP,
             }),
-            "wildness": ("INT", {
-                "default": 45, "min": 0, "max": 100, "step": 1,
-                "tooltip": "0 = grounded performance video, 100 = fully surreal. Above 40 seeds surreal events.",
-            }),
             "model": cc["model"],
             "seed": ("INT", {
                 "default": -1, "min": -1, "max": 0xffffffffffffffff,
-                "tooltip": "Seeds the surreal picks and controls caching. -1 re-runs every queue.",
+                "tooltip": "Controls caching. -1 re-runs every queue.",
             }),
             "prompt_mode": (PROMPT_MODES, {
                 "default": PROMPT_MODES[1],  # Ref2VA - the pre-switch behaviour
@@ -134,7 +130,7 @@ class H3MusicVideoMinimal:
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
     DESCRIPTION = (
         "The one-box music video: song + lyrics + a cinematic look + three sliders "
-        "(performance, pace, wildness) - the model invents the concept and the performer "
+        "(performance, pace) - the model invents the concept and the performer "
         "and writes the whole video. Attach reference images to fix the performer's face. "
         "The full H3 Music Video Writer runs underneath with sensible defaults; use that "
         "node when you need cast, locks, briefs or the masked-audio path."
@@ -150,8 +146,9 @@ class H3MusicVideoMinimal:
         # anything; the full writer coerces empty values to Auto.
         return True
 
-    def write_video(self, audio, lyrics, visual_style, performance, pace, wildness,
+    def write_video(self, audio, lyrics, visual_style, performance, pace,
                     model, seed, prompt_mode=PROMPT_MODES[1], llm=None, project_name="",
+                    wildness=None,  # removed dial; accepted so old API-format prompts still run
                     **image_slots):
         writer = H3ClaudeCodeMusicVideoWriter()
         result = writer.write_video(
@@ -165,7 +162,6 @@ class H3MusicVideoMinimal:
             shots_per_scene=AUTO,
             visual_style=visual_style,
             dialogue_language=DIALOGUE_LANGUAGES[0],  # Auto (match the lyrics)
-            wildness=wildness,
             model=model,
             research=False,
             director=True,

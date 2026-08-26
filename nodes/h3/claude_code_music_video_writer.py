@@ -68,7 +68,6 @@ from .common import (
     reference_image_inputs,
     reference_image_outputs,
     resolve_dialogue_language,
-    wildness_directive,
 )
 from .music_support import (
     SEGMENT_MODES,
@@ -127,102 +126,8 @@ AUDIO_MODES = [
 # family) creates everything from scratch in words - no <Picture N> labels.
 SHOTS_PER_SCENE = [AUTO, "1", "2", "3", "4"]
 
-# Identical example plots and ending advice in every run steer the model into
-# its favourite clichés (cosmic spectacle mid-video, the performer walking away
-# into the distance at the end). These pools are sampled PER SEED, so every run
-# gets different suggestions - and the stock moves are banned outright below.
-PLOT_ARCHETYPES = [
-    "a heist that goes wrong at the hand-off",
-    "two strangers swapping lives for one night",
-    "a chase in which the pursuer and the prey trade places",
-    "building something impossible by hand before sunrise",
-    "a competition with real stakes - a dance-off, a race, a card game",
-    "sneaking out (or breaking in), one room at a time",
-    "a rescue: someone or something small gets saved",
-    "one object passed hand to hand across a whole city",
-    "a slow-burn revenge that lands in the final chorus",
-    "an ordinary work shift that mutates into a spectacle",
-    "a party assembling itself piece by piece from an empty room",
-    "getting ready for someone who never shows - and showing up for yourself",
-    "a bet between the performer and the band",
-    "repairing something broken - a car, a friendship, a neon sign",
-    "a wedding, funeral or festival crashed and transformed",
-    "teaching someone to dance, sing or drive while the world reacts",
-    "a delivery that must arrive before the last chorus, against everything",
-    "an audition or try-out in front of the wrong audience",
-    "a rumour spreading through a neighbourhood and mutating as it goes",
-    "moving out - a whole life carried down the stairs one box at a time",
-    "a lookalike or double causing chaos the performer gets blamed for",
-    "one long apology, staged bigger and bigger until it is accepted",
-    "a strike, walkout or mutiny that turns into a celebration",
-    "a treasure map, scavenger hunt or trail of clues through everyday places",
-    "a curse or lucky streak that switches owners every chorus",
-    "the last night of a closing place - shop, rink, cinema, pool - lived hard",
-    "an interrupted journey: a commute derailed into an adventure",
-    "a swap gone sideways - a bag, a jacket, a phone taken by mistake",
-    "a small lie that must be physically maintained as it snowballs",
-    "the performer versus a machine, a bureaucracy or the weather - and winning ugly",
-]
-
-ENDING_MOVES = [
-    "the opening image returns, transformed by everything that happened",
-    "a hard cut on the biggest physical action, exactly on the last beat",
-    "the performer finally gets - or loses for good - the thing the video chased",
-    "a direct look into the lens, held through the final note",
-    "the crowd is gone and one small prop from scene 01 remains in frame",
-    "a reversal: whoever had the power in scene 01 has lost it",
-    "the two storylines collide in one frame for the first time",
-    "a diegetic punchline: something on screen answers the last lyric",
-    "the lights cut out mid-move, leaving one practical light burning",
-    "a door, a case or a curtain closes on the action",
-    "the performer joins the crowd and disappears INTO it, not away from it",
-    "the last note freezes on contact - a catch, a kiss, a handshake, a fist on a wall",
-    "the thing built, carried or fought over all video finally gets USED",
-    "someone else picks up the song - the world carries on without the performer",
-    "the payoff lands in the background while the performer, oblivious, keeps going",
-    "the mess is cleaned up in seconds of screen time - except one deliberate trace",
-    "the antagonist and the performer end up laughing at the same thing",
-    "morning light hits the aftermath and makes it beautiful",
-    "the video's running gag pays off one last time, bigger than ever",
-    "an exchange completes: the object from scene 01 finally changes hands for keeps",
-    "the camera stays behind as everyone leaves, holding on what they made",
-    "the loudest moment cuts to the quietest one - one breath, then black",
-    "a repeat of the first gesture of the video, now meaning the opposite",
-    "the performer breaks their own rule from scene 01, and it feels earned",
-]
-
-# Visual worlds (era / subculture / palette / texture), sampled per seed like
-# the plots above - suggestions the model may take or beat, so runs stop
-# defaulting to the same contemporary-urban-neon look.
-WORLD_FLAVORS = [
-    "1970s Polaroid suburbia - faded lawns, station wagons, kitchen formica",
-    "wet neon fish-market at night, crushed ice and hand-painted price signs",
-    "VHS public-access TV studio with cardboard sets and hard tube-light colour",
-    "a 1990s hypermarket after hours - strip light, shrink-wrap, endless aisles",
-    "brutalist swimming baths, chlorine haze and tiled echo",
-    "an allotment village of sheds, hosepipes and prize vegetables",
-    "overnight ferry interior - patterned carpet, fruit machines, sodium deck light",
-    "a paper-lantern night market in monsoon drizzle",
-    "an amateur wrestling hall with folding chairs and a hand-sewn banner",
-    "1960s space-age motel - kidney pools, atomic signage, mint and coral",
-    "a working laundrette at 3am, drum-light and folded towels",
-    "county-fair demolition derby, dust, bunting and butter sculpture",
-    "a grand old cinema mid-demolition, one chandelier still up",
-    "snowed-in petrol station diner on a mountain pass",
-    "a shipping-container port at golden hour, gantry cranes like animals",
-    "pirate-radio tower block - coat hangers, tin foil, bass through concrete",
-    "a botanical greenhouse gone feral inside a dead shopping mall",
-    "backstage at a regional theatre pantomime - ropes, gels, glitter dust",
-    "a chalk-cliff seaside town out of season, shuttered arcades and gulls",
-    "an all-night bakery - flour dust in warm light, steel tables, proofing racks",
-    "a 1980s office tower after the last shift - CRTs, ashtrays, beige everything",
-    "a river barge community with string lights and bicycle ferries",
-    "high-plains rodeo at dusk, sodium floods against a green storm sky",
-    "a telephone-exchange museum of switches, patch cords and clicking relays",
-]
-
 _ANTI_CLICHE_DIRECTIVE = (
-    "BANNED STOCK MOVES at every wildness level (these are model cliches, not "
+    "BANNED STOCK MOVES (these are model cliches, not "
     "creativity - use one only if the user's concept explicitly asks for it): "
     "ANYTHING OUTER SPACE - asteroids, meteors, comets, planets, moons, "
     "galaxies, nebulae, star fields, spacesuits, zero-gravity floating, the "
@@ -239,26 +144,25 @@ _ANTI_CLICHE_DIRECTIVE = (
     "instead."
 )
 
-_WILD_FUN_DIRECTIVE = (
-    "Wild means FUN, not cosmic: keep the unhinged energy, but make the "
-    "weirdness physical, playful and shootable inside the song's own world - "
-    "mischief with scale, materials, gravity of ORDINARY things, crowds moving "
-    "wrong, animals with agendas, furniture with opinions, weather indoors, "
-    "machines coming alive, the set itself misbehaving. Absurd and hilarious "
-    "beats grand and cosmic every time, and the weirdness should escalate "
-    "scene to scene like a joke building to its punchline."
-)
-
 # How many scenes to ask for per model call. A 3-minute song is ~13-20 scenes;
 # one answer that long gets sloppy, so the run is split into chunks that
 # continue the same session (same synopsis, same locks).
 SCENES_PER_CALL = 6
 
-_GIST_RE = re.compile(r"integrated_multimodal_description\s*:\s*(.+)", re.IGNORECASE | re.DOTALL)
+_GIST_RE = re.compile(
+    r"(?:integrated_multimodal_description|detailed_description)\s*:\s*(.+)",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
-def _scene_gist(prompt, limit=160):
-    """One compressed line of what a written scene shows, for the story-so-far recap."""
+def _scene_gist(prompt, limit=240):
+    """
+    One compressed line of what a written scene shows - its place, staging and
+    opening framing - for the story-so-far ledger the next chunk is written
+    against. Every scene opens with the same visual_style sentence, so that
+    sentence is dropped first: a gist that only repeats the look tells the
+    next call nothing about what to avoid.
+    """
     m = _GIST_RE.search(prompt or "")
     text = m.group(1) if m else (prompt or "")
     text = re.split(
@@ -266,6 +170,11 @@ def _scene_gist(prompt, limit=160):
     )[0]
     text = re.sub(r"\[Shot\s*\d+\]\s*", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
+    # drop the style opener ("Live-action, 35mm cinematic ...: punchy ... cast.")
+    # when a real sentence follows it
+    first_stop = re.search(r"[.!?]\s+(?=[A-Z<\[])", text)
+    if first_stop and len(text) - first_stop.end() > 60:
+        text = text[first_stop.end():]
     if len(text) > limit:
         text = text[:limit].rsplit(" ", 1)[0] + "…"
     return text
@@ -326,15 +235,11 @@ class H3ClaudeCodeMusicVideoWriter:
                 "default": "English",
                 "tooltip": "Language of the lyrics (the <d>[...] tag).",
             }),
-            "wildness": ("INT", {
-                "default": 45, "min": 0, "max": 100, "step": 1,
-                "tooltip": "0 = grounded performance video, 100 = fully surreal. Above 40 seeds surreal events.",
-            }),
         }
         required.update(claude_code_inputs())
         required["seed"] = ("INT", {
             "default": -1, "min": -1, "max": 0xffffffffffffffff,
-            "tooltip": "Seeds the surreal picks and controls caching. -1 re-runs every queue.",
+            "tooltip": "Controls caching. -1 re-runs every queue.",
         })
 
         optional = {
@@ -666,9 +571,7 @@ class H3ClaudeCodeMusicVideoWriter:
         shots_per_scene,
         visual_style,
         dialogue_language,
-        wildness,
         extra_instructions,
-        rng,
         wardrobe="",
         locations="",
         image_labels=(),
@@ -684,9 +587,6 @@ class H3ClaudeCodeMusicVideoWriter:
         masked_audio=False,
         scene_briefs="",
         prior_scenes=(),
-        plot_picks=(),
-        ending_picks=(),
-        world_picks=(),
         profile=None,
         plan_only=False,
         plan_text="",
@@ -737,9 +637,20 @@ class H3ClaudeCodeMusicVideoWriter:
             lines.append(plan_text.strip())
             lines.append("")
         if first > 1 and prior_scenes:
-            lines.append("THE STORY SO FAR - what the scenes you already wrote show:")
-            for no, gist in prior_scenes:
+            lines.append(
+                "THE STORY SO FAR - what the scenes you already wrote show. This is also "
+                "your DO-NOT-REPEAT list: every new scene must differ from EVERY line "
+                "below in its place, its staging and its opening framing (unless it is a "
+                "chorus returning to the signature look), and it must move the story on "
+                "from where the last line leaves it:"
+            )
+            for no, gist in prior_scenes[:-1]:
                 lines.append(f"  {no:02d}: {gist}")
+            last_no, last_gist = prior_scenes[-1]
+            lines.append(
+                f"  {last_no:02d} (THE PREVIOUS SCENE - open the next one somewhere else, on a "
+                f"different framing, with a different first movement): {last_gist}"
+            )
             lines.append("")
         lines.append("DIRECTIVES:")
         if beats:
@@ -950,32 +861,23 @@ class H3ClaudeCodeMusicVideoWriter:
             "- NO SCENE REPEATS ITSELF: no two non-chorus scenes share the same "
             "setting-plus-staging combination, and consecutive scenes never open on the "
             "same framing of the same subject - change the place, the distance, the angle "
-            "or who moves first. Only the chorus signature look is allowed to rhyme."
-        )
-        plots = "; ".join(plot_picks) if plot_picks else (
-            "a transformation, a chase, a heist, a ritual"
+            "or who moves first. Only the chorus signature look is allowed to rhyme. "
+            "Before writing each scene, check it against THE STORY SO FAR list (when "
+            "given) and against the other rows of the scene plan: if it would read like "
+            "any of them, change where it is, what happens, and how it opens."
         )
         lines.append(
             "- FIND A PLOT: invent a concrete story told in images, with a visible setup, an "
-            f"escalation, and a payoff in the final scene - for example: {plots} - or "
-            "something better that this specific song demands. Never many variations of a "
+            "escalation, and a payoff in the final scene - the story this specific song, "
+            "its lyrics and the user's direction demand. Never many variations of a "
             "performer standing in one room: something HAPPENS in this video, and every "
-            "scene advances it."
+            "scene advances it, and the last scene lands a real, staged payoff."
         )
-        if ending_picks:
-            lines.append(
-                "- THE LAST SCENE lands a REAL payoff - a concrete story beat, staged and "
-                f"shot like it matters. Strong shapes for this song: {'; '.join(ending_picks)}. "
-                "Pick one of these, or beat them."
-            )
-        if world_picks:
-            lines.append(
-                "- WORLD: unless the user's concept already fixes the setting, consider "
-                f"grounding the video in a world like: {'; '.join(world_picks)} - or a "
-                "world of your own that fits this song better. Whatever you choose, commit "
-                "to its era, palette and textures in every scene instead of defaulting to "
-                "a generic contemporary city."
-            )
+        lines.append(
+            "- WORLD: take the setting, era, palette and textures from the user's direction "
+            "and the lyrics; where they leave it open, choose one that fits this song and "
+            "commit to it in every scene instead of defaulting to a generic contemporary city."
+        )
         lines.append(
             "- LENGTH - H3's own budget, and it is a ceiling, not a target to fill: "
             "`integrated_multimodal_description` is 350-500 words for the WHOLE scene, "
@@ -1012,10 +914,6 @@ class H3ClaudeCodeMusicVideoWriter:
                     "Keep sung lines stable for lip-sync, then let everything around them "
                     "hit." + beat
                 )
-        wild_lines, wild_label = wildness_directive(wildness, rng)
-        lines += [f"- {w}" for w in wild_lines]
-        if wildness > 40:
-            lines.append(f"- {_WILD_FUN_DIRECTIVE}")
         extra = (extra_instructions or "").strip()
         if extra:
             lines.append("")
@@ -1027,7 +925,7 @@ class H3ClaudeCodeMusicVideoWriter:
             if plan_only else
             "Now write the requested envelopes (and the synopsis block when asked), and nothing else."
         )
-        return "\n".join(lines), wild_label
+        return "\n".join(lines)
 
     # ------------------------------------------------------------------
     # Execution
@@ -1045,7 +943,6 @@ class H3ClaudeCodeMusicVideoWriter:
         shots_per_scene,
         visual_style,
         dialogue_language,
-        wildness,
         model,
         research,
         director,
@@ -1078,6 +975,7 @@ class H3ClaudeCodeMusicVideoWriter:
         vocals=None,
         sound_events="",
         events_per_scene=6,
+        wildness=None,  # removed dial; accepted so old API-format prompts still run
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -1184,13 +1082,6 @@ class H3ClaudeCodeMusicVideoWriter:
             dialogue_language = resolve_dialogue_language(dialogue_language, custom_dialogue_language)
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
-            rng = random.Random(current_seed)
-            # one sample per RUN (not per chunk), so every chunk of a long video
-            # is steered toward the same story and the same ending
-            plot_picks = tuple(rng.sample(PLOT_ARCHETYPES, 3))
-            ending_picks = tuple(rng.sample(ENDING_MOVES, 2))
-            # sampled AFTER the plot/ending picks, so existing seeds keep them
-            world_picks = tuple(rng.sample(WORLD_FLAVORS, 2))
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             masked_audio = str(audio_mode or "").startswith("Masked")
@@ -1203,7 +1094,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 f"🎬 H3 Music Video Writer | {'ref' if ref_mode else 'fl'} prompts | "
                 f"{len(cast)} cast | {n} scene(s) | "
                 f"context: {context_summary(context_entries)} | {len(references)} reference image(s) | "
-                f"{performance_mode.split(' ')[0].lower()}{' | lyrics-driven' if lyrics_driven else ''} | wildness {wildness} | "
+                f"{performance_mode.split(' ')[0].lower()}{' | lyrics-driven' if lyrics_driven else ''} | "
                 f"research {'on' if research else 'off'} | director {'on' if director else 'off'} | seed {current_seed}"
             )
 
@@ -1222,21 +1113,20 @@ class H3ClaudeCodeMusicVideoWriter:
                     "serially in that session (parallel_chunks needs a fresh run)."
                 )
 
-            def build_prompt(lo, hi, rng_, plan_only=False, plan_text="", prior=()):
+            def build_prompt(lo, hi, plan_only=False, plan_text="", prior=()):
                 # reads wardrobe/locations at call time, so the locks merged from
                 # the synopsis reach every later prompt
-                user_prompt, _wild = self._build_user_prompt(
+                user_prompt = self._build_user_prompt(
                     cast, direction, segments, labels, frames, placed, performance_mode,
-                    shots_per_scene, visual_style, dialogue_language, wildness,
-                    directions_with_research(extra_instructions, research), rng_,
+                    shots_per_scene, visual_style, dialogue_language,
+                    directions_with_research(extra_instructions, research),
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
                     blind_refs=not show_pictures,
                     beats=beats, beats_per_scene=events_per_scene,
                     image_notes=image_notes, first=lo, last=hi, total_seconds=total_seconds,
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
-                    prior_scenes=prior, plot_picks=plot_picks, ending_picks=ending_picks,
-                    world_picks=world_picks,
+                    prior_scenes=prior,
                     profile=profile, plan_only=plan_only, plan_text=plan_text,
                 )
                 return user_prompt
@@ -1266,7 +1156,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     f"⚡ H3 Music Video Writer: parallel run - plan with '{model}', then "
                     f"{len(ranges)} chunk(s) drafted with '{chunk_model}', up to {workers} at once."
                 )
-                plan_prompt = with_context(build_prompt(1, n, rng, plan_only=True), context_text)
+                plan_prompt = with_context(build_prompt(1, n, plan_only=True), context_text)
                 text, session_id, info = run_h3_claude_code(
                     system_prompt, plan_prompt, images, model, research, use_subscription,
                     timeout_seconds, "", working_dir, director, skills=skills, local=local,
@@ -1278,8 +1168,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 merge_locks(synopsis)
 
                 def write_range(lo, hi, depth=0):
-                    rng_ = random.Random(f"{current_seed}:{lo}:{hi}")
-                    user_prompt = build_prompt(lo, hi, rng_, plan_text=synopsis)
+                    user_prompt = build_prompt(lo, hi, plan_text=synopsis)
                     try:
                         text, _sid, info = run_h3_claude_code(
                             system_prompt, user_prompt, images, chunk_model, research,
@@ -1334,7 +1223,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 story_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
 
                 def ask(lo, hi):
-                    user_prompt = build_prompt(lo, hi, rng, prior=tuple(story_so_far))
+                    user_prompt = build_prompt(lo, hi, prior=tuple(story_so_far))
                     if lo == 1:
                         user_prompt = with_context(user_prompt, context_text)
                     return run_h3_claude_code(
