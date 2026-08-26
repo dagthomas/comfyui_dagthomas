@@ -29,8 +29,10 @@ MODE_CONTINUE = "Continue (render the editor text)"
 MODE_BYPASS = "Bypass (pass scenes through)"
 MODES = [MODE_REVIEW, MODE_CONTINUE, MODE_BYPASS]
 
+# END markers are optional here too (see scenes_support._SCENE_HEAD_RE): a
+# hand edit that loses one must not swallow the scenes after it.
 _ENV_RE = re.compile(
-    r"===\s*SCENE\s+(\d+)\s*===\s*(.*?)\s*===\s*END\s+SCENE\s*\1\s*===",
+    r"===\s*SCENE\s+(\d+)\s*(?:\|[^=\n]*)?===\s*(.*?)\s*(?:===\s*END\s+SCENE\s*\d*\s*===|(?====\s*SCENE\s+\d+)|\Z)",
     re.DOTALL | re.IGNORECASE,
 )
 

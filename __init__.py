@@ -547,6 +547,20 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.cut_plan import H3CutPlan
+    NEW_MAPPINGS["H3CutPlan"] = H3CutPlan
+    NEW_DISPLAY_MAPPINGS["H3CutPlan"] = "APNext H3 Cut Plan (scenes from the music)"
+except Exception:
+    pass
+
+try:
+    from .nodes.h3.sync_check import H3SyncCheck
+    NEW_MAPPINGS["H3SyncCheck"] = H3SyncCheck
+    NEW_DISPLAY_MAPPINGS["H3SyncCheck"] = "APNext H3 Sync Check (does the picture hit the beat?)"
+except Exception:
+    pass
+
+try:
     from .nodes.h3.scene_counter import H3SceneCounter
     NEW_MAPPINGS["H3SceneCounter"] = H3SceneCounter
     NEW_DISPLAY_MAPPINGS["H3SceneCounter"] = "APNext H3 Scene Counter"

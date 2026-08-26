@@ -309,7 +309,68 @@ def place_untimed_lyrics(lyrics, duration, lead_in=0.0):
 # ----------------------------------------------------------------------
 # Segmentation
 
-def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0], lyric_times=()):
+def _structure_bonus_fn(structure, events=None):
+    """
+    Cuts want to land where the song changes. A measured section boundary
+    (chorus in, verse in) is worth more than any onset; a DROP wants the cut
+    just BEFORE it so it lands at the top of the new scene; a STOP closes a
+    scene; a downbeat beats the beat before it. Structure comes from
+    song_structure() and events from the Sound Events node; either may be
+    absent, and then that part is a no-op.
+    """
+    boundaries = [s["start"] for s in (structure or {}).get("sections", [])[1:]]
+    downbeats = (structure or {}).get("downbeats") or []
+    by_kind = {}
+    for e in events or []:
+        by_kind.setdefault(e.get("type"), []).append(float(e.get("t", 0.0)))
+    drops, stops, section_events = by_kind.get("DROP", []), by_kind.get("STOP", []), by_kind.get("SECTION", [])
+
+    def bonus(t):
+        best = 0.0
+        if any(-0.6 <= d - t <= 0.15 for d in drops):
+            best = max(best, 2.5)
+        if any(abs(b - t) <= 0.4 for b in boundaries) or any(abs(x - t) <= 0.4 for x in section_events):
+            best = max(best, 2.0)
+        if any(abs(x - t) <= 0.3 for x in stops):
+            best = max(best, 1.5)
+        if best == 0.0 and any(abs(d - t) <= 0.2 for d in downbeats):
+            best = 0.5
+        return best
+    return bonus
+
+
+def cut_reason(t, structure=None, events=None, lyric_times=(), forced=()):
+    """Why a cut sits where it sits - for the Cut Plan readout."""
+    by_kind = {}
+    for e in events or []:
+        by_kind.setdefault(e.get("type"), []).append(float(e.get("t", 0.0)))
+    if any(abs(f - t) <= 0.35 for f in (forced or ())):
+        return "your tap"
+    if any(-0.6 <= d - t <= 0.15 for d in by_kind.get("DROP", [])):
+        return "drop lands here"
+    if any(abs(s["start"] - t) <= 0.4 for s in (structure or {}).get("sections", [])[1:]):
+        return "section start"
+    if any(abs(x - t) <= 0.4 for x in by_kind.get("SECTION", [])):
+        return "section change"
+    if any(abs(x - t) <= 0.3 for x in by_kind.get("STOP", [])):
+        return "stop"
+    if any(-0.35 <= lt - t <= 0.6 for lt in lyric_times):
+        return "lyric line"
+    if any(abs(d - t) <= 0.2 for d in (structure or {}).get("downbeats") or []):
+        return "downbeat"
+    return "onset"
+
+
+def _forced_end(start, forced, shortest, longest):
+    """A hand-placed cut inside this clip's allowed span, on the frame grid - or None."""
+    for f in forced:
+        if start + shortest - 0.3 <= f <= start + longest + 0.3:
+            frames = max(MIN_FRAMES, min(MAX_FRAMES, frames_for_seconds(f - start)))
+            return start + seconds_for_frames(frames)
+    return None
+
+
+def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0], lyric_times=(), structure=None, events=None, forced=()):
     """
     Cut the song into [(start, end), ...] in seconds. Every segment length is
     on the H3 frame grid except the last one, which takes whatever is left
@@ -322,6 +383,7 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
     shortest = choices[0]
     onset, novelty, times = feats["onset"], feats["novelty"], feats["times"]
     lyric_times = sorted(t for t in lyric_times if t is not None)
+    structure_bonus = _structure_bonus_fn(structure, events)
 
     def lyric_bonus(t):
         # cutting just before a lyric line is good, cutting right after one starts is bad
@@ -333,10 +395,19 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
                 bonus = min(bonus, -0.8)
         return bonus
 
+    forced = sorted(f for f in (forced or ()) if 0.5 < f < total - 0.5)
     segments = []
     start = 0.0
     while total - start > 1e-3:
         remaining = total - start
+        if remaining <= longest + 1e-6 and not any(start + shortest <= f <= total - shortest for f in forced):
+            segments.append((start, total))
+            break
+        hand = _forced_end(start, forced, shortest, longest)
+        if hand is not None and total - hand > 1e-3:
+            segments.append((start, hand))
+            start = hand
+            continue
         if remaining <= longest + 1e-6:
             segments.append((start, total))
             break
@@ -356,7 +427,7 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
                 continue
             o, ot = _peak_near(onset, times, end, 0.18)
             nv, _ = _peak_near(novelty, times, end, 0.35)
-            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices)
+            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices) + structure_bonus(end)
             if lyric_times:
                 weight = 1.4 if mode == SEGMENT_MODES[2] else 0.8
                 score += weight * lyric_bonus(end)
@@ -366,6 +437,78 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
         start = best_end
 
     return _merge_short_tail(segments, total, longest, shortest), feats
+
+
+CUT_PLAN_HEADER = "CUT PLAN"
+_CUT_LINE = re.compile(r"^\s*(\d+)\s+(\d+:\d{1,2}(?:\.\d+)?)\s*-\s*(\d+:\d{1,2}(?:\.\d+)?)")
+
+
+def _clock(text):
+    m, s = text.split(":")
+    return int(m) * 60 + float(s)
+
+
+def format_cut_plan(segments, total, min_seconds, max_seconds, *, structure=None, events=None,
+                    lyric_times=(), labels=None, forced=()):
+    """
+    The scene list as text - one line per scene, `NN  m:ss.ss - m:ss.ss  dur  energy  section  cut: why`.
+    Human-readable, hand-editable, and parse_cut_plan() reads it back. Only the
+    number and the two clock times matter to the parser; everything after is
+    commentary.
+    """
+    try:
+        from .song_structure import section_for_span
+    except Exception:  # pragma: no cover
+        section_for_span = lambda *_: None  # noqa: E731
+    lines = [f"{CUT_PLAN_HEADER}: {len(segments)} scenes | {min_seconds:g}-{max_seconds:g} s per scene | {fmt_time(total)} total"]
+    for i, (s, e) in enumerate(segments, 1):
+        section = section_for_span(structure, s, e) if structure else None
+        energy = labels[i - 1] if labels and i - 1 < len(labels) else ""
+        why = "end of song" if i == len(segments) else cut_reason(e, structure, events, lyric_times, forced)
+        lines.append(
+            f"{i:02d}  {fmt_time(s)} - {fmt_time(e)}  {e - s:5.2f}s  {energy:<6} {(section or ''):<12} cut: {why}"
+        )
+    return "\n".join(lines)
+
+
+def parse_cut_plan(text):
+    """[(start, end), ...] from a cut plan (or any lines shaped like one); [] when nothing parses."""
+    out = []
+    for line in (text or "").splitlines():
+        m = _CUT_LINE.match(line)
+        if not m:
+            continue
+        try:
+            s, e = _clock(m.group(2)), _clock(m.group(3))
+        except ValueError:
+            continue
+        if e > s:
+            out.append((s, e))
+    out.sort()
+    return out
+
+
+def normalise_cut_plan(segments, total):
+    """
+    Make a (possibly hand-edited) plan contiguous and inside the song: starts
+    at 0, no gaps or overlaps (each scene starts where the previous ends),
+    nothing past the end, no empty scenes. The scene lengths are what the
+    editor asked for; only the seams are repaired.
+    """
+    cleaned = []
+    cursor = 0.0
+    for _s, e in sorted(segments):
+        e = min(float(e), float(total))
+        if e - cursor >= 0.5:
+            cleaned.append((cursor, e))
+            cursor = e
+    if cleaned and total - cursor > 1e-3:
+        if total - cursor < 1.0:
+            s0, _ = cleaned[-1]
+            cleaned[-1] = (s0, float(total))
+        else:
+            cleaned.append((cursor, float(total)))
+    return cleaned
 
 
 def _merge_short_tail(segments, total, longest, shortest):
@@ -380,7 +523,7 @@ def _merge_short_tail(segments, total, longest, shortest):
     return segments
 
 
-def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=()):
+def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=(), structure=None, events=None, forced=()):
     """
     Lyrics-driven cut: [(start, end), ...] where (almost) every segment starts
     where a lyric phrase starts. The song is walked front to back; each cut
@@ -396,6 +539,7 @@ def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=()):
     longest, shortest = choices[-1], choices[0]
     onset, novelty, times = feats["onset"], feats["novelty"], feats["times"]
     lyric_times = sorted(t for t in lyric_times if t is not None)
+    structure_bonus = _structure_bonus_fn(structure, events)
 
     def musical_cut(start):
         best, best_end = -1e9, start + longest
@@ -405,14 +549,20 @@ def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=()):
                 continue  # would leave a stub shorter than the shortest clip
             o, _ = _peak_near(onset, times, end, 0.18)
             nv, _ = _peak_near(novelty, times, end, 0.35)
-            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices)
+            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices) + structure_bonus(end)
             if score > best:
                 best, best_end = score, end
         return best_end
 
+    forced = sorted(f for f in (forced or ()) if 0.5 < f < total - 0.5)
     segments = []
     start = 0.0
     while total - start > 1e-3:
+        hand = _forced_end(start, forced, shortest, longest)
+        if hand is not None and total - hand > 1e-3:
+            segments.append((start, hand))
+            start = hand
+            continue
         if total - start <= longest + 1e-6:
             segments.append((start, total))
             break

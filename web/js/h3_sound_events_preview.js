@@ -89,6 +89,9 @@ const CSS = `
 .apnext-sev .timeline i { position: absolute; top: 4px; bottom: 4px; width: 2px; border-radius: 1px; opacity: .9; }
 .apnext-sev .timeline i.struct { top: 0; bottom: 0; width: 3px; }
 .apnext-sev .timeline i.cut { opacity: .18; }
+.apnext-sev .timeline i { cursor: pointer; width: 3px; }
+.apnext-sev .timeline i:hover { outline: 1px solid #fff; }
+.apnext-sev .timeline i.struck { background: #d07070 !important; opacity: .9; height: 8px; top: auto; bottom: 2px; border-radius: 2px; width: 6px; margin-left: -1.5px; }
 .apnext-sev .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11px; color: #9a9590; margin-top: 6px; }
 .apnext-sev .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
 .apnext-sev pre.table { background: #0f0f0f; border: 1px solid #2c2820; border-radius: 6px; padding: 10px 12px; margin: 6px 0 0;
@@ -150,6 +153,7 @@ function upstreamAudio(node) {
 function filterEvents(payload, state) {
   const list = state.toggles.impacts ? payload.events : payload.events_no_impacts;
   return list.filter((e) => {
+    if (state.rejected && [...state.rejected].some((t) => Math.abs(t - e.t) <= 0.05)) return false;
     const toggle = KIND_TOGGLE[e.type];
     if (toggle && !state.toggles[toggle]) return false;
     if (STRUCTURAL.has(e.type)) return true;           // never dropped by min_strength
@@ -218,7 +222,9 @@ async function openModal(node) {
     maxEvents: Number(widgetValue(node, "max_events", 200)),
     minStrength: Number(widgetValue(node, "min_strength", 0.0)),
     toggles: Object.fromEntries(TOGGLES.map(([k]) => [k, Boolean(widgetValue(node, k, k !== "accents"))])),
+    rejected: new Set(String(widgetValue(node, "rejected", "") || "").split(/[\s,]+/).filter(Boolean).map(Number).filter((n) => !Number.isNaN(n))),
   };
+  const isRejected = (e) => [...state.rejected].some((t) => Math.abs(t - e.t) <= 0.05);
   let payload = null;
 
   // ---- controls -----------------------------------------------------------
@@ -270,7 +276,7 @@ async function openModal(node) {
   for (let b = 0; b < 10; b++) axis.append(el("span", { textContent: (b / 10).toFixed(1) }));
   body.append(hist, axis);
 
-  body.append(el("h3", { textContent: "4. Timeline" }));
+  body.append(el("h3", { textContent: "4. Timeline - click a tick to strike that hit out (click again to keep it)" }));
   const timeline = el("div", { className: "timeline" });
   const legend = el("div", { className: "legend" });
   for (const [kind, color] of Object.entries(KIND_COLOR)) legend.append(el("span", {}, el("i", { style: `background:${color}` }), kind.toLowerCase()));
@@ -292,6 +298,7 @@ async function openModal(node) {
     set("min_gap_seconds", state.minGap);
     set("min_strength", state.minStrength);
     for (const [key] of TOGGLES) set(key, state.toggles[key]);
+    set("rejected", [...state.rejected].sort((a, b) => a - b).map((t) => t.toFixed(2)).join(" "));
     node.setDirtyCanvas?.(true, true);
     close();
   });
@@ -356,16 +363,27 @@ async function openModal(node) {
     // timeline
     const all = state.toggles.impacts ? payload.events : payload.events_no_impacts;
     const keptSet = new Set(kept);
-    timeline.replaceChildren(...all.map((e) => el("i", {
-      className: (STRUCTURAL.has(e.type) ? "struct" : "") + (keptSet.has(e) ? "" : " cut"),
-      style: `left:${(e.t / payload.duration) * 100}%;background:${KIND_COLOR[e.type] || "#9a9590"}`,
-      title: `${fmtTime(e.t)} ${e.type} ${e.label}`,
-    })));
+    timeline.replaceChildren(...all.map((e) => {
+      const struck = isRejected(e);
+      const tick = el("i", {
+        className: (STRUCTURAL.has(e.type) ? "struct" : "") + (keptSet.has(e) ? "" : " cut") + (struck ? " struck" : ""),
+        style: `left:${(e.t / payload.duration) * 100}%;background:${KIND_COLOR[e.type] || "#9a9590"}`,
+        title: `${fmtTime(e.t)} ${e.type} ${e.label}${struck ? " - STRUCK OUT (click to keep)" : " - click to strike out"}`,
+      });
+      tick.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        const hit = [...state.rejected].find((t) => Math.abs(t - e.t) <= 0.05);
+        if (hit !== undefined) state.rejected.delete(hit); else state.rejected.add(Number(e.t.toFixed(2)));
+        render();
+      });
+      return tick;
+    }));
 
     // table head
     table.textContent = kept.slice(0, 60).map((e) => `${fmtTime(e.t).padStart(8)}  ${e.type.padEnd(9)} ${e.strength.toFixed(2)}  ${e.label}`).join("\n")
       + (kept.length > 60 ? `\n… ${kept.length - 60} more` : "");
-    note.textContent = `Apply writes min_strength ${state.minStrength.toFixed(2)}, the kind toggles, sensitivity and min_gap into the node.`;
+    note.textContent = `Apply writes min_strength ${state.minStrength.toFixed(2)}, the kind toggles, sensitivity, min_gap`
+      + (state.rejected.size ? ` and ${state.rejected.size} struck-out hit(s)` : "") + " into the node.";
   }
 
   function stat(k, v, small) {

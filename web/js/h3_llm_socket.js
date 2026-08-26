@@ -1,19 +1,34 @@
-// APNext H3 - make the `llm` socket visibly win over the model dropdown
+// APNext H3 - make a connected socket visibly win over the widgets it replaces
 //
-// Every H3 Claude Code node carries an optional `llm` input. While an
-// `APNext H3 LLM Backend` is connected, the backend's model overrides the
-// node's own `model` (and `draft_model`) widget on the Python side - see
-// resolve_backend_model / resolve_draft_model in nodes/h3/claude_code_support.py.
-// The widgets kept showing "sonnet" as if it mattered, which read as "still
-// using Claude Code". This extension greys those widgets out while the socket
-// is linked and relabels them with the model that is actually writing, then
-// restores them when the link goes away.
+// Some optional inputs on the H3 nodes override widgets on the same node:
+//
+//   llm       (APNext H3 LLM Backend) -> `model`, `draft_model`
+//             The backend's model is the one that writes; the dropdown kept
+//             showing "sonnet", which read as "still using Claude Code".
+//   cut_plan  (APNext H3 Cut Plan)    -> `segment_mode`, `max_segment_seconds`,
+//             `min_segment_seconds`. The plan's scenes are used verbatim.
+//
+// While such a socket is linked this greys the overridden widgets out and
+// relabels them with what is actually in charge (the backend's model name,
+// or "cut plan"), and restores them when the link goes away.
 
 import { app } from "../../../scripts/app.js";
 
-const SOCKET_TYPE = "APNEXT_LLM";
-const OVERRIDDEN = ["model", "draft_model"];
 const BACKEND_TYPE = "H3LLMBackend";
+
+// input name -> { type: socket type to match, widgets, tag(sourceNode) -> label }
+const RULES = {
+  llm: {
+    type: "APNEXT_LLM",
+    widgets: ["model", "draft_model"],
+    tag: (source, widgetName) => (widgetName === "draft_model" ? "llm backend" : backendModel(source) || "llm backend"),
+  },
+  cut_plan: {
+    type: "STRING",
+    widgets: ["segment_mode", "max_segment_seconds", "min_segment_seconds"],
+    tag: () => "cut plan",
+  },
+};
 
 function backendModel(node) {
   // Mirrors H3LLMBackend.build(): `model` unless it is the custom entry, then
@@ -25,37 +40,38 @@ function backendModel(node) {
   return chosen;
 }
 
-function linkedBackend(node) {
-  const input = node.inputs?.find((i) => i.name === "llm");
+function linkedSource(node, inputName) {
+  const input = node.inputs?.find((i) => i.name === inputName);
   if (input?.link == null) return null;
-  const link = node.graph?.links?.[input.link] ?? app.graph?.links?.[input.link];
-  return link ? node.graph?.getNodeById?.(link.origin_id) ?? app.graph.getNodeById(link.origin_id) : null;
+  const graph = node.graph ?? app.graph;
+  const link = graph.links?.[input.link];
+  return link ? graph.getNodeById(link.origin_id) : null;
 }
 
 function syncOverride(node) {
   if (!node?.widgets) return;
-  const backend = linkedBackend(node);
-  const linked = !!backend;
-  const model = linked ? backendModel(backend) : "";
-  for (const name of OVERRIDDEN) {
-    const widget = node.widgets.find((w) => w.name === name);
-    if (!widget) continue;
-    if (widget.__h3Label === undefined) widget.__h3Label = widget.label;
-    if (linked) {
-      const tag = name === "draft_model" ? "llm backend" : model || "llm backend";
-      widget.label = `${name} → ${tag}`;
-      widget.disabled = true;
-    } else {
-      widget.label = widget.__h3Label;
-      widget.disabled = false;
+  for (const [inputName, rule] of Object.entries(RULES)) {
+    if (!node.inputs?.some((i) => i.name === inputName)) continue;
+    const source = linkedSource(node, inputName);
+    for (const name of rule.widgets) {
+      const widget = node.widgets.find((w) => w.name === name);
+      if (!widget) continue;
+      if (widget.__h3Label === undefined) widget.__h3Label = widget.label;
+      if (source) {
+        widget.label = `${name} → ${rule.tag(source, name)}`;
+        widget.disabled = true;
+      } else {
+        widget.label = widget.__h3Label;
+        widget.disabled = false;
+      }
     }
   }
   node.setDirtyCanvas?.(true, true);
 }
 
-function syncAllConsumers(backendNode) {
-  const graph = backendNode.graph ?? app.graph;
-  for (const out of backendNode.outputs ?? []) {
+function syncAllConsumers(sourceNode) {
+  const graph = sourceNode.graph ?? app.graph;
+  for (const out of sourceNode.outputs ?? []) {
     for (const linkId of out.links ?? []) {
       const link = graph.links?.[linkId];
       const target = link && graph.getNodeById(link.target_id);
@@ -87,12 +103,13 @@ app.registerExtension({
     }
 
     const optional = nodeData?.input?.optional ?? {};
-    if (optional.llm?.[0] !== SOCKET_TYPE) return;
+    const watched = Object.entries(RULES).filter(([name, rule]) => optional[name]?.[0] === rule.type).map(([name]) => name);
+    if (!watched.length) return;
 
     const onConnectionsChange = nodeType.prototype.onConnectionsChange;
     nodeType.prototype.onConnectionsChange = function (type, index, connected, linkInfo, ioSlot) {
       const result = onConnectionsChange?.apply(this, arguments);
-      if ((ioSlot?.name || "") === "llm") setTimeout(() => syncOverride(this), 0);
+      if (watched.includes(ioSlot?.name || "")) setTimeout(() => syncOverride(this), 0);
       return result;
     };
 

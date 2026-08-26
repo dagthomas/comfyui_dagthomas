@@ -850,6 +850,21 @@ def segment_event_lines(events, start, end, limit=8):
     return lines
 
 
+def parse_rejected(text):
+    """'12.4 33.08 1:05.2' -> [12.4, 33.08, 65.2]; anything unreadable is skipped."""
+    out = []
+    for tok in (text or "").replace(",", " ").split():
+        try:
+            if ":" in tok:
+                m, s = tok.split(":", 1)
+                out.append(int(m) * 60 + float(s))
+            else:
+                out.append(float(tok))
+        except ValueError:
+            continue
+    return out
+
+
 def events_summary(events):
     """One line: how many of each kind."""
     if not events:
@@ -926,6 +941,14 @@ class H3SoundEvents:
                     "default": True,
                     "tooltip": "Verse/chorus turns, from the same novelty over a 4 s window.",
                 }),
+                "rejected": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "Hits you have struck out on the preview timeline (click a tick in "
+                        "\U0001F39A Preview events), as seconds separated by spaces. Anything within "
+                        "50 ms of a listed time is dropped from the output. Clear to keep everything."
+                    ),
+                }),
                 "accents": ("BOOLEAN", {
                     "default": False,
                     "tooltip": (
@@ -963,7 +986,7 @@ class H3SoundEvents:
 
     def detect(self, audio, sensitivity, min_gap_seconds, max_events,
                min_strength=0.0, bass_hits=True, impacts=True, drops_and_stops=True,
-               builds=True, sections=True, accents=False):
+               builds=True, sections=True, accents=False, rejected=""):
         events = detect_events(
             audio,
             sensitivity=sensitivity,
@@ -977,6 +1000,11 @@ class H3SoundEvents:
             sections=sections,
             accents=accents,
         )
+        struck = parse_rejected(rejected)
+        if struck:
+            before = len(events)
+            events = [e for e in events if not any(abs(float(e["t"]) - t) <= 0.05 for t in struck)]
+            print(f"\U0001F941 H3 Sound Events | {before - len(events)} hit(s) struck out on the timeline")
         feats = analyse(audio)
         profile = song_profile(feats)
         duration = float(feats["duration"])

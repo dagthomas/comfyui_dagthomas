@@ -25,6 +25,7 @@ from ...utils.apnext_context import (
 )
 from ...utils.constants import CUSTOM_CATEGORY
 from .claude_code_support import (
+    resolve_backend_model,
     BASE_SKILLS,
     CORE_SKILL,
     claude_code_inputs,
@@ -955,9 +956,12 @@ class H3ClaudeCodePresentationWriter:
                 # (draft model, fresh sessions) -> one continuity repair below
                 ranges = [(lo, min(n, lo + per_call - 1)) for lo in range(1, n + 1, per_call)]
                 workers = min(4, len(ranges))
+                effective_model = resolve_backend_model(model, local.get("model_override", ""))
+                effective_chunk = resolve_backend_model(chunk_model, local.get("model_override", ""))
+                backend_note = " (the connected LLM Backend)" if (local.get("model_override") or "").strip() else ""
                 print(
-                    f"⚡ H3 Presentation Writer: parallel run - plan with '{model}', then "
-                    f"{len(ranges)} chunk(s) drafted with '{chunk_model}', up to {workers} at once."
+                    f"⚡ H3 Presentation Writer: parallel run - plan with '{effective_model}'{backend_note}, then "
+                    f"{len(ranges)} chunk(s) drafted with '{effective_chunk}', up to {workers} at once."
                 )
                 plan_prompt = with_context(build_prompt(1, n, plan_only=True), context_text)
                 text, session_id, info = run_h3_claude_code(

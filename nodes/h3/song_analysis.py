@@ -13,6 +13,7 @@
 
 from ...utils.constants import CUSTOM_CATEGORY
 from .music_support import analyse, profile_line, song_profile
+from .song_structure import song_structure, summary_line
 
 
 class H3SongAnalysis:
@@ -26,8 +27,8 @@ class H3SongAnalysis:
             },
         }
 
-    RETURN_TYPES = ("AUDIO", "STRING", "FLOAT", "INT", "STRING")
-    RETURN_NAMES = ("audio", "profile", "bpm", "intensity", "label")
+    RETURN_TYPES = ("AUDIO", "STRING", "FLOAT", "INT", "STRING", "STRING")
+    RETURN_NAMES = ("audio", "profile", "bpm", "intensity", "label", "structure")
     OUTPUT_TOOLTIPS = (
         "The same audio, passed through - wire the writer from here.",
         "One line: BPM | label (intensity /100) | dynamics | onset spikes/s.",
@@ -47,10 +48,18 @@ class H3SongAnalysis:
 
     def measure(self, audio):
         profile = song_profile(analyse(audio))
+        try:
+            structure = song_structure(audio)
+        except Exception as exc:
+            print(f"⚠️ H3 Song Analysis: structure not measured ({type(exc).__name__}: {exc})")
+            structure = None
+        if structure and structure.get("bpm") and structure.get("bpm_confidence", 0) >= 0.3:
+            profile["bpm"] = structure["bpm"]
         line = profile_line(profile)
-        print(f"🎚️ H3 Song Analysis | {line}")
+        form = summary_line(structure)
+        print(f"🎚️ H3 Song Analysis | {line} | {form}")
         return {
-            "ui": {"text": [line]},
+            "ui": {"text": [f"{line}\n{form}"]},
             "result": (audio, line, float(profile["bpm"]), int(profile["intensity"]),
-                       str(profile["label"])),
+                       str(profile["label"]), form),
         }

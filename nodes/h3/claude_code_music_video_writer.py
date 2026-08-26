@@ -26,6 +26,7 @@ from ...utils.apnext_context import (
 )
 from ...utils.constants import CUSTOM_CATEGORY
 from .claude_code_support import (
+    resolve_backend_model,
     BASE_SKILLS,
     CORE_SKILL,
     claude_code_inputs,
@@ -46,6 +47,13 @@ from .claude_code_crossover_writer import (
 from .lyrics_transcribe import transcribe_song_lyrics
 from .scenes_store import save_scene_bundle
 from .sound_events import parse_events, segment_event_lines
+from .song_structure import (
+    downbeats_in_span,
+    section_for_span,
+    song_structure,
+    structure_lines,
+    summary_line,
+)
 from .template_vars import collect_template_vars, expand_all, log_template_vars
 from .common import (
     PROMPT_MODES,
@@ -71,7 +79,10 @@ from .common import (
 )
 from .music_support import (
     SEGMENT_MODES,
+    analyse,
     energy_labels,
+    normalise_cut_plan,
+    parse_cut_plan,
     fmt_time,
     frames_for_seconds,
     lyrics_for_segment,
@@ -178,6 +189,16 @@ def _scene_gist(prompt, limit=240):
     if len(text) > limit:
         text = text[:limit].rsplit(" ", 1)[0] + "…"
     return text
+
+
+def _measure_structure(audio):
+    """song_structure(), but a failure never stops a run - it just costs the form."""
+    try:
+        return song_structure(audio)
+    except Exception as exc:
+        print(f"⚠️ H3 Music Video Writer: song structure not measured ({type(exc).__name__}: {exc}); "
+              "cutting on energy only.")
+        return None
 
 
 class H3ClaudeCodeMusicVideoWriter:
@@ -385,6 +406,15 @@ class H3ClaudeCodeMusicVideoWriter:
             ),
         })
         # appended LAST so saved workflows keep their widget positions
+        optional["cut_plan"] = ("STRING", {
+            "forceInput": True,
+            "tooltip": (
+                "The `cut_plan` output of an APNext H3 Cut Plan node (or hand-typed lines "
+                "shaped `01  0:00.00 - 0:12.96`). The video is then cut into EXACTLY these "
+                "scenes and segment_mode / max_segment_seconds / min_segment_seconds are "
+                "ignored. Decide the scenes once, see them, edit them, then write."
+            ),
+        })
         optional["sound_events"] = ("STRING", {
             "forceInput": True,
             "tooltip": (
@@ -588,6 +618,7 @@ class H3ClaudeCodeMusicVideoWriter:
         scene_briefs="",
         prior_scenes=(),
         profile=None,
+        structure=None,
         plan_only=False,
         plan_text="",
     ):
@@ -612,10 +643,14 @@ class H3ClaudeCodeMusicVideoWriter:
         )
         if profile:
             lines.append(f"THE SOUND (measured from the audio): {profile_line(profile)}")
+        lines.extend(structure_lines(structure))
         for i, ((s, e), label, fr) in enumerate(zip(segments, labels, frames), 1):
             lyr = lyrics_for_segment(placed_lyrics, s, e)
             sung = [l for l in lyr if l[1] and not l[1].startswith("#")]
             tags = [l[1][1:] for l in lyr if l[1].startswith("#")]
+            measured = section_for_span(structure, s, e)
+            if measured and not any(measured.split(" ")[0] in t.lower() for t in tags):
+                tags.append(measured)
             marker = "" if plan_only else ("  <-- write this one" if first <= i <= last else "")
             lines.append(
                 f"PIECE {i:02d}: {fmt_time(s)}-{fmt_time(e)} | duration {e - s:.2f} | energy {label}"
@@ -626,6 +661,9 @@ class H3ClaudeCodeMusicVideoWriter:
                     lines.append(f"    [+{t - s:5.2f}s {'exact' if exact else '~'}] {line}")
             else:
                 lines.append("    [instrumental]")
+            downbeats = downbeats_in_span(structure, s, e)
+            if downbeats:
+                lines.append("    [bars] downbeats at " + " ".join(f"+{t - s:.2f}" for t in downbeats) + " s")
             lines.extend(segment_event_lines(beats, s, e, beats_per_scene))
         lines.append("")
         if plan_text:
@@ -681,6 +719,13 @@ class H3ClaudeCodeMusicVideoWriter:
                 "open on a first frame ALREADY in motion, never from rest. `<lands in the "
                 "next clip>` means the peak falls past this clip's end: climb to the last "
                 "frame and do NOT resolve it here."
+            )
+            lines.append(
+                "- THE CUT IS THE ONLY EXACT HIT: measured renders show the picture inside a "
+                "clip lands on the listed seconds only loosely, while the clip boundary is exact. "
+                "So when a listed moment falls within the first 0.4 s of a piece, make THAT the "
+                "piece's opening image - the first frame already at the peak of the move - and "
+                "treat the in-clip timings as the best effort they are."
             )
             lines.append(
                 "- Never invent moments that are not listed, never move one to a rounder "
@@ -856,7 +901,7 @@ class H3ClaudeCodeMusicVideoWriter:
             "before scene 01. Unless the user's concept explicitly pins one place, the video "
             f"MOVES: at least {distinct} clearly distinct settings across the {n} scenes, each "
             "verse pushing the story somewhere new (a new place, or a visible transformation "
-            "of the last one), every chorus returning to ONE signature look that escalates "
+            "of the last one), every chorus (the pieces tagged `section chorus N`) returning to ONE signature look that escalates "
             "each time - through light, choreography, crowd and camera, never through cosmic "
             "spectacle - and the bridge breaking the pattern completely. Lock only the places "
             "that actually recur; everything else travels."
@@ -993,6 +1038,7 @@ class H3ClaudeCodeMusicVideoWriter:
         vocals=None,
         sound_events="",
         events_per_scene=6,
+        cut_plan="",
         wildness=None,  # removed dial; accepted so old API-format prompts still run
         **cast_slots,
     ):
@@ -1067,9 +1113,19 @@ class H3ClaudeCodeMusicVideoWriter:
         parsed_lyrics = parse_lyrics(lyrics)
         timed = [t for t, _ in parsed_lyrics if t is not None]
         lyrics_driven = bool(scenes_from_lyrics)
-        if lyrics_driven and timed:
+        structure = _measure_structure(audio)
+        planned = parse_cut_plan(cut_plan) if (cut_plan or "").strip() else []
+        if planned:
+            feats = analyse(audio)
+            segments = normalise_cut_plan(planned, feats["duration"])
+            print(
+                f"✂️ H3 Music Video Writer: {len(segments)} scene(s) from the connected cut plan - "
+                "segment_mode, max_segment_seconds and min_segment_seconds are ignored."
+            )
+        elif lyrics_driven and timed:
             segments, feats = segment_by_lyrics(
-                audio, max_segment_seconds, min_segment_seconds, lyric_times=timed,
+                audio, max_segment_seconds, min_segment_seconds, lyric_times=timed, structure=structure,
+                events=beats,
             )
         else:
             if lyrics_driven and not timed:
@@ -1080,6 +1136,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 )
             segments, feats = segment_song(
                 audio, max_segment_seconds, min_segment_seconds, segment_mode, lyric_times=timed,
+                structure=structure, events=beats,
             )
         total_seconds = feats["duration"]
         placed = place_untimed_lyrics(parsed_lyrics, total_seconds)
@@ -1092,6 +1149,10 @@ class H3ClaudeCodeMusicVideoWriter:
         clip_starts = [float(s) for s, _ in segments]
         audio_segments = [slice_audio(audio, s, e, fr) for (s, e), fr in zip(segments, frames)]
         profile = song_profile(feats)
+        if structure and structure.get("bpm") and structure.get("bpm_confidence", 0) >= 0.3:
+            profile["bpm"] = structure["bpm"]   # tempo checked against its half / double / triplet
+        if structure:
+            print(f"🎼 H3 Music Video Writer | {summary_line(structure)}")
         table = f"SOUND: {profile_line(profile)}\n" + segment_table(segments, labels, frames, placed)
         n = len(segments)
         print(f"🎵 H3 Music Video Writer | {fmt_time(total_seconds)} song -> {n} piece(s)\n{table}")
@@ -1145,7 +1206,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
                     prior_scenes=prior,
-                    profile=profile, plan_only=plan_only, plan_text=plan_text,
+                    profile=profile, structure=structure, plan_only=plan_only, plan_text=plan_text,
                 )
                 return user_prompt
 
@@ -1170,9 +1231,12 @@ class H3ClaudeCodeMusicVideoWriter:
                 # (draft model, fresh sessions) -> one continuity repair below
                 ranges = [(lo, min(n, lo + per_call - 1)) for lo in range(1, n + 1, per_call)]
                 workers = min(4, len(ranges))
+                effective_model = resolve_backend_model(model, local.get("model_override", ""))
+                effective_chunk = resolve_backend_model(chunk_model, local.get("model_override", ""))
+                backend_note = " (the connected LLM Backend)" if (local.get("model_override") or "").strip() else ""
                 print(
-                    f"⚡ H3 Music Video Writer: parallel run - plan with '{model}', then "
-                    f"{len(ranges)} chunk(s) drafted with '{chunk_model}', up to {workers} at once."
+                    f"⚡ H3 Music Video Writer: parallel run - plan with '{effective_model}'{backend_note}, then "
+                    f"{len(ranges)} chunk(s) drafted with '{effective_chunk}', up to {workers} at once."
                 )
                 plan_prompt = with_context(build_prompt(1, n, plan_only=True), context_text)
                 text, session_id, info = run_h3_claude_code(

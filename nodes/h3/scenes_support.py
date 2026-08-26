@@ -18,11 +18,19 @@ DURATION_MODES = [
 _SYNOPSIS_RE = re.compile(
     r"===\s*SYNOPSIS\s*===\s*(.*?)\s*===\s*END SYNOPSIS\s*===", re.DOTALL | re.IGNORECASE
 )
-_SCENE_RE = re.compile(
-    r"===\s*SCENE\s+(\d+)\s*(?:\|\s*duration:\s*([0-9.]+)\s*(?:s|sec|seconds)?\s*)?===\s*"
-    r"(.*?)\s*===\s*END SCENE\s*\1\s*===",
-    re.DOTALL | re.IGNORECASE,
+# A scene starts at its header. The `=== END SCENE NN ===` closer is part of
+# the contract, but local models drop it often enough that requiring it lost
+# whole chunks: without a match the fallback made one giant "scene" out of a
+# four-scene reply and the rest were re-requested. So the body runs to the
+# END marker when there is one, otherwise to the next header (or the end).
+_SCENE_HEAD_RE = re.compile(
+    r"^[ \t]*(?:\*\*|#+\s*)?===\s*SCENE\s+(\d+)\s*(?:\|\s*duration:\s*([0-9.]+)\s*(?:s|sec|seconds)?\s*)?===[ \t]*(?:\*\*)?[ \t]*$",
+    re.IGNORECASE | re.MULTILINE,
 )
+_SCENE_END_RE = re.compile(
+    r"^[ \t]*(?:\*\*)?===\s*END\s+SCENE(?:\s*\d+)?\s*===(?:\*\*)?[ \t]*$", re.IGNORECASE | re.MULTILINE
+)
+_SYNOPSIS_HEAD_RE = re.compile(r"^[ \t]*===\s*(?:END\s+)?SYNOPSIS\s*===", re.IGNORECASE | re.MULTILINE)
 
 
 # The four H3 sections, in order. Used as the stop-list when pulling one
@@ -756,12 +764,23 @@ def parse_scenes(text, fallback_duration):
     synopsis = synopsis_match.group(1).strip() if synopsis_match else ""
 
     scenes = []
-    for match in _SCENE_RE.finditer(text):
+    heads = list(_SCENE_HEAD_RE.finditer(text))
+    for k, match in enumerate(heads):
         number = int(match.group(1))
         duration = float(match.group(2)) if match.group(2) else float(fallback_duration)
-        prompt = strip_code_fence(match.group(3))
+        body_end = heads[k + 1].start() if k + 1 < len(heads) else len(text)
+        body = text[match.end():body_end]
+        # stop at an END marker or a synopsis block inside the span, if any
+        stop = _SCENE_END_RE.search(body)
+        if stop:
+            body = body[: stop.start()]
+        syn = _SYNOPSIS_HEAD_RE.search(body)
+        if syn:
+            body = body[: syn.start()]
+        prompt = strip_code_fence(body.strip())
         prompt = re.sub(r"\*\*(\w+):\*\*", r"\1:", prompt)  # de-bold stray headers
-        scenes.append((number, duration, prompt))
+        if prompt:
+            scenes.append((number, duration, prompt))
 
     if not scenes:
         body = text
