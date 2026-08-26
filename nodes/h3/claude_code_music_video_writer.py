@@ -754,9 +754,13 @@ class H3ClaudeCodeMusicVideoWriter:
         if shots_per_scene != AUTO:
             lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
         else:
+            cut_on = (
+                "each cut on one of the piece's LISTED sound moments or on a lyric phrase"
+                if beats else "each cut on a beat or a lyric"
+            )
             lines.append(
                 "- Shots per scene: your call, cut to the music - 1-2 in quiet pieces, 2-4 in "
-                "loud and peak pieces, each cut on a beat or a lyric. In Performance mode "
+                f"loud and peak pieces, {cut_on}. In Performance mode "
                 "prefer ONE continuous shot for a piece whose lyric lines run through it: "
                 "every cut risks breaking the lip-sync."
             )
@@ -892,7 +896,18 @@ class H3ClaudeCodeMusicVideoWriter:
         lines.append(f"- {_ANTI_CLICHE_DIRECTIVE}")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
         if profile:
-            beat = f" At ~{profile['bpm']:g} BPM a bar is ~{240.0 / profile['bpm']:.1f}s - time cuts, gestures and choreography to land ON the beat." if profile.get("bpm") else ""
+            if beats:
+                # The Sound Events node already says WHICH moments matter (and its
+                # toggles say which kinds). A BPM grid on top would have the model
+                # hitting every bar as well - the events list is the sync map.
+                beat = (
+                    " Sync ONLY to the listed sound moments (and the lyric phrases): "
+                    "no cutting or gesturing on the bar grid, no extra hits between them."
+                )
+            elif profile.get("bpm"):
+                beat = f" At ~{profile['bpm']:g} BPM a bar is ~{240.0 / profile['bpm']:.1f}s - time cuts, gestures and choreography to land ON the beat."
+            else:
+                beat = ""
             intensity = profile.get("intensity", 50)
             if intensity < 40:
                 lines.append(
@@ -903,16 +918,19 @@ class H3ClaudeCodeMusicVideoWriter:
             elif intensity < 65:
                 lines.append(
                     "- MATCH THE SOUND - mid-energy song: let the quiet pieces breathe with "
-                    "longer takes and gentler camera, and make the loud pieces visibly hit "
-                    "harder - the contrast IS the video's rhythm." + beat
+                    "longer takes and gentler camera, and give the loud pieces more visible "
+                    "energy - the contrast IS the video's rhythm." + beat
                 )
             else:
                 lines.append(
-                    "- MATCH THE SOUND - this is an AGGRESSIVE song: punchy staging - hard "
-                    "cuts on the beat, bold fast camera moves, physical committed "
-                    "choreography, stark high-contrast light, real impact in every scene. "
-                    "Keep sung lines stable for lip-sync, then let everything around them "
-                    "hit." + beat
+                    "- MATCH THE SOUND - this is an AGGRESSIVE song: punchy staging - "
+                    + ("hard cuts on the listed moments, " if beats else "hard cuts on the beat, ")
+                    + "bold fast camera moves, physical committed choreography, stark "
+                    "high-contrast light, real physical energy in every scene. Keep sung "
+                    "lines stable for lip-sync"
+                    + ("; the listed moments are where things land." if beats
+                       else ", then let everything around them hit.")
+                    + beat
                 )
         extra = (extra_instructions or "").strip()
         if extra:

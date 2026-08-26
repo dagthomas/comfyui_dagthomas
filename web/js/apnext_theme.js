@@ -1,4 +1,4 @@
-// APNext "Graphgen" theme for ComfyUI
+// APNext theme for ComfyUI
 //
 // Optional look-and-feel borrowed from graphgen (X:/KODE/graphgen): the "Dark
 // Botanical" palette (warm near-black, tan accent, dusty-pink highlight, muted
@@ -8,13 +8,13 @@
 // constant redraws hurt UI responsiveness.
 //
 // Everything is opt-in and reversible:
-//   Settings → APNext → Graphgen theme (On/Off) and Wire style (ComfyUI default /
+//   Settings → APNext → APNext theme (On/Off) and Wire style (ComfyUI default /
 //              Bezier / Smooth step / Step / Straight / Cable)
 //   top menu  → APNext → toggle theme / next wire style / Wire style submenu
 //   canvas right-click → APNext theme + wire style entries
 // Turning it off restores the palette that was active before, the default
 // font and radius, and stock bezier links. The palette is installed as a normal
-// custom ComfyUI colour palette ("APNext Graphgen"), so it also shows up in the
+// custom ComfyUI colour palette ("APNext (Dark Botanical)"), so it also shows up in the
 // regular palette picker.
 
 import { app } from "../../../scripts/app.js";
@@ -86,7 +86,7 @@ function dotGrid() {
 function buildPalette() {
   return {
     id: PALETTE_ID,
-    name: "APNext Graphgen (Dark Botanical)",
+    name: "APNext (Dark Botanical)",
     colors: {
       node_slot: {
         CLIP: C.honey,
@@ -208,12 +208,7 @@ const CSS = `
   content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; pointer-events: none;
   background: rgba(212,165,116,0.85);
 }
-@supports (backdrop-filter: brightness(1)) {
-  :is(html, body).apnext-graphgen [data-testid^="node-header-"]::after {
-    background: rgba(255,255,255,0.18);
-    backdrop-filter: brightness(2.2) saturate(1.8);
-  }
-}
+/* (no backdrop-filter on the header line: it forced a compositing layer per node) */
 :is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] input:not([type="checkbox"]):not([type="range"]),
 :is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] textarea,
 :is(html, body).apnext-graphgen [data-testid="node-inner-wrapper"] select,
@@ -241,6 +236,75 @@ const CSS = `
   border: 1px solid ${C.border} !important; border-radius: 2px !important;
 }
 :is(html, body).apnext-graphgen .comfy-multiline-input:focus-within { border-color: ${C.accent} !important; }
+
+/* ---- Vue node widgets: no blue rings, compact toggle rows ----------------
+   ComfyUI's Vue nodes (Comfy.VueNodes.Enabled) paint focus rings, checked
+   toggles / radios / checkboxes and the executing-node border with the
+   frontend's own semantic colours - --primary-background is azure and
+   --node-component-executing is blue-500 - through Tailwind utilities
+   (bg-primary-background, ring-primary-background, ...). PrimeVue tokens do
+   not reach those, so the semantic variables themselves are recoloured here;
+   the class sits on <html> AND <body>, so the body declaration wins inside
+   the page whatever the frontend puts on :root / .dark-theme. The
+   ToggleSwitch is also shrunk from 40x24 px to 28x16 px so a BOOLEAN row is
+   as tall as a number row. No :has() selectors: they are re-evaluated on
+   every style recalc and big graphs recalc a lot. */
+:is(html, body).apnext-graphgen {
+  --primary-background: ${C.accent};
+  --primary-foreground: #1a1510;
+  --node-component-executing: ${C.accent2};
+  --node-component-border-executing: ${C.accent2};
+  --node-stroke-executing: ${C.accent2};
+  --color-ring: ${C.accent};
+  --ring: ${C.accent};
+  --p-focus-ring-width: 1px;
+  --p-focus-ring-style: solid;
+  --p-focus-ring-color: ${C.accent};
+  --p-focus-ring-offset: 0;
+  --p-focus-ring-shadow: none;
+  --p-form-field-focus-border-color: ${C.accent};
+  --p-inputtext-focus-border-color: ${C.accent};
+  --p-inputnumber-focus-border-color: ${C.accent};
+  --p-select-focus-border-color: ${C.accent};
+  --p-textarea-focus-border-color: ${C.accent};
+  --p-checkbox-checked-background: ${C.accent};
+  --p-checkbox-checked-border-color: ${C.accent};
+  --p-checkbox-checked-hover-background: ${C.accent2};
+  --p-radiobutton-checked-background: ${C.accent};
+  --p-radiobutton-checked-border-color: ${C.accent};
+  --p-radiobutton-checked-hover-background: ${C.accent2};
+  --p-toggleswitch-checked-background: ${C.accent};
+  --p-toggleswitch-checked-hover-background: ${C.accent2};
+  --p-toggleswitch-checked-border-color: ${C.accent};
+  --p-toggleswitch-focus-ring-shadow: none;
+  --p-toggleswitch-handle-checked-background: #1a1510;
+}
+:is(html, body).apnext-graphgen .lg-node :is(input, textarea, select, button, [tabindex], .p-inputtext, .p-select, .p-textarea, .p-inputnumber-input):is(:focus, :focus-visible, :focus-within) {
+  outline: 1px solid ${C.accent} !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-color: ${C.accent} !important;
+  border-color: ${C.accent} !important;
+}
+:is(html, body).apnext-graphgen .lg-node .p-inputtext.border-none:is(:focus, :focus-visible) { outline: none !important; box-shadow: inset 0 0 0 1px ${C.accent} !important; }
+:is(html, body).apnext-graphgen .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider,
+:is(html, body).apnext-graphgen .p-radiobutton.p-radiobutton-checked .p-radiobutton-box,
+:is(html, body).apnext-graphgen .p-checkbox.p-checkbox-checked .p-checkbox-box {
+  background: ${C.accent} !important; border-color: ${C.accent} !important;
+}
+:is(html, body).apnext-graphgen .p-toggleswitch:not(.p-toggleswitch-checked) .p-toggleswitch-slider { background: ${C.border} !important; border-color: ${C.border} !important; }
+:is(html, body).apnext-graphgen .p-toggleswitch .p-toggleswitch-slider, :is(html, body).apnext-graphgen .p-radiobutton-box, :is(html, body).apnext-graphgen .p-checkbox-box { box-shadow: none !important; outline: none !important; }
+:is(html, body).apnext-graphgen .lg-node .p-toggleswitch {
+  --p-toggleswitch-width: 1.75rem; --p-toggleswitch-height: 1rem; --p-toggleswitch-gap: 0.125rem; --p-toggleswitch-handle-size: 0.75rem;
+  width: 1.75rem !important; height: 1rem !important;
+}
+:is(html, body).apnext-graphgen .lg-node .p-toggleswitch .p-toggleswitch-slider { height: 1rem !important; }
+:is(html, body).apnext-graphgen .lg-node .p-toggleswitch .p-toggleswitch-handle { width: 0.75rem !important; height: 0.75rem !important; }
+:is(html, body).apnext-graphgen .lg-node .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-handle { left: calc(1.75rem - 0.75rem - 0.125rem) !important; }
+:is(html, body).apnext-graphgen .lg-node .lg-node-widgets { row-gap: 2px !important; }
+:is(html, body).apnext-graphgen .lg-node .lg-node-widget { min-height: 0 !important; }
+:is(html, body).apnext-graphgen .lg-node .lg-node-widget .p-toggleswitch { margin-top: 3px; margin-bottom: 3px; }
 :is(html, body).apnext-graphgen .p-panel, :is(html, body).apnext-graphgen .side-tool-bar-container,
 :is(html, body).apnext-graphgen .comfyui-menu, :is(html, body).apnext-graphgen .actionbar,
 :is(html, body).apnext-graphgen .p-dialog, :is(html, body).apnext-graphgen .p-popover, :is(html, body).apnext-graphgen .p-menu,
@@ -1518,10 +1582,29 @@ function selGlowFrame(canvas) {
   }
   selGlow.ids = ids;
   if (selGlow.flow && selGlow.ids.size && !selGlow.raf) {
-    selGlow.raf = requestAnimationFrame(() => {
-      selGlow.raf = 0;
-      if (selGlow.on && selGlow.flow && selGlow.ids?.size) app.canvas?.setDirty?.(false, true);
-    });
+    // The travelling sparks need a redraw per step. Redrawing on EVERY frame
+    // kept the main thread ~95% busy for as long as a node stayed selected
+    // (Chrome trace, 26 Aug): under Vue nodes each canvas redraw also
+    // re-syncs the DOM node layer and re-mounts its PrimeVue widgets, which
+    // showed up as ~7k element load events a second. So: no animation loop
+    // at all with Vue nodes (the glow stays, the sparks hold still), and a
+    // 24 fps step on the classic canvas, which reads the same to the eye.
+    if (vueNodesEnabled()) return;
+    selGlow.raf = 1;
+    setTimeout(() => {
+      selGlow.raf = requestAnimationFrame(() => {
+        selGlow.raf = 0;
+        if (selGlow.on && selGlow.flow && selGlow.ids?.size) app.canvas?.setDirty?.(false, true);
+      });
+    }, 1000 / 24);
+  }
+}
+
+function vueNodesEnabled() {
+  try {
+    return !!app.ui?.settings?.getSettingValue?.("Comfy.VueNodes.Enabled");
+  } catch (err) {
+    return false;
   }
 }
 
@@ -1833,7 +1916,7 @@ function applyColorCode(on) {
 }
 
 // ---------------------------------------------------------------------------
-// Graphgen node look (theme on): 1px panel border on a rounded-lg box, a
+// APNext node look (theme on): 1px panel border on a rounded-lg box, a
 // header that carries the node's hue as a faint tint + a stronger hued bottom
 // border (BaseNode.svelte), white semibold title text, and port "tabs" -
 // small vertical bars pinned to the node edge that extend outward when
@@ -2099,10 +2182,10 @@ app.registerExtension({
   settings: [
     {
       id: S_MODE,
-      category: ["APNext", "Graphgen theme", "Theme"],
-      name: "Graphgen theme",
+      category: ["APNext", "APNext theme", "Theme"],
+      name: "APNext theme",
       tooltip:
-        "Restyle ComfyUI like graphgen: Dark Botanical palette, IBM Plex Sans, rounder nodes. " +
+        "Restyle ComfyUI with the APNext look: Dark Botanical palette, IBM Plex Sans, rounder nodes. " +
         "Off restores the previous palette, font and radius. Wire style is a separate setting below.",
       type: "combo",
       options: [
@@ -2117,7 +2200,7 @@ app.registerExtension({
     },
     {
       id: S_WIRES,
-      category: ["APNext", "Graphgen theme", "Wire style"],
+      category: ["APNext", "APNext theme", "Wire style"],
       name: "Wire style",
       tooltip:
         "How links are drawn - graphgen's edge styles: Bezier, Smooth step, Step, Straight or " +
@@ -2132,7 +2215,7 @@ app.registerExtension({
     },
     {
       id: S_RECOLOR,
-      category: ["APNext", "Graphgen theme", "Recolour nodes"],
+      category: ["APNext", "APNext theme", "Recolour nodes"],
       name: "Recolour coloured nodes & groups",
       tooltip:
         "While the theme is on, nodes and groups that carry their own colour (right-click → Colors, " +
@@ -2147,8 +2230,8 @@ app.registerExtension({
     },
     {
       id: S_GGNODES,
-      category: ["APNext", "Graphgen theme", "Graphgen nodes"],
-      name: "Graphgen node look (header, border, slot tabs)",
+      category: ["APNext", "APNext theme", "Node look"],
+      name: "APNext node look (header, border, slot tabs)",
       tooltip: "While the theme is on: rounded-lg box with a 1px panel border, a header carrying the node's hue as a faint tint plus a hued bottom border, white semibold title, and port tabs pinned to the node edge that extend outward when connected or hovered (instead of circles).",
       type: "boolean",
       defaultValue: true,
@@ -2210,7 +2293,7 @@ app.registerExtension({
     },
     {
       id: S_PREV,
-      category: ["APNext", "Graphgen theme", "Previous palette"],
+      category: ["APNext", "APNext theme", "Previous palette"],
       name: "Palette to restore when the theme is turned off",
       type: "hidden",
       defaultValue: "dark",
@@ -2218,7 +2301,7 @@ app.registerExtension({
   ],
 
   commands: [
-    { id: "APNext.Theme.Toggle", label: "APNext: toggle Graphgen theme", icon: "pi pi-palette", function: () => toggleTheme() },
+    { id: "APNext.Theme.Toggle", label: "APNext: toggle APNext theme", icon: "pi pi-palette", function: () => toggleTheme() },
     { id: "APNext.Theme.CycleWires", label: "APNext: next wire style", icon: "pi pi-link", function: () => cycleWires() },
     { id: "APNext.Theme.WiresDefault", label: "APNext: wires - ComfyUI default", function: () => setWires(WIRE_DEFAULT) },
     { id: "APNext.Theme.WiresBezier", label: "APNext: wires - Bezier", function: () => setWires(WIRE_BEZIER) },
@@ -2244,7 +2327,7 @@ app.registerExtension({
     const wires = currentWires();
     return [
       null,
-      { content: `APNext: Graphgen theme ${theme ? "✓" : ""}`, callback: () => toggleTheme() },
+      { content: `APNext theme ${theme ? "✓" : ""}`, callback: () => toggleTheme() },
       {
         content: `APNext: wire style (${WIRE_LABELS[wires] || wires})`,
         has_submenu: true,

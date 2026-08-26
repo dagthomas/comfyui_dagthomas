@@ -47,7 +47,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 Resolution Planner (Crop Only)](#apnext-h3-resolution-planner-crop-only)
 7. [Viewing](#viewing)
    - [APNext H3 Prompt Preview](#apnext-h3-prompt-preview)
-8. [Canvas helpers and the Graphgen theme](#canvas-helpers-and-the-graphgen-theme)
+8. [Canvas helpers and the APNext theme](#canvas-helpers-and-the-apnext-theme)
 9. [Workflow index](#workflow-index)
 10. [Files and where to tune things](#files-and-where-to-tune-things)
 
@@ -380,7 +380,9 @@ The Music Video Writer's sound measurement as a **visible readout**: wire the so
 
 Seven labels: **BASS HIT** (kick / low hit), **IMPACT** (crash, slam, snare that lands like a punch), **DROP** (the beat arriving), **STOP** (the music cutting out), **BUILD** (a riser into a drop), **SECTION** (the arrangement turning), **ACCENT** (bright top‑end — off by default, it floods).
 
-Wire `events` into the **Music Video Writer**'s `sound_events` socket and each piece's brief carries only the hits inside *that clip*, timed **from the clip's own start** — `[+2.10s] BASS HIT (heavy)` — which is something a director can stage; `[1:47.3]` is not. The writer is told to land a cut, a camera hit, a light change or a move on them, to open the frame on a DROP, freeze or empty it on a STOP, tighten through a BUILD, and never to invent a hit that is not listed.
+Wire `events` into the **Music Video Writer**'s `sound_events` socket and each piece's brief carries only the hits inside *that clip*, timed **from the clip's own start** — `[+2.10s] BASS HIT (heavy)` — which is something a director can stage; `[1:47.3]` is not. The writer is told to land a cut, a camera hit, a light change or a move on them, to open the frame on a DROP, freeze or empty it on a STOP, tighten through a BUILD, and never to invent a hit that is not listed. With a list connected, the listed moments (and lyric phrases) are the **only** sync targets: the writer drops its own BPM / bar‑grid instruction and the “cut on the beat, everything hits” wording, so what the type toggles select is what the video syncs to.
+
+**🎚 Preview events** — a button on the node. It runs the detectors on the upstream Load Audio file right away (no queue) and opens a modal where the kind toggles and a `min_strength` slider filter the result instantly: events kept, **hits per minute**, hits per ~9 s piece, how many pieces overflow the writer's `events_per_scene` slots, a strength histogram (click a bar to set the threshold), a timeline, and the first table lines. Strength is normalised to *each track's* loudest hit, so no fixed `min_strength` carries over between songs — the modal judges **density** instead: up to ~24 hits/min is comfortable, 24–40 is dense, and above 40 it shows a **too many hits** warning with a one‑click *set min_strength N* that lands the track at ~24/min. **Apply to node** writes `min_strength`, the toggles, `sensitivity` and `min_gap_seconds` back into the widgets. Drops / stops / sections / builds are never removed by `min_strength`.
 
 Widgets: `sensitivity` (0.25 hair‑trigger … 2.0 strict — it divides the median factor every detector scores against), `min_gap_seconds` (refractory gap, 0.18 s keeps a kick and its trailing snare apart), `max_events` (a cap so a 4‑minute track cannot bury the prompt — structure is always kept, only the hit stream is thinned), `min_strength`, and one toggle per detector. Outputs `audio` (pass‑through), `events` (the table), `events_json`, `summary`, `count`; the writer's `events_per_scene` caps how many reach any one brief.
 
@@ -402,14 +404,14 @@ Output node that renders any H3 prompt colour‑coded — `<Subject N>` sage, `<
 
 ---
 
-## Canvas helpers and the Graphgen theme
+## Canvas helpers and the APNext theme
 
 All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click), implemented in `web/js/apnext_theme.js`:
 
 | Setting | What it does |
 |---|---|
-| **Graphgen theme** (On/Off) | The *Dark Botanical* palette (installed as a normal custom ComfyUI palette “APNext Graphgen”), graphgen’s 22 px dot grid on the plain near-black canvas, IBM Plex Sans / Cormorant / JetBrains Mono, rounded‑lg nodes, bold white headers. Off restores the previous palette, font, radius and colours. |
-| **Graphgen node look** | Header tinted with the node’s hue + hued bottom border (body always dark), only the header corners rounded, 1 px panel border, port **tabs** pinned to the node edge that extend outward when connected or hovered. Works for the classic canvas renderer; with ComfyUI’s *Nodes 2.0* (Vue) renderer the same look is applied through CSS (dark body, coloured header, white bold title, square inputs). |
+| **APNext theme** (On/Off) | The *Dark Botanical* palette (installed as a normal custom ComfyUI palette “APNext”), graphgen’s 22 px dot grid on the plain near-black canvas, IBM Plex Sans / Cormorant / JetBrains Mono, rounded‑lg nodes, bold white headers. Off restores the previous palette, font, radius and colours. |
+| **APNext node look** | Header tinted with the node’s hue + hued bottom border (body always dark), only the header corners rounded, 1 px panel border, port **tabs** pinned to the node edge that extend outward when connected or hovered. Works for the classic canvas renderer; with ComfyUI’s *Nodes 2.0* (Vue) renderer the same look is applied through CSS (dark body, coloured header, white bold title, square inputs). |
 | **Recolour coloured nodes & groups** | Nodes/groups with their own colour (right‑click → Colors, or packs that pre‑colour) are drawn in the nearest botanical hue — header only, body neutral; stored colours untouched. |
 | **Wire style** | ComfyUI default / Bezier / Smooth step / Step / Straight / Cable (springy sag + wobble). |
 | **Gravity wires** (On/Off) | Hanging verlet ropes (graphgen `rope.svelte.ts`); `Wire slack` / `weight` / `segments` tune it. Off = physics fully stopped. |

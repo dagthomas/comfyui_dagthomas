@@ -2,6 +2,7 @@
 
 from . import dashboard  # noqa: F401  (registers the /apnext/h3/api_workflows route)
 from . import context_budget  # noqa: F401  (registers the /apnext/h3/context_budget routes)
+from . import sound_events_preview  # noqa: F401  (registers /apnext/h3/sound_events_preview)
 from .base_prompt_writer import H3BasePromptWriter
 from .claude_code_base_writer import H3ClaudeCodeBaseWriter
 from .claude_code_continue_writer import H3ClaudeCodeContinueWriter
