@@ -95,6 +95,48 @@ openrouter_models = [
     "minimax/minimax-m2.7",
 ]
 
+# The whole catalogue, fetched from OpenRouter's public /models endpoint (no
+# key needed) when the node list is built, cached for a while so reloading the
+# page does not hit the network every time. Filtered to models that take and
+# return TEXT (a writer needs nothing else) and to the interactive endpoints
+# (`:batch` variants answer hours later). Curated ids stay at the top of the
+# list; everything else follows alphabetically. APNEXT_OPENROUTER_LIST=0 turns
+# the fetch off and leaves the curated list.
+_OPENROUTER_MODELS_URL = "https://openrouter.ai/api/v1/models"
+_OPENROUTER_LIST_TTL = 600.0
+_OPENROUTER_FETCH_TIMEOUT = 6.0
+_openrouter_cache = {"at": 0.0, "ids": None}
+
+
+def list_openrouter_models(refresh=False):
+    """Every text model on OpenRouter as `vendor/model` ids, curated ones first; the curated list offline."""
+    import time
+    if os.environ.get("APNEXT_OPENROUTER_LIST", "1").strip().lower() in ("0", "false", "off", "no"):
+        return list(openrouter_models)
+    now = time.monotonic()
+    cached = _openrouter_cache["ids"]
+    if cached is not None and not refresh and now - _openrouter_cache["at"] < _OPENROUTER_LIST_TTL:
+        return list(cached)
+    payload = _get_json(_OPENROUTER_MODELS_URL, _OPENROUTER_FETCH_TIMEOUT)
+    ids = []
+    for entry in (payload or {}).get("data", []) if isinstance(payload, dict) else []:
+        if not isinstance(entry, dict) or not entry.get("id"):
+            continue
+        mid = str(entry["id"])
+        arch = entry.get("architecture") or {}
+        outs = arch.get("output_modalities") or ["text"]
+        ins = arch.get("input_modalities") or ["text"]
+        if "text" not in outs or "text" not in ins or mid.endswith(":batch"):
+            continue
+        ids.append(mid)
+    if not ids:
+        return list(cached) if cached else list(openrouter_models)
+    rest = sorted(i for i in set(ids) if i not in openrouter_models)
+    full = [m for m in openrouter_models if m in set(ids)] + [m for m in openrouter_models if m not in set(ids)] + rest
+    _openrouter_cache.update(at=now, ids=full)
+    return list(full)
+
+
 # Extra headers OpenRouter uses for its app rankings; harmless elsewhere.
 _OPENROUTER_HEADERS = {
     "HTTP-Referer": "https://github.com/dagthomas/comfyui_dagthomas",

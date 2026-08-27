@@ -20,7 +20,7 @@ from ...utils.llm_router import (
     grok_models,
     groq_models,
     list_local_models,
-    openrouter_models,
+    list_openrouter_models,
 )
 from .claude_code_support import LLM_SOCKET_TYPE, list_codex_models
 
@@ -55,7 +55,7 @@ def _choices():
         + [f"gemini:{m}" for m in gemini_models]
         + [f"grok:{m}" for m in grok_models]
         + [f"groq:{m}" for m in groq_models]
-        + [f"openrouter:{m}" for m in openrouter_models]
+        + [f"openrouter:{m}" for m in list_openrouter_models()]
         + [AUTO_DETECT]
     )
 
@@ -72,9 +72,10 @@ class H3LLMBackend:
                         "ollama: / lmstudio: / local: entries are whatever your local servers "
                         "were serving when the page loaded (start the server, reload the page). "
                         "Cloud entries need their API key in the environment - or typed into api_key "
-                        "below. openrouter: entries are one key for every model (OPENROUTER_API_KEY); "
-                        "any other OpenRouter model goes in as custom 'openrouter:<vendor/model>'. Pick "
-                        "'custom' to type any provider:model string in model_name."
+                        "below. openrouter: entries are OpenRouter's whole text-model catalogue, fetched "
+                        "when the page loaded (curated ones first, then A-Z; type to filter) - one key for "
+                        "all of them (OPENROUTER_API_KEY). Pick 'custom' to type any provider:model string "
+                        "in model_name."
                     ),
                 }),
                 "model_name": ("STRING", {
