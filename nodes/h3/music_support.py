@@ -25,15 +25,59 @@ SEGMENT_MODES = [
     "Lyric lines (cut before lyric lines when possible)",
 ]
 
+# Which side of a beat the cut sits on. The frame grid moves a cut in 0.71 s
+# steps, so a cut is never ON a hit - it is just before it (the hit is the
+# first thing in the new scene: the classic music-video cut) or just after
+# it (the hit is the last thing in the outgoing scene, and the new one opens
+# on the release). Auto is what the cutter always did: onsets and downbeats
+# from either side, drops opening the new scene.
+CUT_PLACEMENTS = [
+    "Auto (nearest onset; drops open the new scene)",
+    "Before the beat (the hit opens the new scene)",
+    "After the beat (the hit closes the outgoing scene)",
+]
+BEAT_REACH = 0.72   # s - one grid step (17 frames): a one-sided window this wide
+                    # always holds exactly one candidate cut for any beat
+
+
+def placement_side(placement):
+    """'before' / 'after' / None for a CUT_PLACEMENTS entry (or a bare word)."""
+    p = str(placement or "").strip().lower()
+    if p.startswith("before"):
+        return "before"
+    if p.startswith("after"):
+        return "after"
+    return None
+
+
+def beat_fits(beat, cut, side, reach=BEAT_REACH, back=None):
+    """
+    Does `beat` sit on the wanted side of `cut`? before: the beat lands within
+    `reach` s AFTER the cut; after: within `reach` s BEFORE it; None: within
+    `reach` on either side (or `back` behind / `reach` ahead when `back` is given).
+    """
+    d = beat - cut          # >0: the beat comes after the cut
+    if side == "before":
+        return 0.0 <= d <= reach
+    if side == "after":
+        return -reach <= d <= 0.0
+    lo = -(reach if back is None else back)
+    return lo <= d <= reach
+
 
 # ----------------------------------------------------------------------
 # Frame grid
 
-def frames_for_seconds(seconds, *, round_up=False):
+def frames_for_seconds(seconds, *, round_up=False, round_down=False):
     """Nearest valid H3 frame count for a duration (snapped to 5 + 17k)."""
     raw = seconds * FPS
     k = (raw - 5) / FRAME_STEP
-    k = math.ceil(k) if round_up else round(k)
+    if round_up:
+        k = math.ceil(k)
+    elif round_down:
+        k = math.floor(k)
+    else:
+        k = round(k)
     frames = 5 + FRAME_STEP * max(0, int(k))
     return max(MIN_FRAMES, min(MAX_FRAMES, frames))
 
@@ -231,15 +275,20 @@ def profile_line(profile):
     )
 
 
-def _peak_near(values, times, t, radius):
-    """Max of `values` within +-radius seconds of t, and the time where it sits."""
+def _peak_near(values, times, t, radius, side=None):
+    """
+    Max of `values` within +-radius seconds of t, and the time where it sits.
+    `side` narrows the window to one side of t: 'before' looks only AFTER t
+    (a beat the cut sits before), 'after' only BEFORE t.
+    """
     n = values.numel()
     if n == 0:
         return 0.0, t
     hop = float(times[1] - times[0]) if n > 1 else HOP_SECONDS
     c = int(round(t / hop))
     r = max(1, int(round(radius / hop)))
-    a, b = max(0, c - r), min(n, c + r + 1)
+    back, fwd = (0, r) if side == "before" else (r, 0) if side == "after" else (r, r)
+    a, b = max(0, c - back), min(n, c + fwd + 1)
     if a >= b:
         return 0.0, t
     win = values[a:b]
@@ -309,15 +358,18 @@ def place_untimed_lyrics(lyrics, duration, lead_in=0.0):
 # ----------------------------------------------------------------------
 # Segmentation
 
-def _structure_bonus_fn(structure, events=None):
+def _structure_bonus_fn(structure, events=None, placement=None):
     """
     Cuts want to land where the song changes. A measured section boundary
     (chorus in, verse in) is worth more than any onset; a DROP wants the cut
     just BEFORE it so it lands at the top of the new scene; a STOP closes a
     scene; a downbeat beats the beat before it. Structure comes from
     song_structure() and events from the Sound Events node; either may be
-    absent, and then that part is a no-op.
+    absent, and then that part is a no-op. `placement` (CUT_PLACEMENTS) puts
+    drops and downbeats on one side of the cut; sections and stops are
+    boundaries, not beats, and stay symmetric.
     """
+    side = placement_side(placement)
     boundaries = [s["start"] for s in (structure or {}).get("sections", [])[1:]]
     downbeats = (structure or {}).get("downbeats") or []
     by_kind = {}
@@ -327,27 +379,60 @@ def _structure_bonus_fn(structure, events=None):
 
     def bonus(t):
         best = 0.0
-        if any(-0.6 <= d - t <= 0.15 for d in drops):
+        if any(beat_fits(d, t, side, reach=BEAT_REACH if side else 0.6, back=0.15) for d in drops):
             best = max(best, 2.5)
         if any(abs(b - t) <= 0.4 for b in boundaries) or any(abs(x - t) <= 0.4 for x in section_events):
             best = max(best, 2.0)
         if any(abs(x - t) <= 0.3 for x in stops):
             best = max(best, 1.5)
-        if best == 0.0 and any(abs(d - t) <= 0.2 for d in downbeats):
+        if best == 0.0 and any(beat_fits(d, t, side, reach=BEAT_REACH if side else 0.2) for d in downbeats):
             best = 0.5
         return best
     return bonus
 
 
-def cut_reason(t, structure=None, events=None, lyric_times=(), forced=()):
+def _lookahead_fn(events, choices, placement=None, forced=()):
+    """
+    The cutter is greedy - one cut at a time - so a cut that is fine on its
+    own can leave the NEXT drop (or the next tapped cut) unreachable: too
+    close for the shortest clip, too far for the longest, or between two
+    grid lengths. Penalise a candidate end when the nearest target ahead is
+    within two more clips and no one- or two-clip run from there lands on
+    it. A tap is the editor's explicit will and weighs twice a drop.
+    """
+    side = placement_side(placement)
+    drops = [(float(e.get("t", 0.0)), 1.5) for e in events or [] if e.get("type") == "DROP"]
+    taps = [(float(f), 3.0) for f in forced or ()]
+    targets = sorted(drops + taps)
+    longest = choices[-1] if choices else 0.0
+    offsets = sorted(set(choices) | {a + b for a in choices for b in choices})
+    reach, back = (BEAT_REACH, 0.15) if side else (0.6, 0.15)
+
+    def penalty(end):
+        for t, pen in targets:
+            if t <= end - back:
+                continue                    # already behind us
+            if t - end > 2 * longest + reach:
+                return 0.0                  # too far ahead to be decided here
+            if beat_fits(t, end, side, reach=reach, back=back):
+                return 0.0                  # this cut lands on it
+            if any(beat_fits(t, end + o, side, reach=reach, back=back) for o in offsets):
+                return 0.0                  # a later cut still can
+            return pen
+        return 0.0
+    return penalty
+
+
+def cut_reason(t, structure=None, events=None, lyric_times=(), forced=(), placement=None):
     """Why a cut sits where it sits - for the Cut Plan readout."""
+    side = placement_side(placement)
     by_kind = {}
     for e in events or []:
         by_kind.setdefault(e.get("type"), []).append(float(e.get("t", 0.0)))
-    if any(abs(f - t) <= 0.35 for f in (forced or ())):
+    if any(abs(f - t) <= 0.5 for f in (forced or ())):
         return "your tap"
-    if any(-0.6 <= d - t <= 0.15 for d in by_kind.get("DROP", [])):
-        return "drop lands here"
+    if any(beat_fits(d, t, side, reach=BEAT_REACH if side else 0.6, back=0.15) for d in by_kind.get("DROP", [])):
+        return "drop closes the scene" if side == "after" else "drop lands here"
     if any(abs(s["start"] - t) <= 0.4 for s in (structure or {}).get("sections", [])[1:]):
         return "section start"
     if any(abs(x - t) <= 0.4 for x in by_kind.get("SECTION", [])):
@@ -356,26 +441,36 @@ def cut_reason(t, structure=None, events=None, lyric_times=(), forced=()):
         return "stop"
     if any(-0.35 <= lt - t <= 0.6 for lt in lyric_times):
         return "lyric line"
-    if any(abs(d - t) <= 0.2 for d in (structure or {}).get("downbeats") or []):
+    if any(beat_fits(d, t, side, reach=BEAT_REACH if side else 0.2) for d in (structure or {}).get("downbeats") or []):
         return "downbeat"
     return "onset"
 
 
-def _forced_end(start, forced, shortest, longest):
-    """A hand-placed cut inside this clip's allowed span, on the frame grid - or None."""
+def _forced_end(start, forced, shortest, longest, placement=None):
+    """
+    A hand-placed cut inside this clip's allowed span, on the frame grid - or
+    None. The grid rounds the tap to the nearest valid length; with a
+    placement it rounds DOWN (before: the cut lands ahead of the tapped hit)
+    or UP (after: the hit stays in the outgoing scene).
+    """
+    side = placement_side(placement)
     for f in forced:
         if start + shortest - 0.3 <= f <= start + longest + 0.3:
-            frames = max(MIN_FRAMES, min(MAX_FRAMES, frames_for_seconds(f - start)))
+            frames = frames_for_seconds(f - start, round_down=(side == "before"), round_up=(side == "after"))
+            frames = max(MIN_FRAMES, min(MAX_FRAMES, frames))
             return start + seconds_for_frames(frames)
     return None
 
 
-def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0], lyric_times=(), structure=None, events=None, forced=()):
+def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0], lyric_times=(), structure=None, events=None, forced=(), placement=None):
     """
     Cut the song into [(start, end), ...] in seconds. Every segment length is
     on the H3 frame grid except the last one, which takes whatever is left
     (rounded up to the grid for rendering; the audio slice is zero-padded).
+    `placement` (CUT_PLACEMENTS) decides which side of a beat the cut sits on.
     """
+    side = placement_side(placement)
+    onset_reach = BEAT_REACH if side else 0.18
     feats = analyse(audio)
     total = feats["duration"]
     choices = grid_durations(max_seconds, min_seconds)
@@ -383,7 +478,7 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
     shortest = choices[0]
     onset, novelty, times = feats["onset"], feats["novelty"], feats["times"]
     lyric_times = sorted(t for t in lyric_times if t is not None)
-    structure_bonus = _structure_bonus_fn(structure, events)
+    structure_bonus = _structure_bonus_fn(structure, events, placement)
 
     def lyric_bonus(t):
         # cutting just before a lyric line is good, cutting right after one starts is bad
@@ -396,6 +491,7 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
         return bonus
 
     forced = sorted(f for f in (forced or ()) if 0.5 < f < total - 0.5)
+    lookahead = _lookahead_fn(events, choices, placement, forced)
     segments = []
     start = 0.0
     while total - start > 1e-3:
@@ -403,7 +499,7 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
         if remaining <= longest + 1e-6 and not any(start + shortest <= f <= total - shortest for f in forced):
             segments.append((start, total))
             break
-        hand = _forced_end(start, forced, shortest, longest)
+        hand = _forced_end(start, forced, shortest, longest, placement)
         if hand is not None and total - hand > 1e-3:
             segments.append((start, hand))
             start = hand
@@ -425,9 +521,11 @@ def segment_song(audio, max_seconds=15.0, min_seconds=5.2, mode=SEGMENT_MODES[0]
             if total - end < shortest and total - end > 1e-3:
                 # would leave a stub: allowed only if we can still fit one more clip
                 continue
-            o, ot = _peak_near(onset, times, end, 0.18)
+            if any(1e-3 < f - end < shortest - 0.3 for f in forced):
+                continue  # would strand a tapped cut too close ahead to reach
+            o, ot = _peak_near(onset, times, end, onset_reach, side)
             nv, _ = _peak_near(novelty, times, end, 0.35)
-            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices) + structure_bonus(end)
+            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices) + structure_bonus(end) - lookahead(end)
             if lyric_times:
                 weight = 1.4 if mode == SEGMENT_MODES[2] else 0.8
                 score += weight * lyric_bonus(end)
@@ -449,7 +547,7 @@ def _clock(text):
 
 
 def format_cut_plan(segments, total, min_seconds, max_seconds, *, structure=None, events=None,
-                    lyric_times=(), labels=None, forced=()):
+                    lyric_times=(), labels=None, forced=(), placement=None):
     """
     The scene list as text - one line per scene, `NN  m:ss.ss - m:ss.ss  dur  energy  section  cut: why`.
     Human-readable, hand-editable, and parse_cut_plan() reads it back. Only the
@@ -460,11 +558,15 @@ def format_cut_plan(segments, total, min_seconds, max_seconds, *, structure=None
         from .song_structure import section_for_span
     except Exception:  # pragma: no cover
         section_for_span = lambda *_: None  # noqa: E731
-    lines = [f"{CUT_PLAN_HEADER}: {len(segments)} scenes | {min_seconds:g}-{max_seconds:g} s per scene | {fmt_time(total)} total"]
+    side = placement_side(placement)
+    head = f"{CUT_PLAN_HEADER}: {len(segments)} scenes | {min_seconds:g}-{max_seconds:g} s per scene | {fmt_time(total)} total"
+    if side:
+        head += " | cuts " + ("before" if side == "before" else "after") + " the beat"
+    lines = [head]
     for i, (s, e) in enumerate(segments, 1):
         section = section_for_span(structure, s, e) if structure else None
         energy = labels[i - 1] if labels and i - 1 < len(labels) else ""
-        why = "end of song" if i == len(segments) else cut_reason(e, structure, events, lyric_times, forced)
+        why = "end of song" if i == len(segments) else cut_reason(e, structure, events, lyric_times, forced, placement)
         lines.append(
             f"{i:02d}  {fmt_time(s)} - {fmt_time(e)}  {e - s:5.2f}s  {energy:<6} {(section or ''):<12} cut: {why}"
         )
@@ -523,7 +625,7 @@ def _merge_short_tail(segments, total, longest, shortest):
     return segments
 
 
-def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=(), structure=None, events=None, forced=()):
+def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=(), structure=None, events=None, forced=(), placement=None):
     """
     Lyrics-driven cut: [(start, end), ...] where (almost) every segment starts
     where a lyric phrase starts. The song is walked front to back; each cut
@@ -539,7 +641,9 @@ def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=(), 
     longest, shortest = choices[-1], choices[0]
     onset, novelty, times = feats["onset"], feats["novelty"], feats["times"]
     lyric_times = sorted(t for t in lyric_times if t is not None)
-    structure_bonus = _structure_bonus_fn(structure, events)
+    structure_bonus = _structure_bonus_fn(structure, events, placement)
+    side = placement_side(placement)
+    onset_reach = BEAT_REACH if side else 0.18
 
     def musical_cut(start):
         best, best_end = -1e9, start + longest
@@ -547,18 +651,21 @@ def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=(), 
             end = start + dur
             if 1e-3 < total - end < shortest:
                 continue  # would leave a stub shorter than the shortest clip
-            o, _ = _peak_near(onset, times, end, 0.18)
+            if any(1e-3 < f - end < shortest - 0.3 for f in forced):
+                continue  # would strand a tapped cut too close ahead to reach
+            o, _ = _peak_near(onset, times, end, onset_reach, side)
             nv, _ = _peak_near(novelty, times, end, 0.35)
-            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices) + structure_bonus(end)
+            score = 1.0 * o + 1.6 * nv + 0.015 * (dur / longest) * len(choices) + structure_bonus(end) - lookahead(end)
             if score > best:
                 best, best_end = score, end
         return best_end
 
     forced = sorted(f for f in (forced or ()) if 0.5 < f < total - 0.5)
+    lookahead = _lookahead_fn(events, choices, placement, forced)
     segments = []
     start = 0.0
     while total - start > 1e-3:
-        hand = _forced_end(start, forced, shortest, longest)
+        hand = _forced_end(start, forced, shortest, longest, placement)
         if hand is not None and total - hand > 1e-3:
             segments.append((start, hand))
             start = hand

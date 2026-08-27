@@ -1432,11 +1432,11 @@ class H3ClaudeCodeMusicVideoWriter:
             print(f"❌ H3 Music Video Writer error: {exc}")
             import traceback
             print(traceback.format_exc())
-            message = f"Error occurred while writing the music video: {exc}"
-            return (
-                [message] * n, durations, frames, audio_segments, table, message, "", cast_text,
-                n, float(total_seconds), "", "error",
-            ) + passthrough + (clip_starts, project_name_prefix(project_name))
+            # A failed run is an ERROR, not a scene list: returning the message as
+            # the scenes let a dead backend (Ollama down, CLI missing, timeout) go
+            # on to a full render of the error text - 31 minutes on 27 Aug. Raising
+            # marks this node red with the reason and stops the graph here.
+            raise RuntimeError(f"H3 Music Video Writer: {exc}") from exc
         finally:
             release_local_llm(local)
 

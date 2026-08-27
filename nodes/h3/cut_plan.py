@@ -17,6 +17,7 @@
 
 from ...utils.constants import CUSTOM_CATEGORY
 from .music_support import (
+    CUT_PLACEMENTS,
     SEGMENT_MODES,
     analyse,
     energy_labels,
@@ -96,6 +97,20 @@ class H3CutPlan:
                         "lands at the top of a new scene and a stop closes one."
                     ),
                 }),
+                # appended last so saved workflows keep their widget positions
+                "cut_placement": (CUT_PLACEMENTS, {
+                    "default": CUT_PLACEMENTS[0],
+                    "tooltip": (
+                        "Which side of a beat the cut sits on. The frame grid moves a cut in 0.71 s "
+                        "steps, so a cut is never exactly on a hit. Before: the cut lands just ahead "
+                        "of the hit and the hit is the first thing in the new scene (the classic "
+                        "music-video cut; drops, downbeats and onsets all open the new scene, tapped "
+                        "cuts round down onto the grid). After: the hit is the last thing in the "
+                        "outgoing scene and the new one opens on the release (tapped cuts round up). "
+                        "Auto: the cutter's usual mix - onsets and downbeats from either side, drops "
+                        "opening the new scene."
+                    ),
+                }),
             },
         }
 
@@ -110,7 +125,9 @@ class H3CutPlan:
         "a writer and it uses exactly these scenes - its own segment settings are ignored."
     )
 
-    def plan(self, audio, segment_mode, max_seconds, min_seconds, lyrics="", sound_events="", manual_cuts=""):
+    def plan(self, audio, segment_mode, max_seconds, min_seconds, lyrics="", sound_events="", manual_cuts="",
+             cut_placement=None):
+        placement = cut_placement or CUT_PLACEMENTS[0]
         if min_seconds > max_seconds:
             min_seconds, max_seconds = max_seconds, min_seconds
         try:
@@ -125,13 +142,16 @@ class H3CutPlan:
 
         if segment_mode == SEGMENT_MODES[2] and timed:
             segments, feats = segment_by_lyrics(audio, max_seconds, min_seconds, lyric_times=timed,
-                                                structure=structure, events=events, forced=forced)
+                                                structure=structure, events=events, forced=forced,
+                                                placement=placement)
         else:
             segments, feats = segment_song(audio, max_seconds, min_seconds, segment_mode,
-                                           lyric_times=timed, structure=structure, events=events, forced=forced)
+                                           lyric_times=timed, structure=structure, events=events, forced=forced,
+                                           placement=placement)
         labels = energy_labels(feats, segments)
         text = format_cut_plan(segments, feats["duration"], min_seconds, max_seconds,
-                               structure=structure, events=events, lyric_times=timed, labels=labels, forced=forced)
+                               structure=structure, events=events, lyric_times=timed, labels=labels, forced=forced,
+                               placement=placement)
         count = len(segments)
         form = summary_line(structure) if structure else "structure: not measured"
         summary = f"{count} scenes, {min_seconds:g}-{max_seconds:g} s, {fmt_time(feats['duration'])} | {form}"

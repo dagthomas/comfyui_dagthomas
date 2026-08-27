@@ -829,7 +829,7 @@ def parse_scenes_json(text, fallback_duration):
     synopsis = ""
     items = data
     if isinstance(data, dict):
-        synopsis = str(data.get("synopsis") or "").strip()
+        synopsis = _strip_envelope_lines(str(data.get("synopsis") or ""))
         items = data.get("scenes")
     if not isinstance(items, list):
         return None

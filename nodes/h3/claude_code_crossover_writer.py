@@ -695,7 +695,8 @@ class H3ClaudeCodeCrossoverWriter:
             import traceback
 
             print(traceback.format_exc())
-            message = f"Error occurred while writing crossover scenes: {exc}"
-            return (
-                [message], [float(scene_duration)], message, "", cast_text, 0, "", "error"
-            ) + passthrough + (project_name_prefix(project_name),)
+            # A failed run is an ERROR, not a scene list: returning the message as
+            # the scenes let a dead backend (Ollama down, CLI missing, timeout) go
+            # on to a full render of the error text - 31 minutes on 27 Aug. Raising
+            # marks this node red with the reason and stops the graph here.
+            raise RuntimeError(f"H3 Crossover Writer: {exc}") from exc

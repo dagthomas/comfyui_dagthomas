@@ -853,8 +853,8 @@ class H3ClaudeCodeShortFilmWriter:
             print(f"❌ H3 Short Film Writer error: {exc}")
             import traceback
             print(traceback.format_exc())
-            message = f"Error occurred while writing the film: {exc}"
-            return (
-                [message] * n, fallback_durations, fallback_lengths, message, "", "",
-                cast_text, n, float(sum(fallback_durations)), "", "error",
-            ) + passthrough + (project_name_prefix(project_name),)
+            # A failed run is an ERROR, not a scene list: returning the message as
+            # the scenes let a dead backend (Ollama down, CLI missing, timeout) go
+            # on to a full render of the error text - 31 minutes on 27 Aug. Raising
+            # marks this node red with the reason and stops the graph here.
+            raise RuntimeError(f"H3 Short Film Writer: {exc}") from exc

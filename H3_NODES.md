@@ -394,6 +394,7 @@ Decide the scenes *before* anything is written. Give it the song and how long a 
 
 - `segment_mode` — Auto (cut on the music) / Fixed (as long as allowed) / Lyric lines (cut just before lyric phrases; needs timed `lyrics`).
 - `lyrics` (optional, timed) and `sound_events` (optional, from the Sound Events node) make the cuts lyric‑ and drop‑aware.
+- `cut_placement` — which side of a beat the cut sits on. H3's frame grid moves a cut in 0.71 s steps, so a cut is never exactly *on* a hit: **Before the beat** puts the cut just ahead of the hit, so the hit is the first thing in the new scene (the classic music‑video cut — drops, downbeats and onsets all open the new scene; tapped cuts round *down* onto the grid); **After the beat** keeps the hit as the last thing in the outgoing scene and opens the new one on the release (tapped cuts round *up*); **Auto** is the cutter's usual mix (onsets and downbeats from either side, drops opening the new scene). The plan's header says `cuts before the beat` / `cuts after the beat`, and a drop that closes a scene reads `cut: drop closes the scene`.
 - Outputs: `audio` (pass‑through), **`cut_plan`** (the text), `count`, `summary`. The node shows the plan on the canvas:
 
 ```
