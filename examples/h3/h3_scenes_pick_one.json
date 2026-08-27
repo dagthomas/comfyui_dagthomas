@@ -1135,7 +1135,7 @@
         "",
         "",
         "Auto (the writer decides)",
-        "Auto (the writer chooses per scene)"
+        "Stay (a continuing scene keeps its place)"
       ],
       "title": "APNext H3 Claude Code Scenes Writer",
       "color": "#223",

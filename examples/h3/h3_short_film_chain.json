@@ -751,7 +751,7 @@
         6,
         true,
         "Auto (the writer decides)",
-        "Auto (the writer chooses per scene)"
+        "Stay (a continuing scene keeps its place)"
       ],
       "title": "H3 Short Film Writer"
     },

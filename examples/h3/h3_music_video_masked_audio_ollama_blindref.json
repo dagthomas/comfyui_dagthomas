@@ -1049,7 +1049,7 @@
         true,
         6,
         "Auto (the writer decides per song)",
-        "Auto (the writer chooses per scene)"
+        "Stay (a continuing scene keeps its place)"
       ],
       "title": "H3 Music Video Writer - blind Ref2VA (no vision needed)"
     },

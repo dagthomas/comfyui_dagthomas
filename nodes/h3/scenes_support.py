@@ -1110,7 +1110,7 @@ def transition_directive(key):
 
 def transition_input():
     return (TRANSITION_STYLES, {
-        "default": TRANSITION_STYLES[0],
+        "default": TRANSITION_STYLES[1],          # Stay - the behaviour before the dropdown existed
         "tooltip": (
             "What a CONTINUING scene may do with its place. The chain carry keeps the actor "
             "exactly - pose, direction, speed - but not the previous place, so a change of place "

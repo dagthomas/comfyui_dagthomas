@@ -214,7 +214,7 @@
       "transcribe_lyrics": true,
       "events_per_scene": 6,
       "lyric_interpretation": "Auto (the writer decides per song)",
-      "transition_style": "Auto (the writer chooses per scene)",
+      "transition_style": "Stay (a continuing scene keeps its place)",
       "audio": [
         "164",
         0

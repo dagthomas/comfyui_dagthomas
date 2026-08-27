@@ -222,7 +222,7 @@
       "avoid_previous": 6,
       "handoff_pass": true,
       "interpretation": "Auto (the writer decides)",
-      "transition_style": "Auto (the writer chooses per scene)",
+      "transition_style": "Stay (a continuing scene keeps its place)",
       "cast_1": [
         "157",
         4
