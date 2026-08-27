@@ -47,6 +47,7 @@ Everything in this pack that touches **MiniMax‑H3** video prompting: how each 
    - [APNext H3 Cut Plan (scenes from the music)](#apnext-h3-cut-plan-scenes-from-the-music)
    - [APNext H3 Sync Check (does the picture hit the beat?)](#apnext-h3-sync-check-does-the-picture-hit-the-beat)
    - [APNext H3 Music Video Chain Render (carry frames between scenes)](#apnext-h3-music-video-chain-render-carry-frames-between-scenes)
+   - [APNext H3 Short Film Chain Render (carry picture + sound between scenes)](#apnext-h3-short-film-chain-render-carry-picture--sound-between-scenes)
    - [APNext H3 Resolution Planner (Crop Only)](#apnext-h3-resolution-planner-crop-only)
 7. [Viewing](#viewing)
    - [APNext H3 Prompt Preview](#apnext-h3-prompt-preview)
@@ -256,6 +257,8 @@ The example workflow adapts a two‑minute harbour‑town story; the **turbo var
 
 ## Cast and model
 
+**`handoff_pass`** (Continuous chain only, default **on**) — after the scenes are written (and the wardrobe / location repair), one more LLM turn reads every scene's *ending* against the *opening* that follows it and rewrites the openings that drift — a prop that vanished or changed hands, a person who moved or changed pose, a re‑established wide shot, a changed light — so the first frame of each scene *is* the last frame of the previous one, exactly as the [Short Film Chain Render](#apnext-h3-short-film-chain-render-carry-picture--sound-between-scenes) pins it. Only the rewritten scenes are re‑emitted and spliced in by number (a reply that touches scene 01 or anything outside the chain is discarded, `OK` means nothing needed changing); the log shows `🔗 hand-off pass: N scene opening(s) rewritten`.
+
 ### APNext H3 Characters
 `H3Characters` · workflows: all crossover workflows, [`h3_music_video.json`](examples/h3/h3_music_video.json)
 
@@ -378,6 +381,15 @@ Measured on 18 H3 clips of one video (26 Aug 2026): 58 % of hits had a picture c
 
 Inputs: `images` (the decoded clip or a joined video), `audio` (its own audio piece, or the whole song for a joined video), `fps`, `tolerance_frames`, `min_strength`; optional `sound_events` for that audio. Outputs: `report`, `hit_rate`, `chance`, `lift`.
 
+### APNext H3 Short Film Chain Render (carry picture + sound between scenes)
+`H3ShortFilmChainRender` · writer `scenes` + `lengths` + model/clip/VAEs + sampler → clips on disk
+
+The short‑film pipeline renders every scene as an independent clip, and H3 generates each clip's sound from nothing — so at every scene change the room tone, the score and whatever was mid‑air at the cut all **start over**. This node renders the scenes **one after another inside one execution** and, for every scene after the first, pins the last `context_frames` of the previous scene's **sampled latent — picture and sound together** — to the head of the new latent, protected by a noise mask, with the audio mask feathered over its last `audio_feather_ticks` (8 = 0.2 s) so the join is a release rather than a wall. The model reads the pinned run as "this clip's picture and sound so far" and continues both; the delivered clip has the head trimmed off, picture and sound by the same duration, and its audio cut to exactly its frame count (H3 rounds its audio grid up ~8 ms per clip, which would otherwise accumulate into a click down the chain). No decode / re‑encode round trip: the latent is copied straight across (ComfyUI‑H3‑Motion‑Context‑MultiRef's `MiniMaxH3GeneratedAVMaskedContext`, the node its own AV‑extension workflows use). Without that pack the core `MiniMaxH3AddGuide` still carries the previous picture; the sound is then generated per scene and the report says so.
+
+`context_frames` snaps to the runs where the 24 fps picture and the 40 Hz audio latent share a boundary — **39** (~1.6 s), **90** (~3.75 s), **141** (~5.9 s); more context is a longer, surer continuation of the sound and fewer frames left for the scene. The continuing scene renders on a longer grid (scene + context, rounded up to H3's 5 + 17k) and the grid padding stays **in** the delivered clip on purpose: the next scene continues from the latent's real tail, and a tail the film never showed would be a jump at the join (the report lists any `+N grid pad`). A scene too long to fit the context under H3's 362‑frame range opens on a hard cut with a warning. `continuity`: *flow everywhere* / *cut everywhere*. Up to four `ref_image` pictures (Ref2VA) apply to every scene.
+
+Pair it with the **Short Film Writer**'s `continuity_mode` = *Continuous chain* and its `handoff_pass` (below), so the words and the pixels agree at every join. Outputs `file_paths` (list) and a `report`.
+
 ### APNext H3 Music Video Chain Render (carry frames between scenes)
 `H3MusicVideoChainRender` · writer lists + model/clip/VAEs + sampler → clips on disk
 
@@ -483,6 +495,7 @@ All in `Settings → APNext` (and the *APNext* top‑menu / canvas right‑click
 | [`h3_music_video_masked_audio.json`](examples/h3/h3_music_video_masked_audio.json) | The strongest lip‑sync: writer in `audio_mode` = *Masked latent* → **AudioSeparation** vocal stem + `clip_starts` → **H3 Song Audio + Masked Video Context** (the song slice written into the H3 audio latent, protected from denoising) → sampler → each clip saved directly. The song is deliberately *not* wired to `ref_audio`. Needs ComfyUI‑H3‑Motion‑Context‑MultiRef + audio‑separation‑nodes. |
 | [`h3_music_video_masked_audio_briefs.json`](examples/h3/h3_music_video_masked_audio_briefs.json) | The masked‑latent music video **plus custom scenes**: three chained **H3 Scene Brief** nodes → the writer's `scene_briefs` — brief 1 pinned to scene 01, the rest filling in order, every unplanned piece still the model's to invent. |
 | [`h3_music_video_masked_audio_chain.json`](examples/h3/h3_music_video_masked_audio_chain.json) | The cut‑plan music video rendered by **Chain Render**: one node replaces Ref2VA → masked audio → guider → sampler → Save Clip, renders the scenes in order and carries the last 22 frames across every boundary the Cut Plan marks as a soft cut. |
+| [`h3_short_film_chain.json`](examples/h3/h3_short_film_chain.json) | The short film rendered by the **Short Film Chain Render**: the writer in *Continuous chain* mode with the hand‑off pass on, and one node replacing Ref2VA → guider → sampler → decode → Save Clip that carries the last 39 frames **and their sound** of every scene into the next, so the room tone and score do not restart at each cut. |
 | [`h3_music_video_masked_audio_cut_plan.json`](examples/h3/h3_music_video_masked_audio_cut_plan.json) | The masked‑latent music video with the scenes **decided by the music first**: Load Audio → Sound Events → **Cut Plan** → the writer's `cut_plan` socket (its own segment widgets grey out). Tap the cuts on the Cut Plan node or edit the plan text. A muted **Decode → Sync Check** branch after the sampler measures, on a test run, whether the picture actually hits the beat. |
 | [`h3_music_video_masked_audio_ollama.json`](examples/h3/h3_music_video_masked_audio_ollama.json) | The masked‑latent music video **written entirely locally**: an **H3 LLM Backend** on `ollama:qwen3.8:27b` (`num_ctx` 32768, thinking off) drives the writer — no API key, nothing leaves the machine. The model is multimodal, so a performer photo goes to both the writer’s `image_1` and the video node’s `ref_image_0` and `prompt_mode` is **Ref2VA**. Notes on the canvas cover the Ollama setup and the local‑model settings. |
 | [`h3_music_video_masked_audio_ollama_blindref.json`](examples/h3/h3_music_video_masked_audio_ollama_blindref.json) | **Blind Ref2VA** — the performer photo reaches the video node as `<Picture 1>` and is rendered normally, but the writer never sees a pixel and takes who is in it from `image_notes`. Reference‑image quality on a model with **no vision at all**; the usual pick for a local or uncensored model. |

@@ -739,6 +739,107 @@ def enforce_continuity_chunked(enabled, synopsis, parsed, session_id, info, repa
     )
 
 
+# ---- hand-off between chained scenes -----------------------------------
+# In a continuous chain the last frame of scene N IS the first frame of scene
+# N+1 - the render pins it there. The wardrobe and location locks keep the
+# people and the place the same; what they do not catch is the STATE of the
+# frame at the join: the glass that was at her lips, the door that had just
+# opened, the lamp that was on, who stood where. That is what an LLM pass can
+# tidy: read every ending against the opening that follows it and rewrite the
+# openings that drift, nothing else.
+
+def _description_of(prompt):
+    m = re.search(r"integrated_multimodal_description\s*:\s*(.*?)(?:\n\s*(?:overall_soundscape|non_diegetic_music|subject_definitions|summary)\s*:|\Z)",
+                  prompt or "", re.DOTALL | re.IGNORECASE)
+    return (m.group(1) if m else (prompt or "")).strip()
+
+
+def scene_ending(prompt, chars=420):
+    """The closing sentences of a scene's description - the state the next scene inherits."""
+    text = " ".join(_description_of(prompt).split())
+    return text[-chars:].lstrip() if len(text) > chars else text
+
+
+def scene_opening(prompt, chars=420):
+    """The first sentences of a scene - [Shot 1] up to `chars`."""
+    text = " ".join(_description_of(prompt).split())
+    return text[:chars].rstrip()
+
+
+def opens_on_previous(prompt):
+    return bool(re.search(r"last frame of the previous scene", prompt or "", re.IGNORECASE))
+
+
+def handoff_repair_prompt(parsed):
+    """One repair turn: every join listed as ENDING -> OPENING, scenes to re-emit chosen by the model."""
+    lines = [
+        "HAND-OFF PASS. These scenes render as a CONTINUOUS CHAIN: the last frame of each "
+        "scene is pinned as the first frame of the next. At every join below, compare the "
+        "ENDING with the OPENING that follows it. The opening must show the SAME frame: the "
+        "same people in the same screen positions and poses, the same objects and props in "
+        "the same hands and places (a glass raised stays raised, an open door stays open, a "
+        "lit lamp stays lit), the same light and the same framing. Where the opening drifts - "
+        "a prop that vanished or changed, a person who moved or changed pose, a re-established "
+        "wide shot, a different light - rewrite THAT scene's [Shot 1] so its first sentence "
+        "is `Opens on the last frame of the previous scene: ...` naming what is actually on "
+        "screen at the end of the previous scene, and then carry the story on. Change nothing "
+        "else in the scene. Never rewrite an ending to fit an opening.",
+        "",
+    ]
+    for k in range(1, len(parsed)):
+        prev_no, _, prev_p = parsed[k - 1]
+        no, _, p = parsed[k]
+        flag = "" if opens_on_previous(p) else "   <-- does not open on the previous frame"
+        lines.append(f"JOIN {prev_no:02d} -> {no:02d}{flag}")
+        lines.append(f"  ENDING of {prev_no:02d}: {scene_ending(prev_p)}")
+        lines.append(f"  OPENING of {no:02d}: {scene_opening(p)}")
+        lines.append("")
+    lines.append(
+        "Re-emit ONLY the scenes whose opening you changed, each as a complete envelope with "
+        "its original number and duration (`=== SCENE NN | duration: X.X ===` ... `=== END "
+        "SCENE NN ===`), every field present, nothing else changed. If no opening needs a "
+        "change, answer with the single word OK."
+    )
+    return "\n".join(lines)
+
+
+def enforce_handoff(enabled, parsed, session_id, info, repair):
+    """
+    Hand-off pass for chained films: one repair turn that rewrites the scene
+    openings that do not match the previous scene's ending. Only the scenes
+    the model re-emits are spliced in (by number, subset only, real envelopes
+    only); the rest stay as written. Returns (parsed, info).
+    """
+    if not enabled or len(parsed) < 2:
+        return parsed, info
+    drift = [no for k, (no, _, p) in enumerate(parsed) if k > 0 and not opens_on_previous(p)]
+    note = f"hand-off: {len(drift)} scene(s) do not open on the previous frame" if drift else "hand-off: every scene opens on the previous frame"
+    if not session_id:
+        print(f"🔗 {note} - no session to repair in")
+        return parsed, f"{info} | {note}"
+    print(f"🔗 {note} - asking for one hand-off pass on {len(parsed) - 1} join(s)")
+    try:
+        text, repair_info = repair(handoff_repair_prompt(parsed))
+    except Exception as exc:  # keep the first answer rather than fail the run
+        print(f"⚠️ hand-off pass failed: {exc}")
+        return parsed, f"{info} | {note}, hand-off pass failed"
+    if (text or "").strip().upper().rstrip(".") == "OK":
+        print("🔗 hand-off pass: nothing to change")
+        return parsed, f"{info} | {note}, hand-off pass: unchanged"
+    _, fixed = parse_scenes(text, parsed[0][1])
+    allowed = {no for no, _, _ in parsed[1:]}
+    fixed_by_no = {no: p for no, _, p in fixed}
+    if not fixed_by_no or not set(fixed_by_no) <= allowed or any("[shot" not in p.lower() for p in fixed_by_no.values()):
+        print(f"⚠️ hand-off pass returned scene(s) {sorted(fixed_by_no)}; expected a subset of {sorted(allowed)} - discarded")
+        return parsed, f"{info} | {note}, hand-off pass discarded"
+    out = [(no, dur, fixed_by_no.get(no, p)) for no, dur, p in parsed]
+    left = [no for k, (no, _, p) in enumerate(out) if k > 0 and not opens_on_previous(p)]
+    print(f"🔗 hand-off pass: {len(fixed_by_no)} scene opening(s) rewritten "
+          f"({', '.join(f'{no:02d}' for no in sorted(fixed_by_no))}); "
+          f"{len(drift)} -> {len(left)} not opening on the previous frame | {repair_info}")
+    return out, f"{info} | hand-off: {len(fixed_by_no)} opening(s) rewritten, {len(drift)} -> {len(left)} drifting"
+
+
 def duration_directive(duration_mode, scene_duration):
     if duration_mode == DURATION_MODES[0]:
         return (

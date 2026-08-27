@@ -557,6 +557,9 @@ try:
     from .nodes.h3.chain_render import H3MusicVideoChainRender
     NEW_MAPPINGS["H3MusicVideoChainRender"] = H3MusicVideoChainRender
     NEW_DISPLAY_MAPPINGS["H3MusicVideoChainRender"] = "APNext H3 Music Video Chain Render (carry frames between scenes)"
+    from .nodes.h3.film_chain_render import H3ShortFilmChainRender
+    NEW_MAPPINGS["H3ShortFilmChainRender"] = H3ShortFilmChainRender
+    NEW_DISPLAY_MAPPINGS["H3ShortFilmChainRender"] = "APNext H3 Short Film Chain Render (carry picture + sound between scenes)"
 except Exception:
     pass
 

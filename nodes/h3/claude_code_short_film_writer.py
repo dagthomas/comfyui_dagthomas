@@ -81,6 +81,8 @@ from .scenes_support import (
     continuity_directive,
     enforce_continuity,
     enforce_continuity_chunked,
+    enforce_handoff,
+    is_chain_mode,
     envelope_contract,
     locations_directive,
     parse_location_lock,
@@ -247,6 +249,18 @@ class H3ClaudeCodeShortFilmWriter:
                 "far more reliably than it forbids it: the run reproduced what it was told "
                 "to avoid, got saved, and fed itself back. The slot stays so saved "
                 "workflows keep their widget positions; the value is ignored."
+            ),
+        })
+        # appended last so saved workflows keep their widget positions
+        optional["handoff_pass"] = ("BOOLEAN", {
+            "default": True,
+            "tooltip": (
+                "Continuous chain only: after the scenes are written, one more LLM turn reads "
+                "every scene's ending against the opening that follows it and rewrites the "
+                "openings that drift - a prop that vanished, a person who moved, a re-established "
+                "wide shot, a changed light - so the first frame of each scene is the last frame of "
+                "the previous one, as the chain render pins it. Only the rewritten scenes are "
+                "re-emitted; nothing else changes."
             ),
         })
 
@@ -566,7 +580,7 @@ class H3ClaudeCodeShortFilmWriter:
         llm=None, reference_image_use=None, scene_briefs="",
         save_scenes=True, scenes_per_call=SCENES_PER_CALL, prompt_mode=None,
         draft_model="haiku", parallel_chunks=True, project_name="",
-        avoid_previous=0,
+        avoid_previous=0, handoff_pass=True,
         **cast_slots,
     ):
         import random
@@ -814,6 +828,8 @@ class H3ClaudeCodeShortFilmWriter:
                 parsed, info = enforce_continuity_chunked(
                     enforce_wardrobe, synopsis, parsed, session_id, info, repair,
                 )
+            if is_chain_mode(continuity_mode):
+                parsed, info = enforce_handoff(bool(handoff_pass), parsed, session_id, info, repair)
 
             scenes = [p for _, _, p in parsed][:n]
             while len(scenes) < n:
