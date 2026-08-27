@@ -749,7 +749,9 @@
         true,
         "",
         6,
-        true
+        true,
+        "Auto (the writer decides)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "H3 Short Film Writer"
     },
@@ -878,7 +880,10 @@
         8,
         "flow everywhere (every scene continues the previous picture and sound)",
         "video/H3_film",
-        24.0
+        24.0,
+        true,
+        400,
+        "masked AV latent (picture + sound; 39 / 90 / 141 frames)"
       ],
       "title": "Short Film Chain Render - Ref2VA + carried picture AND sound, scene by scene",
       "color": "#223",

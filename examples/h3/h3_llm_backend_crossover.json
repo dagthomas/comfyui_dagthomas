@@ -1218,7 +1218,10 @@
         "",
         "",
         "Characters only (ignore picture backgrounds)",
-        ""
+        "",
+        0,
+        "Auto (the writer decides)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "APNext H3 Crossover Writer",
       "color": "#223",
@@ -1267,7 +1270,8 @@
         32768,
         "off (faster - recommended)",
         true,
-        "auto (JSON with a schema on Ollama, text envelopes elsewhere)"
+        "auto (JSON with a schema on Ollama, text envelopes elsewhere)",
+        ""
       ],
       "title": "H3 LLM Backend — Ollama (qwen3:14b)"
     },

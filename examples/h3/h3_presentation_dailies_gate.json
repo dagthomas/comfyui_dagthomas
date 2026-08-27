@@ -1064,7 +1064,8 @@
         "haiku",
         true,
         "",
-        6
+        6,
+        "Auto (the writer decides)"
       ],
       "title": "H3 Presentation Writer"
     },

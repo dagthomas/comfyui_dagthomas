@@ -48,7 +48,7 @@
     "class_type": "MiniMaxH3ReferenceToVideo",
     "inputs": {
       "prompt": [
-        "165",
+        "163",
         0
       ],
       "width": [
@@ -130,36 +130,6 @@
       ]
     }
   },
-  "92": {
-    "class_type": "SaveVideo",
-    "inputs": {
-      "filename_prefix": [
-        "163",
-        22
-      ],
-      "format": "auto",
-      "codec": "auto",
-      "video": [
-        "146",
-        0
-      ]
-    }
-  },
-  "146": {
-    "class_type": "CreateVideo",
-    "inputs": {
-      "fps": 24,
-      "bit_depth": 8,
-      "images": [
-        "122",
-        0
-      ],
-      "audio": [
-        "163",
-        3
-      ]
-    }
-  },
   "125": {
     "class_type": "SamplerCustomAdvanced",
     "inputs": {
@@ -182,32 +152,6 @@
       "latent_image": [
         "136",
         1
-      ]
-    }
-  },
-  "121": {
-    "class_type": "VAEDecodeAudio",
-    "inputs": {
-      "samples": [
-        "125",
-        0
-      ],
-      "vae": [
-        "120",
-        0
-      ]
-    }
-  },
-  "122": {
-    "class_type": "VAEDecode",
-    "inputs": {
-      "samples": [
-        "125",
-        0
-      ],
-      "vae": [
-        "119",
-        0
       ]
     }
   },
@@ -241,7 +185,6 @@
       "shots_per_scene": "Auto",
       "visual_style": "Live-action, 35mm cinematic film aesthetic",
       "dialogue_language": "English",
-      "wildness": 45,
       "model": "sonnet",
       "research": false,
       "director": true,
@@ -264,6 +207,14 @@
       "save_scenes": true,
       "scenes_per_call": 4,
       "prompt_mode": "Ref2VA (bind reference images)",
+      "draft_model": "haiku",
+      "parallel_chunks": true,
+      "project_name": "",
+      "avoid_previous": 6,
+      "transcribe_lyrics": true,
+      "events_per_scene": 6,
+      "lyric_interpretation": "Auto (the writer decides per song)",
+      "transition_style": "Auto (the writer chooses per scene)",
       "audio": [
         "164",
         0
@@ -271,9 +222,7 @@
       "cast_1": [
         "157",
         4
-      ],
-      "project_name": "",
-      "avoid_previous": 6
+      ]
     }
   },
   "164": {
@@ -282,23 +231,35 @@
       "audio": ""
     }
   },
-  "165": {
-    "class_type": "H3ScenesReview",
-    "inputs": {
-      "mode": "Bypass (pass scenes through)",
-      "edited": "",
-      "scenes": [
-        "163",
-        0
-      ]
-    }
-  },
   "190": {
     "class_type": "H3SongAnalysis",
     "inputs": {
       "audio": [
         "164",
         0
+      ]
+    }
+  },
+  "191": {
+    "class_type": "H3SaveClip",
+    "inputs": {
+      "filename_prefix": [
+        "163",
+        22
+      ],
+      "fps": 24.0,
+      "format": "mp4",
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "audio": [
+        "163",
+        3
       ]
     }
   }

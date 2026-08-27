@@ -157,7 +157,11 @@ class H3LLMBackend:
                         "envelopes everywhere. The scene text itself is unchanged either way."
                     ),
                 }),
-                # appended last so saved workflows keep their widget positions
+            },
+            "optional": {
+                # new since the first release: OPTIONAL with a default, so a workflow saved (or a
+                # browser tab loaded) before it existed still validates and runs; it stays last so
+                # saved widget positions hold
                 "api_key": ("STRING", {
                     "default": "",
                     "tooltip": (

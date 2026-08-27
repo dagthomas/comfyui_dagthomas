@@ -1053,10 +1053,10 @@ def interpretation_input(source_word="the manuscript"):
 # space is disclosed around the same figure. Left unsaid, the writers keep
 # continuing scenes in the room they started in.
 TRANSITION_STYLES = [
+    "Auto (the writer chooses per scene)",
     "Stay (a continuing scene keeps its place)",
     "Walk-through (the actor carries the take into a new place)",
     "Reveal (a camera move discloses a new space around them)",
-    "Any (the writer chooses per scene)",
 ]
 
 _TRANSITION_TEXT = {
@@ -1087,7 +1087,7 @@ _TRANSITION_TEXT = {
         "the actor jumps. Use it whenever the plan moves the story to a new place; a scene "
         "whose plan stays put stays put."
     ),
-    "Any": (
+    "Auto": (
         "TRANSITIONS - YOUR CALL: a continuing scene may change place inside the take, either "
         "by WALK-THROUGH (the actor carries it through a door, a corridor, a corner, the camera "
         "following without cutting) or by REVEAL (the actor holds, the camera moves, and a new "
@@ -1114,10 +1114,11 @@ def transition_input():
         "tooltip": (
             "What a CONTINUING scene may do with its place. The chain carry keeps the actor "
             "exactly - pose, direction, speed - but not the previous place, so a change of place "
-            "inside a take has to be written. Stay: same place, as before. Walk-through: the actor "
-            "carries the take through a door / corridor / corner into the new place, camera "
-            "following. Reveal: the actor holds, the camera moves, and a new space is disclosed "
-            "around them. Any: the writer picks per scene. Hard cuts are unaffected."
+            "inside a take has to be written. Auto: the writer picks walk-through or reveal per "
+            "scene where the plan moves. Stay: same place, always. Walk-through: the actor carries "
+            "the take through a door / corridor / corner into the new place, camera following. "
+            "Reveal: the actor holds, the camera moves, and a new space is disclosed around them. "
+            "Hard cuts are unaffected."
         ),
     })
 

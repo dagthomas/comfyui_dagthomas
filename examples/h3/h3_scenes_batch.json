@@ -994,7 +994,9 @@
         "",
         "",
         "",
-        ""
+        "",
+        "Auto (the writer decides)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "APNext H3 Claude Code Scenes Writer",
       "color": "#223",

@@ -951,7 +951,10 @@
         "haiku",
         true,
         "",
-        6
+        6,
+        true,
+        "Auto (the writer decides)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "H3 Short Film Writer"
     },

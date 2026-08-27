@@ -1055,7 +1055,9 @@
         "",
         6,
         true,
-        6
+        6,
+        "Auto (the writer decides per song)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "H3 Music Video Writer"
     },
@@ -1435,7 +1437,11 @@
         true,
         true,
         true,
-        false
+        false,
+        "",
+        1.0,
+        "",
+        0
       ],
       "color": "#323",
       "bgcolor": "#535"
@@ -1499,7 +1505,8 @@
         15.0,
         5.2,
         "",
-        ""
+        "",
+        "Auto (nearest onset; drops open the new scene)"
       ],
       "title": "Cut Plan - the scenes, decided by the music",
       "color": "#323",

@@ -193,6 +193,11 @@ class H3MusicVideoChainRender:
                 "filename_prefix": ("STRING", {"default": "video/MiniMax_H3"}),
                 "fps": ("FLOAT", {"default": 24.0, "min": 1.0, "max": 60.0, "step": 0.01}),
                 # appended last so saved workflows keep their widget positions
+            },
+            "optional": {
+                **optional,
+                # new since the first release: OPTIONAL with defaults, so a workflow saved (or a
+                # browser tab loaded) before they existed still validates and runs
                 "save_latents": ("BOOLEAN", {
                     "default": True,
                     "tooltip": (
@@ -211,7 +216,6 @@ class H3MusicVideoChainRender:
                     ),
                 }),
             },
-            "optional": optional,
         }
 
     RETURN_TYPES = ("STRING", "STRING", "AUDIO")

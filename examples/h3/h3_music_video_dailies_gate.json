@@ -1045,7 +1045,10 @@
         true,
         "",
         6,
-        true
+        true,
+        6,
+        "Auto (the writer decides per song)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "H3 Music Video Writer"
     },

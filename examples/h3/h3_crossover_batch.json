@@ -1218,7 +1218,10 @@
         "",
         "",
         "Characters only (ignore picture backgrounds)",
-        ""
+        "",
+        0,
+        "Auto (the writer decides)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "APNext H3 Crossover Writer",
       "color": "#223",

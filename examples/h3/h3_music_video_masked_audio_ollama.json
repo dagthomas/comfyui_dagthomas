@@ -1047,7 +1047,9 @@
         "",
         0,
         true,
-        6
+        6,
+        "Auto (the writer decides per song)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "H3 Music Video Writer - Ref2VA (vision model)"
     },
@@ -1404,7 +1406,8 @@
         32768,
         "off (faster - recommended)",
         true,
-        "auto (JSON with a schema on Ollama, text envelopes elsewhere)"
+        "auto (JSON with a schema on Ollama, text envelopes elsewhere)",
+        ""
       ],
       "color": "#232",
       "bgcolor": "#353"
@@ -1561,7 +1564,11 @@
         true,
         true,
         true,
-        false
+        false,
+        "",
+        1.0,
+        "",
+        0
       ],
       "color": "#323",
       "bgcolor": "#535"

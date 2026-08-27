@@ -782,7 +782,9 @@
         "",
         6,
         true,
-        6
+        6,
+        "Auto (the writer decides per song)",
+        "Auto (the writer chooses per scene)"
       ],
       "title": "H3 Music Video Writer"
     },
@@ -998,7 +1000,11 @@
         true,
         true,
         true,
-        false
+        false,
+        "",
+        1.0,
+        "",
+        0
       ],
       "color": "#323",
       "bgcolor": "#535"
@@ -1063,7 +1069,8 @@
         15.0,
         5.2,
         "",
-        ""
+        "",
+        "Auto (nearest onset; drops open the new scene)"
       ],
       "title": "Cut Plan - the scenes, decided by the music",
       "color": "#323",
@@ -1232,7 +1239,9 @@
         22,
         "cut plan decides (continue over soft cuts, hard cut on drops / sections / taps)",
         "video/MiniMax_H3",
-        24.0
+        24.0,
+        true,
+        "previous latent (copied straight into the new latent - no decode / re-encode)"
       ],
       "title": "Chain Render - Ref2VA + masked song + carried frames, scene by scene",
       "color": "#223",
