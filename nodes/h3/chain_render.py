@@ -34,6 +34,7 @@ import re
 
 from ...utils.constants import CUSTOM_CATEGORY
 from .clip_save import save_frames
+from .latent_store import project_key, save_scene_latent
 from .music_support import FPS, FRAME_STEP, MAX_FRAMES
 
 CONTINUITY_MODES = [
@@ -44,6 +45,17 @@ CONTINUITY_MODES = [
 
 # cut reasons (see music_support.cut_reason) that are *soft*: the take may continue
 FLOW_REASONS = ("onset", "downbeat", "lyric line")
+
+# How the previous scene reaches the next on the masked-song path. The latent
+# carry copies the previous scene's sampled video latent tail straight into
+# the new target (the pack's `source_latent` input - "preferred for live clip
+# chaining"): no decode, no re-encode, no generation loss at every link, and
+# it is what the Short Film Chain Render does. The frames carry decodes the
+# tail and encodes it again - the original path, kept for comparison.
+CARRY_MODES = [
+    "previous latent (copied straight into the new latent - no decode / re-encode)",
+    "previous frames (the decoded tail, encoded again)",
+]
 MAX_REFS = 4
 
 
@@ -180,13 +192,31 @@ class H3MusicVideoChainRender:
                 "continuity": (CONTINUITY_MODES, {"default": CONTINUITY_MODES[0]}),
                 "filename_prefix": ("STRING", {"default": "video/MiniMax_H3"}),
                 "fps": ("FLOAT", {"default": 24.0, "min": 1.0, "max": 60.0, "step": 0.01}),
+                # appended last so saved workflows keep their widget positions
+                "save_latents": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": (
+                        "Write every scene's sampled latent to output/apnext_latents/<project>_sNN.pt so "
+                        "H3 Scene Retake can render one scene again later, continuing from the previous "
+                        "scene's real tail. ~10-30 MB per scene."
+                    ),
+                }),
+                "carry": (CARRY_MODES, {
+                    "default": CARRY_MODES[0],
+                    "tooltip": (
+                        "How a continuing scene gets the previous one (masked-song path). Previous latent: "
+                        "the sampled video latent tail is copied straight into the new latent - no decode, "
+                        "no re-encode, nothing lost at each link; the song stays authoritative for the sound. "
+                        "Previous frames: the decoded tail encoded again (the original path)."
+                    ),
+                }),
             },
             "optional": optional,
         }
 
-    RETURN_TYPES = ("STRING", "STRING")
-    RETURN_NAMES = ("file_paths", "report")
-    OUTPUT_IS_LIST = (True, False)
+    RETURN_TYPES = ("STRING", "STRING", "AUDIO")
+    RETURN_NAMES = ("file_paths", "report", "audio")
+    OUTPUT_IS_LIST = (True, False, False)
     OUTPUT_NODE = True
     FUNCTION = "render"
     CATEGORY = f"{CUSTOM_CATEGORY}/H3"
@@ -198,7 +228,7 @@ class H3MusicVideoChainRender:
 
     def render(self, model, clip, vae, audio_vae, scenes, lengths, audio_segments, clip_starts,
                width, height, sampler, sigmas, seed, context_frames, continuity, filename_prefix, fps,
-               master_audio=None, cut_plan=None, **refs):
+               master_audio=None, cut_plan=None, save_latents=True, carry=None, **refs):
         import torch
         import comfy.model_management as mm
 
@@ -212,6 +242,8 @@ class H3MusicVideoChainRender:
         ctx = snap_run(int(_first(context_frames, 22)))
         master = _first(master_audio)
         plan_text = str(_first(cut_plan, "") or "")
+        keep_latents = bool(_first(save_latents, True))
+        carry_latent = str(_first(carry, CARRY_MODES[0]) or CARRY_MODES[0]).startswith("previous latent")
         scenes, lengths = _as_list(scenes), [int(x) for x in _as_list(lengths)]
         pieces, starts = _as_list(audio_segments), [float(x) for x in _as_list(clip_starts)]
         n = min(len(scenes), len(lengths), len(pieces), len(starts))
@@ -234,11 +266,13 @@ class H3MusicVideoChainRender:
         if master is not None and masked_cls is None:
             print("⚠️ H3 Chain Render: master_audio is connected but ComfyUI-H3-Motion-Context-MultiRef is not "
                   "installed - audio will be generated and continuity uses the core guide.")
-        mechanism = "masked AV prefix" if (master is not None and masked_cls) else ("core guide clip" if guide_cls else "none")
+        mechanism = ("masked AV prefix (latent carry)" if carry_latent else "masked AV prefix (frames carry)") \
+            if (master is not None and masked_cls) else ("core guide clip" if guide_cls else "none")
 
         paths, lines = [], []
         lines.append(f"CHAIN RENDER | {n} scene(s) | context {ctx} frames | continuity: {continuity.split(' (')[0]} | mechanism: {mechanism}")
         prev_tail = None
+        prev_latent = None
         for i in range(n):
             length = lengths[i]
             flow = bool(flags[i]) and prev_tail is not None and mechanism != "none"
@@ -259,7 +293,14 @@ class H3MusicVideoChainRender:
                                  ref_images=ref_images or None)[:2]
             trim = 0
             if master is not None and masked_cls is not None:
-                if flow:
+                if flow and carry_latent and prev_latent is not None:
+                    latent, trim, _clip_audio = _call(
+                        masked_cls, latent=latent, audio_vae=audio_vae, master_audio=master,
+                        clip_start_seconds=start, context_length=ctx, source_fps=fps_v, crop="disabled",
+                        source_latent=prev_latent,
+                    )[:3]
+                    trim = int(trim)
+                elif flow:
                     latent, trim, _clip_audio = _call(
                         masked_cls, latent=latent, audio_vae=audio_vae, master_audio=master,
                         clip_start_seconds=start, context_length=ctx, source_fps=fps_v, crop="disabled",
@@ -290,10 +331,23 @@ class H3MusicVideoChainRender:
                          f"{'head ' + str(head_cut) + ' trimmed' if flow else ''}  -> {path}")
             keep = min(ctx, int(delivered.shape[0]))
             prev_tail = delivered[-keep:].detach().clone()
+            prev_latent = {"samples": sampled["samples"]}
+            if keep_latents:
+                save_scene_latent(project_key(prefix), i + 1, sampled)
             del images, delivered, sampled, latent, cond, guider, noise
             torch.cuda.empty_cache() if torch.cuda.is_available() else None
             mm.soft_empty_cache()
 
+        # the `audio` output: the song pieces butted together sample-exactly - the
+        # song itself over the rendered span, with no per-clip encode in between.
+        # Wire it into Scenes Join's `replace_audio` so the joined video carries
+        # ONE track instead of every clip's own AAC-encoded slice.
+        try:
+            waves = [p["waveform"].detach().to("cpu") for p in pieces[:n]]
+            song = {"waveform": torch.cat(waves, dim=-1), "sample_rate": int(pieces[0]["sample_rate"])}
+        except Exception as exc:
+            print(f"⚠️ H3 Chain Render: could not assemble the continuous audio: {exc}")
+            song = {"waveform": None, "sample_rate": 44100}
         report = "\n".join(lines)
         print(report)
-        return {"ui": {"text": [report]}, "result": (paths, report)}
+        return {"ui": {"text": [report]}, "result": (paths, report, song)}

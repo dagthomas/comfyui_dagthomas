@@ -178,13 +178,13 @@ def event_window(event):
     strength = float(event.get("strength", 0.5))
     land = float(event.get("t", 0.0))
     until = event.get("until")
+    lead = event.get("lead")
     if kind == "BUILD" and until is not None:
         return land, float(until), float(until)
-    return (
-        max(0.0, land - _tiered(_LEAD, kind, strength)),
-        land,
-        land + _tiered(_TAIL, kind, strength),
-    )
+    # a hand-set window (the editor's drag handles) wins over the tier tables
+    start = land - float(lead) if lead is not None else land - _tiered(_LEAD, kind, strength)
+    settle = float(until) if until is not None else land + _tiered(_TAIL, kind, strength)
+    return max(0.0, start), land, max(land, settle)
 
 
 # ----------------------------------------------------------------------
@@ -385,6 +385,58 @@ def _resolve_hits(bass, impacts, low_tilt, top_tilt, window=0.07, bias=1.5):
     return [(t, kind, s) for _i, t, kind, s in resolved]
 
 
+# ----------------------------------------------------------------------
+# Timing: from "the attack starts" to "the sound is there"
+# ----------------------------------------------------------------------
+
+# The detectors time an event at the frame where the spectral flux peaks -
+# the frame whose 46 ms window first swallows the attack. That is when the
+# sound STARTS, 20-50 ms before it is actually there (a kick's body swells
+# for a few tens of ms after its click), so every event read a little early
+# against the waveform. The fix is to look at the waveform itself: within a
+# short window after the flux peak, the envelope's maximum is the instant
+# the sound is on. Hits get a tight window; a DROP - timed from loudness
+# over a much longer span - gets a wider one; stops, sections and builds are
+# windows in their own right and are left alone.
+_SNAP_WINDOW = {
+    "BASS HIT": (0.010, 0.080),
+    "IMPACT": (0.010, 0.080),
+    "ACCENT": (0.005, 0.050),
+    "DROP": (0.050, 0.150),
+}
+
+
+def _envelope(wave, sr, width=0.004):
+    """Short-window RMS of the waveform - the sound's outline at ~4 ms resolution."""
+    k = max(1, int(round(width * sr)))
+    x = wave.view(1, 1, -1) ** 2
+    x = torch.nn.functional.pad(x, (k // 2, k - 1 - k // 2), mode="replicate")
+    return torch.nn.functional.avg_pool1d(x, k, stride=1).view(-1).sqrt()
+
+
+def _snap_to_transients(found, wave, sr):
+    """(t, kind, strength) tuples with each hit moved onto its envelope peak."""
+    if not found:
+        return found
+    env = None
+    out = []
+    for t, kind, strength in found:
+        win = _SNAP_WINDOW.get(kind)
+        if win is None:
+            out.append((t, kind, strength))
+            continue
+        if env is None:
+            env = _envelope(wave, sr)
+        a = max(0, int((t - win[0]) * sr))
+        b = min(env.numel(), int((t + win[1]) * sr) + 1)
+        if b - a < 2:
+            out.append((t, kind, strength))
+            continue
+        peak = a + int(torch.argmax(env[a:b]))
+        out.append((peak / sr, kind, strength))
+    return out
+
+
 def _merge_coincident(events, window=0.07):
     """
     Collapse events that describe the same instant.
@@ -583,6 +635,7 @@ def detect_events(
     builds=True,
     sections=True,
     accents=False,
+    time_offset_ms=0,
 ):
     """
     Every labelled moment in the song, as
@@ -629,7 +682,11 @@ def detect_events(
     if accents:
         found += _accents(top_flux, top_floor, hop, sensitivity, min_gap_seconds)
 
+    found = _snap_to_transients(found, wave, sr)
     found = _merge_coincident(found)
+    if time_offset_ms:
+        shift = float(time_offset_ms) / 1000.0
+        found = [(max(0.0, t + shift), kind, s) for t, kind, s in found]
 
     # The hit stream is kept inside a strength BAND. A floor alone thins a
     # busy track; a ceiling as well lets a run target one layer of the mix -
@@ -683,7 +740,10 @@ def detect_events(
 
 _LINE_RE = re.compile(
     r"^\s*\[(\d+):(\d{2}(?:\.\d+)?)\]\s+([A-Z][A-Z ]*[A-Z]|[A-Z])\s*"
-    # optional landing time: a BUILD carries the drop it ramps into
+    # optional hand-set wind-up start (the editor's left handle)
+    r"(?:<-\s*\[(\d+):(\d{2}(?:\.\d+)?)\]\s*)?"
+    # optional landing / settle time: a BUILD carries the drop it ramps into,
+    # any event may carry a hand-set settle (the editor's right handle)
     r"(?:->\s*\[(\d+):(\d{2}(?:\.\d+)?)\]\s*)?"
     r"(?:\|\s*(\w+))?\s*(?:\|\s*(.*))?$"
 )
@@ -704,6 +764,8 @@ def events_table(events, duration=0.0, profile=None):
         lines.append(f"# {fmt_time(duration)} of audio, {len(events)} event(s)")
     for e in events:
         row = f"[{fmt_time(e['t'])}] {e['type']:<9}"
+        if e.get("lead") is not None:
+            row += f" <- [{fmt_time(max(0.0, float(e['t']) - float(e['lead'])))}]"
         if e.get("until") is not None:
             # where the ramp is released - a build is a window, not an instant
             row += f" -> [{fmt_time(e['until'])}]"
@@ -746,6 +808,8 @@ def parse_events(text):
                 }
                 if e.get("until") is not None:
                     row["until"] = float(e["until"])
+                if e.get("lead") is not None:
+                    row["lead"] = float(e["lead"])
                 out.append(row)
             out.sort(key=lambda e: e["t"])
             return out
@@ -759,7 +823,7 @@ def parse_events(text):
         m = _LINE_RE.match(line)
         if not m:
             continue
-        minutes, seconds, kind, until_min, until_sec, label, note = m.groups()
+        minutes, seconds, kind, lead_min, lead_sec, until_min, until_sec, label, note = m.groups()
         kind = kind.strip()
         strength = {"light": 0.2, "solid": 0.5, "heavy": 0.9}.get((label or "").lower(), 0.5)
         row = {
@@ -769,6 +833,8 @@ def parse_events(text):
             "label": (label or "solid").lower(),
             "note": (note or "").strip() or _sound_note(kind, strength),
         }
+        if lead_min is not None:
+            row["lead"] = max(0.0, row["t"] - (int(lead_min) * 60 + float(lead_sec)))
         if until_min is not None:
             row["until"] = int(until_min) * 60 + float(until_sec)
         out.append(row)
@@ -858,6 +924,76 @@ def segment_event_lines(events, start, end, limit=8):
             row += "  <lands in the next clip>"
         lines.append(row)
     return lines
+
+
+def parse_edits(text):
+    """The editor's `edits` JSON -> dict; anything unreadable is an empty edit set."""
+    raw = (text or "").strip()
+    if not raw:
+        return {}
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        print("⚠️ H3 Sound Events: `edits` is not valid JSON - ignored")
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def apply_edits(events, edits, tolerance=0.08):
+    """
+    Apply the editor's hand edits to a detected list: moved / resized /
+    retyped / re-weighted events (matched by the time they were DETECTED at,
+    so the edit survives a re-detection with the same settings) and events
+    the editor added. Returns (events, changed_count, added_count).
+    """
+    if not edits:
+        return events, 0, 0
+    out = [dict(e) for e in events]
+    changed = 0
+    for op in edits.get("events", []) or []:
+        try:
+            at = float(op.get("at"))
+        except (TypeError, ValueError):
+            continue
+        best = min(out, key=lambda e: abs(float(e["t"]) - at), default=None)
+        if best is None or abs(float(best["t"]) - at) > tolerance:
+            continue
+        touched = False
+        if op.get("type") in EVENT_TYPES:
+            best["type"] = op["type"]; touched = True
+        for key in ("t", "strength", "lead", "until"):
+            if key in op and op[key] is not None:
+                try:
+                    best[key] = round(float(op[key]), 3)
+                    touched = True
+                except (TypeError, ValueError):
+                    pass
+        if touched:
+            best["strength"] = max(0.0, min(1.0, float(best.get("strength", 0.5))))
+            best["label"] = _strength_label(best["strength"])
+            best["note"] = _sound_note(best["type"], best["strength"])
+            best["edited"] = True
+            changed += 1
+    added = 0
+    for op in edits.get("added", []) or []:
+        try:
+            t = float(op.get("t"))
+        except (TypeError, ValueError):
+            continue
+        kind = op.get("type") if op.get("type") in EVENT_TYPES else "BASS HIT"
+        strength = max(0.0, min(1.0, float(op.get("strength", 0.6) or 0.6)))
+        row = {"t": round(t, 3), "type": kind, "strength": round(strength, 2),
+               "label": _strength_label(strength), "note": _sound_note(kind, strength), "edited": True}
+        for key in ("lead", "until"):
+            if op.get(key) is not None:
+                try:
+                    row[key] = round(float(op[key]), 3)
+                except (TypeError, ValueError):
+                    pass
+        out.append(row)
+        added += 1
+    out.sort(key=lambda e: float(e["t"]))
+    return out, changed, added
 
 
 def parse_rejected(text):
@@ -970,7 +1106,6 @@ class H3SoundEvents:
                         "50 ms of a listed time is dropped from the output. Clear to keep everything."
                     ),
                 }),
-                # appended last so saved workflows keep their widget positions
                 "max_strength": ("FLOAT", {
                     "default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01,
                     "tooltip": (
@@ -978,6 +1113,25 @@ class H3SoundEvents:
                         "band: 0.35-0.45 targets the hits around 0.4 and leaves both the soft "
                         "kicks and the big slams out. 1.0 = no ceiling. Structural events are "
                         "never dropped."
+                    ),
+                }),
+                # appended last so saved workflows keep their widget positions
+                "edits": ("STRING", {
+                    "default": "", "multiline": True,
+                    "tooltip": (
+                        "Hand edits from the 🎚 editor, as JSON: events moved, stretched "
+                        "(wind-up / settle handles), retyped, re-weighted, and events you added. "
+                        "Each edit names the time the event was DETECTED at, so it survives a "
+                        "re-detection with the same settings. Clear to go back to the detector's list."
+                    ),
+                }),
+                "time_offset_ms": ("INT", {
+                    "default": 0, "min": -250, "max": 250, "step": 5,
+                    "tooltip": (
+                        "Global nudge for every event, in milliseconds - positive = later. Events are "
+                        "already snapped onto the waveform's own peaks, so 0 is where the sound is; use "
+                        "this if the whole list still reads early or late against the editor's waveform "
+                        "(check with the playhead), or to pre-empt a render that lands its moves late."
                     ),
                 }),
             },
@@ -1010,7 +1164,8 @@ class H3SoundEvents:
 
     def detect(self, audio, sensitivity, min_gap_seconds, max_events,
                min_strength=0.0, bass_hits=True, impacts=True, drops_and_stops=True,
-               builds=True, sections=True, accents=False, rejected="", max_strength=1.0):
+               builds=True, sections=True, accents=False, rejected="", max_strength=1.0, edits="",
+               time_offset_ms=0):
         events = detect_events(
             audio,
             sensitivity=sensitivity,
@@ -1024,12 +1179,16 @@ class H3SoundEvents:
             builds=builds,
             sections=sections,
             accents=accents,
+            time_offset_ms=int(time_offset_ms or 0),
         )
         struck = parse_rejected(rejected)
         if struck:
             before = len(events)
-            events = [e for e in events if not any(abs(float(e["t"]) - t) <= 0.05 for t in struck)]
+            events = [e for e in events if not any(abs(float(e["t"]) - t) <= 0.08 for t in struck)]
             print(f"\U0001F941 H3 Sound Events | {before - len(events)} hit(s) struck out on the timeline")
+        events, changed, added = apply_edits(events, parse_edits(edits))
+        if changed or added:
+            print(f"\u270F\uFE0F H3 Sound Events | hand edits: {changed} event(s) changed, {added} added")
         feats = analyse(audio)
         profile = song_profile(feats)
         duration = float(feats["duration"])

@@ -927,6 +927,201 @@ def enforce_handoff(enabled, parsed, session_id, info, repair):
     return out, f"{info} | hand-off: {len(fixed_by_no)} opening(s) rewritten, {len(drift)} -> {len(left)} drifting"
 
 
+# ---- interpretation: how far the pictures may stray from the source ------
+# The source (a manuscript, an idea, a direction, the material) is always
+# honoured for what it states outright; this decides what the PICTURE does
+# with it. Auto is the writer's own judgement; the rest are named readings a
+# director picks on purpose. "Surprise me" picks a non-literal reading by
+# seed, so re-running the same source gives a different film.
+INTERPRETATIONS = [
+    "Auto (the writer decides)",
+    "Literal (the pictures show what the source says)",
+    "Loose (the source is a starting point - stage the feeling, not the nouns)",
+    "Metaphor (one image system stands in for the source)",
+    "Counterpoint (the picture tells a different story that rhymes with the source)",
+    "Reframe (the source retold in another world, era or genre)",
+    "Surreal (dream logic - the source as images that should not be possible)",
+    "Surprise me (a different non-literal reading every seed)",
+]
+_SURPRISE_POOL = ("Loose", "Metaphor", "Counterpoint", "Reframe", "Surreal")
+
+_INTERPRETATION_TEXT = {
+    "Literal": (
+        "INTERPRETATION - LITERAL: the pictures show what {source} says. When it names a "
+        "thing, a place or an action, that thing is on screen; the story, its people and its "
+        "events are adapted faithfully. Imagination goes into HOW it is shown - framing, "
+        "light, the detail chosen - never into replacing it."
+    ),
+    "Loose": (
+        "INTERPRETATION - LOOSE: {source} is a starting point, not a shot list. Keep its "
+        "people and what happens between them; stage the feeling and the situation behind "
+        "each beat rather than its literal props and places - a scene written in a car may be "
+        "two people not leaving a room, a storm may be a kitchen at 3 a.m. with nobody "
+        "speaking. Never illustrate a line word-for-word; the audience gets the story, not "
+        "a diagram of it."
+    ),
+    "Metaphor": (
+        "INTERPRETATION - METAPHOR: choose ONE image system - a single concrete world of "
+        "objects, materials and actions that is NOT what {source} literally describes (a house "
+        "being dismantled room by room, a swimmer who never reaches the wall, a market closing "
+        "for the night) - state it in the synopsis as the Concept, and let every scene be a "
+        "stage of that one metaphor. Each beat of {source} maps onto a development of the "
+        "image system, never onto its own literal content. The metaphor is never explained on "
+        "screen; it is simply what we watch."
+    ),
+    "Counterpoint": (
+        "INTERPRETATION - COUNTERPOINT: the picture tells a DIFFERENT story from {source} - "
+        "different people, place and events - that rhymes with it emotionally and "
+        "structurally: the same setup, the same turn, the same kind of ending, in another "
+        "life. The gap between what {source} says and what is seen is the point; the audience "
+        "closes it. Its dialogue, if any is written, may be kept as voice-over or given to "
+        "the new people - but no literal imagery from {source} at all."
+    ),
+    "Reframe": (
+        "INTERPRETATION - REFRAME: keep what {source} is ABOUT - the relationship, the loss, "
+        "the boast, the escape, the argument - but retell it inside a world it never mentions: "
+        "another era, another genre (heist, western, nature documentary, fairy tale, sports "
+        "final, space station, kitchen brigade), another scale (insects, gods, a city as a "
+        "body). Pick ONE such world in the synopsis and commit to it in every scene: its props, "
+        "its costumes, its light. Nouns from {source} are translated into that world, never "
+        "shown as themselves; written dialogue survives, adapted only where the new world "
+        "makes a word impossible."
+    ),
+    "Surreal": (
+        "INTERPRETATION - SURREAL: dream logic. Take {source} as images that should not be "
+        "possible and show them as plainly as the weather: rooms that fill with the sea, a "
+        "character who is also the audience, a road that loops back into the house, gravity "
+        "that gives up on one object. Every scene contains at least one impossible thing "
+        "treated as normal by everyone in it, and the impossibilities build on each other "
+        "across the film instead of resetting - by the last scene the world has become "
+        "something else entirely. Physical, literal descriptions of the impossible; never the "
+        "words `surreal`, `dreamlike` or `as if`."
+    ),
+}
+
+
+def resolve_interpretation(choice, seed=0):
+    """The mode's key word ('Literal', ...), None for Auto; 'Surprise me' picks by seed."""
+    key = str(choice or "").split(" ", 1)[0].strip()
+    if not key or key.startswith("Auto"):
+        return None
+    if key.startswith("Surprise"):
+        import random
+        return random.Random(f"interpretation:{seed}").choice(_SURPRISE_POOL)
+    return key if key in _INTERPRETATION_TEXT else None
+
+
+def interpretation_directive(key, source="the manuscript", keep=""):
+    """
+    The directive for one reading. `source` names what is being interpreted
+    ("the manuscript", "the idea", "the direction", "the material"); `keep`
+    is an extra sentence for what must survive untouched (a presentation's
+    facts, for instance).
+    """
+    text = _INTERPRETATION_TEXT.get(key or "")
+    if not text:
+        return ""
+    text = text.format(source=source)
+    tail = (
+        " The user's explicit instructions still win on anything they state outright; this "
+        "reading fills everything they leave open. Name the reading's central idea in the "
+        "synopsis Concept so every chunk writer stages the same one."
+    )
+    return text + (" " + keep.strip() if keep else "") + tail
+
+
+def interpretation_input(source_word="the manuscript"):
+    """The widget spec, appended last in a writer's optional inputs."""
+    return (INTERPRETATIONS, {
+        "default": INTERPRETATIONS[0],
+        "tooltip": (
+            f"How far the pictures may stray from {source_word}. Auto leaves it to the writer. "
+            "Literal adapts it faithfully. Loose keeps the people and the events but stages the "
+            "feeling, never the literal props. Metaphor builds the whole film on one image system. "
+            "Counterpoint tells a different story that rhymes with it. Reframe keeps the subject but "
+            "moves it into another world, era or genre. Surreal is escalating dream logic. Surprise "
+            "me picks one of the non-literal readings by seed, so every re-run is a different film."
+        ),
+    })
+
+
+# ---- transitions: what a CONTINUING scene may do with its place ----------
+# The chain carry hands H3 the previous scene's last frames - the actor's
+# identity, pose, direction and speed continue exactly - but not the previous
+# PLACE. So a change of place inside a continuing take has to be written:
+# the actor carries the take through a door, or the camera moves and a new
+# space is disclosed around the same figure. Left unsaid, the writers keep
+# continuing scenes in the room they started in.
+TRANSITION_STYLES = [
+    "Stay (a continuing scene keeps its place)",
+    "Walk-through (the actor carries the take into a new place)",
+    "Reveal (a camera move discloses a new space around them)",
+    "Any (the writer chooses per scene)",
+]
+
+_TRANSITION_TEXT = {
+    "Stay": (
+        "TRANSITIONS - STAY: a continuing scene keeps its place - the same room, the same "
+        "light, the same anchors; only what the story changes changes. A new place needs a "
+        "hard cut, so it waits for a scene that opens on one."
+    ),
+    "Walk-through": (
+        "TRANSITIONS - WALK-THROUGH: a continuing scene may CHANGE PLACE inside the take, and "
+        "the actor carries it there: through a door, down a corridor, round a corner, up a "
+        "stair, out of a room's lamplight into a street. The camera follows without cutting. "
+        "The opening is still the previous scene's last frame - the same pose, direction and "
+        "speed, nothing about the actor jumps - and the new place is established BEHIND and "
+        "AROUND the moving actor within the first seconds: name its anchors as they come into "
+        "frame (`the swing door gives onto the harbour boards, rain on the planks, the green "
+        "lamp of the pilot boat`), lock the new place's light in the same sentence, and then "
+        "carry the story on there. Use it whenever the plan moves the story to a new place; a "
+        "continuing scene whose plan stays put stays put."
+    ),
+    "Reveal": (
+        "TRANSITIONS - REVEAL: a continuing scene may CHANGE PLACE inside the take by "
+        "revealing it: the actor stays roughly where the previous frame left them while the "
+        "camera moves - pulls back, arcs, cranes, tilts, racks - and the space around them is "
+        "not what we thought: the kitchen wall is a set flat, the alley opens into a market, "
+        "the close-up was on a train. The reveal completes within the first half of the scene, "
+        "the new place's anchors and light are named as they are disclosed, and nothing about "
+        "the actor jumps. Use it whenever the plan moves the story to a new place; a scene "
+        "whose plan stays put stays put."
+    ),
+    "Any": (
+        "TRANSITIONS - YOUR CALL: a continuing scene may change place inside the take, either "
+        "by WALK-THROUGH (the actor carries it through a door, a corridor, a corner, the camera "
+        "following without cutting) or by REVEAL (the actor holds, the camera moves, and a new "
+        "space is disclosed around them). Choose per scene whatever serves the plan, alternate "
+        "rather than repeat, keep the opening on the previous scene's last frame with nothing "
+        "about the actor jumping, and establish the new place's anchors and light as they come "
+        "into frame. A scene whose plan stays put stays put."
+    ),
+}
+
+
+def resolve_transition(choice):
+    key = str(choice or "").split(" ", 1)[0].strip()
+    return key if key in _TRANSITION_TEXT else None
+
+
+def transition_directive(key):
+    return _TRANSITION_TEXT.get(key or "", "")
+
+
+def transition_input():
+    return (TRANSITION_STYLES, {
+        "default": TRANSITION_STYLES[0],
+        "tooltip": (
+            "What a CONTINUING scene may do with its place. The chain carry keeps the actor "
+            "exactly - pose, direction, speed - but not the previous place, so a change of place "
+            "inside a take has to be written. Stay: same place, as before. Walk-through: the actor "
+            "carries the take through a door / corridor / corner into the new place, camera "
+            "following. Reveal: the actor holds, the camera moves, and a new space is disclosed "
+            "around them. Any: the writer picks per scene. Hard cuts are unaffected."
+        ),
+    })
+
+
 def duration_directive(duration_mode, scene_duration):
     if duration_mode == DURATION_MODES[0]:
         return (

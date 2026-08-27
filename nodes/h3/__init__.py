@@ -26,6 +26,7 @@ from .scenes_review import H3ScenesReview
 from .scenes_review_gate import H3ScenesReviewGate
 from .chain_render import H3MusicVideoChainRender
 from .film_chain_render import H3ShortFilmChainRender
+from .scene_retake import H3SceneRetake
 from .cut_plan import H3CutPlan
 from .sync_check import H3SyncCheck
 from .song_analysis import H3SongAnalysis
@@ -72,6 +73,7 @@ NODE_CLASS_MAPPINGS = {
     "H3SyncCheck": H3SyncCheck,
     "H3MusicVideoChainRender": H3MusicVideoChainRender,
     "H3ShortFilmChainRender": H3ShortFilmChainRender,
+    "H3SceneRetake": H3SceneRetake,
     "H3SoundEvents": H3SoundEvents,
     "H3SceneBrief": H3SceneBrief,
     "H3ScenesLoad": H3ScenesLoad,
@@ -109,6 +111,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3SyncCheck": "APNext H3 Sync Check (does the picture hit the beat?)",
     "H3MusicVideoChainRender": "APNext H3 Music Video Chain Render (carry frames between scenes)",
     "H3ShortFilmChainRender": "APNext H3 Short Film Chain Render (carry picture + sound between scenes)",
+    "H3SceneRetake": "APNext H3 Scene Retake (render one scene again)",
     "H3SoundEvents": "APNext H3 Sound Events (bass hits / drops / stops)",
     "H3SceneBrief": "APNext H3 Scene Brief (manual scene)",
     "H3ScenesLoad": "APNext H3 Scenes Load (from disk)",

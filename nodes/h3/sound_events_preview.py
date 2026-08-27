@@ -53,7 +53,8 @@ def _load_audio(name):
 
 def _slim(events):
     return [
-        {"t": e["t"], "type": e["type"], "strength": e["strength"], "label": e["label"]}
+        {"t": e["t"], "type": e["type"], "strength": e["strength"], "label": e["label"],
+         **({"until": e["until"]} if e.get("until") is not None else {})}
         for e in events
     ]
 

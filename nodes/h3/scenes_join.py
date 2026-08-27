@@ -119,7 +119,23 @@ class H3ScenesJoin:
             wav = self._resample(wav, int(a["sample_rate"]), sr)
             if wav.shape[1] != channels:
                 wav = wav.mean(dim=1, keepdim=True).expand(-1, channels, -1)
-            parts.append(wav)
+            parts.append(wav.clone())
+        # Declick every seam: a hard splice between two clips' audio lands on
+        # arbitrary sample values and clicks. A 5 ms raised-cosine out / in at
+        # each boundary is inaudible on its own and removes the click; lengths
+        # are unchanged. (A chain render's `audio` output, wired into
+        # `replace_audio`, is the better seam - crossfaded over real overlap.)
+        n = max(2, int(round(0.005 * sr)))
+        for k in range(len(parts)):
+            m = min(n, parts[k].shape[-1])
+            if m < 2:
+                continue
+            t = torch.linspace(0.0, 1.0, m, device=parts[k].device, dtype=parts[k].dtype)
+            ramp = 0.5 - 0.5 * torch.cos(t * 3.141592653589793)
+            if k > 0:
+                parts[k][..., :m] = parts[k][..., :m] * ramp
+            if k < len(parts) - 1:
+                parts[k][..., -m:] = parts[k][..., -m:] * (1.0 - ramp)
         return {"waveform": torch.cat(parts, dim=2), "sample_rate": sr}
 
     # ---- node ---------------------------------------------------------------

@@ -1,15 +1,27 @@
-// APNext H3 Sound Events - "🎚 Preview events" button
+// APNext H3 Sound Events - "🎚 Preview & edit events" button
 //
 // Strength is normalised to each track's loudest hit, so `min_strength` has to
-// be tuned per song - and until now the only way to see the result was to run
-// the whole workflow. This button finds the Load Audio node upstream, asks the
+// be tuned per song - and the only honest way to tune it is to SEE the hits
+// on the waveform. This button finds the Load Audio node upstream, asks the
 // server to run the detectors once with every kind on (see
-// nodes/h3/sound_events_preview.py), and opens a modal where the kind toggles
-// and the min_strength slider filter the list instantly. It shows what the
-// writer will actually see - hits per minute, hits per 9 s piece, how many
-// pieces overflow `events_per_scene` - warns when the track is too dense, and
-// suggests the threshold that lands in the comfortable band. "Apply" writes
-// the values back into the node's widgets.
+// nodes/h3/sound_events_preview.py), decodes the audio in the browser, and
+// opens a full-screen editor:
+//
+//   * the whole waveform, zoomable (ctrl+wheel / buttons), with a playhead -
+//     click to seek, space to play
+//   * every event as a block on the lane under it: its wind-up (cue), the
+//     instant it lands, and its settle - the same window the writer's brief
+//     lists as `[+cue ->+land ->+settle s]`
+//   * drag a block to move it, drag its left / right edge to make the wind-up
+//     or the settle longer or shorter, click to select and edit its type,
+//     strength and times in the inspector, Delete to strike it out (and again
+//     to keep it), double-click the lane to add one
+//   * the kind toggles, the strength band, sensitivity / gap and the density
+//     readout from before, in the side panel
+//
+// "Apply" writes the detector settings, the struck-out times and the hand
+// edits (as JSON in the node's `edits` widget) back into the node; the node
+// applies them after detection so the writer sees exactly this list.
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
@@ -26,12 +38,21 @@ const TOGGLES = [
   ["bass_hits", "bass hits"], ["impacts", "impacts"], ["drops_and_stops", "drops & stops"],
   ["builds", "builds"], ["sections", "sections"], ["accents", "accents"],
 ];
+const EVENT_TYPES = ["DROP", "STOP", "SECTION", "BUILD", "IMPACT", "BASS HIT", "ACCENT"];
 const HIT_KINDS = new Set(["BASS HIT", "IMPACT", "ACCENT"]);
 const STRUCTURAL = new Set(["DROP", "STOP", "SECTION", "BUILD"]);
 const KIND_COLOR = {
   "BASS HIT": "#d4a574", IMPACT: "#e8b4b8", DROP: "#84b3a6", STOP: "#88a9c0",
   BUILD: "#a7bd84", SECTION: "#b58fc2", ACCENT: "#ccb777",
 };
+// The writer's staging window per kind at (light, solid, heavy) - mirrors
+// sound_events._LEAD / _TAIL so the blocks here are the windows the brief lists.
+const LEAD = { DROP: [0.55, 0.85, 1.20], STOP: [0.40, 0.60, 0.85], SECTION: [0.30, 0.40, 0.55], BUILD: [0.90, 1.40, 2.00],
+  IMPACT: [0.32, 0.45, 0.60], "BASS HIT": [0.20, 0.28, 0.36], ACCENT: [0.08, 0.12, 0.16] };
+const TAIL = { DROP: [0.55, 0.80, 1.10], STOP: [0.50, 0.75, 1.10], SECTION: [0.35, 0.45, 0.60], BUILD: [0, 0, 0],
+  IMPACT: [0.35, 0.50, 0.70], "BASS HIT": [0.22, 0.30, 0.40], ACCENT: [0.10, 0.14, 0.18] };
+const tier = (s) => (s >= 0.66 ? 2 : s >= 0.33 ? 1 : 0);
+const strengthLabel = (s) => (s >= 0.66 ? "heavy" : s >= 0.33 ? "solid" : "light");
 
 // Density bands, hits per minute. A 9 s piece gets `events_per_scene` slots
 // (6 by default) and drops/stops always take theirs first, so ~24/min
@@ -40,65 +61,87 @@ const OK_PER_MIN = 24;
 const TOO_MANY_PER_MIN = 40;
 const PIECE_SECONDS = 9;
 const SLOTS_PER_PIECE = 6;
+const MATCH = 0.08;          // s - "the same event" when matching times (under min_gap, over the snap shift)
+const MAX_CANVAS = 30000;    // px - Chrome's canvas width limit is 32767
 
 const CSS = `
-.apnext-sev-wrap { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.72);
-  display: flex; align-items: center; justify-content: center; padding: 24px; color-scheme: dark; }
-.apnext-sev { background: #14120e; border: 1px solid #463f33; border-radius: 10px;
-  width: min(1040px, 96vw); max-height: 92vh; display: flex; flex-direction: column;
-  box-shadow: 0 18px 60px rgba(0,0,0,.7); font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #e8e4df; }
+.apnext-sev-wrap { position: fixed; inset: 0; z-index: 10000; background: #0d0c0a; color-scheme: dark; display: flex; }
+.apnext-sev { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #14120e;
+  font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #e8e4df; }
 .apnext-sev * { box-sizing: border-box; }
 .apnext-sev :is(input, button, select):focus, .apnext-sev :is(input, button, select):focus-visible { outline: none; }
-.apnext-sev header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #2c2820; flex: 0 0 auto; }
+.apnext-sev header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid #2c2820; flex: 0 0 auto; }
 .apnext-sev header h2 { margin: 0; font-size: 15px; font-weight: 650; }
-.apnext-sev header .sub { color: #9a9590; font-size: 12px; margin-left: auto; max-width: 50%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.apnext-sev header button.close { background: none; border: 0; color: #9a9590; font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.apnext-sev header .sub { color: #9a9590; font-size: 12px; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.apnext-sev header .spacer { margin-left: auto; }
+.apnext-sev header button.close { background: none; border: 0; color: #9a9590; font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px; }
 .apnext-sev header button.close:hover { color: #e8e4df; }
-.apnext-sev .body { overflow: auto; padding: 14px 16px 18px; overscroll-behavior: contain; }
-.apnext-sev h3 { margin: 18px 0 8px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .1em; color: #d4a574; }
-.apnext-sev h3:first-child { margin-top: 0; }
+.apnext-sev main { flex: 1; display: flex; min-height: 0; }
+.apnext-sev .stage { flex: 1; display: flex; flex-direction: column; min-width: 0; border-right: 1px solid #2c2820; }
+.apnext-sev .toolbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 14px; border-bottom: 1px solid #2c2820; flex: 0 0 auto; }
+.apnext-sev .toolbar .clock { font: 12px "JetBrains Mono", Consolas, monospace; color: #d4a574; min-width: 150px; }
+.apnext-sev .toolbar .hint { color: #9a9590; font-size: 11.5px; margin-left: auto; }
+.apnext-sev .scroll { flex: 1; overflow: auto; position: relative; background: #0f0e0b; overscroll-behavior: contain; }
+.apnext-sev .track { position: relative; height: 100%; min-height: 330px; }
+.apnext-sev canvas.wave { position: absolute; left: 0; top: 22px; height: 170px; display: block; }
+.apnext-sev .ruler { position: absolute; left: 0; top: 0; height: 22px; border-bottom: 1px solid #2c2820; }
+.apnext-sev .ruler span { position: absolute; top: 3px; font-size: 10px; color: #9a9590; transform: translateX(-50%); white-space: nowrap; }
+.apnext-sev .ruler span::after { content: ""; position: absolute; left: 50%; top: 14px; width: 1px; height: 6px; background: #463f33; }
+.apnext-sev .lane { position: absolute; left: 0; top: 196px; height: 124px; border-top: 1px solid #2c2820; border-bottom: 1px solid #2c2820; background: #131110; }
+.apnext-sev .lane .ev { position: absolute; top: 34px; height: 56px; border-radius: 4px; opacity: .85; cursor: grab; border: 1px solid rgba(0,0,0,.4); }
+.apnext-sev .lane .ev.struct { top: 8px; height: 108px; }
+.apnext-sev .lane .ev .land { position: absolute; top: -6px; bottom: -6px; width: 2px; background: #fff; opacity: .9; pointer-events: none; }
+.apnext-sev .lane .ev .lbl { position: absolute; left: 4px; top: 2px; font-size: 10px; color: #1a1510; white-space: nowrap; pointer-events: none; font-weight: 600; text-shadow: 0 0 2px rgba(255,255,255,.4); }
+.apnext-sev .lane .ev .h { position: absolute; top: 0; bottom: 0; width: 7px; cursor: ew-resize; }
+.apnext-sev .lane .ev .h.l { left: -3px; } .apnext-sev .lane .ev .h.r { right: -3px; }
+.apnext-sev .lane .ev:hover { opacity: 1; }
+.apnext-sev .lane .ev.sel { outline: 2px solid #fff; opacity: 1; z-index: 3; }
+.apnext-sev .lane .ev.cut { opacity: .22; }
+.apnext-sev .lane .ev.struck { opacity: .55; background-image: repeating-linear-gradient(135deg, rgba(208,112,112,.9) 0 4px, transparent 4px 9px) !important; }
+.apnext-sev .lane .ev.edited::before { content: "✎"; position: absolute; right: 3px; top: 1px; font-size: 10px; color: #1a1510; }
+.apnext-sev .lane .ev.added::before { content: "+"; position: absolute; right: 3px; top: 0; font-size: 12px; color: #1a1510; font-weight: 700; }
+.apnext-sev .playhead { position: absolute; top: 0; bottom: 0; width: 1px; background: #e8b4b8; pointer-events: none; z-index: 4; }
+.apnext-sev .inspector { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 8px 14px; border-top: 1px solid #2c2820; min-height: 44px; }
+.apnext-sev .inspector .none { color: #9a9590; }
+.apnext-sev aside { flex: 0 0 340px; overflow: auto; padding: 12px 14px 18px; overscroll-behavior: contain; }
+.apnext-sev h3 { margin: 16px 0 8px; font-size: 12px; font-weight: 650; text-transform: uppercase; letter-spacing: .1em; color: #d4a574; }
+.apnext-sev aside h3:first-child { margin-top: 0; }
 .apnext-sev p { margin: 6px 0; color: #c9c4bd; }
-.apnext-sev .row { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.apnext-sev .row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .apnext-sev label.ctl { display: inline-flex; align-items: center; gap: 6px; color: #c9c4bd; white-space: nowrap; }
-.apnext-sev input[type="number"] { width: 72px; background: #1e1c17; color: #e8e4df; border: 1px solid #2c2820; border-radius: 3px; padding: 3px 6px; font: inherit; }
+.apnext-sev input[type="number"] { width: 76px; background: #1e1c17; color: #e8e4df; border: 1px solid #2c2820; border-radius: 3px; padding: 3px 6px; font: inherit; }
 .apnext-sev input[type="number"]:focus { border-color: #d4a574; }
-.apnext-sev input[type="range"] { accent-color: #d4a574; width: 260px; }
+.apnext-sev select { background: #1e1c17; color: #e8e4df; border: 1px solid #2c2820; border-radius: 3px; padding: 3px 6px; font: inherit; }
+.apnext-sev input[type="range"] { accent-color: #d4a574; width: 150px; }
 .apnext-sev input[type="checkbox"] { accent-color: #d4a574; width: 14px; height: 14px; margin: 0; }
 .apnext-sev button.pill { background: #1e1c17; color: #e8e4df; border: 1px solid #463f33; border-radius: 999px; padding: 4px 12px; cursor: pointer; font: inherit; }
 .apnext-sev button.pill:hover { border-color: #d4a574; }
+.apnext-sev button.pill:disabled { opacity: .5; cursor: default; }
 .apnext-sev button.pill.primary { background: #d4a574; color: #1a1510; border-color: #d4a574; font-weight: 600; }
 .apnext-sev button.pill.primary:hover { background: #e8b4b8; border-color: #e8b4b8; }
-.apnext-sev .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.apnext-sev .stat { background: #1e1c17; border: 1px solid #2c2820; border-radius: 6px; padding: 8px 10px; }
-.apnext-sev .stat .k { color: #9a9590; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
-.apnext-sev .stat .v { font-size: 18px; font-weight: 650; margin-top: 2px; }
-.apnext-sev .stat .v small { font-size: 11px; color: #9a9590; font-weight: 400; margin-left: 4px; }
-.apnext-sev .banner { border-radius: 6px; padding: 10px 12px; margin: 10px 0 0; border: 1px solid; line-height: 1.45; }
+.apnext-sev button.pill.danger { border-color: #d07070; color: #e8b4b8; }
+.apnext-sev .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.apnext-sev .stat { background: #1e1c17; border: 1px solid #2c2820; border-radius: 6px; padding: 6px 9px; }
+.apnext-sev .stat .k { color: #9a9590; font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+.apnext-sev .stat .v { font-size: 16px; font-weight: 650; margin-top: 1px; }
+.apnext-sev .stat .v small { font-size: 10.5px; color: #9a9590; font-weight: 400; margin-left: 4px; }
+.apnext-sev .banner { border-radius: 6px; padding: 8px 10px; margin: 8px 0 0; border: 1px solid; line-height: 1.45; font-size: 12px; }
 .apnext-sev .banner.ok { border-color: #84b3a6; background: rgba(132,179,166,.12); }
 .apnext-sev .banner.warn { border-color: #d4a574; background: rgba(212,165,116,.12); }
 .apnext-sev .banner.bad { border-color: #d07070; background: rgba(208,112,112,.14); }
 .apnext-sev .banner b { font-weight: 650; }
-.apnext-sev .banner button.pill { margin-left: 10px; padding: 2px 10px; }
-.apnext-sev .hist { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; align-items: end; height: 84px; margin-top: 6px; }
+.apnext-sev .banner button.pill { margin-left: 8px; padding: 2px 10px; }
+.apnext-sev .hist { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; align-items: end; height: 70px; margin-top: 6px; }
 .apnext-sev .hist .bin { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; cursor: pointer; }
 .apnext-sev .hist .bin .bar { background: #463f33; border-radius: 3px 3px 0 0; min-height: 2px; transition: height .12s; }
 .apnext-sev .hist .bin.kept .bar { background: #d4a574; }
 .apnext-sev .hist .bin .n { position: absolute; top: -2px; left: 0; right: 0; text-align: center; font-size: 10px; color: #9a9590; }
 .apnext-sev .hist-axis { display: grid; grid-template-columns: repeat(10, 1fr); font-size: 10px; color: #9a9590; text-align: center; margin-top: 2px; }
-.apnext-sev .timeline { position: relative; height: 34px; background: #1e1c17; border: 1px solid #2c2820; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-.apnext-sev .timeline i { position: absolute; top: 4px; bottom: 4px; width: 2px; border-radius: 1px; opacity: .9; }
-.apnext-sev .timeline i.struct { top: 0; bottom: 0; width: 3px; }
-.apnext-sev .timeline i.cut { opacity: .18; }
-.apnext-sev .timeline i { cursor: pointer; width: 3px; }
-.apnext-sev .timeline i:hover { outline: 1px solid #fff; }
-.apnext-sev .timeline i.struck { background: #d07070 !important; opacity: .9; height: 8px; top: auto; bottom: 2px; border-radius: 2px; width: 6px; margin-left: -1.5px; }
-.apnext-sev .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11px; color: #9a9590; margin-top: 6px; }
+.apnext-sev .legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: #9a9590; margin-top: 6px; }
 .apnext-sev .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
-.apnext-sev pre.table { background: #0f0f0f; border: 1px solid #2c2820; border-radius: 6px; padding: 10px 12px; margin: 6px 0 0;
-  font: 11.5px/1.45 "JetBrains Mono", Consolas, monospace; color: #ddd6c8; max-height: 220px; overflow: auto; white-space: pre; }
-.apnext-sev .foot { display: flex; gap: 10px; justify-content: flex-end; align-items: center; padding: 12px 16px; border-top: 1px solid #2c2820; }
+.apnext-sev .foot { display: flex; gap: 10px; justify-content: flex-end; align-items: center; padding: 10px 16px; border-top: 1px solid #2c2820; flex: 0 0 auto; }
 .apnext-sev .foot .note { margin-right: auto; color: #9a9590; font-size: 12px; }
-.apnext-sev .error { color: #d07070; white-space: pre-wrap; }
+.apnext-sev .error { color: #d07070; white-space: pre-wrap; padding: 16px; }
 `;
 
 function ensureStyle() {
@@ -126,6 +169,8 @@ function fmtTime(sec) {
   const m = Math.floor(sec / 60), s = sec - m * 60;
   return `${m}:${s.toFixed(2).padStart(5, "0")}`;
 }
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const r2 = (v) => Math.round(v * 100) / 100;
 
 // Walk the `audio` input back to a Load Audio node and read its file name.
 function upstreamAudio(node) {
@@ -148,74 +193,107 @@ function upstreamAudio(node) {
   return { file: null, via, reason: "no Load Audio node found upstream" };
 }
 
-// ---- the density maths --------------------------------------------------
-
-function filterEvents(payload, state) {
-  const list = state.toggles.impacts ? payload.events : payload.events_no_impacts;
-  return list.filter((e) => {
-    if (state.rejected && [...state.rejected].some((t) => Math.abs(t - e.t) <= 0.05)) return false;
-    const toggle = KIND_TOGGLE[e.type];
-    if (toggle && !state.toggles[toggle]) return false;
-    if (STRUCTURAL.has(e.type)) return true;           // never dropped by the strength band
-    return e.strength >= state.minStrength - 1e-9 && e.strength <= state.maxStrength + 1e-9;
-  });
+// "song.mp3 [input]" -> /view?filename=song.mp3&type=input
+function audioUrl(name) {
+  let type = "input";
+  let file = name;
+  const m = /^(.*) \[(input|output|temp)\]$/.exec(name);
+  if (m) { file = m[1]; type = m[2]; }
+  let subfolder = "";
+  const slash = file.lastIndexOf("/");
+  if (slash >= 0) { subfolder = file.slice(0, slash); file = file.slice(slash + 1); }
+  return api.apiURL(`/view?filename=${encodeURIComponent(file)}&type=${type}&subfolder=${encodeURIComponent(subfolder)}`);
 }
 
-function density(events, duration) {
+// ---- the event model --------------------------------------------------------
+// A detected event is keyed by the time it was DETECTED at (`at`), so a hand
+// edit survives a re-detection with the same settings; an added event has no
+// `at`. The block on the lane is the writer's window: cue -> land -> settle.
+
+function windowOf(it) {
+  const k = tier(it.strength);
+  const lead = it.lead != null ? it.lead : (LEAD[it.type] || [0.2, 0.3, 0.4])[k];
+  let settle;
+  if (it.type === "BUILD") settle = it.until != null ? it.until : it.t;
+  else settle = it.until != null ? it.until : it.t + (TAIL[it.type] || [0.2, 0.3, 0.4])[k];
+  return { cue: Math.max(0, it.t - lead), land: it.t, settle: Math.max(it.t, settle) };
+}
+
+function buildItems(payload, state) {
+  const list = state.toggles.impacts ? payload.events : payload.events_no_impacts;
+  const items = [];
+  for (const e of list) {
+    const key = e.t.toFixed(2);
+    const ed = state.edits.get(key) || {};
+    items.push({
+      id: "d:" + key, at: e.t, orig: e,
+      t: ed.t != null ? ed.t : e.t, type: ed.type || e.type, strength: ed.strength != null ? ed.strength : e.strength,
+      lead: ed.lead != null ? ed.lead : null, until: ed.until != null ? ed.until : (e.until != null ? e.until : null),
+      edited: Object.keys(ed).length > 0, added: false,
+    });
+  }
+  state.added.forEach((a, i) => items.push({ id: "a:" + a.id, at: null, orig: null, t: a.t, type: a.type, strength: a.strength,
+    lead: a.lead != null ? a.lead : null, until: a.until != null ? a.until : null, edited: false, added: true, ref: a }));
+  items.sort((x, y) => x.t - y.t);
+  return items;
+}
+
+const isStruck = (state, it) => !it.added && [...state.rejected].some((t) => Math.abs(t - it.at) <= MATCH);
+const isAdded = (it) => it.added;
+
+function keptByFilters(state, it) {
+  const toggle = KIND_TOGGLE[it.type];
+  if (toggle && !state.toggles[toggle]) return false;
+  if (STRUCTURAL.has(it.type)) return true;
+  return it.strength >= state.minStrength - 1e-9 && it.strength <= state.maxStrength + 1e-9;
+}
+
+function density(items, duration) {
   const minutes = Math.max(duration, 1) / 60;
-  const hits = events.filter((e) => HIT_KINDS.has(e.type));
-  const structural = events.length - hits.length;
+  const hits = items.filter((e) => HIT_KINDS.has(e.type));
+  const structural = items.length - hits.length;
   const pieces = Math.max(1, Math.ceil(duration / PIECE_SECONDS));
   const perPiece = new Array(pieces).fill(0);
-  for (const e of events) perPiece[Math.min(pieces - 1, Math.floor(e.t / PIECE_SECONDS))]++;
+  for (const e of items) perPiece[Math.min(pieces - 1, Math.floor(e.t / PIECE_SECONDS))]++;
   const over = perPiece.filter((n) => n > SLOTS_PER_PIECE).length;
   return {
-    total: events.length, hits: hits.length, structural,
-    hitsPerMin: hits.length / minutes,
-    hitsPerPiece: hits.length / pieces,
-    piecesOver: over, pieces,
-    everySeconds: hits.length ? duration / hits.length : Infinity,
+    total: items.length, hits: hits.length, structural,
+    hitsPerMin: hits.length / minutes, hitsPerPiece: hits.length / pieces,
+    piecesOver: over, pieces, everySeconds: hits.length ? duration / hits.length : Infinity,
   };
 }
 
-function suggestThreshold(payload, state) {
-  for (let t = 0; t <= 1.0001; t += 0.05) {
-    const d = density(filterEvents(payload, { ...state, minStrength: t }), payload.duration);
-    if (d.hitsPerMin <= OK_PER_MIN) return Math.min(state.maxStrength, Math.round(t * 20) / 20);
-  }
-  return state.maxStrength;
-}
-
-// ---- the modal -------------------------------------------------------------
+// ---- the editor -------------------------------------------------------------
 
 async function openModal(node) {
   ensureStyle();
-
   const wrap = el("div", { className: "apnext-sev-wrap" });
   const panel = el("div", { className: "apnext-sev" });
-  const body = el("div", { className: "body" });
-  const close = () => { wrap.remove(); document.removeEventListener("keydown", onKey); };
-  const onKey = (e) => { if (e.key === "Escape") close(); };
-  wrap.addEventListener("click", (e) => { if (e.target === wrap) close(); });
-  document.addEventListener("keydown", onKey);
-
   const source = upstreamAudio(node);
+
+  const audio = new Audio();
+  const close = () => { audio.pause(); audio.src = ""; wrap.remove(); document.removeEventListener("keydown", onKey); };
   const head = el("header");
   head.append(
-    el("h2", { textContent: "Sound events preview" }),
+    el("h2", { textContent: "Sound events" }),
     el("span", { className: "sub", textContent: source.file || "no audio file", title: source.file || "" }),
+    el("span", { className: "spacer" }),
     el("button", { className: "close", textContent: "×", onclick: close }),
   );
-  panel.append(head, body);
+  panel.append(head);
   wrap.append(panel);
   document.body.append(wrap);
 
   if (!source.file) {
-    body.append(el("p", { className: "error", textContent: `Cannot preview: ${source.reason}. Connect Load Audio → this node's audio input and pick a file.` }));
+    panel.append(el("p", { className: "error", textContent: `Cannot preview: ${source.reason}. Connect Load Audio → this node's audio input and pick a file.` }));
+    const onKey = (e) => { if (e.key === "Escape") close(); };
+    document.addEventListener("keydown", onKey);
     return;
   }
 
-  // state seeded from the node's widgets
+  // ---- state seeded from the node's widgets
+  let savedEdits = {};
+  try { savedEdits = JSON.parse(String(widgetValue(node, "edits", "") || "") || "{}"); } catch (_) { savedEdits = {}; }
   const state = {
     sensitivity: Number(widgetValue(node, "sensitivity", 1.0)),
     minGap: Number(widgetValue(node, "min_gap_seconds", 0.18)),
@@ -224,38 +302,80 @@ async function openModal(node) {
     maxStrength: Number(widgetValue(node, "max_strength", 1.0)),
     toggles: Object.fromEntries(TOGGLES.map(([k]) => [k, Boolean(widgetValue(node, k, k !== "accents"))])),
     rejected: new Set(String(widgetValue(node, "rejected", "") || "").split(/[\s,]+/).filter(Boolean).map(Number).filter((n) => !Number.isNaN(n))),
+    edits: new Map(),                 // "12.40" -> {t, lead, until, strength, type}
+    added: [],                        // [{id, t, type, strength, lead, until}]
+    selected: null,                   // item id
+    pps: 0,                           // px per second (0 = fit)
+    addType: "BASS HIT",
   };
-  const isRejected = (e) => [...state.rejected].some((t) => Math.abs(t - e.t) <= 0.05);
-  let payload = null;
+  for (const e of savedEdits.events || []) if (e && e.at != null) state.edits.set(Number(e.at).toFixed(2), { ...e, at: undefined });
+  let addSeq = 0;
+  for (const a of savedEdits.added || []) if (a && a.t != null) state.added.push({ id: ++addSeq, t: Number(a.t), type: a.type || "BASS HIT", strength: Number(a.strength ?? 0.6), lead: a.lead ?? null, until: a.until ?? null });
 
-  // ---- controls -----------------------------------------------------------
-  body.append(el("h3", { textContent: "1. Detection" }));
-  if (source.via.length) {
-    body.append(el("p", { textContent: `Preview runs on the Load Audio file; on the canvas the audio passes through ${source.via.join(" → ")} first, so counts can differ slightly.` }));
-  }
+  let payload = null;
+  let peaks = null;         // Float32Array of mono samples (decimated)
+  let peaksRate = 0;        // samples per second of `peaks`
+  let duration = 0;
+  let items = [];
+
+  // ---- layout
+  const main = el("main");
+  const stage = el("div", { className: "stage" });
+  const aside = el("aside");
+  main.append(stage, aside);
+  panel.append(main);
+
+  // toolbar
+  const toolbar = el("div", { className: "toolbar" });
+  const playBtn = el("button", { className: "pill", textContent: "▶ play" });
+  const clock = el("span", { className: "clock", textContent: "0:00.00 / 0:00.00" });
+  const zoomIn = el("button", { className: "pill", textContent: "zoom +" });
+  const zoomOut = el("button", { className: "pill", textContent: "zoom −" });
+  const zoomFit = el("button", { className: "pill", textContent: "fit" });
+  const addSel = el("select");
+  for (const t of EVENT_TYPES) addSel.append(el("option", { value: t, textContent: t.toLowerCase() }));
+  addSel.value = state.addType;
+  addSel.addEventListener("change", () => { state.addType = addSel.value; });
+  toolbar.append(
+    playBtn, clock, zoomOut, zoomIn, zoomFit,
+    el("label", { className: "ctl" }, "double-click adds a ", addSel),
+    el("span", { className: "hint", textContent: "drag = move · edges = wind-up / settle · click = select · Delete = strike out / keep · space = play · ctrl+wheel = zoom" }),
+  );
+  stage.append(toolbar);
+
+  // scrolling track
+  const scroll = el("div", { className: "scroll" });
+  const track = el("div", { className: "track" });
+  const ruler = el("div", { className: "ruler" });
+  const wave = el("canvas", { className: "wave" });
+  const lane = el("div", { className: "lane" });
+  const playhead = el("div", { className: "playhead" });
+  track.append(ruler, wave, lane, playhead);
+  scroll.append(track);
+  stage.append(scroll);
+
+  // inspector
+  const inspector = el("div", { className: "inspector" });
+  stage.append(inspector);
+
+  // side panel
+  aside.append(el("h3", { textContent: "Detection" }));
+  if (source.via.length) aside.append(el("p", { textContent: `Preview runs on the Load Audio file; on the canvas the audio passes through ${source.via.join(" → ")} first, so counts can differ slightly.` }));
   const sens = el("input", { type: "number", step: "0.05", min: "0.25", max: "4", value: state.sensitivity });
   const gap = el("input", { type: "number", step: "0.01", min: "0.05", max: "2", value: state.minGap });
   const recompute = el("button", { className: "pill", textContent: "Recompute" });
-  body.append(el("div", { className: "row" },
-    el("label", { className: "ctl" }, "sensitivity ", sens),
-    el("label", { className: "ctl" }, "min_gap_seconds ", gap),
-    recompute,
-    el("span", { textContent: "(these two change what is detected and need a re-run; everything below filters instantly)", style: "color:#9a9590;font-size:12px" }),
-  ));
+  aside.append(el("div", { className: "row" }, el("label", { className: "ctl" }, "sensitivity ", sens), el("label", { className: "ctl" }, "min_gap ", gap), recompute));
+  aside.append(el("p", { textContent: "These two change what is detected and need a re-run (hand edits are kept where their event still exists); everything below filters instantly.", style: "font-size:11.5px;color:#9a9590" }));
 
-  body.append(el("h3", { textContent: "2. What reaches the writer" }));
+  aside.append(el("h3", { textContent: "What reaches the writer" }));
   const toggleRow = el("div", { className: "row" });
   for (const [key, label] of TOGGLES) {
     const box = el("input", { type: "checkbox", checked: state.toggles[key] });
     box.addEventListener("change", () => { state.toggles[key] = box.checked; render(); });
     toggleRow.append(el("label", { className: "ctl" }, box, label));
   }
-  body.append(toggleRow);
+  aside.append(toggleRow);
 
-  // The hit stream is kept inside a strength BAND [min, max]: a floor alone
-  // thins a busy track, a ceiling as well targets one layer of the mix
-  // (0.35-0.45 = "the hits around 0.4"). Either bound pushes the other along
-  // so the band never inverts.
   const clamp01 = (v) => Math.max(0, Math.min(1, Math.round(Number(v) * 100) / 100));
   const slider = el("input", { type: "range", min: "0", max: "1", step: "0.01", value: state.minStrength });
   const sliderNum = el("input", { type: "number", min: "0", max: "1", step: "0.01", value: state.minStrength.toFixed(2) });
@@ -265,54 +385,41 @@ async function openModal(node) {
     slider.value = String(state.minStrength); sliderNum.value = state.minStrength.toFixed(2);
     sliderMax.value = String(state.maxStrength); sliderMaxNum.value = state.maxStrength.toFixed(2);
   };
-  const setStrength = (v) => {
-    state.minStrength = clamp01(v);
-    if (state.maxStrength < state.minStrength) state.maxStrength = state.minStrength;
-    syncStrengthInputs();
-    render();
-  };
-  const setMaxStrength = (v) => {
-    state.maxStrength = clamp01(v);
-    if (state.minStrength > state.maxStrength) state.minStrength = state.maxStrength;
-    syncStrengthInputs();
-    render();
-  };
+  const setStrength = (v) => { state.minStrength = clamp01(v); if (state.maxStrength < state.minStrength) state.maxStrength = state.minStrength; syncStrengthInputs(); render(); };
+  const setMaxStrength = (v) => { state.maxStrength = clamp01(v); if (state.minStrength > state.maxStrength) state.minStrength = state.maxStrength; syncStrengthInputs(); render(); };
   slider.addEventListener("input", () => setStrength(slider.value));
   sliderNum.addEventListener("change", () => setStrength(sliderNum.value));
   sliderMax.addEventListener("input", () => setMaxStrength(sliderMax.value));
   sliderMaxNum.addEventListener("change", () => setMaxStrength(sliderMaxNum.value));
-  body.append(el("div", { className: "row", style: "margin-top:8px" },
-    el("label", { className: "ctl" }, "min_strength ", slider, sliderNum),
-    el("label", { className: "ctl" }, "max_strength ", sliderMax, sliderMaxNum),
-    el("span", { textContent: "a band: only hits between the two are kept; drops / stops / sections / builds are never dropped by it", style: "color:#9a9590;font-size:12px" }),
-  ));
+  aside.append(
+    el("div", { className: "row", style: "margin-top:8px" }, el("label", { className: "ctl" }, "min ", slider, sliderNum)),
+    el("div", { className: "row", style: "margin-top:4px" }, el("label", { className: "ctl" }, "max ", sliderMax, sliderMaxNum)),
+    el("p", { textContent: "strength band - only hits between the two are kept; drops / stops / sections / builds are never dropped by it", style: "font-size:11.5px;color:#9a9590" }),
+  );
 
-  const stats = el("div", { className: "stats", style: "margin-top:12px" });
+  const stats = el("div", { className: "stats", style: "margin-top:10px" });
   const banner = el("div", { className: "banner ok" });
-  body.append(stats, banner);
+  aside.append(stats, banner);
 
-  body.append(el("h3", { textContent: "3. Hit strength - where the threshold cuts" }));
-  body.append(el("p", { textContent: "Bars are the hits (bass hits / impacts / accents) by strength, 0 = quietest kept peak, 1 = the loudest hit in this track. Click a bar to set min_strength there; shift-click to set max_strength to the top of that bar (click 0.3, shift-click 0.4 = the band 0.30-0.50)." }));
+  aside.append(el("h3", { textContent: "Hit strength" }));
+  aside.append(el("p", { textContent: "Click a bar: min_strength there; shift-click: max_strength at its top.", style: "font-size:11.5px;color:#9a9590" }));
   const hist = el("div", { className: "hist" });
   const axis = el("div", { className: "hist-axis" });
   for (let b = 0; b < 10; b++) axis.append(el("span", { textContent: (b / 10).toFixed(1) }));
-  body.append(hist, axis);
+  aside.append(hist, axis);
 
-  body.append(el("h3", { textContent: "4. Timeline - click a tick to strike that hit out (click again to keep it)" }));
-  const timeline = el("div", { className: "timeline" });
   const legend = el("div", { className: "legend" });
   for (const [kind, color] of Object.entries(KIND_COLOR)) legend.append(el("span", {}, el("i", { style: `background:${color}` }), kind.toLowerCase()));
-  legend.append(el("span", { textContent: "faded = removed by the current settings" }));
-  body.append(timeline, legend);
+  legend.append(el("span", { textContent: "faded = removed by the settings · striped = struck out · ✎ edited · + added" }));
+  aside.append(el("h3", { textContent: "Legend" }), legend);
 
-  body.append(el("h3", { textContent: "5. The first lines of the table" }));
-  const table = el("pre", { className: "table", textContent: "…" });
-  body.append(table);
-
+  // footer
   const note = el("span", { className: "note" });
+  const resetBtn = el("button", { className: "pill danger", textContent: "Discard hand edits" });
   const apply = el("button", { className: "pill primary", textContent: "Apply to node" });
-  const foot = el("div", { className: "foot" }, note, el("button", { className: "pill", textContent: "Close", onclick: close }), apply);
-  panel.append(foot);
+  panel.append(el("div", { className: "foot" }, note, resetBtn, el("button", { className: "pill", textContent: "Close", onclick: close }), apply));
+
+  resetBtn.addEventListener("click", () => { state.edits.clear(); state.added = []; state.rejected.clear(); state.selected = null; render(); });
 
   apply.addEventListener("click", () => {
     const set = (name, value) => { const w = widget(node, name); if (w) { w.value = value; w.callback?.(value, app.canvas, node); } };
@@ -322,98 +429,347 @@ async function openModal(node) {
     set("max_strength", state.maxStrength);
     for (const [key] of TOGGLES) set(key, state.toggles[key]);
     set("rejected", [...state.rejected].sort((a, b) => a - b).map((t) => t.toFixed(2)).join(" "));
+    set("edits", editsJson());
     node.setDirtyCanvas?.(true, true);
     close();
   });
 
-  // ---- rendering ----------------------------------------------------------
+  function editsJson() {
+    const events = [];
+    for (const [key, ed] of state.edits) {
+      const clean = {};
+      for (const k of ["t", "lead", "until", "strength", "type"]) if (ed[k] != null) clean[k] = ed[k];
+      if (Object.keys(clean).length) events.push({ at: Number(key), ...clean });
+    }
+    const added = state.added.map((a) => ({ t: r2(a.t), type: a.type, strength: r2(a.strength), ...(a.lead != null ? { lead: r2(a.lead) } : {}), ...(a.until != null ? { until: r2(a.until) } : {}) }));
+    if (!events.length && !added.length) return "";
+    return JSON.stringify({ v: 1, events, added });
+  }
+
+  // ---- geometry
+  const fitPps = () => Math.max(1, (scroll.clientWidth - 2) / Math.max(duration, 1));
+  const pps = () => (state.pps || fitPps());
+  const maxPps = () => Math.max(fitPps(), MAX_CANVAS / Math.max(duration, 1));
+  const setZoom = (factor, anchorSec) => {
+    const before = pps();
+    const next = clamp(before * factor, fitPps(), maxPps());
+    state.pps = next <= fitPps() + 1e-6 ? 0 : next;
+    const anchor = anchorSec ?? (scroll.scrollLeft + scroll.clientWidth / 2) / before;
+    layout();
+    scroll.scrollLeft = anchor * pps() - scroll.clientWidth / 2;
+  };
+  zoomIn.addEventListener("click", () => setZoom(1.6));
+  zoomOut.addEventListener("click", () => setZoom(1 / 1.6));
+  zoomFit.addEventListener("click", () => { state.pps = 0; layout(); });
+  scroll.addEventListener("wheel", (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const sec = (scroll.scrollLeft + e.clientX - scroll.getBoundingClientRect().left) / pps();
+    const before = pps();
+    setZoom(e.deltaY < 0 ? 1.25 : 1 / 1.25);
+    scroll.scrollLeft = sec * pps() - (e.clientX - scroll.getBoundingClientRect().left);
+    void before;
+  }, { passive: false });
+  new ResizeObserver(() => { if (duration) layout(); }).observe(scroll);
+
+  // ---- waveform
+  function drawWave() {
+    const width = Math.min(MAX_CANVAS, Math.ceil(duration * pps()));
+    const height = 170;
+    wave.width = width; wave.height = height;
+    wave.style.width = `${width}px`;
+    const ctx = wave.getContext("2d");
+    ctx.fillStyle = "#0f0e0b"; ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#463f33"; ctx.fillRect(0, height / 2, width, 1);
+    if (!peaks) { ctx.fillStyle = "#9a9590"; ctx.fillText("decoding audio…", 12, 20); return; }
+    const spc = peaksRate / pps();          // peak samples per pixel column
+    ctx.fillStyle = "#c9a26e";
+    for (let x = 0; x < width; x++) {
+      const a = Math.floor(x * spc), b = Math.max(a + 1, Math.floor((x + 1) * spc));
+      let lo = 1, hi = -1;
+      for (let i = a; i < b && i < peaks.length; i++) { const v = peaks[i]; if (v < lo) lo = v; if (v > hi) hi = v; }
+      if (hi < lo) continue;
+      const y1 = (1 - hi) * height / 2, y2 = (1 - lo) * height / 2;
+      ctx.fillRect(x, y1, 1, Math.max(1, y2 - y1));
+    }
+  }
+
+  function drawRuler() {
+    const width = Math.ceil(duration * pps());
+    ruler.style.width = `${width}px`;
+    ruler.replaceChildren();
+    const steps = [0.1, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60];
+    const step = steps.find((s) => s * pps() >= 70) || 60;
+    for (let t = 0; t <= duration; t += step) ruler.append(el("span", { textContent: fmtTime(t), style: `left:${t * pps()}px` }));
+  }
+
+  function layout() {
+    const width = Math.ceil(duration * pps());
+    track.style.width = `${width}px`;
+    lane.style.width = `${width}px`;
+    drawRuler();
+    drawWave();
+    render();
+  }
+
+  // ---- the lane
   function render() {
     if (!payload) return;
-    const kept = filterEvents(payload, state);
-    const d = density(kept, payload.duration);
-    const suggested = suggestThreshold(payload, state);
+    items = buildItems(payload, state);
+    const p = pps();
+    lane.replaceChildren();
+    const kept = [];
+    for (const it of items) {
+      const w = windowOf(it);
+      const struck = isStruck(state, it);
+      const keep = !struck && keptByFilters(state, it);
+      if (keep) kept.push(it);
+      const box = el("div", {
+        className: "ev" + (STRUCTURAL.has(it.type) ? " struct" : "") + (keep ? "" : " cut") + (struck ? " struck" : "")
+          + (it.edited ? " edited" : "") + (it.added ? " added" : "") + (state.selected === it.id ? " sel" : ""),
+        style: `left:${w.cue * p}px;width:${Math.max(6, (w.settle - w.cue) * p)}px;background:${KIND_COLOR[it.type] || "#9a9590"}`,
+        title: `${fmtTime(it.t)} ${it.type} ${strengthLabel(it.strength)} (${it.strength.toFixed(2)})  window +${(it.t - w.cue).toFixed(2)} / -${(w.settle - it.t).toFixed(2)} s`
+          + (struck ? " - STRUCK OUT" : "") + (it.added ? " - added by hand" : it.edited ? " - edited" : ""),
+      });
+      box.append(el("div", { className: "land", style: `left:${(it.t - w.cue) * p - 1}px` }));
+      if ((w.settle - w.cue) * p > 46) box.append(el("span", { className: "lbl", textContent: it.type.toLowerCase() }));
+      box.append(el("div", { className: "h l" }), el("div", { className: "h r" }));
+      box.dataset.id = it.id;
+      lane.append(box);
+    }
+    renderInspector();
+    renderStats(kept);
+    const changes = state.edits.size + state.added.length;
+    note.textContent = `Apply writes band ${state.minStrength.toFixed(2)}-${state.maxStrength.toFixed(2)}, the kind toggles, sensitivity, min_gap`
+      + (state.rejected.size ? `, ${state.rejected.size} struck-out` : "") + (changes ? `, ${changes} hand edit(s)` : "") + " into the node.";
+  }
 
+  // ---- drag / select / add on the lane
+  let drag = null;
+  lane.addEventListener("pointerdown", (e) => {
+    const box = e.target.closest(".ev");
+    if (!box) return;
+    const it = items.find((x) => x.id === box.dataset.id);
+    if (!it) return;
+    e.preventDefault();
+    state.selected = it.id;
+    const mode = e.target.classList.contains("h") ? (e.target.classList.contains("l") ? "lead" : "until") : "move";
+    const w = windowOf(it);
+    drag = { it, mode, x0: e.clientX, t0: it.t, cue0: w.cue, settle0: w.settle, moved: false };
+    lane.setPointerCapture(e.pointerId);
+    render();
+  });
+  lane.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dt = (e.clientX - drag.x0) / pps();
+    if (Math.abs(e.clientX - drag.x0) > 2) drag.moved = true;
+    const it = drag.it;
+    const ed = editFor(it);
+    if (drag.mode === "move") {
+      const t = r2(clamp(drag.t0 + dt, 0, duration));
+      ed.t = t;
+      // the hand-set window travels with the event; a default window recomputes
+    } else if (drag.mode === "lead") {
+      const cue = clamp(drag.cue0 + dt, 0, it.t - 0.02);
+      ed.lead = r2(it.t - cue);
+    } else {
+      const settle = clamp(drag.settle0 + dt, it.t + 0.02, duration);
+      ed.until = r2(settle);
+    }
+    commitEdit(it, ed);
+    render();
+  });
+  const endDrag = (e) => {
+    if (!drag) return;
+    try { lane.releasePointerCapture(e.pointerId); } catch (_) { /* already released */ }
+    drag = null;
+    render();
+  };
+  lane.addEventListener("pointerup", endDrag);
+  lane.addEventListener("pointercancel", endDrag);
+  lane.addEventListener("dblclick", (e) => {
+    if (e.target.closest(".ev")) return;
+    const t = r2(clamp((e.clientX - lane.getBoundingClientRect().left) / pps(), 0, duration));
+    const a = { id: ++addSeq, t, type: state.addType, strength: 0.7, lead: null, until: null };
+    state.added.push(a);
+    state.selected = "a:" + a.id;
+    render();
+  });
+  lane.addEventListener("click", (e) => {
+    if (e.target.closest(".ev")) return;
+    if (!drag) { state.selected = null; render(); }
+  });
+
+  // an item's editable record (detected -> edits map entry; added -> the record itself)
+  function editFor(it) {
+    if (it.added) return it.ref;
+    const key = it.at.toFixed(2);
+    return { ...(state.edits.get(key) || {}) };
+  }
+  function commitEdit(it, ed) {
+    if (it.added) { Object.assign(it.ref, ed); return; }
+    const key = it.at.toFixed(2);
+    const clean = {};
+    for (const k of ["t", "lead", "until", "strength", "type"]) {
+      if (ed[k] == null) continue;
+      // an edit equal to the detected value is no edit
+      if (k === "t" && Math.abs(ed.t - it.orig.t) < 0.005) continue;
+      if (k === "strength" && Math.abs(ed.strength - it.orig.strength) < 0.005) continue;
+      if (k === "type" && ed.type === it.orig.type) continue;
+      if (k === "until" && it.orig.until != null && Math.abs(ed.until - it.orig.until) < 0.005) continue;
+      clean[k] = ed[k];
+    }
+    if (Object.keys(clean).length) state.edits.set(key, clean); else state.edits.delete(key);
+  }
+
+  function toggleStruck(it) {
+    if (it.added) { state.added = state.added.filter((a) => a !== it.ref); state.selected = null; return; }
+    const hit = [...state.rejected].find((t) => Math.abs(t - it.at) <= MATCH);
+    if (hit !== undefined) state.rejected.delete(hit); else state.rejected.add(Number(it.at.toFixed(2)));
+  }
+
+  function renderInspector() {
+    inspector.replaceChildren();
+    const it = items.find((x) => x.id === state.selected);
+    if (!it) { inspector.append(el("span", { className: "none", textContent: "Select an event on the lane to edit it - or double-click the lane to add one." })); return; }
+    const w = windowOf(it);
+    const struck = isStruck(state, it);
+    const typeSel = el("select");
+    for (const t of EVENT_TYPES) typeSel.append(el("option", { value: t, textContent: t.toLowerCase() }));
+    typeSel.value = it.type;
+    typeSel.addEventListener("change", () => { const ed = editFor(it); ed.type = typeSel.value; commitEdit(it, ed); render(); });
+    const tNum = el("input", { type: "number", step: "0.01", min: "0", max: duration.toFixed(2), value: it.t.toFixed(2) });
+    tNum.addEventListener("change", () => { const ed = editFor(it); ed.t = r2(clamp(Number(tNum.value), 0, duration)); commitEdit(it, ed); render(); });
+    const sNum = el("input", { type: "range", min: "0", max: "1", step: "0.01", value: it.strength, style: "width:110px" });
+    const sLbl = el("span", { textContent: `${it.strength.toFixed(2)} ${strengthLabel(it.strength)}`, style: "min-width:78px;color:#c9c4bd" });
+    sNum.addEventListener("input", () => { const ed = editFor(it); ed.strength = clamp01(sNum.value); commitEdit(it, ed); sLbl.textContent = `${ed.strength.toFixed(2)} ${strengthLabel(ed.strength)}`; render(); });
+    const leadNum = el("input", { type: "number", step: "0.01", min: "0", max: "5", value: (it.t - w.cue).toFixed(2) });
+    leadNum.addEventListener("change", () => { const ed = editFor(it); ed.lead = r2(clamp(Number(leadNum.value), 0, 5)); commitEdit(it, ed); render(); });
+    const settleNum = el("input", { type: "number", step: "0.01", min: "0", max: "10", value: (w.settle - it.t).toFixed(2) });
+    settleNum.addEventListener("change", () => { const ed = editFor(it); ed.until = r2(clamp(it.t + Number(settleNum.value), it.t, duration)); commitEdit(it, ed); render(); });
+    const strikeBtn = el("button", { className: "pill" + (struck ? "" : " danger"), textContent: it.added ? "remove" : (struck ? "keep" : "strike out") });
+    strikeBtn.addEventListener("click", () => { toggleStruck(it); render(); });
+    const resetBtnI = el("button", { className: "pill", textContent: "reset to detected", disabled: it.added || !it.edited });
+    resetBtnI.addEventListener("click", () => { state.edits.delete(it.at.toFixed(2)); render(); });
+    const seek = el("button", { className: "pill", textContent: "▶ from here" });
+    seek.addEventListener("click", () => { audio.currentTime = Math.max(0, it.t - 1.0); audio.play(); });
+    inspector.append(
+      el("label", { className: "ctl" }, "type ", typeSel),
+      el("label", { className: "ctl" }, "lands at ", tNum, "s"),
+      el("label", { className: "ctl" }, "strength ", sNum, sLbl),
+      el("label", { className: "ctl" }, "wind-up ", leadNum, "s before"),
+      el("label", { className: "ctl" }, "settle ", settleNum, "s after"),
+      seek, strikeBtn, resetBtnI,
+      el("span", { style: "color:#9a9590;font-size:11.5px", textContent: it.added ? "added by hand" : (it.edited ? `detected at ${fmtTime(it.at)}, edited` : `detected at ${fmtTime(it.at)}`) }),
+    );
+  }
+
+  function renderStats(kept) {
+    const d = density(kept, duration);
     stats.replaceChildren(
-      stat("track", `${fmtTime(payload.duration)}`, `${d.pieces} pieces of ~${PIECE_SECONDS}s`),
+      stat("track", fmtTime(duration), `${d.pieces} pieces of ~${PIECE_SECONDS}s`),
       stat("events kept", String(d.total), `${d.hits} hits · ${d.structural} structural`),
       stat("hits / minute", d.hitsPerMin.toFixed(0), Number.isFinite(d.everySeconds) ? `one every ${d.everySeconds.toFixed(1)}s` : "none"),
       stat("hits / piece", d.hitsPerPiece.toFixed(1), `${SLOTS_PER_PIECE} slots per piece`),
       stat("pieces overflowing", String(d.piecesOver), d.piecesOver ? "extra hits get cut, strongest kept" : "everything fits"),
       stat("node max_events", String(state.maxEvents), d.total > state.maxEvents ? `will thin ${d.total} → ${state.maxEvents}` : "not reached"),
     );
-
+    const suggested = suggestThreshold();
     const jump = suggested > state.minStrength + 1e-9
-      ? el("button", { className: "pill", textContent: `set min_strength ${suggested.toFixed(2)}`, onclick: () => setStrength(suggested) })
-      : null;
+      ? el("button", { className: "pill", textContent: `set min ${suggested.toFixed(2)}`, onclick: () => setStrength(suggested) }) : null;
     if (d.hitsPerMin > TOO_MANY_PER_MIN) {
       banner.className = "banner bad";
-      banner.replaceChildren(
-        el("b", { textContent: `Too many hits: ${d.hitsPerMin.toFixed(0)} per minute. ` }),
-        `Every scene will be a wall of "bass hit" cues and the writer cannot make them mean anything - a hit every ${d.everySeconds.toFixed(1)}s is a metronome, not a beat to stage. Raise min_strength: ${suggested.toFixed(2)} keeps the heavy ones on this track (~${OK_PER_MIN}/min).`,
-        jump,
-      );
+      banner.replaceChildren(el("b", { textContent: `Too many hits: ${d.hitsPerMin.toFixed(0)} per minute. ` }),
+        `A hit every ${d.everySeconds.toFixed(1)}s is a metronome, not a beat to stage. ${suggested.toFixed(2)} keeps the heavy ones (~${OK_PER_MIN}/min).`, jump);
     } else if (d.hitsPerMin > OK_PER_MIN) {
       banner.className = "banner warn";
-      banner.replaceChildren(
-        el("b", { textContent: `Dense: ${d.hitsPerMin.toFixed(0)} hits per minute. ` }),
-        `Workable, but pieces will fill their ${SLOTS_PER_PIECE} slots and lighter hits crowd out the drops. ${suggested.toFixed(2)} would land at ~${OK_PER_MIN}/min.`,
-        jump,
-      );
+      banner.replaceChildren(el("b", { textContent: `Dense: ${d.hitsPerMin.toFixed(0)} hits per minute. ` }),
+        `Workable, but pieces will fill their ${SLOTS_PER_PIECE} slots and lighter hits crowd out the drops.`, jump);
     } else if (d.hits === 0 && d.structural === 0) {
       banner.className = "banner warn";
       banner.replaceChildren(el("b", { textContent: "Nothing left. " }), "Every kind is off or the strength band holds no hit - the writer will get no sound moments at all.");
     } else {
       banner.className = "banner ok";
-      banner.replaceChildren(
-        el("b", { textContent: `Good density: ${d.hitsPerMin.toFixed(0)} hits per minute. ` }),
-        `About ${d.hitsPerPiece.toFixed(1)} hits per piece plus the drops and stops - each one can land as a real, visible event.`,
-      );
+      banner.replaceChildren(el("b", { textContent: `Good density: ${d.hitsPerMin.toFixed(0)} hits per minute. ` }),
+        `About ${d.hitsPerPiece.toFixed(1)} hits per piece plus the drops and stops - each one can land as a real, visible event.`);
     }
-
-    // histogram of hit strengths (all kinds currently toggled on, before the threshold)
-    const hitPool = (state.toggles.impacts ? payload.events : payload.events_no_impacts)
-      .filter((e) => HIT_KINDS.has(e.type) && state.toggles[KIND_TOGGLE[e.type]]);
+    // histogram of hit strengths (toggled-on kinds, before the band)
+    const pool = items.filter((e) => HIT_KINDS.has(e.type) && state.toggles[KIND_TOGGLE[e.type]] && !isStruck(state, e));
     const bins = new Array(10).fill(0);
-    for (const e of hitPool) bins[Math.min(9, Math.floor(e.strength * 10))]++;
+    for (const e of pool) bins[Math.min(9, Math.floor(e.strength * 10))]++;
     const top = Math.max(1, ...bins);
     hist.replaceChildren(...bins.map((n, b) => {
       const inBand = (b + 1) / 10 > state.minStrength + 1e-9 && b / 10 < state.maxStrength - 1e-9;
-      const bin = el("div", { className: "bin" + (inBand ? " kept" : ""), title: `strength ${(b / 10).toFixed(1)}-${((b + 1) / 10).toFixed(1)}: ${n} hits - click: min_strength ${(b / 10).toFixed(1)}, shift-click: max_strength ${((b + 1) / 10).toFixed(1)}` });
-      bin.append(el("span", { className: "n", textContent: n ? String(n) : "" }), el("div", { className: "bar", style: `height:${Math.max(2, (n / top) * 68)}px` }));
+      const bin = el("div", { className: "bin" + (inBand ? " kept" : ""), title: `strength ${(b / 10).toFixed(1)}-${((b + 1) / 10).toFixed(1)}: ${n} hits` });
+      bin.append(el("span", { className: "n", textContent: n ? String(n) : "" }), el("div", { className: "bar", style: `height:${Math.max(2, (n / top) * 56)}px` }));
       bin.addEventListener("click", (ev) => (ev.shiftKey ? setMaxStrength((b + 1) / 10) : setStrength(b / 10)));
       return bin;
     }));
+  }
 
-    // timeline
-    const all = state.toggles.impacts ? payload.events : payload.events_no_impacts;
-    const keptSet = new Set(kept);
-    timeline.replaceChildren(...all.map((e) => {
-      const struck = isRejected(e);
-      const tick = el("i", {
-        className: (STRUCTURAL.has(e.type) ? "struct" : "") + (keptSet.has(e) ? "" : " cut") + (struck ? " struck" : ""),
-        style: `left:${(e.t / payload.duration) * 100}%;background:${KIND_COLOR[e.type] || "#9a9590"}`,
-        title: `${fmtTime(e.t)} ${e.type} ${e.label}${struck ? " - STRUCK OUT (click to keep)" : " - click to strike out"}`,
-      });
-      tick.addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        const hit = [...state.rejected].find((t) => Math.abs(t - e.t) <= 0.05);
-        if (hit !== undefined) state.rejected.delete(hit); else state.rejected.add(Number(e.t.toFixed(2)));
-        render();
-      });
-      return tick;
-    }));
-
-    // table head
-    table.textContent = kept.slice(0, 60).map((e) => `${fmtTime(e.t).padStart(8)}  ${e.type.padEnd(9)} ${e.strength.toFixed(2)}  ${e.label}`).join("\n")
-      + (kept.length > 60 ? `\n… ${kept.length - 60} more` : "");
-    note.textContent = `Apply writes the strength band ${state.minStrength.toFixed(2)}-${state.maxStrength.toFixed(2)}, the kind toggles, sensitivity, min_gap`
-      + (state.rejected.size ? ` and ${state.rejected.size} struck-out hit(s)` : "") + " into the node.";
+  function suggestThreshold() {
+    for (let t = 0; t <= 1.0001; t += 0.05) {
+      const trial = { ...state, minStrength: t };
+      const kept = items.filter((it) => !isStruck(state, it) && keptByFilters(trial, it));
+      if (density(kept, duration).hitsPerMin <= OK_PER_MIN) return Math.min(state.maxStrength, Math.round(t * 20) / 20);
+    }
+    return state.maxStrength;
   }
 
   function stat(k, v, small) {
     return el("div", { className: "stat" }, el("div", { className: "k", textContent: k }), el("div", { className: "v" }, v, small ? el("small", { textContent: small }) : null));
   }
 
+  // ---- audio: playback + decoded waveform
+  audio.src = audioUrl(source.file);
+  const updateClock = () => { clock.textContent = `${fmtTime(audio.currentTime || 0)} / ${fmtTime(duration)}`; playhead.style.left = `${(audio.currentTime || 0) * pps()}px`; };
+  audio.addEventListener("loadedmetadata", () => { if (!duration) { duration = audio.duration || 0; layout(); } updateClock(); });
+  audio.addEventListener("play", () => { playBtn.textContent = "❚❚ pause"; tick(); });
+  audio.addEventListener("pause", () => { playBtn.textContent = "▶ play"; });
+  audio.addEventListener("ended", () => { playBtn.textContent = "▶ play"; });
+  let raf = 0;
+  function tick() { updateClock(); if (!audio.paused) raf = requestAnimationFrame(tick); else cancelAnimationFrame(raf); }
+  playBtn.addEventListener("click", () => { if (audio.paused) audio.play(); else audio.pause(); });
+  wave.addEventListener("click", (e) => { audio.currentTime = clamp((e.clientX - wave.getBoundingClientRect().left) / pps(), 0, duration); updateClock(); });
+  ruler.addEventListener("click", (e) => { audio.currentTime = clamp((e.clientX - ruler.getBoundingClientRect().left) / pps(), 0, duration); updateClock(); });
+
+  const onKey = (e) => {
+    if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (e.key === "Escape") { close(); return; }
+    if (e.key === " ") { e.preventDefault(); if (audio.paused) audio.play(); else audio.pause(); return; }
+    if ((e.key === "Delete" || e.key === "Backspace") && state.selected) {
+      const it = items.find((x) => x.id === state.selected);
+      if (it) { toggleStruck(it); render(); }
+    }
+  };
+  document.addEventListener("keydown", onKey);
+
+  (async () => {
+    try {
+      const buf = await (await fetch(audioUrl(source.file))).arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const decoded = await ctx.decodeAudioData(buf);
+      ctx.close?.();
+      const n = decoded.length, ch = decoded.numberOfChannels;
+      const target = 4000;                              // peak samples per second - enough for 400 px/s
+      const step = Math.max(1, Math.floor(decoded.sampleRate / target));
+      const out = new Float32Array(Math.ceil(n / step));
+      const chans = Array.from({ length: ch }, (_, c) => decoded.getChannelData(c));
+      for (let i = 0, k = 0; i < n; i += step, k++) {
+        let m = 0;
+        for (let j = i; j < Math.min(n, i + step); j++) { let v = 0; for (let c = 0; c < ch; c++) v += chans[c][j]; v /= ch; if (Math.abs(v) > Math.abs(m)) m = v; }
+        out[k] = m;
+      }
+      peaks = out; peaksRate = decoded.sampleRate / step;
+      if (!duration) duration = decoded.duration;
+      layout();
+    } catch (err) {
+      console.warn("[APNext sound events] waveform decode failed:", err);
+      const ctx = wave.getContext("2d"); ctx.fillStyle = "#d07070"; ctx.fillText(`waveform unavailable: ${err.message}`, 12, 20);
+    }
+  })();
+
+  // ---- detection
   async function compute() {
     state.sensitivity = Number(sens.value) || 1.0;
     state.minGap = Number(gap.value) || 0.18;
@@ -428,7 +784,8 @@ async function openModal(node) {
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
       payload = data;
-      render();
+      if (!duration) duration = Number(data.duration) || 0;
+      layout();
     } catch (err) {
       banner.className = "banner bad";
       banner.textContent = `Preview failed: ${err.message}`;
@@ -447,7 +804,7 @@ app.registerExtension({
     const onNodeCreated = nodeType.prototype.onNodeCreated;
     nodeType.prototype.onNodeCreated = function () {
       const r = onNodeCreated?.apply(this, arguments);
-      const __btn = this.addWidget("button", "🎚 Preview events", null, () => {
+      const __btn = this.addWidget("button", "🎚 Preview & edit events", null, () => {
         openModal(this).catch((err) => console.error("[APNext sound events]", err));
       });
       __btn.serialize = false;   // a button has no value to save; a saved null would shift later widgets

@@ -64,6 +64,41 @@ _OPENAI_COMPATIBLE = {
     "gpt": (("OPENAI_API_KEY",), None),
     "grok": (("XAI_API_KEY", "GROK_API_KEY"), "https://api.x.ai/v1"),
     "groq": (("GROQ_API_KEY",), "https://api.groq.com/openai/v1"),
+    # OpenRouter: one key, every model. Model ids are `vendor/model`, so a
+    # router string reads `openrouter:anthropic/claude-fable-5`.
+    "openrouter": (("OPENROUTER_API_KEY",), "https://openrouter.ai/api/v1"),
+}
+
+# OpenRouter serves 400+ models; these are the ones worth a dropdown entry for
+# writing prompts (strong instruction following, long output). Anything else
+# goes in as `openrouter:<vendor/model>` through model_name - the full list is
+# https://openrouter.ai/models. Checked against the live catalogue on 2026-08-27.
+openrouter_models = [
+    "anthropic/claude-fable-5",
+    "anthropic/claude-haiku-4.5",
+    "anthropic/claude-opus-4.1",
+    "openai/gpt-5",
+    "openai/gpt-5-mini",
+    "openai/gpt-4.1",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-flash",
+    "google/gemini-3-flash-preview",
+    "x-ai/grok-4.6",
+    "deepseek/deepseek-v3.2",
+    "deepseek/deepseek-chat-v3.1",
+    "qwen/qwen3-235b-a22b-2507",
+    "qwen/qwen3-30b-a3b-instruct-2507",
+    "moonshotai/kimi-k2.5",
+    "z-ai/glm-4.7",
+    "meta-llama/llama-4-maverick",
+    "mistralai/mistral-large-2512",
+    "minimax/minimax-m2.7",
+]
+
+# Extra headers OpenRouter uses for its app rankings; harmless elsewhere.
+_OPENROUTER_HEADERS = {
+    "HTTP-Referer": "https://github.com/dagthomas/comfyui_dagthomas",
+    "X-Title": "APNext H3 (ComfyUI)",
 }
 
 # Local OpenAI-compatible servers: provider prefix -> (env var names, default base url).
@@ -85,6 +120,7 @@ _AUTO_DETECT_ORDER = (
     (("GEMINI_API_KEY",), "gemini:gemini-3.7-flash"),
     (("XAI_API_KEY", "GROK_API_KEY"), "grok:grok-4.6"),
     (("GROQ_API_KEY",), "groq:llama-3.3-70b-versatile"),
+    (("OPENROUTER_API_KEY",), "openrouter:anthropic/claude-fable-5"),
 )
 
 AUTO_DETECT = "auto-detect"
@@ -299,7 +335,8 @@ def auto_detect_model():
 
     raise ValueError(
         "No API keys found and no local server responded. Set one of: "
-        "ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY, GROQ_API_KEY - "
+        "ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, XAI_API_KEY, GROQ_API_KEY, "
+        "OPENROUTER_API_KEY - "
         "or start a local OpenAI-compatible server (Ollama, LM Studio, vLLM, "
         "llama.cpp) and pick an `ollama:` / `lmstudio:` / `local:` model."
     )
@@ -331,7 +368,12 @@ _LOCAL_REQUEST_TIMEOUT = float(os.environ.get("APNEXT_LOCAL_LLM_REQUEST_TIMEOUT"
 
 
 def _request_timeout(provider):
-    return _LOCAL_REQUEST_TIMEOUT if provider in _LOCAL_PROVIDERS else _CLOUD_REQUEST_TIMEOUT
+    if provider in _LOCAL_PROVIDERS:
+        return _LOCAL_REQUEST_TIMEOUT
+    if provider == "openrouter":
+        # a routed open model writing six scenes can take minutes; give it the local leash
+        return max(_CLOUD_REQUEST_TIMEOUT, _LOCAL_REQUEST_TIMEOUT)
+    return _CLOUD_REQUEST_TIMEOUT
 
 
 def _http_client(timeout=_CLOUD_REQUEST_TIMEOUT):
@@ -343,23 +385,30 @@ def _http_client(timeout=_CLOUD_REQUEST_TIMEOUT):
         return httpx.Client()
 
 
-def _get_openai_compatible_client(provider, base_url_override=None):
+def _get_openai_compatible_client(provider, base_url_override=None, api_key_override=None):
     if not OPENAI_AVAILABLE:
         raise ImportError("openai is not installed. Install it with: pip install 'openai<3'")
 
+    key_override = (api_key_override or "").strip()
     if provider in _LOCAL_PROVIDERS:
         base_url = resolve_base_url(provider, base_url_override)
         # Local servers ignore the key, but the OpenAI client refuses to start without one.
-        api_key = _first_env(("LOCAL_LLM_API_KEY",)) or "local"
+        api_key = key_override or _first_env(("LOCAL_LLM_API_KEY",)) or "local"
     else:
         env_names, base_url = _OPENAI_COMPATIBLE[provider]
-        api_key = _first_env(env_names)
+        if provider == "openrouter" and (base_url_override or "").strip():
+            base_url = _normalise_base_url(base_url_override)      # a gateway in front of OpenRouter
+        # the key typed on the LLM Backend node wins over the environment
+        api_key = key_override or _first_env(env_names)
         if not api_key:
-            raise ValueError(f"{' or '.join(env_names)} environment variable not set")
+            raise ValueError(
+                f"{' or '.join(env_names)} environment variable not set - or type the key into the "
+                f"H3 LLM Backend node's api_key."
+            )
 
-    # The URL is part of the key so two nodes pointing at different local servers
-    # do not share a client.
-    cache_key = f"{provider}|{base_url or ''}"
+    # The URL and the key are part of the cache key so two nodes pointing at
+    # different servers, or using different accounts, do not share a client.
+    cache_key = f"{provider}|{base_url or ''}|{hash(api_key)}"
     cached = _client_cache.get(cache_key)
     if cached is not None:
         return cached
@@ -370,6 +419,8 @@ def _get_openai_compatible_client(provider, base_url_override=None):
         kwargs["http_client"] = http_client
     if base_url:
         kwargs["base_url"] = base_url
+    if provider == "openrouter":
+        kwargs["default_headers"] = dict(_OPENROUTER_HEADERS)
 
     client = OpenAI(**kwargs)
     _client_cache[cache_key] = client
@@ -581,9 +632,9 @@ def _call_ollama_native(
 
 def _call_openai_compatible(
     provider, model, user_prompt, system_prompt, images, temperature, seed, max_tokens,
-    base_url=None, history=None,
+    base_url=None, history=None, api_key=None, think=None,
 ):
-    client = _get_openai_compatible_client(provider, base_url)
+    client = _get_openai_compatible_client(provider, base_url, api_key)
 
     if images:
         content = [{"type": "text", "text": user_prompt}]
@@ -614,6 +665,13 @@ def _call_openai_compatible(
     # (GPT, Grok, Ollama, LM Studio, vLLM, llama.cpp) accepts it.
     if seed is not None and seed != -1 and provider != "groq":
         kwargs["seed"] = seed
+    if provider == "openrouter" and think is not None:
+        # OpenRouter's unified reasoning control. Reasoning models (GPT-5,
+        # Claude with thinking, DeepSeek-R1, Qwen3 ...) spend `max_tokens` on
+        # their hidden thinking FIRST; the H3 format is spelled out in the
+        # system prompt, so the backend's default `thinking: off` asks for the
+        # least reasoning a model allows, and `on` for the most.
+        kwargs["extra_body"] = {"reasoning": {"effort": "high" if think else "minimal"}}
 
     try:
         response = client.chat.completions.create(**kwargs)
@@ -632,7 +690,18 @@ def _call_openai_compatible(
         raise
 
     text = (response.choices[0].message.content or "").strip()
-    return strip_reasoning(text) if provider in _LOCAL_PROVIDERS else text
+    if not text and provider == "openrouter":
+        finish = getattr(response.choices[0], "finish_reason", None)
+        usage = getattr(response, "usage", None)
+        reasoning = getattr(getattr(usage, "completion_tokens_details", None), "reasoning_tokens", None)
+        raise RuntimeError(
+            f"OpenRouter returned no text from '{model}' (finish_reason={finish}"
+            + (f", reasoning_tokens={reasoning}" if reasoning else "") + "). A reasoning model spends "
+            "max_tokens on its hidden thinking first: raise max_tokens on the LLM Backend (8000+), keep "
+            "its `thinking` off, or pick a non-reasoning model."
+        )
+    # open models routed through OpenRouter (Qwen, DeepSeek, GLM, ...) may think out loud
+    return strip_reasoning(text) if (provider in _LOCAL_PROVIDERS or provider == "openrouter") else text
 
 
 def _call_claude(model, user_prompt, system_prompt, images, temperature, max_tokens, history=None):
@@ -703,6 +772,7 @@ def call_llm(
     num_ctx=0,
     think=None,
     format_schema=None,
+    api_key=None,
 ):
     """
     Send a prompt to whichever provider `model_name` selects.
@@ -750,6 +820,8 @@ def call_llm(
             max_tokens,
             base_url=base_url,
             history=history,
+            api_key=api_key,
+            think=think,
         )
     elif provider == "claude":
         text = _call_claude(

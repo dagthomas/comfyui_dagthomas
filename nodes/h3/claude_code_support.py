@@ -227,6 +227,7 @@ def local_llm_options(llm=None):
         "think": llm.get("think"),
         "structured": str(llm.get("structured") or "auto"),
         "unload_after": bool(llm.get("unload_after", True)),
+        "api_key": (llm.get("api_key") or "").strip(),
     }
 
 
@@ -376,6 +377,7 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
         num_ctx=local.get("num_ctx", 0),
         think=local.get("think"),
         format_schema=schema,
+        api_key=local.get("api_key") or None,
     )
     duration = time.monotonic() - started
 

@@ -1,0 +1,754 @@
+{
+  "id": "4d5c8255-aef8-4755-abd2-bee02c0b31ba",
+  "revision": 0,
+  "last_node_id": 210,
+  "last_link_id": 609,
+  "nodes": [
+    {
+      "id": 119,
+      "type": "VAELoader",
+      "pos": [
+        -1490,
+        5190
+      ],
+      "size": [
+        640,
+        70
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            603
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "minimax_h3_video_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+      }
+    },
+    {
+      "id": 120,
+      "type": "VAELoader",
+      "pos": [
+        -1490,
+        5330
+      ],
+      "size": [
+        650,
+        70
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            604
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "minimax_h3_audio_vae_fp32.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      }
+    },
+    {
+      "id": 123,
+      "type": "KSamplerSelect",
+      "pos": [
+        -260.0,
+        5200.0
+      ],
+      "size": [
+        370,
+        70
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            605
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "res_multistep"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "res_multistep"
+      }
+    },
+    {
+      "id": 128,
+      "type": "CLIPLoader",
+      "pos": [
+        -1490,
+        5000
+      ],
+      "size": [
+        640,
+        120
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            602
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    {
+      "id": 127,
+      "type": "UNETLoader",
+      "pos": [
+        -1490,
+        4840
+      ],
+      "size": [
+        640,
+        90
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            287
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 143,
+      "type": "PathchSageAttentionKJ",
+      "pos": [
+        -1050,
+        4490
+      ],
+      "size": [
+        270,
+        114
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 287
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            288
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PathchSageAttentionKJ"
+      },
+      "widgets_values": [
+        "auto",
+        false
+      ],
+      "widgets_values_named": {
+        "sage_attention": "auto",
+        "allow_compile": false
+      }
+    },
+    {
+      "id": 124,
+      "type": "BasicScheduler",
+      "pos": [
+        -260.0,
+        5340.0
+      ],
+      "size": [
+        370,
+        130
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 285
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            606
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "simple",
+        14,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "simple",
+        "steps": 25,
+        "denoise": 1
+      }
+    },
+    {
+      "id": 141,
+      "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
+      "pos": [
+        -730,
+        4490
+      ],
+      "size": [
+        425,
+        318
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 288
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            285,
+            601
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3MemoryEfficientSolAttentionPatch"
+      },
+      "widgets_values": [
+        true,
+        1,
+        4096,
+        false,
+        "diag",
+        false,
+        "exact_kv",
+        "exact_kv",
+        ""
+      ],
+      "widgets_values_named": {
+        "enabled": true,
+        "tau": 1,
+        "min_tokens": 4096,
+        "strict": false,
+        "thresh_type": "diag",
+        "int8_qk": false,
+        "int8_pv": "exact_kv",
+        "sink_conditioning": "exact_kv",
+        "dense_blocks": ""
+      }
+    },
+    {
+      "id": 115,
+      "type": "ResolutionSelector",
+      "pos": [
+        -1480,
+        5860
+      ],
+      "size": [
+        270,
+        170
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            607
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            608
+          ]
+        }
+      ],
+      "title": "Resolution Selector (Size)",
+      "properties": {
+        "Node name for S&R": "ResolutionSelector"
+      },
+      "widgets_values": [
+        "16:9 (Widescreen)",
+        0.5,
+        32
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "16:9 (Widescreen)",
+        "megapixels": 0.5,
+        "multiple": 32
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 153,
+      "type": "H3PromptPreview",
+      "pos": [
+        -40,
+        5480
+      ],
+      "size": [
+        847,
+        818
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 609
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "title": "The prompt the retake rendered"
+    },
+    {
+      "id": 161,
+      "type": "MarkdownNote",
+      "pos": [
+        -1850,
+        5500
+      ],
+      "size": [
+        700,
+        420
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# H3 Scene Retake\n\nOne scene of a finished run did not land? Render **just that scene again** - no writer, no other scenes.\n\n1. **`bundle`** = *latest* is the newest saved run in `output/apnext_scenes/` (every writer saves one with `save_scenes` on); pick a specific file for an older run.\n2. Set **`scene_number`**, optionally paste and edit the scene into **`prompt_override`** (empty = the bundle's prompt).\n3. Click **🎬 Retake this scene** - it bumps the seed and queues ONLY this node (the model loaders are cached). Each click is a new take; the Prompt Preview below shows the prompt it rendered.\n4. **Continuity:** if the run was chain-rendered with `save_latents` on, the previous scene's saved take (`output/apnext_latents/<project>_sNN.pt`) is pinned to the head - picture and sound - with `context_frames` / `context_mode` set to what the chain render used. No saved take = hard cut.\n5. **Music videos:** connect a Load Audio with the song to `master_audio`; the scene's piece is cut at the bundle's segment and masked in. **Films:** leave it unconnected. Wire the same `ref_image` pictures the run used.\n\nThe clip lands at `filename_prefix` + `_sNN_retake`; swap it into your join. Models, sampler and resolution are the short-film setup - change them to match the run you are retaking."
+      ],
+      "title": "How this works",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 210,
+      "type": "H3SceneRetake",
+      "pos": [
+        160,
+        4880
+      ],
+      "size": [
+        520,
+        520
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 601
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 602
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 603
+        },
+        {
+          "name": "audio_vae",
+          "type": "VAE",
+          "link": 604
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 605
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 606
+        },
+        {
+          "name": "master_audio",
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "ref_image_1",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_3",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_4",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": 607,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": 608,
+          "widget": {
+            "name": "height"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            609
+          ]
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3SceneRetake",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "latest (newest bundle)",
+        1,
+        0,
+        "fixed",
+        1344,
+        768,
+        "",
+        "continue from the previous scene's saved take when one exists",
+        39,
+        8,
+        "video/H3_retake",
+        24.0,
+        "masked AV latent (picture + sound; 39 / 90 / 141 frames)"
+      ],
+      "title": "Scene Retake - one scene again, from the saved bundle",
+      "color": "#223",
+      "bgcolor": "#335"
+    }
+  ],
+  "links": [
+    [
+      285,
+      141,
+      0,
+      124,
+      0,
+      "MODEL"
+    ],
+    [
+      287,
+      127,
+      0,
+      143,
+      0,
+      "MODEL"
+    ],
+    [
+      288,
+      143,
+      0,
+      141,
+      0,
+      "MODEL"
+    ],
+    [
+      601,
+      141,
+      0,
+      210,
+      0,
+      "MODEL"
+    ],
+    [
+      602,
+      128,
+      0,
+      210,
+      1,
+      "CLIP"
+    ],
+    [
+      603,
+      119,
+      0,
+      210,
+      2,
+      "VAE"
+    ],
+    [
+      604,
+      120,
+      0,
+      210,
+      3,
+      "VAE"
+    ],
+    [
+      605,
+      123,
+      0,
+      210,
+      4,
+      "SAMPLER"
+    ],
+    [
+      606,
+      124,
+      0,
+      210,
+      5,
+      "SIGMAS"
+    ],
+    [
+      607,
+      115,
+      0,
+      210,
+      11,
+      "INT"
+    ],
+    [
+      608,
+      115,
+      1,
+      210,
+      12,
+      "INT"
+    ],
+    [
+      609,
+      210,
+      1,
+      153,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [
+        -1520,
+        4750,
+        710,
+        680
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Sampling + Scene Retake",
+      "bounding": [
+        -290,
+        4820,
+        1000,
+        720
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Retake output",
+      "bounding": [
+        -80,
+        5400,
+        1000,
+        900
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5986674567928358,
+      "offset": [
+        2312.7617207097105,
+        -4100.956019764087
+      ]
+    },
+    "frontendVersion": "1.49.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

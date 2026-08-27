@@ -72,6 +72,9 @@ from .common import (
     toggle_directives,
 )
 from .scenes_support import (
+    interpretation_directive,
+    interpretation_input,
+    resolve_interpretation,
     length_directive,
     shots_directive,
     ENFORCE_WARDROBE_TOOLTIP,
@@ -408,6 +411,9 @@ class H3ClaudeCodePresentationWriter:
                 "workflows keep their widget positions; the value is ignored."
             ),
         })
+
+        # appended last so saved workflows keep their widget positions
+        optional["interpretation"] = interpretation_input('the source material')
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -775,6 +781,8 @@ class H3ClaudeCodePresentationWriter:
                 "contradict a brief."
             )
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
+        if getattr(self, "_interpretation", None):
+            lines.append("- " + interpretation_directive(self._interpretation, 'the source material', keep='Every fact, number, name and spoken line stays exactly as the material gives it - only the staging, the world and the visual aids are reinterpreted, and they must never contradict or obscure a fact.'))
         lines.append(f"- {length_directive()}")
         lines.append(f"- {shots_directive()}")
         lines.append(f"- {_wildness_scale_directive(wildness)}")
@@ -843,9 +851,14 @@ class H3ClaudeCodePresentationWriter:
         parallel_chunks=True,
         project_name="",
         avoid_previous=0,
+        interpretation=None,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
+        self._interpretation = resolve_interpretation(interpretation, seed)
+        if self._interpretation:
+            picked = " (picked by seed)" if str(interpretation or "").startswith("Surprise") else ""
+            print(f"🎭 interpretation: {self._interpretation}{picked}")
         print(f"📊 H3 Presentation Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
         references = collect_reference_images(passthrough, tensor2pil)

@@ -57,6 +57,13 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    is_chain_mode,
+    resolve_transition,
+    transition_directive,
+    transition_input,
+    interpretation_directive,
+    interpretation_input,
+    resolve_interpretation,
     length_directive,
     shots_directive,
     sound_fields_directive,
@@ -308,6 +315,11 @@ class H3ClaudeCodeCrossoverWriter:
             ),
         })
 
+        # appended last so saved workflows keep their widget positions
+        optional["interpretation"] = interpretation_input('the direction')
+
+        optional["transition_style"] = transition_input()
+
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
     _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
@@ -461,6 +473,10 @@ class H3ClaudeCodeCrossoverWriter:
         else:
             lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
+        if getattr(self, "_interpretation", None):
+            lines.append("- " + interpretation_directive(self._interpretation, "the direction and the cast's own stories"))
+        if is_chain_mode(continuity_mode) and getattr(self, "_transition", None):
+            lines.append("- " + transition_directive(self._transition))
         lines.append(f"- {length_directive(scene_duration)}")
         lines.append(f"- {sound_fields_directive()}")
         if visual_style == AUTO:
@@ -576,6 +592,8 @@ class H3ClaudeCodeCrossoverWriter:
         scene_briefs="",
         project_name="",
         avoid_previous=0,
+        interpretation=None,
+        transition_style=None,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -610,6 +628,11 @@ class H3ClaudeCodeCrossoverWriter:
             )
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
+            self._interpretation = resolve_interpretation(interpretation, current_seed)
+            self._transition = resolve_transition(transition_style)
+            if self._interpretation:
+                picked = " (picked by seed)" if str(interpretation or "").startswith("Surprise") else ""
+                print(f"🎭 interpretation: {self._interpretation}{picked}")
             rng = random.Random(current_seed)
 
             user_prompt, wild_label = self._build_user_prompt(

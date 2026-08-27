@@ -560,6 +560,9 @@ try:
     from .nodes.h3.film_chain_render import H3ShortFilmChainRender
     NEW_MAPPINGS["H3ShortFilmChainRender"] = H3ShortFilmChainRender
     NEW_DISPLAY_MAPPINGS["H3ShortFilmChainRender"] = "APNext H3 Short Film Chain Render (carry picture + sound between scenes)"
+    from .nodes.h3.scene_retake import H3SceneRetake
+    NEW_MAPPINGS["H3SceneRetake"] = H3SceneRetake
+    NEW_DISPLAY_MAPPINGS["H3SceneRetake"] = "APNext H3 Scene Retake (render one scene again)"
 except Exception:
     pass
 

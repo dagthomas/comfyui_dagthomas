@@ -73,6 +73,12 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    resolve_transition,
+    transition_directive,
+    transition_input,
+    interpretation_directive,
+    interpretation_input,
+    resolve_interpretation,
     length_directive,
     report_description_lengths,
     shots_directive,
@@ -267,6 +273,11 @@ class H3ClaudeCodeShortFilmWriter:
                 "re-emitted; nothing else changes."
             ),
         })
+
+        # appended last so saved workflows keep their widget positions
+        optional["interpretation"] = interpretation_input('the manuscript')
+
+        optional["transition_style"] = transition_input()
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -550,6 +561,10 @@ class H3ClaudeCodeShortFilmWriter:
             "with its own speaker - only that character's mouth moves on their line."
         )
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
+        if getattr(self, "_interpretation", None):
+            lines.append("- " + interpretation_directive(self._interpretation, 'the manuscript'))
+        if is_chain_mode(continuity_mode) and getattr(self, "_transition", None):
+            lines.append("- " + transition_directive(self._transition))
         avg = (target_seconds / n) if (target_seconds and n) else None
         lines.append(f"- {length_directive(avg)}")
         lines.append(f"- {shots_directive(avg)}")
@@ -596,6 +611,8 @@ class H3ClaudeCodeShortFilmWriter:
         save_scenes=True, scenes_per_call=SCENES_PER_CALL, prompt_mode=None,
         draft_model="haiku", parallel_chunks=True, project_name="",
         avoid_previous=0, handoff_pass=True,
+        interpretation=None,
+        transition_style=None,
         **cast_slots,
     ):
         import random
@@ -646,6 +663,11 @@ class H3ClaudeCodeShortFilmWriter:
             dialogue_language = resolve_dialogue_language(dialogue_language, custom_dialogue_language)
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
+            self._interpretation = resolve_interpretation(interpretation, current_seed)
+            self._transition = resolve_transition(transition_style)
+            if self._interpretation:
+                picked = " (picked by seed)" if str(interpretation or "").startswith("Surprise") else ""
+                print(f"🎭 interpretation: {self._interpretation}{picked}")
             rng = random.Random(current_seed)
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)

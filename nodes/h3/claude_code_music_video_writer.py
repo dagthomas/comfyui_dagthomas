@@ -98,6 +98,9 @@ from .music_support import (
     song_profile,
 )
 from .scenes_support import (
+    resolve_transition,
+    transition_directive,
+    transition_input,
     description_budget,
     length_directive,
     shots_directive,
@@ -125,6 +128,93 @@ _SCENE_FIELDS = (
     "overall_soundscape",
     "non_diegetic_music",
 )
+
+# How far the pictures may stray from the words. The lyric is always audible
+# and always sung where the mode says; this decides what the PICTURE does with
+# it. "Auto" is the writer's own judgement (what the node always did); the
+# rest are named readings a director would pick on purpose. "Surprise me"
+# picks one of the non-literal readings by seed, so re-running gives a
+# different video for the same song.
+LYRIC_INTERPRETATIONS = [
+    "Auto (the writer decides per song)",
+    "Literal (the pictures show what the words say)",
+    "Loose (the words are a starting point - stage the feeling, not the nouns)",
+    "Metaphor (one image system stands in for the lyrics)",
+    "Counterpoint (the picture tells a different story that rhymes with the song)",
+    "Reframe (the lyrics retold in another world, era or genre)",
+    "Surreal (dream logic - the lyrics as images that should not be possible)",
+    "Surprise me (a different non-literal reading every seed)",
+]
+
+_INTERPRETATION_DIRECTIVES = {
+    "Literal": (
+        "INTERPRETATION - LITERAL: the pictures show what the words say. When a line names "
+        "a thing, a place or an action, that thing is on screen as the line is sung; someone "
+        "watching without sound could follow the words. Imagination goes into HOW it is "
+        "shown - framing, light, the detail chosen - never into replacing it."
+    ),
+    "Loose": (
+        "INTERPRETATION - LOOSE: the words are a starting point, not a shot list. Stage the "
+        "feeling and the situation behind each line, not its nouns: a line about rain may be "
+        "a kitchen at 3 a.m. with nobody speaking; a line about a car may be two people not "
+        "leaving a room. Never illustrate a lyric word-for-word, never put the sung noun in "
+        "frame on purpose - if the audience can hear it, the picture does not have to show "
+        "it. The story is yours; the song is its soundtrack."
+    ),
+    "Metaphor": (
+        "INTERPRETATION - METAPHOR: choose ONE image system - a single concrete world of "
+        "objects, materials and actions that is NOT what the lyrics literally describe (a "
+        "house being dismantled room by room, a swimmer who never reaches the wall, a market "
+        "closing for the night) - state it in the synopsis as the Concept, and let every "
+        "scene be a stage of that one metaphor. Each lyric line maps onto a development of "
+        "the image system, never onto its own literal content. The metaphor is never "
+        "explained on screen; it is simply what we watch."
+    ),
+    "Counterpoint": (
+        "INTERPRETATION - COUNTERPOINT: the picture tells a DIFFERENT story from the lyrics - "
+        "different people, place and events - that rhymes with the song emotionally and "
+        "structurally: verses are its setup, the chorus its recurring pressure point, the "
+        "bridge its turn, the last piece its resolution. The gap between what is sung and "
+        "what is seen is the point; the audience closes it. No literal lyric imagery at all - "
+        "the only things the words and the pictures share are rhythm and feeling."
+    ),
+    "Reframe": (
+        "INTERPRETATION - REFRAME: keep what the lyrics are ABOUT - the relationship, the "
+        "loss, the boast, the escape - but retell it inside a world the lyrics never mention: "
+        "another era, another genre (heist, western, nature documentary, fairy tale, sports "
+        "final, space station, kitchen brigade), another scale (insects, gods, a city as a "
+        "body). Pick ONE such world in the synopsis and commit to it in every scene: its "
+        "props, its costumes, its light. Lyric nouns are translated into that world, never "
+        "shown as themselves."
+    ),
+    "Surreal": (
+        "INTERPRETATION - SURREAL: dream logic. Take the lyrics as images that should not be "
+        "possible and show them as plainly as the weather: rooms that fill with the sea, a "
+        "singer who is also the audience, a road that loops back into the house, gravity "
+        "that gives up on one object. Every scene contains at least one impossible thing "
+        "treated as normal by everyone in it, and the impossibilities build on each other "
+        "across the video instead of resetting - by the last piece the world has become "
+        "something else entirely. Physical, literal descriptions of the impossible; never "
+        "the words `surreal`, `dreamlike` or `as if`."
+    ),
+}
+
+_SURPRISE_POOL = ("Loose", "Metaphor", "Counterpoint", "Reframe", "Surreal")
+
+
+def resolve_interpretation(choice, seed=0):
+    """The mode's key word ('Literal', ...), None for Auto; 'Surprise me' picks by seed."""
+    key = str(choice or "").split(" ", 1)[0].strip()
+    if not key or key.startswith("Auto"):
+        return None
+    if key.startswith("Surprise"):
+        return random.Random(f"interpretation:{seed}").choice(_SURPRISE_POOL)
+    return key if key in _INTERPRETATION_DIRECTIVES else None
+
+
+def interpretation_directive(key):
+    return _INTERPRETATION_DIRECTIVES.get(key or "", "")
+
 
 PERFORMANCE_MODES = [
     "Performance (the singer lip-syncs the lyrics on camera)",
@@ -447,6 +537,22 @@ class H3ClaudeCodeMusicVideoWriter:
                 "mix. Ignored when lyrics are typed in or transcribe_lyrics is off."
             ),
         })
+        optional["lyric_interpretation"] = (LYRIC_INTERPRETATIONS, {
+            "default": LYRIC_INTERPRETATIONS[0],
+            "tooltip": (
+                "How far the pictures may stray from the words. The lyric is always audible and "
+                "sung as performance_mode says; this decides what the PICTURE does with it. "
+                "Literal shows what the words say. Loose stages the feeling, never the nouns. "
+                "Metaphor builds the whole video on one image system that is not the lyric. "
+                "Counterpoint tells a different story that rhymes with the song. Reframe keeps "
+                "the subject but moves it into another world, era or genre. Surreal is dream "
+                "logic that escalates. Surprise me picks one of the non-literal readings by "
+                "seed, so every re-run is a different video. Auto leaves it to the writer."
+            ),
+        })
+
+        # appended last so saved workflows keep their widget positions
+        optional["transition_style"] = transition_input()
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -628,6 +734,7 @@ class H3ClaudeCodeMusicVideoWriter:
         flow_flags=(),
         plan_only=False,
         plan_text="",
+        interpretation=None,
     ):
         last = last or len(segments)
         n = len(segments)
@@ -781,7 +888,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 "Start directly with the scene envelopes; do not repeat the synopsis."
             )
         lines.append(f"- Performance mode: {performance_mode}.")
-        if lyrics_driven:
+        if lyrics_driven and interpretation in (None, "Literal"):
             lines.append(
                 "- LYRICS DRIVE THE VIDEO: the pieces are cut where lyric phrases start, and "
                 "every scene's imagery is built from its lyric lines - stage, illustrate or "
@@ -790,6 +897,13 @@ class H3ClaudeCodeMusicVideoWriter:
                 "world and recurring motifs, but the moment-to-moment content of each scene "
                 "comes from its lines. Instrumental pieces bridge between the lyric images "
                 "using the motifs."
+            )
+        elif lyrics_driven:
+            lines.append(
+                "- LYRICS DRIVE THE CUTS, the INTERPRETATION drives the pictures: the pieces "
+                "are cut where lyric phrases start, so each scene turns on its line - but what "
+                "the scene SHOWS follows the INTERPRETATION directive below, never the line's "
+                "literal content. Instrumental pieces bridge using the motifs."
             )
         if performance_mode.startswith("Performance"):
             lines.append(
@@ -936,6 +1050,9 @@ class H3ClaudeCodeMusicVideoWriter:
                 "changes. Pieces without the mark open on a hard cut, as usual - that is where the "
                 "big visual switches belong."
             )
+            if getattr(self, "_transition", None):
+                lines.append("- " + transition_directive(self._transition) + " This applies to the pieces "
+                             "marked `CONTINUES the previous take` only; hard-cut pieces switch place freely.")
         lines.append(
             "- FIND A PLOT: invent a concrete story told in images, with a visible setup, an "
             "escalation, and a payoff in the final scene - the story this specific song, "
@@ -943,6 +1060,12 @@ class H3ClaudeCodeMusicVideoWriter:
             "performer standing in one room: something HAPPENS in this video, and every "
             "scene advances it, and the last scene lands a real, staged payoff."
         )
+        if interpretation:
+            lines.append("- " + interpretation_directive(interpretation) + (
+                " The user's direction still wins on anything it states outright; this "
+                "reading fills everything it leaves open. Name the reading's central idea in "
+                "the synopsis Concept so every chunk writer stages the same one."
+            ))
         lines.append(
             "- WORLD: take the setting, era, palette and textures from the user's direction "
             "and the lyrics; where they leave it open, choose one that fits this song and "
@@ -1060,6 +1183,8 @@ class H3ClaudeCodeMusicVideoWriter:
         events_per_scene=6,
         cut_plan="",
         wildness=None,  # removed dial; accepted so old API-format prompts still run
+        lyric_interpretation=None,
+        transition_style=None,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -1185,6 +1310,11 @@ class H3ClaudeCodeMusicVideoWriter:
             dialogue_language = resolve_dialogue_language(dialogue_language, custom_dialogue_language)
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
+            interpretation = resolve_interpretation(lyric_interpretation, current_seed)
+            self._transition = resolve_transition(transition_style)
+            if interpretation:
+                picked = " (picked by seed)" if str(lyric_interpretation or "").startswith("Surprise") else ""
+                print(f"🎭 H3 Music Video Writer | lyric interpretation: {interpretation}{picked}")
             local = local_llm_options(llm)
             chars_only = characters_only_refs(reference_image_use)
             masked_audio = str(audio_mode or "").startswith("Masked")
@@ -1231,7 +1361,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     masked_audio=masked_audio, scene_briefs=scene_briefs,
                     prior_scenes=prior,
                     profile=profile, structure=structure, flow_flags=flow_flags,
-                    plan_only=plan_only, plan_text=plan_text,
+                    plan_only=plan_only, plan_text=plan_text, interpretation=interpretation,
                 )
                 return user_prompt
 

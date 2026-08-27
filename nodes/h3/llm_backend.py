@@ -20,6 +20,7 @@ from ...utils.llm_router import (
     grok_models,
     groq_models,
     list_local_models,
+    openrouter_models,
 )
 from .claude_code_support import LLM_SOCKET_TYPE, list_codex_models
 
@@ -34,7 +35,13 @@ _STRUCTURED = [
     "off (text envelopes)",
 ]
 _THINKING = ["off (faster - recommended)", "on", "model default"]
-_KNOWN_PREFIXES = set(LOCAL_PROVIDERS) | {"claude", "gpt", "gemini", "grok", "groq", "codex", CLAUDE_CODE_PROVIDER}
+# vendors whose `vendor/model` ids mean "this is an OpenRouter id" when typed bare
+_OPENROUTER_VENDORS = {
+    "anthropic", "openai", "google", "x-ai", "deepseek", "qwen", "moonshotai", "z-ai", "meta-llama",
+    "mistralai", "minimax", "cohere", "amazon", "microsoft", "nvidia", "perplexity", "ai21", "inception",
+    "nousresearch", "thedrummer", "sao10k", "baidu", "bytedance", "tencent", "stepfun", "arcee-ai", "liquid",
+}
+_KNOWN_PREFIXES = set(LOCAL_PROVIDERS) | {"claude", "gpt", "gemini", "grok", "groq", "openrouter", "codex", CLAUDE_CODE_PROVIDER}
 
 
 def _choices():
@@ -48,6 +55,7 @@ def _choices():
         + [f"gemini:{m}" for m in gemini_models]
         + [f"grok:{m}" for m in grok_models]
         + [f"groq:{m}" for m in groq_models]
+        + [f"openrouter:{m}" for m in openrouter_models]
         + [AUTO_DETECT]
     )
 
@@ -63,8 +71,10 @@ class H3LLMBackend:
                     "tooltip": (
                         "ollama: / lmstudio: / local: entries are whatever your local servers "
                         "were serving when the page loaded (start the server, reload the page). "
-                        "Cloud entries need their API key in the environment. Pick 'custom' to "
-                        "type any provider:model string in model_name."
+                        "Cloud entries need their API key in the environment - or typed into api_key "
+                        "below. openrouter: entries are one key for every model (OPENROUTER_API_KEY); "
+                        "any other OpenRouter model goes in as custom 'openrouter:<vendor/model>'. Pick "
+                        "'custom' to type any provider:model string in model_name."
                     ),
                 }),
                 "model_name": ("STRING", {
@@ -72,8 +82,9 @@ class H3LLMBackend:
                     "tooltip": (
                         "Used when model = custom. Any router string: 'ollama:qwen3:8b', "
                         "'lmstudio:qwen/qwen3-8b', 'local:my-model', 'claude:claude-sonnet-5', "
-                        "'gpt:gpt-5.6', 'gemini:gemini-3.7-flash' - or the Codex CLI: 'codex' "
-                        "(its configured model) / 'codex:<model-id>' for a specific one."
+                        "'gpt:gpt-5.6', 'gemini:gemini-3.7-flash', 'openrouter:<vendor/model>' (any "
+                        "id from openrouter.ai/models) - or the Codex CLI: 'codex' (its configured "
+                        "model) / 'codex:<model-id>' for a specific one."
                     ),
                 }),
                 "base_url": ("STRING", {
@@ -145,6 +156,17 @@ class H3LLMBackend:
                         "envelopes everywhere. The scene text itself is unchanged either way."
                     ),
                 }),
+                # appended last so saved workflows keep their widget positions
+                "api_key": ("STRING", {
+                    "default": "",
+                    "tooltip": (
+                        "API key for a cloud provider on this node - OpenRouter, OpenAI, Grok, Groq - "
+                        "used instead of the environment variable when set. The key is saved INSIDE the "
+                        "workflow JSON in plain text: fine on your own machine, but on a shared box or "
+                        "before sharing a workflow, leave this empty and set OPENROUTER_API_KEY (etc.) in "
+                        "the environment instead."
+                    ),
+                }),
             },
         }
 
@@ -159,15 +181,18 @@ class H3LLMBackend:
     )
 
     def build(self, model, model_name, base_url, temperature, max_tokens,
-              inline_skill_references, num_ctx=0, thinking=None, unload_after=True, structured_output=None):
+              inline_skill_references, num_ctx=0, thinking=None, unload_after=True, structured_output=None,
+              api_key=""):
         chosen = (model_name or "").strip() if model == _CUSTOM else (model or "").strip()
         if not chosen:
             raise ValueError("H3 LLM Backend: pick a model or fill in model_name.")
         if model == _CUSTOM:
             prefix = chosen.split(":", 1)[0].lower()
             if prefix not in _KNOWN_PREFIXES:
+                # 'anthropic/claude-fable-5' is an OpenRouter id (vendor/model);
                 # 'qwen3:8b' / 'llama3.1' are Ollama tags, not provider strings
-                chosen = f"ollama:{chosen}"
+                vendor = chosen.split("/", 1)[0].lower() if "/" in chosen else ""
+                chosen = f"openrouter:{chosen}" if vendor in _OPENROUTER_VENDORS else f"ollama:{chosen}"
         mode = str(thinking or _THINKING[0])
         llm = {
             "model": chosen,
@@ -180,5 +205,12 @@ class H3LLMBackend:
             "think": None if mode.startswith("model default") else mode.startswith("on"),
             "structured": str(structured_output or _STRUCTURED[0]).split(" ", 1)[0],
             "unload_after": True if unload_after is None else bool(unload_after),
+            "api_key": (api_key or "").strip(),
         }
+        if llm["api_key"]:
+            print(
+                f"🔑 H3 LLM Backend: using the api_key typed on the node for '{chosen}'. It is saved in plain "
+                "text inside this workflow - on a shared machine, or before sharing the workflow file, clear "
+                "it and set the provider's environment variable (OPENROUTER_API_KEY, OPENAI_API_KEY, ...) instead."
+            )
         return (llm, chosen)

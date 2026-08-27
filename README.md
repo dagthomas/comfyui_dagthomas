@@ -44,7 +44,12 @@ set GROK_API_KEY=your-key-here
 
 # Groq
 set GROQ_API_KEY=your-key-here
+
+# OpenRouter (one key, every model - https://openrouter.ai/keys)
+set OPENROUTER_API_KEY=sk-or-your-key-here
 ```
+
+The H3 writers can also take the key on the canvas: the **APNext H3 LLM Backend** node has an `api_key` field that overrides the environment for that node (saved in plain text inside the workflow JSON, so prefer the environment variable on a shared machine).
 
 ---
 

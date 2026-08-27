@@ -51,6 +51,13 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    is_chain_mode,
+    resolve_transition,
+    transition_directive,
+    transition_input,
+    interpretation_directive,
+    interpretation_input,
+    resolve_interpretation,
     ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
     LOCATIONS_TOOLTIP,
@@ -174,6 +181,11 @@ class H3ClaudeCodeScenesWriter:
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
 
+        # appended last so saved workflows keep their widget positions
+        optional["interpretation"] = interpretation_input('the idea')
+
+        optional["transition_style"] = transition_input()
+
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
     RETURN_TYPES = ("STRING", "FLOAT", "STRING", "STRING", "INT", "STRING", "STRING", "STRING")
@@ -285,6 +297,10 @@ class H3ClaudeCodeScenesWriter:
             duration_directive(duration_mode, scene_duration),
             continuity_directive(continuity_mode),
         ]
+        if getattr(self, "_interpretation", None):
+            directives.append(interpretation_directive(self._interpretation, 'the idea'))
+        if is_chain_mode(continuity_mode) and getattr(self, "_transition", None):
+            directives.append(transition_directive(self._transition))
         if shot_plan == AUTO:
             directives.append(
                 "Choose the shot count per scene that fits the action (usually 1-3), varying "
@@ -401,6 +417,8 @@ class H3ClaudeCodeScenesWriter:
         llm=None,
         scene_briefs="",
         project_name="",
+        interpretation=None,
+        transition_style=None,
         **reference_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
@@ -422,6 +440,11 @@ class H3ClaudeCodeScenesWriter:
 
             visual_style = resolve_visual_style(visual_style, custom_visual_style)
             current_seed = seed if seed != -1 else random.randint(0, 0xffffffffffffffff)
+            self._interpretation = resolve_interpretation(interpretation, current_seed)
+            self._transition = resolve_transition(transition_style)
+            if self._interpretation:
+                picked = " (picked by seed)" if str(interpretation or "").startswith("Surprise") else ""
+                print(f"🎭 interpretation: {self._interpretation}{picked}")
             rng = random.Random(current_seed)
 
             context = [tensor2pil(frame) for frame in image] if image is not None else []

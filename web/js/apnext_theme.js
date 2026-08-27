@@ -279,6 +279,31 @@ const CSS = `
   --p-toggleswitch-focus-ring-shadow: none;
   --p-toggleswitch-handle-checked-background: #1a1510;
 }
+/* Widgets at rest: the frontend paints input, select and toggle borders in
+   its primary blue through PrimeVue tokens (--p-primary-color, the
+   *-border-color tokens) and Tailwind utilities (border-primary,
+   border-primary-background), and the html/body override above loses to an
+   inner .dark-theme scope that re-declares --primary-background. So the
+   tokens are recoloured at every scope the frontend uses, and the resting
+   border of every field inside a node is pinned to the theme border. */
+:is(html, body).apnext-graphgen,
+:is(html, body).apnext-graphgen :is(.dark-theme, #app, #vue-app, #graph-canvas-container, .lg-node) {
+  --primary-background: ${C.accent};
+  --p-primary-color: ${C.accent}; --p-primary-hover-color: ${C.accent2}; --p-primary-active-color: ${C.accent2};
+  --p-form-field-border-color: ${C.border}; --p-form-field-hover-border-color: ${C.accent}; --p-form-field-focus-border-color: ${C.accent};
+  --p-inputtext-border-color: ${C.border}; --p-inputtext-hover-border-color: ${C.accent};
+  --p-select-border-color: ${C.border}; --p-select-hover-border-color: ${C.accent};
+  --p-inputnumber-button-border-color: ${C.border};
+  --p-textarea-border-color: ${C.border}; --p-textarea-hover-border-color: ${C.accent};
+  --p-toggleswitch-border-color: transparent; --p-toggleswitch-hover-border-color: transparent;
+  --node-component-border: ${C.border}; --node-component-outline: ${C.border}; --node-component-ring: ${C.border};
+}
+:is(html, body).apnext-graphgen .lg-node { --border-default: ${C.border}; }
+:is(html, body).apnext-graphgen .lg-node :is(input, textarea, select, .p-inputtext, .p-select, .p-textarea, .p-inputnumber, .p-inputnumber-input, .p-inputnumber-button):not(:focus):not(:focus-within):not(:hover) {
+  border-color: ${C.border} !important; outline-color: ${C.border} !important; box-shadow: none !important;
+}
+:is(html, body).apnext-graphgen .lg-node .p-toggleswitch:not(:focus-within) { outline: none !important; box-shadow: none !important; }
+:is(html, body).apnext-graphgen .lg-node .p-toggleswitch .p-toggleswitch-slider { border-color: transparent !important; }
 :is(html, body).apnext-graphgen .lg-node :is(input, textarea, select, button, [tabindex], .p-inputtext, .p-select, .p-textarea, .p-inputnumber-input):is(:focus, :focus-visible, :focus-within) {
   outline: 1px solid ${C.accent} !important;
   outline-offset: 0 !important;
