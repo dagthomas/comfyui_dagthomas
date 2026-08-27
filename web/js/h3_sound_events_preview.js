@@ -156,8 +156,8 @@ function filterEvents(payload, state) {
     if (state.rejected && [...state.rejected].some((t) => Math.abs(t - e.t) <= 0.05)) return false;
     const toggle = KIND_TOGGLE[e.type];
     if (toggle && !state.toggles[toggle]) return false;
-    if (STRUCTURAL.has(e.type)) return true;           // never dropped by min_strength
-    return e.strength >= state.minStrength - 1e-9;
+    if (STRUCTURAL.has(e.type)) return true;           // never dropped by the strength band
+    return e.strength >= state.minStrength - 1e-9 && e.strength <= state.maxStrength + 1e-9;
   });
 }
 
@@ -181,9 +181,9 @@ function density(events, duration) {
 function suggestThreshold(payload, state) {
   for (let t = 0; t <= 1.0001; t += 0.05) {
     const d = density(filterEvents(payload, { ...state, minStrength: t }), payload.duration);
-    if (d.hitsPerMin <= OK_PER_MIN) return Math.round(t * 20) / 20;
+    if (d.hitsPerMin <= OK_PER_MIN) return Math.min(state.maxStrength, Math.round(t * 20) / 20);
   }
-  return 1.0;
+  return state.maxStrength;
 }
 
 // ---- the modal -------------------------------------------------------------
@@ -221,6 +221,7 @@ async function openModal(node) {
     minGap: Number(widgetValue(node, "min_gap_seconds", 0.18)),
     maxEvents: Number(widgetValue(node, "max_events", 200)),
     minStrength: Number(widgetValue(node, "min_strength", 0.0)),
+    maxStrength: Number(widgetValue(node, "max_strength", 1.0)),
     toggles: Object.fromEntries(TOGGLES.map(([k]) => [k, Boolean(widgetValue(node, k, k !== "accents"))])),
     rejected: new Set(String(widgetValue(node, "rejected", "") || "").split(/[\s,]+/).filter(Boolean).map(Number).filter((n) => !Number.isNaN(n))),
   };
@@ -251,18 +252,39 @@ async function openModal(node) {
   }
   body.append(toggleRow);
 
-  const slider = el("input", { type: "range", min: "0", max: "1", step: "0.05", value: state.minStrength });
-  const sliderNum = el("input", { type: "number", min: "0", max: "1", step: "0.05", value: state.minStrength.toFixed(2) });
-  const setStrength = (v) => {
-    state.minStrength = Math.max(0, Math.min(1, Math.round(Number(v) * 20) / 20));
+  // The hit stream is kept inside a strength BAND [min, max]: a floor alone
+  // thins a busy track, a ceiling as well targets one layer of the mix
+  // (0.35-0.45 = "the hits around 0.4"). Either bound pushes the other along
+  // so the band never inverts.
+  const clamp01 = (v) => Math.max(0, Math.min(1, Math.round(Number(v) * 100) / 100));
+  const slider = el("input", { type: "range", min: "0", max: "1", step: "0.01", value: state.minStrength });
+  const sliderNum = el("input", { type: "number", min: "0", max: "1", step: "0.01", value: state.minStrength.toFixed(2) });
+  const sliderMax = el("input", { type: "range", min: "0", max: "1", step: "0.01", value: state.maxStrength });
+  const sliderMaxNum = el("input", { type: "number", min: "0", max: "1", step: "0.01", value: state.maxStrength.toFixed(2) });
+  const syncStrengthInputs = () => {
     slider.value = String(state.minStrength); sliderNum.value = state.minStrength.toFixed(2);
+    sliderMax.value = String(state.maxStrength); sliderMaxNum.value = state.maxStrength.toFixed(2);
+  };
+  const setStrength = (v) => {
+    state.minStrength = clamp01(v);
+    if (state.maxStrength < state.minStrength) state.maxStrength = state.minStrength;
+    syncStrengthInputs();
+    render();
+  };
+  const setMaxStrength = (v) => {
+    state.maxStrength = clamp01(v);
+    if (state.minStrength > state.maxStrength) state.minStrength = state.maxStrength;
+    syncStrengthInputs();
     render();
   };
   slider.addEventListener("input", () => setStrength(slider.value));
   sliderNum.addEventListener("change", () => setStrength(sliderNum.value));
+  sliderMax.addEventListener("input", () => setMaxStrength(sliderMax.value));
+  sliderMaxNum.addEventListener("change", () => setMaxStrength(sliderMaxNum.value));
   body.append(el("div", { className: "row", style: "margin-top:8px" },
     el("label", { className: "ctl" }, "min_strength ", slider, sliderNum),
-    el("span", { textContent: "drops / stops / sections / builds are never dropped by this", style: "color:#9a9590;font-size:12px" }),
+    el("label", { className: "ctl" }, "max_strength ", sliderMax, sliderMaxNum),
+    el("span", { textContent: "a band: only hits between the two are kept; drops / stops / sections / builds are never dropped by it", style: "color:#9a9590;font-size:12px" }),
   ));
 
   const stats = el("div", { className: "stats", style: "margin-top:12px" });
@@ -270,7 +292,7 @@ async function openModal(node) {
   body.append(stats, banner);
 
   body.append(el("h3", { textContent: "3. Hit strength - where the threshold cuts" }));
-  body.append(el("p", { textContent: "Bars are the hits (bass hits / impacts / accents) by strength, 0 = quietest kept peak, 1 = the loudest hit in this track. Click a bar to set the threshold there." }));
+  body.append(el("p", { textContent: "Bars are the hits (bass hits / impacts / accents) by strength, 0 = quietest kept peak, 1 = the loudest hit in this track. Click a bar to set min_strength there; shift-click to set max_strength to the top of that bar (click 0.3, shift-click 0.4 = the band 0.30-0.50)." }));
   const hist = el("div", { className: "hist" });
   const axis = el("div", { className: "hist-axis" });
   for (let b = 0; b < 10; b++) axis.append(el("span", { textContent: (b / 10).toFixed(1) }));
@@ -297,6 +319,7 @@ async function openModal(node) {
     set("sensitivity", state.sensitivity);
     set("min_gap_seconds", state.minGap);
     set("min_strength", state.minStrength);
+    set("max_strength", state.maxStrength);
     for (const [key] of TOGGLES) set(key, state.toggles[key]);
     set("rejected", [...state.rejected].sort((a, b) => a - b).map((t) => t.toFixed(2)).join(" "));
     node.setDirtyCanvas?.(true, true);
@@ -338,7 +361,7 @@ async function openModal(node) {
       );
     } else if (d.hits === 0 && d.structural === 0) {
       banner.className = "banner warn";
-      banner.replaceChildren(el("b", { textContent: "Nothing left. " }), "Every kind is off or the threshold is above the loudest hit - the writer will get no sound moments at all.");
+      banner.replaceChildren(el("b", { textContent: "Nothing left. " }), "Every kind is off or the strength band holds no hit - the writer will get no sound moments at all.");
     } else {
       banner.className = "banner ok";
       banner.replaceChildren(
@@ -354,9 +377,10 @@ async function openModal(node) {
     for (const e of hitPool) bins[Math.min(9, Math.floor(e.strength * 10))]++;
     const top = Math.max(1, ...bins);
     hist.replaceChildren(...bins.map((n, b) => {
-      const bin = el("div", { className: "bin" + (b / 10 >= state.minStrength - 1e-9 ? " kept" : ""), title: `strength ${(b / 10).toFixed(1)}-${((b + 1) / 10).toFixed(1)}: ${n} hits` });
+      const inBand = (b + 1) / 10 > state.minStrength + 1e-9 && b / 10 < state.maxStrength - 1e-9;
+      const bin = el("div", { className: "bin" + (inBand ? " kept" : ""), title: `strength ${(b / 10).toFixed(1)}-${((b + 1) / 10).toFixed(1)}: ${n} hits - click: min_strength ${(b / 10).toFixed(1)}, shift-click: max_strength ${((b + 1) / 10).toFixed(1)}` });
       bin.append(el("span", { className: "n", textContent: n ? String(n) : "" }), el("div", { className: "bar", style: `height:${Math.max(2, (n / top) * 68)}px` }));
-      bin.addEventListener("click", () => setStrength(b / 10));
+      bin.addEventListener("click", (ev) => (ev.shiftKey ? setMaxStrength((b + 1) / 10) : setStrength(b / 10)));
       return bin;
     }));
 
@@ -382,7 +406,7 @@ async function openModal(node) {
     // table head
     table.textContent = kept.slice(0, 60).map((e) => `${fmtTime(e.t).padStart(8)}  ${e.type.padEnd(9)} ${e.strength.toFixed(2)}  ${e.label}`).join("\n")
       + (kept.length > 60 ? `\n… ${kept.length - 60} more` : "");
-    note.textContent = `Apply writes min_strength ${state.minStrength.toFixed(2)}, the kind toggles, sensitivity, min_gap`
+    note.textContent = `Apply writes the strength band ${state.minStrength.toFixed(2)}-${state.maxStrength.toFixed(2)}, the kind toggles, sensitivity, min_gap`
       + (state.rejected.size ? ` and ${state.rejected.size} struck-out hit(s)` : "") + " into the node.";
   }
 

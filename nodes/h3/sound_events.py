@@ -577,6 +577,7 @@ def detect_events(
     min_strength=0.0,
     max_events=200,
     bass_hits=True,
+    max_strength=1.0,
     impacts=True,
     drops_and_stops=True,
     builds=True,
@@ -630,6 +631,15 @@ def detect_events(
 
     found = _merge_coincident(found)
 
+    # The hit stream is kept inside a strength BAND. A floor alone thins a
+    # busy track; a ceiling as well lets a run target one layer of the mix -
+    # "the 0.4 kicks, not the 0.9 slams" - or the mid-weight hits between
+    # the drops. Structural events (drops, stops, sections, builds) are the
+    # song's shape and are never subject to either bound.
+    lo = float(min_strength or 0.0)
+    hi = 1.0 if max_strength is None else float(max_strength)
+    if hi < lo:
+        lo, hi = hi, lo
     events = [
         {
             "t": round(float(t), 2),
@@ -639,7 +649,7 @@ def detect_events(
             "note": _sound_note(kind, s),
         }
         for t, kind, s in found
-        if float(t) <= duration and float(s) >= min_strength or kind in _STRUCTURAL
+        if float(t) <= duration and (kind in _STRUCTURAL or lo - 1e-9 <= float(s) <= hi + 1e-9)
     ]
 
     # A BUILD's own `t` is where the ramp STARTS - the quietest point of the
@@ -918,8 +928,12 @@ class H3SoundEvents:
             },
             "optional": {
                 "min_strength": ("FLOAT", {
-                    "default": 0.0, "min": 0.0, "max": 1.0, "step": 0.05,
-                    "tooltip": "Drop hits weaker than this (0-1). Structural events are never dropped.",
+                    "default": 0.0, "min": 0.0, "max": 1.0, "step": 0.01,
+                    "tooltip": (
+                        "Drop hits weaker than this (0-1, 1 = the loudest hit in this track). "
+                        "With max_strength it is a band: 0.35-0.45 keeps only the hits around "
+                        "0.4. Structural events (drops, stops, sections, builds) are never dropped."
+                    ),
                 }),
                 "bass_hits": ("BOOLEAN", {
                     "default": True,
@@ -956,6 +970,16 @@ class H3SoundEvents:
                         "50 ms of a listed time is dropped from the output. Clear to keep everything."
                     ),
                 }),
+                # appended last so saved workflows keep their widget positions
+                "max_strength": ("FLOAT", {
+                    "default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01,
+                    "tooltip": (
+                        "Drop hits STRONGER than this (0-1). Together with min_strength it is a "
+                        "band: 0.35-0.45 targets the hits around 0.4 and leaves both the soft "
+                        "kicks and the big slams out. 1.0 = no ceiling. Structural events are "
+                        "never dropped."
+                    ),
+                }),
             },
         }
 
@@ -986,12 +1010,13 @@ class H3SoundEvents:
 
     def detect(self, audio, sensitivity, min_gap_seconds, max_events,
                min_strength=0.0, bass_hits=True, impacts=True, drops_and_stops=True,
-               builds=True, sections=True, accents=False, rejected=""):
+               builds=True, sections=True, accents=False, rejected="", max_strength=1.0):
         events = detect_events(
             audio,
             sensitivity=sensitivity,
             min_gap_seconds=min_gap_seconds,
             min_strength=min_strength,
+            max_strength=max_strength,
             max_events=max_events,
             bass_hits=bass_hits,
             impacts=impacts,
