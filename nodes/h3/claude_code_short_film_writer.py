@@ -73,6 +73,10 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    length_directive,
+    report_description_lengths,
+    shots_directive,
+    sound_fields_directive,
     ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
     LOCATIONS_TOOLTIP,
@@ -156,7 +160,7 @@ class H3ClaudeCodeShortFilmWriter:
                 ),
             }),
             "visual_style": (VISUAL_STYLES, {
-                "default": "Live-action, 35mm cinematic film aesthetic",
+                "default": "Live-action, cinematic",
                 "tooltip": "Opens every [Shot 1]; kept identical across the whole film.",
             }),
             "dialogue_language": (DIALOGUE_LANGUAGES, {"default": "English"}),
@@ -546,6 +550,17 @@ class H3ClaudeCodeShortFilmWriter:
             "with its own speaker - only that character's mouth moves on their line."
         )
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
+        avg = (target_seconds / n) if (target_seconds and n) else None
+        lines.append(f"- {length_directive(avg)}")
+        lines.append(f"- {shots_directive(avg)}")
+        lines.append(
+            "- " + sound_fields_directive(
+                music=("`non_diegetic_music` is the film's score in ONE sentence per scene - "
+                       "instrumentation, tempo, one cue tied to a visible moment - kept in one "
+                       "musical voice across the film; `N/A` for a scene the score should leave alone."
+                       if include_non_diegetic_music else "`non_diegetic_music` is `N/A`.")
+            )
+        )
         if briefs:
             lines.append(
                 "- SCENE BRIEFS ARE BINDING: a numbered brief is the plan for that scene; "
@@ -840,6 +855,7 @@ class H3ClaudeCodeShortFilmWriter:
             lengths = [frames_for_seconds(d) for d in raw_durations]
             durations = [fr / 24.0 for fr in lengths]
             total_seconds = float(sum(durations))
+            info = f"{info} | {report_description_lengths(scenes, durations=durations)}"
             scenes_text = scenes_to_text(synopsis, [(i + 1, durations[i], s) for i, s in enumerate(scenes)])
             script = _extract_script(scenes)
             table = _scene_table(durations, lengths)

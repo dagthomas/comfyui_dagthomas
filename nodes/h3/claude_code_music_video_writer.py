@@ -98,6 +98,10 @@ from .music_support import (
     song_profile,
 )
 from .scenes_support import (
+    description_budget,
+    length_directive,
+    shots_directive,
+    sound_fields_directive,
     ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
     LOCATIONS_TOOLTIP,
@@ -251,7 +255,7 @@ class H3ClaudeCodeMusicVideoWriter:
                 "tooltip": "Shots per scene. Auto lets the model cut to the music (more shots in loud parts).",
             }),
             "visual_style": (VISUAL_STYLES, {
-                "default": "Live-action, 35mm cinematic film aesthetic",
+                "default": "Live-action, cinematic",
                 "tooltip": "Opens every [Shot 1]; kept identical across the whole video.",
             }),
             "dialogue_language": (DIALOGUE_LANGUAGES, {
@@ -656,9 +660,11 @@ class H3ClaudeCodeMusicVideoWriter:
                 tags.append(measured)
             marker = "" if plan_only else ("  <-- write this one" if first <= i <= last else "")
             continues = " | CONTINUES the previous take" if (i - 1 < len(flow_flags) and flow_flags[i - 1]) else ""
+            lo_w, hi_w = description_budget(e - s)
             lines.append(
                 f"PIECE {i:02d}: {fmt_time(s)}-{fmt_time(e)} | duration {e - s:.2f} | energy {label}"
-                + (f" | section {'/'.join(tags)}" if tags else "") + continues + marker
+                + (f" | section {'/'.join(tags)}" if tags else "") + f" | {lo_w}-{hi_w} words"
+                + continues + marker
             )
             if sung:
                 for t, line, exact in sung:
@@ -808,8 +814,8 @@ class H3ClaudeCodeMusicVideoWriter:
                 if beats else "each cut on a beat or a lyric"
             )
             lines.append(
-                "- Shots per scene: your call, cut to the music - 1-2 in quiet pieces, 2-4 in "
-                f"loud and peak pieces, {cut_on}. In Performance mode "
+                "- " + shots_directive() + f" Cut to the music - {cut_on}; a quiet piece "
+                "is one shot, a loud piece over 8 s may take two. In Performance mode "
                 "prefer ONE continuous shot for a piece whose lyric lines run through it: "
                 "every cut risks breaking the lip-sync."
             )
@@ -943,15 +949,14 @@ class H3ClaudeCodeMusicVideoWriter:
             "commit to it in every scene instead of defaulting to a generic contemporary city."
         )
         lines.append(
-            "- LENGTH - H3's own budget, and it is a ceiling, not a target to fill: "
-            "`integrated_multimodal_description` is 350-500 words for the WHOLE scene, "
-            "every shot together; `overall_soundscape` is 1-4 sentences; "
-            "`non_diegetic_music` is 1-3 sentences; `subject_definitions` is one line per "
-            "subject. Spend those words on what the camera sees that is NEW in this "
-            "scene. Never spend them repeating an outfit the `<Subject N>` label already "
-            "carries, re-listing a room an earlier shot already fixed, or restating "
-            "anything the scene has established - that is the padding that pushes a "
-            "description past its budget and buys nothing."
+            "- " + length_directive() + " Each PIECE line above carries its own word "
+            "budget. `subject_definitions` is one line per subject."
+        )
+        lines.append(
+            "- " + sound_fields_directive(
+                music="`non_diegetic_music` follows the soundtrack rule above (the song is "
+                      "the score); one sentence, never more."
+            )
         )
         lines.append(f"- {_ANTI_CLICHE_DIRECTIVE}")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
@@ -1406,7 +1411,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     enforce_wardrobe, synopsis, parsed, session_id, info, repair, cast=cast,
                 )
 
-            info = f"{info} | {report_description_lengths([p for _, _, p in parsed])}"
+            info = f"{info} | {report_description_lengths([p for _, _, p in parsed], durations=durations)}"
 
             # pad / trim to exactly one scene per piece so the lists stay aligned
             scenes = [p for _, _, p in parsed][:n]

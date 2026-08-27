@@ -1,0 +1,1641 @@
+{
+ "source": "ostris/minimax_h3_1k",
+ "prompts": 1000,
+ "styles": [
+  {
+   "style": "2D-animated in action-anime style with dynamic speed lines, sharp cel shading",
+   "family": "2D animation",
+   "count": 8
+  },
+  {
+   "style": "2D-animated in adult-swim-style late-night comedy cartoon, with flat muted colors, deadpan character posing, and deliberately crude",
+   "family": "2D animation",
+   "count": 8
+  },
+  {
+   "style": "2D-animated in anime opening-credits title-sequence style, with high-contrast graphic character posing, dramatic backlighting flashes, and stylized directional motion blur",
+   "family": "2D animation",
+   "count": 8
+  },
+  {
+   "style": "2D-animated in early-2000s Flash-cartoon style, with rigid tweened limbs, bold vector outlines, flat gradient fills",
+   "family": "2D animation",
+   "count": 8
+  },
+  {
+   "style": "2D-animated in a chalkboard-animation style",
+   "family": "2D animation",
+   "count": 2
+  },
+  {
+   "style": "2D cutout-paper stop-motion animation, hand-cut colored-paper figures pinned at brass joints under a striped paper big-top canopy",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D cutout-paper stop-motion animation, hand-cut construction-paper figures pinned at visible brass joints",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated commercial in a bright Saturday-morning cartoon style with bold outlines and flat color",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in 1930s rubber-hose cartoon style with crisp black-and-white shading and elastic bounce timing",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in 1930s rubber-hose cartoon style with high-contrast monochrome shading and springy bounce-ball timing",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in 1930s rubber-hose style",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in 1990s slice-of-life anime style, with muted pastel backgrounds, soft airbrushed light, and hand-inked outlines",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in 1990s slice-of-life anime style, with warm paper-lantern glow, dense crowd silhouettes, and soft bloom highlights",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a bold black-and-white newspaper comic-strip style with thick inked outlines and radiating dotted impact-lines",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a bold black-and-white newspaper comic-strip style with thick inked outlines and star-shaped impact bursts at collision points",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a bold black-and-white newspaper comic-strip style with thick inked outlines, cross-hatched shading",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a chalkboard-animation style, bright colored chalk lines racing across a dark green board",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a chalkboard-animation style, thick white chalk outlines on a scuffed green board with visible dust smears",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a European watercolor storybook style with soft dawn-lavender washes over alpine rooftops",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a European watercolor storybook style with soft ink outlines bleeding into pale washes",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in a European watercolor storybook style with soft washed color gradients and loose ink linework",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in ancient-fresco-inspired black-figure vase-painting style",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in bold comic-book ink style with heavy black outlines and halftone shading",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in bright storybook watercolor style, sun-sparkled turquoise water around a small wooden fishing boat",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in Saturday-morning 1980s cartoon style with bold cel-shaded colors and glowing laser-effect linework",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in Saturday-morning 1980s cartoon style with bold flat colors, thick black outlines, and glowing energy-effect highlights",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in Saturday-morning 1980s cartoon style with flat saturated colors and bouncy squash-and-stretch character animation",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in scratchy hand-drawn 1960s tokusatsu-inspired style",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in soft painterly children's-book watercolor style, dawn light filtering gold through dew-heavy grass blades",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in soft painterly fantasy-storybook style, golden late-afternoon light warming a jagged sea cliff",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in UPA-style flat mid-century modern design with candy-colored diner interiors and simplified rounded character shapes",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in UPA-style flat mid-century modern design with mint-green kitchen color blocks and simplified appliance shapes",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in UPA-style flat mid-century modern design with warm coral and avocado-green color blocks and abstract geometric figures",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "2D-animated in warm storybook watercolor style, early morning mist curling low over a farmyard",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered speedrun capture of a modern indie 3D platformer, clean low-poly geometry with flat-shaded pastel colors",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Amateur phone video, grainy low-light with a shaky flashlight beam sweeping a suburban backyard at night",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Documentary footage, night storm-chase photography lit only by intermittent lightning flashes",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Live-action commercial composited with a 2D-animated mascot, dim pre-dawn kitchen light with a single fridge-light glow",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Live-action commercial composited with a bright 2D-animated mascot, oversaturated morning kitchen light",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, cool industrial lighting cut through with bright welding flashes, \"How It's Made\"-style factory footage",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Live-action fly-on-the-wall documentary footage at night under handheld flashlight and headlamp beams, along a rural fence line",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic horror, dense fog lit by scattered flashlight beams cutting through summer-camp woods",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, bright saturated morning kitchen lighting with glossy stylized surfaces and rounded cartoon proportions",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Rotoscoped 2D animation traced over live-action footage",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Rotoscoped 2D animation traced over live-action footage, sharp graphic outlines with a rippling blue color-fill trailing behind every stroke",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Stylized low-poly 3D game render with flat-shaded geometric terrain and simplified faceted character models",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Stylized low-poly 3D game render with flat-shaded ocean waves and a faceted wooden galleon model",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Stylized low-poly 3D game render with neon-edged flat-shaded buildings and a simplified night-city skyline",
+   "family": "2D animation",
+   "count": 1
+  },
+  {
+   "style": "Live-action puppetry",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 6
+  },
+  {
+   "style": "Stop-motion animation in an unsettling Eastern European surrealist style",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 5
+  },
+  {
+   "style": "Claymation animation with thumbprint ridges visible across every surface and slightly asymmetrical eyes",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation stop motion with heavy fingerprint texturing across the clay mud and wool",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation stop motion with rich fingerprint texturing across every gnome and leaf",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation stop motion with rough fingerprinted textures and a slightly wobbling frame-rate typical of hand-shot armature animation, down the cracked pavement of a small clay village high street a spike-haired teenage punk (S1)",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation stop-motion with pronounced fingerprint dimpling across the clay figures and painted backdrop",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation with exaggerated fingerprint ridges across every clay surface and slightly googly clay eyes",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation with pronounced fingerprint ridging across the clay pipes and tools",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation with visible fingerprint texture and gently stuttering stop-motion movement",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Claymation, Aardman-style stop motion with visible fingerprint texture and tool marks pressed into every clay surface",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "LEGO brickfilm stop motion with glossy plastic textures under warm kitchen lighting",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "LEGO brickfilm stop motion with high-gloss plastic textures under studio lighting",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "LEGO brickfilm stop motion with sharp plastic highlights under a blue gel light",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Live-action museum footage framing an antique zoetrope drum lit under a warm spotlight",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic, saturated casino neon washing across green felt tables in shallow depth of field",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Practical zoetrope animation captured in extreme close macro",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Practical zoetrope animation captured in extreme close macro inside a cluttered woodworking workshop",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation captured overhead on a light table",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation filmed top-down on a light table, coarse tan sand swept into the silhouette of a fisherman standing at the edge of a boat",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation filmed top-down on an illuminated glass light-table, loose sand pushed and dragged by unseen fingers forms the flowing silhouette of a galloping horse crossing a rippled dune line",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation on a backlit glass table, coarse black sand dragged into the embracing silhouette of two dancers spinning cheek to cheek",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation on a glowing amber light table",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation shot from directly above on an illuminated tabletop, dark sand swept into the rising silhouette of a whale breaching from a smooth sand ocean, water-spray lines scratched outward from its tail with quick fingernail strokes",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Sand animation shot overhead on a backlit table",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation in an unsettling Eastern European surrealist style, assembled from cracked porcelain doll fragments, rusted clock gears, and yellowed bone-white fragments",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation in classic Rankin-Bass-style holiday puppetry, fuzzy fabric-and-rubber puppets amid a miniature festival-parade set lined with paper lanterns and cheering felt onlookers",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation in classic Rankin-Bass-style holiday puppetry, fuzzy fabric-and-rubber puppets on a miniature factory-line set strung with conveyor belts and hanging bells",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation in classic Rankin-Bass-style holiday puppetry, fuzzy fabric-and-rubber puppets on a miniature North Pole workshop set banked with cotton-batting snow",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation using needle-felted wool creatures with dense fuzzy fiber texture, photographed on a miniature barnyard diorama of real straw and painted wooden fencing under warm morning-light gels",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation using needle-felted wool creatures with dense fuzzy fiber texture, photographed on a miniature cliffside diorama of felted scrub grass and painted sky under a warm setting-sun gel",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion animation using needle-felted wool creatures with dense fuzzy fiber texture, photographed on a miniature nighttime forest diorama lit by a single cool blue spotlight through felted pine boughs",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion brickfilm animation using LEGO minifigures and brick-built sets with visible stud textures and plastic sheen",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion collage animation",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion collage animation assembled from torn magazine photographs, glossy cutout eyes, lips, and newsprint columns pieced together into a towering surreal face that looms over a miniature photographed city skyline",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion collage animation built from torn photographs of ocean waves and ship-hull textures",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Stop-motion LEGO brickfilm with glossy plastic sheen and visible stud connectors, along a brick-built city rooftop under a painted dusk skyline",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature diorama cinematography, macro lens over a hand-painted WWII battlefield table with felt hills and talcum-powder snow",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature historical-battle footage in wide macro over a painted diorama battlefield with felt hills and static-grass tufts",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature horror-wargaming footage in close macro under flickering red emergency-light gels",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature naval wargaming footage shot in macro over a rippling water table lit from beneath",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature sci-fi wargaming footage shot in close macro under strobing red light",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature siege-warfare footage in extreme macro",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "Tabletop miniature wargaming cinematography shot in extreme macro",
+   "family": "stop-motion / clay / puppets / tabletop",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered VTuber livestream capture",
+   "family": "game engine / VTuber",
+   "count": 4
+  },
+  {
+   "style": "3D CG video-game capture rendered with heavy glitch-aesthetic corruption",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered in N64-era 3D fighting-game capture style, blocky low-polygon warriors with stiff hinge-jointed limbs standing in a stone-tiled arena ringed by cheering low-poly spectators",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered in N64-era platformer video-game capture style, chunky low-polygon geometry with fog-clipped draw distance and blurry mip-mapped textures",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered in PS1-era kart-racing video-game capture style, low-polygon karts with wobbling texture seams racing on a candy-colored canyon track",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered in PS1-era mecha-shooter video-game capture style, angular low-polygon robots with dithered texture shading inside a collapsing underground hangar",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered in PS1-era survival-horror video game capture style, low-polygon character models with visible vertex wobble, affine texture warping, and a soft-focus pre-rendered background",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered machinima using a fantasy MMO game engine",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered machinima using a first-person-shooter game engine, blocky soldier avatars standing on a rooftop test map with placeholder gray textures",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered machinima using a voxel sandbox game engine, blocky cube-textured characters standing beside a painstakingly built wooden tower on a grassy plain",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered real-time-strategy game capture",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered real-time-strategy game capture, overhead ocean battlefield with low-poly whitecap waves and a fleet of galleon-style ship units trading cannon fire",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered real-time-strategy game capture, top-down overhead low-poly battlefield with flattened perspective and unit-selection boxes",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered real-time-strategy game capture, top-down overhead sci-fi desert battlefield rendered in clean low-poly shading",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered speedrun capture of a 3D action-adventure game, painterly low-poly forest level with baked lightmap shadows",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered speedrun capture of a 3D collectathon platformer, glossy low-poly surfaces with soft ambient-occlusion shading",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered speedrun capture of a 3D obstacle-race platformer shown in a two-panel split-screen, cel-shaded low-poly characters",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "Live-action, harsh overhead work lights in a community theater rehearsal hall with taped floor marks, six dancers in mismatched rehearsal clothes tap in a ragged line while a gray-bunned director in a cardigan (S1) claps sharply and shouts over them, hands chopping the air: <d>[English] Sloppy!",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "Modern AAA video-game cutscene, photorealistic in-engine rendering with harsh midday light over a rusted highway overpass and dust-caked wreckage",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "Modern AAA video-game cutscene, photorealistic in-engine rendering with sweeping open-plains lighting and dynamic dust kicked up by hooves",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "Modern AAA video-game cutscene, photorealistic in-engine rendering with volumetric dust and dynamic shadow-mapped lighting",
+   "family": "game engine / VTuber",
+   "count": 1
+  },
+  {
+   "style": "3D-animated commercial with glossy CG rendering and cool blue interior light",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered racing-game replay-camera capture, dirt-track motocross render with dust haze and sun-bleached color grading",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered racing-game replay-camera capture, glossy circuit-racer render with motion-blurred backgrounds",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "3D-rendered racing-game replay-camera capture, neon-lit night street-racing render with rain-slicked asphalt reflections",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Live-action composited with CG surreal effects",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, bright saturated daycare classroom lighting with rounded soft-cornered furniture",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, cozy warm-toned farmhouse kitchen lighting with flour dust catching sunbeams",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, crisp winter daylight with sparkling snow particle effects and stylized fur shading",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, vivid stylized underwater lighting with shafts of caustic sunlight through a coral reef",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, warm dusk golden-hour lighting with long soft shadows across a suburban backyard",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Pixar-style CG animation, warm golden-hour lighting with soft subsurface-scattering skin shading and stylized painterly foliage",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Voxel-block sandbox game render with chunky cubic castle towers set on a floating blocky cloud platform",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Voxel-block sandbox game render with chunky cubic terrain",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Voxel-block sandbox game render with chunky cubic terrain, blocky lighting, and a first-person HUD",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Voxel-block sandbox multiplayer game render with chunky cubic arena walls",
+   "family": "3D CG",
+   "count": 1
+  },
+  {
+   "style": "Screen recording of a video call",
+   "family": "capture / device footage",
+   "count": 7
+  },
+  {
+   "style": "Grainy green night-vision footage",
+   "family": "capture / device footage",
+   "count": 5
+  },
+  {
+   "style": "Vertical phone video",
+   "family": "capture / device footage",
+   "count": 5
+  },
+  {
+   "style": "Vertical phone-camera footage in 9:16 portrait framing",
+   "family": "capture / device footage",
+   "count": 5
+  },
+  {
+   "style": "Color doorbell-camera footage",
+   "family": "capture / device footage",
+   "count": 4
+  },
+  {
+   "style": "FPV drone-goggle footage",
+   "family": "capture / device footage",
+   "count": 4
+  },
+  {
+   "style": "Grainy webcam footage",
+   "family": "capture / device footage",
+   "count": 3
+  },
+  {
+   "style": "Thermal-imaging camera footage",
+   "family": "capture / device footage",
+   "count": 3
+  },
+  {
+   "style": "X-ray-scan aesthetic visualization",
+   "family": "capture / device footage",
+   "count": 3
+  },
+  {
+   "style": "2000s MiniDV camcorder skate footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur backyard phone video with harsh noon sun and a slight lens flare",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur GoPro footage mounted on a dock post, fisheye-warped and sun-bright",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur GoPro footage, chest-mounted and fisheye-warped",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur phone video with warm indoor aquarium lighting reflecting off glass",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur vertical phone video with warm lamp light in a cluttered living room",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur vertical phone video, grainy and slightly out of focus at the edges",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Amateur vertical phone video, slightly overexposed under midday sun",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Black-and-white security-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Cold-blue thermal-imaging footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Color security-camera footage from a bank-lobby ceiling dome",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Color security-camera footage from a warehouse ceiling mount",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Color security-camera footage from an apartment-lobby ceiling dome",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Dashcam footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Firefighter helmet-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "FPV drone-race footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "GoPro chest-mount camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "GoPro helmet-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "GoPro helmet-camera footage mounted on a climbing helmet",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "GoPro helmet-camera footage on a whitewater kayaker",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "GoPro mask-mounted footage underwater on a coral reef",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy amateur GoPro footage, fisheye-warped and sun-flared",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy amateur smartphone video, held vertically in a suburban backyard at dusk",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy amateur smartphone video, held vertically on a sunny street corner",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy doorbell-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy GoPro action-cam footage mounted on a handlebar clamp",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy vertical phone video lit by sodium parking-lot floodlights and rows of headlights",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy webcam footage, flat overhead living-room light with visible compression noise",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy webcam footage, slightly compressed with a soft blown-out ring-light glow",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy webcam footage, soft string-light glow strung along the headboard behind her",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Grainy webcam footage, warm indoor lamp light with visible pixel noise in the shadows",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Livestream capture, bathroom vanity framing lit by a ring light",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Livestream capture, shelf-lined collector-room backdrop crowded with figures",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Livestream capture, warehouse-shelf backdrop lined with shoeboxes",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Mall-security body-worn-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Motion-triggered doorbell-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Paramedic body-worn-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Police body-worn-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Utility-worker helmet-camera footage",
+   "family": "capture / device footage",
+   "count": 1
+  },
+  {
+   "style": "Glitch-aesthetic broadcast footage",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Grainy 1980s broadcast toy commercial with oversaturated color and faint tape wobble",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Grainy 1980s broadcast toy commercial with oversaturated color and soft tape flicker",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Grainy 1990s broadcast toy commercial with oversaturated color and faint scan lines",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Grainy 1990s broadcast toy commercial with oversaturated color and slight tape wobble",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action 2002 telenovela shot on soft digital video with candlelit chapel tones",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action 2013 telenovela shot on crisp digital video with warm ballroom uplighting",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action broadcast footage for an extreme-sports television special",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action broadcast footage from a regional Portuguese sports channel",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action cereal commercial with bright, saturated morning light",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action cinematic broadcast footage with a subtle anamorphic glow",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action commercial with tight macro photography and warm amber light",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action fast-food commercial, warm overhead lighting bouncing off orange booths",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action infomercial cinematography with dim blue bedroom lighting",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action infomercial cinematography with warm workshop lighting",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action reality-TV cooking-competition broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action tech-commercial cinematography with cool morning light through forest fog",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, 2020s field news broadcast with a visibly hazy orange sky",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright 2000s home-shopping channel demo set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright 2020s home-shopping channel kitchen counter set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright commercial lighting with saturated primary colors",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic broadcast television coverage",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic broadcast television coverage of a championship boxing match",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic broadcast television coverage of a Japanese sumo tournament",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic commercial with moody amber lounge lighting and soft cigar haze",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic commercial with opulent chandelier light and rich wood paneling",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic sports broadcast in bright outdoor arena light",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic sports broadcast over open turquoise water under bright sun",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic sports broadcast under bright arena floodlights",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic winter car commercial, crisp blue-white light and drifting snow",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, clean 1990s evening news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, clean 2010s local evening news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, clean 2020s French-Canadian evening news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, clean 2020s morning news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, clean 2020s network news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, clean 2020s network news set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, crisp 2010s network news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, glossy 1990s late-night talk show cold-open set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, glossy 2000s late-night talk show desk set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, glossy 2020s broadcast weather segment",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, glossy 2020s late-night talk show desk set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, saturated 1990s home-shopping channel fitness-demo set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, saturated 2000s late-night home-shopping clearance broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, sleek 2020s financial-news broadcast",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm documentary-style commercial with soft late-afternoon backlight",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm pharmaceutical-commercial cinematography with high-key daylight",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm-lit 2010s morning talk show interview set with two low armchairs",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm-lit 2020s morning talk show set",
+   "family": "broadcast / TV / commercial",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage",
+   "family": "documentary / nature",
+   "count": 10
+  },
+  {
+   "style": "Found-footage horror",
+   "family": "documentary / nature",
+   "count": 7
+  },
+  {
+   "style": "Live-action documentary",
+   "family": "documentary / nature",
+   "count": 5
+  },
+  {
+   "style": "Grainy VHS home video",
+   "family": "documentary / nature",
+   "count": 4
+  },
+  {
+   "style": "Live-action true-crime reenactment",
+   "family": "documentary / nature",
+   "count": 2
+  },
+  {
+   "style": "Grainy found-footage handheld video, dusk blue-hour light with lens flare from a truck's headlights",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Grainy VHS home video, oversaturated color with heavy chromatic fringing",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Grainy VHS home video, warm indoor lighting with faint color bleed and a persistent low tape hiss",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Grainy VHS home video, warm indoor lighting with mild color bleed around bright edges and a faint persistent tape hiss",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary footage lit by dozens of handheld torches",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary footage shot from a rescue helicopter's open door, grey coastal cliffs and crashing surf below",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary footage shot underwater with a diver-mounted camera, shafts of sunlight piercing the open ocean",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary footage with flat daylight and handheld camera work",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary footage with flat midday sunlight",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary footage, long-exposure night photography on a dark ridge overlooking a distant storm cell",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, bright saturated industrial lighting over rows of colorful machinery, \"How It's Made\"-style factory footage",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, clean bright industrial lighting with a shallow depth of field, \"How It's Made\"-style factory footage",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, harsh industrial fluorescent lighting over dark steel machinery, \"How It's Made\"-style factory footage",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, harsh sodium streetlight glow over steam curling off a New York halal cart",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, high-contrast industrial lighting glowing orange against dark machinery, \"How It's Made\"-style factory footage",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action documentary, warm sawdust-lit industrial lighting with a shallow depth of field, \"How It's Made\"-style factory footage",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action fly-on-the-wall documentary footage across a dusty savanna clearing at midday",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action fly-on-the-wall documentary footage in a suburban backyard at dusk",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action fly-on-the-wall documentary footage on a shallow tidal sandbar at dusk",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action true-crime reenactment, cool blue dusk lighting with a soft grainy filter over a calm mountain lake",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action true-crime reenactment, desaturated blue-grey color grade with harsh raking side-lighting and heavy film grain",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action true-crime reenactment, warm amber kitchen lighting undercut with a slightly desaturated grade and fine grain",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic wildlife footage with flat grey coastal light over a crowded elephant seal rookery",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic wildlife footage with low golden light slanting through cloud-forest canopy",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic wildlife footage with warm late-afternoon light and a shallow depth of field over an East African savanna",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action, documentary-style",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Live-action, documentary-style, warm firelight flickering across faces gathered on log benches under a dark treeline",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage in crisp macro with shallow depth of field and morning dew beading every stem",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage, crisp long-lens photography against a hazy downtown skyline",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage, extreme macro photography under diffused daylight on a moss-covered log",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage, extreme macro photography with a narrow focal plane on a sunlit leaf",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage, extreme macro photography with shallow depth of field along a rainforest floor",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage, silhouette photography against a burnt-orange dusk sky over a braided river",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Nature documentary footage, soft golden-hour light filtering through the oyamel fir canopy in the Mexican highlands, thousands of monarch butterflies cling in dense orange-and-black clusters along the drooping branches, wings folded tight against the morning chill",
+   "family": "documentary / nature",
+   "count": 1
+  },
+  {
+   "style": "Black-and-white silent-era footage played in reverse with heavy film grain and a soft iris vignette",
+   "family": "silent era / archival film",
+   "count": 3
+  },
+  {
+   "style": "Silent-era black-and-white film, dense grain",
+   "family": "silent era / archival film",
+   "count": 2
+  },
+  {
+   "style": "Black-and-white 1940s film noir on grainy 35mm with hard chiaroscuro shadows and faint gate flicker",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Black-and-white silent-era footage played in reverse with heavy film grain, vertical scratches",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, coarse grain, faint reel scratches, soft flicker",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, coarse grain, frequent scratches, and an unsteady flicker with pronounced gate weave",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, coarse grain, intermittent scratches, and a flickering exposure with light gate weave",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, dense grain, hairline scratches, embedded dust specks",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, dense grain, scattered scratches",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, grainy and high-contrast with scattered scratches and a faint flicker",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, heavy grain, embedded dust and scratches, and a subtle flicker with slight gate weave",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Silent-era black-and-white film, heavy grain, hairline scratches",
+   "family": "silent era / archival film",
+   "count": 1
+  },
+  {
+   "style": "Live-action 1960s spy caper on saturated Technicolor 35mm with fine grain, mild gate weave, and horizontal blue anamorphic flares",
+   "family": "vintage / analogue video",
+   "count": 1
+  },
+  {
+   "style": "Live-action 1960s spy caper on warm Technicolor 35mm with fine grain, subtle gate weave, and a faint projector flicker",
+   "family": "vintage / analogue video",
+   "count": 1
+  },
+  {
+   "style": "Live-action 1960s spy caper printed on Technicolor 35mm with fine grain, faint gate weave, and sun-star lens flares off the snowfield",
+   "family": "vintage / analogue video",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic, warm sepia-tinted desert light with heavy film grain",
+   "family": "vintage / analogue video",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic",
+   "family": "live-action",
+   "count": 36
+  },
+  {
+   "style": "Live-action footage played in reverse",
+   "family": "live-action",
+   "count": 3
+  },
+  {
+   "style": "Live-action night footage",
+   "family": "live-action",
+   "count": 2
+  },
+  {
+   "style": "Live-action, cinematic in bright midday sun",
+   "family": "live-action",
+   "count": 2
+  },
+  {
+   "style": "Grainy amateur security-light footage",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action night footage at a maritime festival dock",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, arena stage lighting cutting through haze",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright afternoon light through tall windows in a recital hall",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright fluorescent light in a busy shopping mall atrium",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright midday sun in a paved city plaza",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, bright midday sun over a wooden boardwalk",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic comedy with harsh orange firelight against dusk sky",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic on a disused airfield converted into a drift course",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic Steadicam with cool fluorescent airport light",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic under bright midday sun",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic under flat overcast beach light",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic under flat overcast light",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with anamorphic flares and golden-hour backlight",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with clean overhead gymnasium light",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with hard key light and a slow-circling energy",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with muted daylight through tall windows",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with shallow focus and warm incandescent light",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with warm amber string-light glow and light haze",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic with warm torchlight and drifting woodsmoke",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic, anamorphic lens flare and warm golden-hour light",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic, bright overcast light off fresh alpine snow",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic, cold blue-white grade with blowing snow",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, cinematic, overcast daylight with a fine mist of rain",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, dappled morning sunlight over a row of farmers market stalls",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, dim backstage corridor lit by a single bare bulb",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, dim concrete stadium tunnel opening onto blinding field lights",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, dim studio lighting glowing off soundproofing foam",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, flat fluorescent gymnasium lighting",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, fluorescent-lit open-plan office",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, gray driving rain over a stadium parking lot",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, harsh late-afternoon sun in a school parking lot",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, harsh midday sun on a busy city sidewalk",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, harsh single-bulb music-video style inside a packed basement",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, moody blue-toned night photography under sheeting rain",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, moody purple stage lighting at an indoor DJ battle",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, overcast gray light in a Victorian park gazebo",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, soft candlelit ambiance in a dinner-theater dining room",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, soft natural morning light in a public park",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, soft stage lighting in a small recital hall",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm early-morning light in a small-town plaza",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm golden-hour music-video style with soft natural backlight",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Live-action, warm string-lit patio of a restaurant at dusk",
+   "family": "live-action",
+   "count": 1
+  },
+  {
+   "style": "Search-and-rescue volunteer body-camera footage",
+   "family": "live-action",
+   "count": 1
+  }
+ ]
+}

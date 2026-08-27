@@ -57,6 +57,9 @@ from .common import (
     wildness_directive,
 )
 from .scenes_support import (
+    length_directive,
+    shots_directive,
+    sound_fields_directive,
     ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
     LOCATIONS_TOOLTIP,
@@ -215,10 +218,10 @@ class H3ClaudeCodeCrossoverWriter:
             }),
             "shots_per_scene": (SHOTS_PER_SCENE, {
                 "default": AUTO,
-                "tooltip": "Shots per scene. Auto lets Claude choose 2-3 to fit the duration.",
+                "tooltip": "Shots per scene. Auto: one shot up to ~8 s, two beyond, three only past 10 s.",
             }),
             "visual_style": (VISUAL_STYLES, {
-                "default": "Live-action, 35mm cinematic film aesthetic",
+                "default": "Live-action, cinematic",
                 "tooltip": (
                     "Opens every [Shot 1]; kept identical across the run for continuity. The "
                     "list is the guide's styles plus the APNext Cinematic vocabulary (film "
@@ -454,16 +457,20 @@ class H3ClaudeCodeCrossoverWriter:
         lines.append(f"- {duration_directive(duration_mode, scene_duration)}")
         lines.append(f"- {continuity_directive(continuity_mode)}")
         if shots_per_scene == AUTO:
-            lines.append("- Use 2-3 shots per scene, varying the pattern between scenes.")
+            lines.append(f"- {shots_directive(scene_duration)}")
         else:
             lines.append(f"- Use exactly {shots_per_scene} shot(s) per scene.")
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
+        lines.append(f"- {length_directive(scene_duration)}")
+        lines.append(f"- {sound_fields_directive()}")
         if visual_style == AUTO:
             lines.append(
-                "- Visual style: choose one concrete style that suits this cast (e.g. "
-                "`Live-action, 35mm cinematic film aesthetic`), open every [Shot 1] with it "
-                "followed by lighting, time of day and setting, and keep it identical across "
-                "the run."
+                "- Visual style: choose one concrete style that suits this cast and open every "
+                "[Shot 1] with it, then the light and grade, then the framing - the way "
+                "prompts that render well do: `Live-action, cinematic, sun-bleached "
+                "desaturated grade with dust haze over an open desert highway, a courier in "
+                "his thirties leans low over a dirt-caked motorcycle...`. Keep the style "
+                "clause identical across the run."
             )
         else:
             lines.append(

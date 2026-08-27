@@ -72,6 +72,8 @@ from .common import (
     toggle_directives,
 )
 from .scenes_support import (
+    length_directive,
+    shots_directive,
     ENFORCE_WARDROBE_TOOLTIP,
     WARDROBE_TOOLTIP,
     LOCATIONS_TOOLTIP,
@@ -269,7 +271,7 @@ class H3ClaudeCodePresentationWriter:
                 ),
             }),
             "visual_style": (VISUAL_STYLES, {
-                "default": "Live-action, 35mm cinematic film aesthetic",
+                "default": "Live-action, cinematic",
                 "tooltip": "Opens every [Shot 1]; kept identical across the whole presentation.",
             }),
             "dialogue_language": (DIALOGUE_LANGUAGES, {
@@ -773,6 +775,8 @@ class H3ClaudeCodePresentationWriter:
                 "contradict a brief."
             )
         lines.append(f"- {LITERAL_CAMERA_DIRECTIVE}")
+        lines.append(f"- {length_directive()}")
+        lines.append(f"- {shots_directive()}")
         lines.append(f"- {_wildness_scale_directive(wildness)}")
         if wildness > 40:
             lines.append(

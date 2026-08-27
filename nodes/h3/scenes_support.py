@@ -459,13 +459,89 @@ def location_violations(scenes, locks):
 # Description length
 # ----------------------------------------------------------------------
 
-# H3's own budget for a generation task, from the reference guide: "For
-# generation tasks, `detailed_description` is normally 350-500 English words."
-# It is a budget, not a target - but with nothing measuring it the writers had
-# no way to know they were routinely at 600+, and neither did anyone reading
-# the output.
+# The reference guide budgets `detailed_description` at 350-500 English words
+# for a generation task. Measured against prompts that are known to render
+# well (ostris/minimax_h3_1k: 1,000 prompts + their renders, 5 s clips), that
+# is two to three times too long: median 152 words, p90 180, never above 250.
+# So the budget scales with the clip: ~30 words per second, sub-linear at the
+# top because a 15 s scene is not three 5 s scenes' worth of new information.
+#   5 s: 120-190   8 s: 144-226   10 s: 160-250   15 s: 200-310
+# The old constants remain as the ceiling for callers with no duration.
 DESCRIPTION_MIN_WORDS = 350
 DESCRIPTION_MAX_WORDS = 500
+
+
+def description_budget(seconds):
+    """(lo, hi) words for a scene of `seconds`; the guide's 350-500 when unknown."""
+    try:
+        sec = float(seconds or 0.0)
+    except (TypeError, ValueError):
+        sec = 0.0
+    if sec <= 0:
+        return DESCRIPTION_MIN_WORDS, DESCRIPTION_MAX_WORDS
+    sec = max(3.0, min(15.5, sec))
+    return int(round(80 + 8 * sec)), int(round(130 + 12 * sec))
+
+
+def length_directive(seconds=None):
+    """The LENGTH rule for a writer's prompt, with the numbers for its scene length."""
+    if seconds:
+        lo, hi = description_budget(seconds)
+        target = f"for a {float(seconds):.0f}-second scene that is {lo}-{hi} words"
+    else:
+        target = "120-190 words for a 5-second scene, 160-250 for 10 seconds, 200-310 for 15"
+    return (
+        "LENGTH - a ceiling, not a target to fill: `integrated_multimodal_description` is "
+        f"about 30 words per second of the scene, every shot together - {target}. Prompts "
+        "measured to render well on H3 sit at 150 words for 5 seconds and never pass 250; "
+        "past that the model stops reading and the picture gets vaguer, not richer. Spend "
+        "the words on what the camera sees that is NEW in this scene - never on repeating "
+        "an outfit a label already carries, re-listing a room an earlier shot fixed, or "
+        "restating anything the scene has established."
+    )
+
+
+def sound_fields_directive(music="auto"):
+    """
+    The two sound fields the way well-rendering prompts write them. `music`:
+    "auto" (N/A unless the scene calls for score), "none" (always N/A), or a
+    ready-made sentence describing the rule for the music field.
+    """
+    soundscape = (
+        "`overall_soundscape` is ONE sentence: the concrete sounds the picture makes, in "
+        "order, as a comma list - `A shin striking padded ribs with a heavy thump, ropes "
+        "stretching under a falling body, boots pivoting and scuffing canvas, a stadium roar "
+        "rising sharply.` No mood words, no dialogue, no music."
+    )
+    if music == "none":
+        music_rule = "`non_diegetic_music` is `N/A`."
+    elif music == "auto":
+        music_rule = (
+            "`non_diegetic_music` is `N/A` unless the scene genuinely calls for score - most "
+            "scenes do not - and then ONE sentence: instrumentation, tempo, and one cue tied "
+            "to a visible moment (`Pizzicato strings and solo bassoon at moderate tempo, "
+            "staccato throughout, a single tuba note on the belly-flop.`)."
+        )
+    else:
+        music_rule = str(music)
+    return f"SOUND FIELDS: {soundscape} {music_rule}"
+
+
+def shots_directive(seconds=None):
+    """How many shots a scene should have - measured, not a matter of taste."""
+    base = (
+        "SHOTS: ONE shot for a scene up to about 8 seconds, two for a longer one, three at "
+        "most and only past 10 seconds - never four. Half of the prompts that render well "
+        "are a single shot, and a cut only earns its place when it brings new information "
+        "(a new space, viewpoint or state); when only the distance changes, move the camera "
+        "instead. `[Shot 2] At 00:0X.XXX, the shot cuts to ...` for every cut. A static "
+        "shot is a normal choice, not a failure of imagination."
+    )
+    if seconds:
+        sec = float(seconds)
+        n = 1 if sec <= 8.5 else (2 if sec <= 11 else 3)
+        base += f" For this scene's {sec:.0f} seconds that means {n} shot{'s' if n > 1 else ''}."
+    return base
 
 
 def description_lengths(scenes, field="integrated_multimodal_description",
@@ -484,17 +560,28 @@ def description_lengths(scenes, field="integrated_multimodal_description",
     return out
 
 
-def description_summary(lengths):
-    """One line: how the scenes sit against H3's 350-500 word budget."""
+def description_summary(lengths, durations=None):
+    """One line: how the scenes sit against their word budget (per scene when durations are known)."""
     counts = [w for _, w in lengths if w]
     if not counts:
         return "description: nothing to measure"
     counts.sort()
     median = counts[len(counts) // 2]
-    over = [n for n, w in lengths if w > DESCRIPTION_MAX_WORDS]
-    under = [n for n, w in lengths if 0 < w < DESCRIPTION_MIN_WORDS]
-    parts = [f"description: median {median} words (budget "
-             f"{DESCRIPTION_MIN_WORDS}-{DESCRIPTION_MAX_WORDS})"]
+    durations = list(durations or [])
+
+    def budget(n):
+        sec = durations[n - 1] if n - 1 < len(durations) else None
+        return description_budget(sec)
+
+    over = [n for n, w in lengths if w > budget(n)[1]]
+    under = [n for n, w in lengths if 0 < w < budget(n)[0]]
+    if durations:
+        los = sorted(budget(n)[0] for n, _ in lengths)
+        his = sorted(budget(n)[1] for n, _ in lengths)
+        label = f"~30 words/s: {los[0]}-{his[-1]}" if los[0] != los[-1] or his[0] != his[-1] else f"{los[0]}-{his[0]}"
+    else:
+        label = f"{DESCRIPTION_MIN_WORDS}-{DESCRIPTION_MAX_WORDS}"
+    parts = [f"description: median {median} words (budget {label})"]
     if over:
         parts.append(f"{len(over)} over (worst {max(counts)})")
     if under:
@@ -505,7 +592,7 @@ def description_summary(lengths):
 
 
 def report_description_lengths(scenes, field="integrated_multimodal_description",
-                               all_fields=_SCENE_FIELDS):
+                               all_fields=_SCENE_FIELDS, durations=None):
     """
     Print the length summary and name the scenes that overran. Returns the
     summary so callers can fold it into their info string.
@@ -516,7 +603,7 @@ def report_description_lengths(scenes, field="integrated_multimodal_description"
     user's back.
     """
     lengths = description_lengths(scenes, field, all_fields)
-    summary = description_summary(lengths)
+    summary = description_summary(lengths, durations)
     print(f"📏 {summary}")
     over = sorted(((w, n) for n, w in lengths if w > DESCRIPTION_MAX_WORDS), reverse=True)
     for w, n in over[:5]:

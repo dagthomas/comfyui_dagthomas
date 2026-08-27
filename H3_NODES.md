@@ -259,6 +259,16 @@ The example workflow adapts a two‑minute harbour‑town story; the **turbo var
 
 **`handoff_pass`** (Continuous chain only, default **on**) — after the scenes are written (and the wardrobe / location repair), one more LLM turn reads every scene's *ending* against the *opening* that follows it and rewrites the openings that drift — a prop that vanished or changed hands, a person who moved or changed pose, a re‑established wide shot, a changed light — so the first frame of each scene *is* the last frame of the previous one, exactly as the [Short Film Chain Render](#apnext-h3-short-film-chain-render-carry-picture--sound-between-scenes) pins it. Only the rewritten scenes are re‑emitted and spliced in by number (a reply that touches scene 01 or anything outside the chain is discarded, `OK` means nothing needed changing); the log shows `🔗 hand-off pass: N scene opening(s) rewritten`.
 
+### Prompt rules measured from ostris/minimax_h3_1k
+
+`scripts/h3_dataset_survey.py` profiles a corpus of 1,000 H3 prompts that are known to render well ([ostris/minimax_h3_1k](https://huggingface.co/datasets/ostris/minimax_h3_1k), 5‑second clips + the txt that made them). The report is in [`data/h3/h3_1k_survey.md`](data/h3/h3_1k_survey.md); the writers' directives and `data/h3/guide_base_en.md` follow what it measured:
+
+- **Length scales with the clip** — ~30 words per second of `integrated_multimodal_description`: 120–190 for 5 s, 160–250 for 10 s, 200–310 for 15 s (the corpus: median 152, never above 250; the old 350–500 was two to three times too long). The Music Video Writer prints each piece's budget on its `PIECE` line; the `📏 description:` log line judges every scene against its own duration.
+- **Shots** — one up to ~8 s, two beyond, three only past 10 s, never four (half the corpus is a single shot). `[Shot 2] At 00:0X.XXX, the shot cuts to …` for every cut.
+- **Sound fields** — `overall_soundscape` is one sentence, a comma list of concrete sounds; `non_diegetic_music` is `N/A` unless the scene calls for score (56 % of the corpus), then one sentence with instrumentation, tempo and one cue tied to a visible moment.
+- **Dialogue** — the voice quality rides on the speaker id the first time (`(S1), her voice sharp, breathless, and quick-paced,`), silent on‑screen characters are marked `(no ID, non-vocalizing)`, a line that runs past the end closes with `<cutoff>`.
+- **Style** — the default `visual_style` is now `Live-action, cinematic` (the corpus's most common opener; `35mm` appears in 2.5 % of it), followed in the scene's own words by the light and grade, then the framing. The `visual_style` dropdown leads with 327 openers taken verbatim from the corpus, grouped by medium — device footage (phone, doorbell, bodycam, night‑vision, screen recording), broadcast / commercial, 2D and 3D animation, clay / puppets / tabletop, game engine, silent era — regenerated with `python scripts/h3_dataset_survey.py --style-list data/h3/dataset_visual_styles.json`.
+
 ### APNext H3 Characters
 `H3Characters` · workflows: all crossover workflows, [`h3_music_video.json`](examples/h3/h3_music_video.json)
 

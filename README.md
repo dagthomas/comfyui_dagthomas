@@ -1266,6 +1266,8 @@ Built for the ComfyUI community. Special thanks to all contributors and users pr
 
 Shoutout to [**malcolmrey**](https://huggingface.co/malcolmrey) for the crossover ideas and for finding valid characters — see his [various dataset](https://huggingface.co/datasets/malcolmrey/various) on Hugging Face. The H3 Crossover Writer and the character casting owe him a beer. 🍻
 
+Shoutout to [**ostris**](https://huggingface.co/ostris) for the [minimax_h3_1k](https://huggingface.co/datasets/ostris/minimax_h3_1k) dataset — 1,000 MiniMax-H3 prompts with the videos they rendered. The writers' word budgets, shot counts, sound-field rules and the `visual_style` list (327 openers in the dataset's own words) are measured from it; see `scripts/h3_dataset_survey.py` and [`data/h3/h3_1k_survey.md`](data/h3/h3_1k_survey.md). 🙏
+
 The example workflows stand on these excellent node packs:
 
 - [**ComfyUI-H3-Motion-Context-MultiRef**](https://github.com/seitanism/ComfyUI-H3-Motion-Context-MultiRef) by **seitanism** — the masked-audio latent technique behind the `h3_music_video_masked_audio` workflow (the song written into the H3 audio latent and protected from denoising, for structural lip-sync).

@@ -78,7 +78,7 @@ class H3MusicVideoMinimal:
                 ),
             }),
             "visual_style": (VISUAL_STYLES, {
-                "default": "Live-action, 35mm cinematic film aesthetic",
+                "default": "Live-action, cinematic",
                 "tooltip": (
                     "The look of the whole video - the curated cinematic looks (35mm, Wes "
                     "Anderson, neon noir, ...) each fix style, camera, lenses and colour. "

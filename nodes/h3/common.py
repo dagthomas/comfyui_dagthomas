@@ -91,6 +91,9 @@ VISUAL_STYLE_CUSTOM = "Custom (use custom_visual_style)"
 # with the photography actually spelled out so every scene renders the same
 # look.
 _CINEMATIC_LOOKS = [
+    # the writers' default - the opener of a fifth of the prompts measured to
+    # render well (the light and grade follow it in the scene's own words)
+    "Live-action, cinematic",
     "Live-action, 35mm cinematic film aesthetic",
     "Live-action, modern large-format digital cinema: Alexa 65 clarity, creamy shallow depth of field, natural HDR skin tones, smooth floating gimbal moves, neutral filmic grade",
     "Live-action, 65mm epic scale: IMAX-format deep-focus vistas, slow deliberate crane and dolly moves, natural available light, cool desaturated grade with warm protected skin tones",
@@ -149,10 +152,27 @@ def _apnext_cinematic_items(name):
     return [str(item).strip() for item in items if str(item).strip()]
 
 
+# ... and FIRST of all the styles measured from a corpus of prompts that are
+# known to render well on H3: the [Shot 1] openers of ostris/minimax_h3_1k
+# (1,000 prompts + their renders), extracted and grouped by medium with
+# scripts/h3_dataset_survey.py --style-list. They are the dataset's own
+# words, so they read exactly the way H3 was prompted.
+_DATASET_STYLES_PATH = os.path.join(_DATA_DIR, "dataset_visual_styles.json")
+
+
+def _dataset_visual_styles():
+    try:
+        with open(_DATASET_STYLES_PATH, "r", encoding="utf-8") as fh:
+            items = json.load(fh).get("styles", [])
+    except (OSError, ValueError):
+        return []
+    return [str(item.get("style", "")).strip() for item in items if str(item.get("style", "")).strip()]
+
+
 def _build_visual_styles():
     styles = [AUTO, VISUAL_STYLE_CUSTOM]
     seen = {s.lower() for s in styles}
-    for source in [_CINEMATIC_LOOKS, _GUIDE_VISUAL_STYLES] + [
+    for source in [_dataset_visual_styles(), _CINEMATIC_LOOKS, _GUIDE_VISUAL_STYLES] + [
         _apnext_cinematic_items(name) for name in _APNEXT_VISUAL_STYLE_FILES
     ]:
         for item in source:

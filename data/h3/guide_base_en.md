@@ -81,7 +81,20 @@ At the beginning of `[Shot 1]`, state the overall style and initial composition.
 [Shot 1] Live-action, cinematic, a medium-wide shot frames...
 ```
 
+The openers that render best say the style, then the **light and grade**, then the framing, all in the first sentence:
+
+```text
+[Shot 1] Live-action, cinematic, sun-bleached desaturated grade with dust haze hanging low over an open desert highway, an Indigenous American courier in his thirties leans low over a dirt-caked motorcycle...
+[Shot 1] Live-action, cinematic drama with dusty shafts of afternoon light through a small attic window, a middle-aged Black woman in a paint-stained cardigan (S1) and her younger brother in glasses (S2) kneel on either side of an open cedar chest...
+[Shot 1] 2D-animated in early-2000s Flash-cartoon style, with rigid tweened limbs, bold vector outlines, flat gradient fills, a ...
+```
+
+**Length.** The description is about 30 words per second of video, every shot together - 120-190 words for 5 seconds, 160-250 for 10, 200-310 for 15. Measured on 1,000 prompts that render well, the median 5-second description is 152 words and none passes 250; past that the model stops reading and the picture gets vaguer, not richer.
+
 ### 4.2 Shots and Cuts
+
+**How many.** One shot for a clip up to about 8 seconds, two for a longer one, three at most and only past 10 seconds - never four. Half of the prompts that render well are a single shot; a static shot is a normal choice.
+
 
 Do not add a timestamp to the first shot. Use sequential shot numbers for later shots, and begin each one with a strictly increasing cut time that falls within the video duration:
 
@@ -131,7 +144,10 @@ When a speaker first appears, provide enough information from the visual and aud
 ```text
 The young woman with a quiet, breathy voice (S1) says: <d>[English] I get off at the next station.</d>
 The two children (S1,S2) shout together, <d>[English] Wait for us!</d>
+The wiry East Asian woman in a black windbreaker (S1), her voice sharp, breathless, and quick-paced, vaults an air duct and shouts: <d>[English] Don't slow down — jump!</d>
 ```
+
+Put the voice right after the ID the first time the speaker appears - `(S1), her voice sharp, breathless, and quick-paced,` - and the model casts the voice as well as the face. A character who is on screen but never speaks is marked once, `a young Black woman counselor in her twenties (no ID, non-vocalizing)`, so the model does not give her a line. When a line runs past the end of the video, close it with `<cutoff>` inside the tag: `<d>[English] Not for use on load-bearing structures, void where prohibited<cutoff></d>`.
 
 For voiceover, use the exact phrase `says in an off-screen voiceover`. Immediately after every voiceover `<d>` block, state that the corresponding on-screen character's lips remain closed:
 
@@ -151,18 +167,21 @@ A red neon sign reading "营业中" glows above the doorway.
 
 ### 4.6 overall_soundscape
 
-Use 1–4 English sentences in one continuous paragraph to summarize the ambient sound, physical action sounds, and non-verbal human sounds across the full video, such as wind, rain, traffic, footsteps, fabric movement, impacts, breathing, laughter, or panting. Dialogue, singing, and diegetic music already belong in the multimodal description and should not be repeated here. Use `N/A` only when the user explicitly requests complete silence throughout the video.
+Use ONE English sentence: the concrete sounds the picture makes, in the order they happen, as a comma list - wind, rain, traffic, footsteps, fabric movement, impacts, breathing, laughter, panting. Name the sound and the thing making it; no mood words. Dialogue, singing, and diegetic music already belong in the multimodal description and should not be repeated here. Use `N/A` only when the user explicitly requests complete silence throughout the video. (Prompts that render well average 28 words here and are one sentence in 90% of cases.)
 
 ```text
-overall_soundscape: Steady rain taps against the café windows while low room ambience continues underneath. The entrance bell rings once, followed by wet footsteps and the soft scrape of a chair.
+overall_soundscape: A shin striking padded ribs with a heavy thump, ropes stretching under the falling body's weight, boots pivoting and scuffing canvas, a stadium roar rising sharply, the referee's shoes scuffing in fast.
+overall_soundscape: A timer bell dinging, a small metal pan sliding on a tray, a soft child's giggle, frosting smearing with a light finger-tap.
 ```
 
 ### 4.7 non_diegetic_music
 
-Use 1–3 English sentences to describe background music that the characters cannot hear and only the audience can hear. Focus on instrumentation, speed, rhythm, and dynamic changes; do not use abstract mood words or explain the emotional function of the score. Singing, instruments, radio, television, or phone music audible to the characters are diegetic events and should appear in the multimodal description. Use `N/A` when there is no non-diegetic music.
+`N/A` is the normal answer - more than half of the prompts that render well have no score - and a clip with no music reads cleaner than one with a vague pad under it. When the scene genuinely calls for score, ONE English sentence: instrumentation, tempo, and one cue tied to a visible moment. Do not use abstract mood words or explain the emotional function of the score. Singing, instruments, radio, television, or phone music audible to the characters are diegetic events and should appear in the multimodal description.
 
 ```text
-non_diegetic_music: Sparse piano notes at a slow tempo, joined by sustained low strings that gradually increase in volume before fading out.
+non_diegetic_music: N/A
+non_diegetic_music: Pizzicato strings and solo bassoon at moderate tempo, staccato throughout, a single tuba note on the belly-flop.
+non_diegetic_music: Driving synth-brass swell with a rapid tom-tom pattern, cutting to a single sustained low pad chord on the stoppage.
 ```
 
 ## 5. Cases
