@@ -16,7 +16,10 @@
 # edit: change an end time, delete a line, and the writer follows.
 
 from ...utils.constants import CUSTOM_CATEGORY
+import json
+
 from .music_support import (
+    BEAT_SNAP_MODES,
     CUT_PLACEMENTS,
     SEGMENT_MODES,
     analyse,
@@ -27,6 +30,7 @@ from .music_support import (
     parse_lyrics,
     segment_by_lyrics,
     segment_song,
+    snap_segments_to_beats,
 )
 from .song_structure import song_structure, summary_line
 from .sound_events import parse_events, parse_rejected
@@ -87,7 +91,15 @@ class H3CutPlan:
                     "multiline": True, "default": "",
                     "tooltip": (
                         "Optional timed lyrics (`[0:15] line`). Cuts then avoid landing just after a "
-                        "line has started, and the Lyric lines mode cuts right before lines."
+                        "line has started, and the Lyric lines mode cuts right before lines. Empty = "
+                        "take the `lyrics_in` socket (e.g. H3 Lyrics Transcribe)."
+                    ),
+                }),
+                "lyrics_in": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": (
+                        "Timed lyrics from another node - the `lyrics` output of an APNext H3 Lyrics "
+                        "Transcribe node. Used only while the `lyrics` box is empty; typed text wins."
                     ),
                 }),
                 "sound_events": ("STRING", {
@@ -111,6 +123,25 @@ class H3CutPlan:
                         "opening the new scene."
                     ),
                 }),
+                "beat_snap": (BEAT_SNAP_MODES, {
+                    "default": BEAT_SNAP_MODES[0],
+                    "tooltip": (
+                        "After the cutter has placed every cut on the frame grid, move each one onto the "
+                        "nearest beat (or downbeat), rounded to the frame - so every scene opens ON the "
+                        "pulse to within half a frame (21 ms) instead of up to a third of a second off. "
+                        "Scene lengths are then frame-exact, not on the 17-frame grid: render with H3 "
+                        "Chain Render, which renders the next grid length up and trims the pad. The "
+                        "single-clip path (Save Clip) would leave the pad in. The beats come from "
+                        "`beat_grid` when wired, else from the song's measured structure."
+                    ),
+                }),
+                "beat_grid": ("STRING", {
+                    "forceInput": True,
+                    "tooltip": (
+                        "Optional: Beat Grid's `grid_json` - its beats and downbeats (with your BPM override "
+                        "and offset) are what beat_snap snaps to, instead of the measured structure's."
+                    ),
+                }),
             },
         }
 
@@ -126,8 +157,11 @@ class H3CutPlan:
     )
 
     def plan(self, audio, segment_mode, max_seconds, min_seconds, lyrics="", sound_events="", manual_cuts="",
-             cut_placement=None):
+             cut_placement=None, beat_snap=None, beat_grid="", lyrics_in=""):
         placement = cut_placement or CUT_PLACEMENTS[0]
+        if not (lyrics or "").strip() and (lyrics_in or "").strip():
+            lyrics = lyrics_in          # the socket feeds the box while it is empty; typed text wins
+        snap_mode = str(beat_snap or BEAT_SNAP_MODES[0])
         if min_seconds > max_seconds:
             min_seconds, max_seconds = max_seconds, min_seconds
         try:
@@ -148,10 +182,35 @@ class H3CutPlan:
             segments, feats = segment_song(audio, max_seconds, min_seconds, segment_mode,
                                            lyric_times=timed, structure=structure, events=events, forced=forced,
                                            placement=placement)
+        # beat-exact: move every grid-placed cut onto the nearest beat / downbeat
+        beat_offsets, beat_unit = None, "beat"
+        if not snap_mode.startswith("off"):
+            beat_unit = "downbeat" if "downbeat" in snap_mode else "beat"
+            grid = None
+            if (beat_grid or "").strip():
+                try:
+                    grid = json.loads(beat_grid)
+                except Exception as exc:
+                    print(f"⚠️ H3 Cut Plan: beat_grid is not JSON ({exc}) - using the measured structure")
+            if grid and grid.get("beats"):
+                lines = grid.get("bars") if beat_unit == "downbeat" else grid.get("beats")
+                origin = f"Beat Grid ({grid.get('bpm', 0):g} BPM)"
+            elif structure and structure.get("beats"):
+                lines = structure.get("downbeats") if beat_unit == "downbeat" else structure.get("beats")
+                origin = f"measured structure ({structure.get('bpm', 0):g} BPM)"
+            else:
+                lines, origin = [], ""
+            if lines:
+                segments, beat_offsets = snap_segments_to_beats(segments, lines, feats["duration"], min_seconds, max_seconds)
+                moved = [o for o in beat_offsets if o is not None]
+                print(f"🎵 H3 Cut Plan | {len(moved)}/{max(0, len(segments) - 1)} cuts snapped onto the {beat_unit} "
+                      f"from the {origin}; largest move {max((abs(o) for o in moved), default=0.0) * 1000:.0f} ms")
+            else:
+                print(f"⚠️ H3 Cut Plan: beat_snap is on but no {beat_unit}s were found (no steady pulse) - cuts stay on the grid")
         labels = energy_labels(feats, segments)
         text = format_cut_plan(segments, feats["duration"], min_seconds, max_seconds,
                                structure=structure, events=events, lyric_times=timed, labels=labels, forced=forced,
-                               placement=placement)
+                               placement=placement, beat_offsets=beat_offsets, beat_unit=beat_unit)
         count = len(segments)
         form = summary_line(structure) if structure else "structure: not measured"
         summary = f"{count} scenes, {min_seconds:g}-{max_seconds:g} s, {fmt_time(feats['duration'])} | {form}"

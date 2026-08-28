@@ -10,8 +10,9 @@
 # write the chosen values back into the node's widgets.
 #
 #   POST /apnext/h3/sound_events_preview
-#        {audio, sensitivity, min_gap_seconds}
-#     -> {file, duration, events: [{t, type, strength, label}], events_no_impacts: [...]}
+#        {audio, sensitivity, min_gap_seconds, gain_db, dynamics_curve, eq_*_db, on_beat_weight}
+#     -> {file, duration, bpm, grid: {bpm, period, phase, on, of}, shaping, on_beat_weight,
+#         events: [{t, type, strength, label}], events_no_impacts: [...]}
 #
 # Two variants come back because the two hit detectors share one label per
 # instant: with `impacts` on, a kick that is also bright is called IMPACT;
@@ -32,10 +33,23 @@ try:
 except Exception:  # pragma: no cover - imported outside ComfyUI
     PromptServer = None
 
-from .sound_events import EVENT_TYPES, detect_events
+from .sound_events import EVENT_TYPES, SHAPING_KEYS, detect_events
 
 _CACHE = {}
 _CACHE_LIMIT = 6
+_SHAPING_DEFAULT = {k: (1.0 if k == "dynamics_curve" else 0.0) for k in SHAPING_KEYS}
+_SHAPING_RANGE = {k: ((0.25, 4.0) if k == "dynamics_curve" else (-24.0, 24.0)) for k in SHAPING_KEYS}
+
+
+def _shaping_from(body):
+    """The gain / curve / EQ values from the request, clamped to the node's ranges."""
+    out = {}
+    for key in SHAPING_KEYS:
+        raw = body.get(key)
+        value = _SHAPING_DEFAULT[key] if raw is None or raw == "" else float(raw)
+        lo, hi = _SHAPING_RANGE[key]
+        out[key] = round(min(hi, max(lo, value)), 3)
+    return out
 
 
 def _load_audio(name):
@@ -59,22 +73,29 @@ def _slim(events):
     ]
 
 
-def _compute(name, sensitivity, min_gap):
+def _compute(name, sensitivity, min_gap, shaping, on_beat_weight):
     path, audio = _load_audio(name)
     common = dict(
         sensitivity=sensitivity, min_gap_seconds=min_gap, min_strength=0.0,
         max_events=1_000_000, bass_hits=True, drops_and_stops=True, builds=True,
-        sections=True, accents=True,
+        sections=True, accents=True, on_beat_weight=on_beat_weight, **shaping,
     )
-    with_impacts = detect_events(audio, impacts=True, **common)
+    # the grid is fitted on the run with impacts - the fuller hit list - and the
+    # editor draws that one; the two runs share the tempo, so the phase agrees
+    grid = {}
+    with_impacts = detect_events(audio, impacts=True, grid_out=grid, **common)
     without_impacts = detect_events(audio, impacts=False, **common)
     duration = audio["waveform"].shape[-1] / audio["sample_rate"]
     return {
         "file": name,
+        "bpm": grid.get("bpm", 0.0),
+        "grid": grid,
+        "on_beat_weight": on_beat_weight,
         "path_mtime": os.path.getmtime(path),
         "duration": round(float(duration), 2),
         "sensitivity": sensitivity,
         "min_gap_seconds": min_gap,
+        "shaping": dict(shaping),
         "kinds": list(EVENT_TYPES),
         "events": _slim(with_impacts),
         "events_no_impacts": _slim(without_impacts),
@@ -92,10 +113,12 @@ async def _preview(request):
     try:
         sensitivity = float(body.get("sensitivity") or 1.0)
         min_gap = float(body.get("min_gap_seconds") or 0.18)
+        shaping = _shaping_from(body)
+        on_beat_weight = round(min(1.0, max(0.0, float(body.get("on_beat_weight") or 0.0))), 3)
     except (TypeError, ValueError):
-        return web.json_response({"error": "sensitivity / min_gap_seconds must be numbers."}, status=400)
+        return web.json_response({"error": "sensitivity / min_gap_seconds / gain / curve / EQ must be numbers."}, status=400)
 
-    key = (name, round(sensitivity, 4), round(min_gap, 4))
+    key = (name, round(sensitivity, 4), round(min_gap, 4), on_beat_weight) + tuple(shaping[k] for k in SHAPING_KEYS)
     cached = _CACHE.get(key)
     if cached is not None:
         try:
@@ -108,7 +131,7 @@ async def _preview(request):
 
     loop = asyncio.get_running_loop()
     try:
-        payload = await loop.run_in_executor(None, _compute, name, sensitivity, min_gap)
+        payload = await loop.run_in_executor(None, _compute, name, sensitivity, min_gap, shaping, on_beat_weight)
     except FileNotFoundError as exc:
         return web.json_response({"error": str(exc)}, status=404)
     except Exception as exc:  # decoding / torch errors - show them, do not 500 blindly

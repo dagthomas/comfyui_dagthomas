@@ -180,15 +180,16 @@ class H3SceneRetake:
         ref2va = _node("MiniMaxH3ReferenceToVideo")
         guider_cls, noise_cls = _node("BasicGuider"), _node("RandomNoise")
         sampler_cls, decode_cls, decode_audio_cls = _node("SamplerCustomAdvanced"), _node("VAEDecode"), _node("VAEDecodeAudio")
-        masked_cls = comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3SongMaskedAVContext")
+        masked_cls = (comfy_nodes.NODE_CLASS_MAPPINGS.get("H3MaskedSongLatent")
+                      or comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3SongMaskedAVContext"))
         av_cls = comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3GeneratedAVMaskedContext")
         mc_cls = comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3MotionContext")
         guide_cls = comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3AddGuide")
         use_av = mode.startswith("masked") and av_cls is not None
         use_mc = not use_av and (mode.startswith("masked") or mode.startswith("motion")) and mc_cls is not None
         if master_audio is not None and masked_cls is None:
-            print("⚠️ H3 Scene Retake: master_audio is connected but ComfyUI-H3-Motion-Context-MultiRef is not installed - "
-                  "the song cannot be masked in; H3 will generate the sound.")
+            print("⚠️ H3 Scene Retake: master_audio is connected but neither H3 Masked Song Latent nor "
+                  "ComfyUI-H3-Motion-Context-MultiRef is available - the song cannot be masked in; H3 will generate the sound.")
         if flow and master_audio is None and not use_av and not use_mc and guide_cls is None:
             flow = False
 

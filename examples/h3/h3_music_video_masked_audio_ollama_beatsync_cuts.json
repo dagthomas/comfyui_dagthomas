@@ -1,0 +1,2187 @@
+{
+  "id": "0b3bf871-92da-4121-8da0-4e64ef08bf95",
+  "revision": 0,
+  "last_node_id": 207,
+  "last_link_id": 453,
+  "nodes": [
+    {
+      "id": 119,
+      "type": "VAELoader",
+      "pos": [
+        -1860,
+        4860
+      ],
+      "size": [
+        480,
+        62
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            420
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "minimax_h3_video_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+      }
+    },
+    {
+      "id": 120,
+      "type": "VAELoader",
+      "pos": [
+        -1860,
+        5000
+      ],
+      "size": [
+        480,
+        62
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            421
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "minimax_h3_audio_vae_fp32.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      }
+    },
+    {
+      "id": 123,
+      "type": "KSamplerSelect",
+      "pos": [
+        -160,
+        4510
+      ],
+      "size": [
+        370,
+        62
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            426
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "res_multistep"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "res_multistep"
+      }
+    },
+    {
+      "id": 128,
+      "type": "CLIPLoader",
+      "pos": [
+        -1860,
+        4670
+      ],
+      "size": [
+        480,
+        112
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            419
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    {
+      "id": 127,
+      "type": "UNETLoader",
+      "pos": [
+        -1860,
+        4510
+      ],
+      "size": [
+        480,
+        86
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            287
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 143,
+      "type": "PathchSageAttentionKJ",
+      "pos": [
+        -1150,
+        4510
+      ],
+      "size": [
+        270,
+        112
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 287
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            288
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PathchSageAttentionKJ"
+      },
+      "widgets_values": [
+        "auto",
+        false
+      ],
+      "widgets_values_named": {
+        "sage_attention": "auto",
+        "allow_compile": false
+      }
+    },
+    {
+      "id": 124,
+      "type": "BasicScheduler",
+      "pos": [
+        -160,
+        4650
+      ],
+      "size": [
+        370,
+        114
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 285
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            427
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "simple",
+        14,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "simple",
+        "steps": 25,
+        "denoise": 1
+      }
+    },
+    {
+      "id": 141,
+      "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
+      "pos": [
+        -820,
+        4510
+      ],
+      "size": [
+        425,
+        302
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 288
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            285,
+            418
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3MemoryEfficientSolAttentionPatch"
+      },
+      "widgets_values": [
+        true,
+        1,
+        4096,
+        false,
+        "diag",
+        false,
+        "exact_kv",
+        "exact_kv",
+        ""
+      ],
+      "widgets_values_named": {
+        "enabled": true,
+        "tau": 1,
+        "min_tokens": 4096,
+        "strict": false,
+        "thresh_type": "diag",
+        "int8_qk": false,
+        "int8_pv": "exact_kv",
+        "sink_conditioning": "exact_kv",
+        "dense_blocks": ""
+      }
+    },
+    {
+      "id": 115,
+      "type": "H3ResolutionSelector",
+      "pos": [
+        -930,
+        6350
+      ],
+      "size": [
+        270,
+        238
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            430
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            431
+          ]
+        },
+        {
+          "name": "megapixels",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Resolution Selector (Size)",
+      "properties": {
+        "Node name for S&R": "H3ResolutionSelector"
+      },
+      "widgets_values": [
+        "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
+        0.5,
+        32
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "16:9 (Widescreen)",
+        "megapixels": 0.5,
+        "multiple": 32
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 153,
+      "type": "H3PromptPreview",
+      "pos": [
+        4190,
+        5960
+      ],
+      "size": [
+        847,
+        818
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 322
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": 436,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3PromptPreview",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "h3_preview": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Stylized 3D CG comedic animation, a medium shot opens on the man exactly as shown in <Picture 1> — neon green buzzcut, mirrored wraparound visor sunglasses worn even at this sleepy hour, a single pearl drop earring on his right ear only with the left ear bare, and the same eye shape and head structure — sitting slumped on the edge of a messy bed in rumpled pajamas inside a 90s metalhead bedroom cluttered with band posters. He yawns and rubs his face, looking extremely sleepy, then the drowsy, low-pitched young man (S1) mutters: <d>[English] Five more minutes... no, wait, I'm already up.</d> He stretches both arms overhead, pushes himself upright, and shuffles right toward the bathroom door as the camera tracks right with small amplitude at a steady pace, following him past the doorway into the bathroom. He steps up to the mirror and looks straight into the camera as if meeting his own reflection, lifts the hem of his pajama top with one hand, and sprays deodorant under the raised arm with the other, wincing slightly at the cold mist. He sets the deodorant on the sink edge, reaches to the opposite side for a bottle of mouthwash, takes a sip, gargles loudly with puffed cheeks, and spits it into the sink, shaking his head once as (S1) grumbles: <d>[English] Ugh, that's freezing.</d> Wiping his mouth with the back of his hand, he turns and walks right again toward the kitchen while the camera continues its rightward tracking motion, arriving at a kitchen counter that fills the foreground as he pulls out a stool and sits, reaching for a box of cereal beside a chipped mug. [Shot 2] At 00:13.500, the shot cuts to a tight close-up on his visor sunglasses as a cereal flake bounces off the lens, and (S1) deadpans: <d>[English] Really, again?</d>\n\noverall_soundscape: Bedsprings creak and fabric rustles as he stretches, followed by soft footsteps padding across a hallway floor. The deodorant can hisses briefly, liquid sloshes and gargles in the bathroom, then splashes into the sink basin. In the kitchen, a stool scrapes the floor, a cereal box crinkles, and a single flake clinks lightly off glass.\n\nnon_diegetic_music: A playful, palm-muted electric guitar riff at a moderate tempo drives the sequence, underscored by a tight, syncopated drum groove. A single staccato guitar chord and a snare hit accent the cut to the close-up at the end."
+      }
+    },
+    {
+      "id": 157,
+      "type": "H3Characters",
+      "pos": [
+        -540,
+        5960
+      ],
+      "size": [
+        330,
+        390
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "cast_in",
+          "type": "STRING",
+          "shape": 7,
+          "link": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 447,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "character",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "actor",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "franchise",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "file_path",
+          "type": "STRING",
+          "links": []
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": [
+            320
+          ]
+        },
+        {
+          "name": "wardrobe",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            434
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3Characters",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "✏️ custom (type in custom_character)",
+        "(all)",
+        0,
+        "fixed",
+        "Lena: a singer in her early 30s, platinum pixie cut, sharp cheekbones",
+        "red leather biker jacket, white ribbed tank top, black skinny jeans, silver hoop earrings"
+      ],
+      "title": "H3 Characters — custom performer + wardrobe",
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 161,
+      "type": "MarkdownNote",
+      "pos": [
+        -1860,
+        5960
+      ],
+      "size": [
+        700,
+        260
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "# (cut plan variant, independent clips) H3 Music Video\n\n**This copy of the beat-sync workflow renders every scene as its own clip**: `continuity` = *cut everywhere* on BOTH the writer and Chain Render. Every cut is a hard cut and every scene a fresh setup - no take carries frames into the next.\n\n1. **Load the song** → `audio` of the **H3 Music Video Writer** (and `replace_audio` of H3 Scenes Join, so the finished video carries the original track).\n2. The writer cuts the song into 5–15 s pieces on the music (timed lyrics make cuts land before lines), writes one scene per piece with `<Audio 1>` = that piece, and emits matching lists: `scenes` → prompt, `lengths` → length (frame counts on H3's grid), `audio_segments` → `ref_audio_1`.\n3. The H3 video node runs once per piece and each clip is DECODED AND SAVED as its own video file (VAE Decode → Create Video → Save Video). Stitch externally, or re-add **H3 Scenes Join** before Create Video for one file with the original song.\n\nPut lyrics with timestamps (`[0:12] line`) for exact lip-sync; a custom performer + wardrobe comes from the H3 Characters node (✏️ custom). Connect reference images (the performer's face) to the writer's `image_1..` and they reach the video node and the preview thumbnails.\n\n**Seed:** the writer's seed is **-1 (randomize)** - every queue writes a brand-new video; nothing is reused from earlier runs. To use the Review node's stop-edit-**Continue** flow, first set the writer's seed to a FIXED number: Continue relies on ComfyUI reusing the cached scenes, and with -1 each queue writes fresh scenes and re-reviews instead.\n\n**Original sound:** every saved clip carries its ORIGINAL slice of the song (the writer's `audio_segments`, cut on the same frame grid) - not the model-generated audio, and in the masked workflow not the vocals-only stem. Wire Create Video's `audio` back to VAE Decode Audio if you want to hear what the model generated."
+      ],
+      "title": "How this works",
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 163,
+      "type": "H3ClaudeCodeMusicVideoWriter",
+      "pos": [
+        3350,
+        5960
+      ],
+      "size": [
+        520,
+        1644
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 319
+        },
+        {
+          "name": "cast_1",
+          "type": "STRING",
+          "link": 320,
+          "shape": 7
+        },
+        {
+          "name": "cast_2",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "cast_3",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "cast_4",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "link": 433,
+          "shape": 7
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": 434,
+          "shape": 7
+        },
+        {
+          "name": "sound_events",
+          "type": "STRING",
+          "link": 410,
+          "shape": 7
+        },
+        {
+          "name": "cut_plan",
+          "type": "STRING",
+          "link": 413
+        },
+        {
+          "name": "lyrics_in",
+          "type": "STRING",
+          "link": 446,
+          "shape": 7
+        },
+        {
+          "name": "beat_grid",
+          "type": "STRING",
+          "link": 453,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "scenes",
+          "type": "STRING",
+          "links": [
+            422
+          ]
+        },
+        {
+          "name": "durations",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "lengths",
+          "type": "INT",
+          "links": [
+            423
+          ]
+        },
+        {
+          "name": "audio_segments",
+          "type": "AUDIO",
+          "links": [
+            424
+          ]
+        },
+        {
+          "name": "segment_table",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "scenes_text",
+          "type": "STRING",
+          "links": [
+            322
+          ]
+        },
+        {
+          "name": "synopsis",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "cast",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "scene_count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "song_seconds",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "session_id",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_2",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_3",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_4",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_5",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_6",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_7",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_8",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "image_9",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "clip_starts",
+          "type": "FLOAT",
+          "links": [
+            425
+          ],
+          "slot_index": 21
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": [
+            432
+          ],
+          "slot_index": 22
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3ClaudeCodeMusicVideoWriter",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "Performance (the singer lip-syncs the lyrics on camera)",
+        "Auto (cut on the music)",
+        15.0,
+        5.2,
+        "Auto",
+        "Live-action, 35mm cinematic film aesthetic",
+        "English",
+        "sonnet",
+        false,
+        true,
+        true,
+        1800,
+        -1,
+        "randomize",
+        "",
+        "",
+        "",
+        "",
+        "",
+        true,
+        "",
+        "",
+        "",
+        "",
+        true,
+        "Characters only (ignore picture backgrounds)",
+        "Masked latent (song injected into the audio latent)",
+        true,
+        4,
+        "Ref2VA (bind reference images)",
+        "haiku",
+        true,
+        "",
+        true,
+        "Literal (the pictures show what the words say)",
+        "Reveal (a camera move discloses a new space around them)",
+        "write (call the LLM)",
+        "cut everywhere (independent clips)"
+      ],
+      "title": "Music Video Writer - independent clips (continuity: cut everywhere)"
+    },
+    {
+      "id": 164,
+      "type": "LoadAudio",
+      "pos": [
+        -930,
+        5960
+      ],
+      "size": [
+        315,
+        136
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            319,
+            327,
+            409,
+            411,
+            428,
+            437
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "",
+        null,
+        null
+      ],
+      "title": "Load the song"
+    },
+    {
+      "id": 166,
+      "type": "AudioSeparation",
+      "pos": [
+        690,
+        5960
+      ],
+      "size": [
+        315,
+        198
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 327
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Bass",
+          "type": "AUDIO",
+          "links": [
+            450
+          ]
+        },
+        {
+          "name": "Drums",
+          "type": "AUDIO",
+          "links": [
+            449
+          ]
+        },
+        {
+          "name": "Other",
+          "type": "AUDIO",
+          "links": [
+            451
+          ]
+        },
+        {
+          "name": "Vocals",
+          "type": "AUDIO",
+          "links": [
+            444,
+            448
+          ],
+          "slot_index": 3
+        }
+      ],
+      "title": "Vocal stem - what H3 lip-syncs to",
+      "properties": {
+        "Node name for S&R": "AudioSeparation"
+      },
+      "widgets_values": [
+        "linear",
+        10.0,
+        0.1
+      ]
+    },
+    {
+      "id": 193,
+      "type": "H3SoundEvents",
+      "pos": [
+        1400,
+        5960
+      ],
+      "size": [
+        340,
+        696
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 409
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "events",
+          "type": "STRING",
+          "links": [
+            410,
+            412,
+            438,
+            441
+          ]
+        },
+        {
+          "name": "events_json",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "summary",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "Sound Events - bass hits / drops / stops",
+      "properties": {
+        "Node name for S&R": "H3SoundEvents"
+      },
+      "widgets_values": [
+        1.0,
+        0.18,
+        600,
+        0.0,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        "",
+        1.0,
+        "",
+        0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 194,
+      "type": "H3CutPlan",
+      "pos": [
+        -540,
+        6420
+      ],
+      "size": [
+        405,
+        376
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 411
+        },
+        {
+          "name": "sound_events",
+          "type": "STRING",
+          "link": 412
+        },
+        {
+          "name": "beat_grid",
+          "type": "STRING",
+          "link": 439,
+          "shape": 7
+        },
+        {
+          "name": "lyrics_in",
+          "type": "STRING",
+          "link": 445,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "cut_plan",
+          "type": "STRING",
+          "links": [
+            413,
+            429
+          ]
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "summary",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3CutPlan",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "Auto (cut on the music)",
+        15.0,
+        5.2,
+        "",
+        "",
+        "Auto (nearest onset; drops open the new scene)",
+        "nearest beat (frame-exact - Chain Render)"
+      ],
+      "title": "Cut Plan - cuts before the lyric lines, snapped ON the beat",
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 197,
+      "type": "MarkdownNote",
+      "pos": [
+        120,
+        5960
+      ],
+      "size": [
+        340,
+        300
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        "# Cut Plan\n\nThe scenes are decided **before** anything is written: Load Audio → **Cut Plan** → the writer's `cut_plan` socket. The node measures the song's form (chorus / verse / bridge, downbeats when clear), folds in the Sound Events list, and returns every scene with its start and end on the H3 frame grid - shown on the node, one line per scene, with the reason for each cut (`drop lands here`, `section start`, `your tap`, ...).\n\n- `min_seconds` / `max_seconds` on THIS node are the scene bounds now; the writer's own segment widgets are greyed out while the socket is linked.\n- **🎮 Tap the cuts** plays the song here in the browser: press space where the video should cut, *Apply*, and your taps become hard boundaries (snapped to the nearest onset).\n- The plan is text: edit a time or delete a line and the writer follows.\n- Paste the same lyrics here as in the writer if you want lyric-aware cuts."
+      ],
+      "title": "Cut Plan",
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 199,
+      "type": "H3MusicVideoChainRender",
+      "pos": [
+        440,
+        4510
+      ],
+      "size": [
+        457,
+        622
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 418
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 419
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 420
+        },
+        {
+          "name": "audio_vae",
+          "type": "VAE",
+          "link": 421
+        },
+        {
+          "name": "scenes",
+          "type": "STRING",
+          "link": 422
+        },
+        {
+          "name": "lengths",
+          "type": "INT",
+          "link": 423
+        },
+        {
+          "name": "audio_segments",
+          "type": "AUDIO",
+          "link": 424
+        },
+        {
+          "name": "clip_starts",
+          "type": "FLOAT",
+          "link": 425
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 426
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 427
+        },
+        {
+          "name": "master_audio",
+          "type": "AUDIO",
+          "link": 428
+        },
+        {
+          "name": "cut_plan",
+          "type": "STRING",
+          "link": 429
+        },
+        {
+          "name": "ref_image_1",
+          "type": "IMAGE",
+          "link": 435
+        },
+        {
+          "name": "ref_image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_3",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "ref_image_4",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "conditioning_audio",
+          "type": "AUDIO",
+          "link": 443,
+          "shape": 7
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "link": 430,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": 431,
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": 432,
+          "widget": {
+            "name": "filename_prefix"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "file_paths",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "report",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3MusicVideoChainRender",
+        "cnr_id": "comfyui_dagthomas"
+      },
+      "widgets_values": [
+        1344,
+        768,
+        0,
+        "fixed",
+        22,
+        "cut everywhere (independent clips)",
+        "video/MiniMax_H3",
+        24.0,
+        true,
+        "previous latent (copied straight into the new latent - no decode / re-encode)"
+      ],
+      "title": "Chain Render - independent clips (continuity: cut everywhere)",
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 200,
+      "type": "MarkdownNote",
+      "pos": [
+        440,
+        5210
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "color": "#432",
+      "bgcolor": "#653",
+      "title": "Chain Render",
+      "widgets_values": [
+        "# Chain Render\n\nOne node replaces Ref2VA → masked song audio → guider → sampler → Save Clip. It renders the scenes **in order** and carries the last **22 frames** of each clip into the next one wherever the Cut Plan placed a *soft* cut (onset / downbeat / lyric line). Cuts on a **drop, section start, stop or your tap stay hard cuts** - that is where the sync lives.\n\n- `continuity`: **cut everywhere** in THIS workflow - every scene is its own clip on a hard cut; nothing is carried from the previous scene. The writer has the same switch (its last widget) and is set the same way, so the scenes are also *written* as fresh setups - own framing, own opening image, free to change place at every cut. Flip both back to *cut plan decides* for the flowing version (`h3_music_video_masked_audio_ollama_beatsync.json`).\n- `context_frames`: 5 / 22 / 39 … (22 ≈ 0.9 s of motion; 39 also aligns the audio clock).\n- Wire the performer pictures into `ref_image_1..4` - they are the `<Picture N>` references for every scene.\n- `master_audio` = the song: each scene gets its piece masked into the latent; a continuing scene's pinned head carries the previous piece's tail audio.\n- The writer gets the same `cut_plan` for the scene times; with `continuity` = cut everywhere no piece is marked `CONTINUES the previous take`.\n\nNeeds ComfyUI-H3-Motion-Context-MultiRef for the masked prefix (installed here); without it the core AddGuide path carries the frames and audio is generated.\n\nClips land in `output/video/` as `MiniMax_H3_sNN_*.mp4`; the node shows a per-scene report."
+      ]
+    },
+    {
+      "id": 201,
+      "type": "H3LLMBackend",
+      "pos": [
+        2810,
+        5960
+      ],
+      "size": [
+        400,
+        342
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "llm",
+          "type": "APNEXT_LLM",
+          "links": [
+            433
+          ]
+        },
+        {
+          "name": "model_used",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Ollama backend - qwen3.8:27b writes the scenes",
+      "properties": {
+        "Node name for S&R": "H3LLMBackend"
+      },
+      "widgets_values": [
+        "custom (use model_name below)",
+        "ollama:qwen3.8:27b",
+        "",
+        0.9,
+        8000,
+        false,
+        65536,
+        "off (faster - recommended)",
+        true,
+        "auto (JSON with a schema on Ollama, text envelopes elsewhere)",
+        ""
+      ]
+    },
+    {
+      "id": 202,
+      "type": "LoadImage",
+      "pos": [
+        -930,
+        6170
+      ],
+      "size": [
+        320,
+        102
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            435,
+            436,
+            447
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Performer photo - <Picture 1>",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
+    },
+    {
+      "id": 203,
+      "type": "H3BeatGrid",
+      "pos": [
+        1880,
+        5960
+      ],
+      "size": [
+        340,
+        230
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 437
+        },
+        {
+          "name": "events",
+          "type": "STRING",
+          "link": 438,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "beat_times",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "grid_json",
+          "type": "STRING",
+          "links": [
+            439,
+            442,
+            453
+          ]
+        },
+        {
+          "name": "summary",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "Beat Grid - BPM, every beat, downbeats",
+      "properties": {
+        "Node name for S&R": "H3BeatGrid"
+      },
+      "widgets_values": [
+        0.0,
+        4,
+        0,
+        "beats"
+      ]
+    },
+    {
+      "id": 204,
+      "type": "H3BeatEmphasis",
+      "pos": [
+        1880,
+        6260
+      ],
+      "size": [
+        475,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 452
+        },
+        {
+          "name": "events",
+          "type": "STRING",
+          "link": 441,
+          "shape": 7
+        },
+        {
+          "name": "grid_json",
+          "type": "STRING",
+          "link": 442,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            443
+          ]
+        },
+        {
+          "name": "summary",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "title": "Beat Emphasis - BYPASSED (experiment: un-bypass to A/B the thump track)",
+      "properties": {
+        "Node name for S&R": "H3BeatEmphasis"
+      },
+      "widgets_values": [
+        3.0,
+        0.0,
+        "thump",
+        0.5,
+        5,
+        40,
+        120,
+        true,
+        1.0,
+        true
+      ]
+    },
+    {
+      "id": 205,
+      "type": "MarkdownNote",
+      "pos": [
+        -1860,
+        6290
+      ],
+      "size": [
+        400,
+        360
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Beat sync",
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "## Beat sync\n\n**Beat Grid** measures the tempo and lists every beat (phase fitted to Sound Events' hits).\n\n**Cut Plan** with `beat_snap` moves every cut onto the nearest beat, frame-exact - so every scene OPENS on the beat. The writer keeps those exact lengths (it says so in its log) and each piece's brief lists `[beat] every 0.469 s at +0.00 +0.47 ...` so the model times the action to the pulse. Only **Chain Render** can use this: it renders the next 17-frame length up and trims the pad.\n\n**Beat Emphasis** is **bypassed** in this workflow: with it on, H3 listened to a thump on every beat mixed over the voice instead of the music - the motion went jittery and stopped following the song, and the cut-before-every-lyric-line plan put no cut on a drop. Now the Cut Plan cuts **on the music** (Auto: onsets / drops / sections, still snapped to the beat) and Chain Render is conditioned on the plain **vocal stem**, like the masked-audio workflow. Un-bypass the node to A/B it. When on, it takes the **vocal stem** (not the song) and lays a thump on every beat with a small spike (`boost_db` 3, `duck_db` 0) - wired into Chain Render's `conditioning_audio`, it is what H3 *listens* to while the original song still goes to the output. The vocal stem is what the lips follow; the thumps are the beat cue. Feeding the full mix here, spiked +9 dB and ducked -6 dB, buries the voice and the lip-sync goes with it. Whether the picture follows the beat more tightly is an experiment: render with and without, run **Sync Check** on both.\n\nSound Events' `on_beat_weight` (and its 🎚 editor's Signal section: gain / curve / EQ) shapes which hits count as beats in the first place.\n\n**Voice Over Music** is what Chain Render listens to now (`conditioning_audio`): the Vocals stem at full level with Drums + Bass + Other summed **-9 dB** under it, ducked a further **-6 dB** only while the voice sounds. The mouth follows the voice, the picture moves on the real beat, and no word is buried. `music_db` is the dial: -3 is nearly the full song, -18 is a whisper of beat. The bypassed Beat Emphasis sits after it, so un-bypassing adds thumps on top of this mix for an A/B."
+      ]
+    },
+    {
+      "id": 206,
+      "type": "H3LyricsTranscribe",
+      "pos": [
+        690,
+        6230
+      ],
+      "size": [
+        340,
+        80
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 444
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lyrics",
+          "type": "STRING",
+          "links": [
+            445,
+            446
+          ]
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3LyricsTranscribe"
+      },
+      "widgets_values": [],
+      "title": "Lyrics Transcribe - the words, timed, for the cuts AND the writer"
+    },
+    {
+      "id": 207,
+      "type": "H3VoiceOverMusic",
+      "pos": [
+        1880,
+        6010
+      ],
+      "size": [
+        475,
+        210
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "voice",
+          "type": "AUDIO",
+          "link": 448
+        },
+        {
+          "name": "music_1",
+          "type": "AUDIO",
+          "link": 449,
+          "shape": 7
+        },
+        {
+          "name": "music_2",
+          "type": "AUDIO",
+          "link": 450,
+          "shape": 7
+        },
+        {
+          "name": "music_3",
+          "type": "AUDIO",
+          "link": 451,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            452
+          ]
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3VoiceOverMusic"
+      },
+      "widgets_values": [
+        -9.0,
+        -6.0,
+        0.0,
+        true
+      ],
+      "title": "Voice Over Music - what H3 listens to (voice on top, drums+bass+other under it)"
+    }
+  ],
+  "links": [
+    [
+      285,
+      141,
+      0,
+      124,
+      0,
+      "MODEL"
+    ],
+    [
+      287,
+      127,
+      0,
+      143,
+      0,
+      "MODEL"
+    ],
+    [
+      288,
+      143,
+      0,
+      141,
+      0,
+      "MODEL"
+    ],
+    [
+      319,
+      164,
+      0,
+      163,
+      0,
+      "AUDIO"
+    ],
+    [
+      320,
+      157,
+      4,
+      163,
+      1,
+      "STRING"
+    ],
+    [
+      322,
+      163,
+      5,
+      153,
+      0,
+      "STRING"
+    ],
+    [
+      327,
+      164,
+      0,
+      166,
+      0,
+      "AUDIO"
+    ],
+    [
+      409,
+      164,
+      0,
+      193,
+      0,
+      "AUDIO"
+    ],
+    [
+      410,
+      193,
+      1,
+      163,
+      7,
+      "STRING"
+    ],
+    [
+      411,
+      164,
+      0,
+      194,
+      0,
+      "AUDIO"
+    ],
+    [
+      412,
+      193,
+      1,
+      194,
+      1,
+      "STRING"
+    ],
+    [
+      413,
+      194,
+      1,
+      163,
+      8,
+      "STRING"
+    ],
+    [
+      418,
+      141,
+      0,
+      199,
+      0,
+      "MODEL"
+    ],
+    [
+      419,
+      128,
+      0,
+      199,
+      1,
+      "CLIP"
+    ],
+    [
+      420,
+      119,
+      0,
+      199,
+      2,
+      "VAE"
+    ],
+    [
+      421,
+      120,
+      0,
+      199,
+      3,
+      "VAE"
+    ],
+    [
+      422,
+      163,
+      0,
+      199,
+      4,
+      "STRING"
+    ],
+    [
+      423,
+      163,
+      2,
+      199,
+      5,
+      "INT"
+    ],
+    [
+      424,
+      163,
+      3,
+      199,
+      6,
+      "AUDIO"
+    ],
+    [
+      425,
+      163,
+      21,
+      199,
+      7,
+      "FLOAT"
+    ],
+    [
+      426,
+      123,
+      0,
+      199,
+      8,
+      "SAMPLER"
+    ],
+    [
+      427,
+      124,
+      0,
+      199,
+      9,
+      "SIGMAS"
+    ],
+    [
+      428,
+      164,
+      0,
+      199,
+      10,
+      "AUDIO"
+    ],
+    [
+      429,
+      194,
+      1,
+      199,
+      11,
+      "STRING"
+    ],
+    [
+      430,
+      115,
+      0,
+      199,
+      17,
+      "INT"
+    ],
+    [
+      431,
+      115,
+      1,
+      199,
+      18,
+      "INT"
+    ],
+    [
+      432,
+      163,
+      22,
+      199,
+      19,
+      "STRING"
+    ],
+    [
+      433,
+      201,
+      0,
+      163,
+      5,
+      "APNEXT_LLM"
+    ],
+    [
+      434,
+      157,
+      6,
+      163,
+      6,
+      "IMAGE"
+    ],
+    [
+      435,
+      202,
+      0,
+      199,
+      12,
+      "IMAGE"
+    ],
+    [
+      436,
+      202,
+      0,
+      153,
+      1,
+      "IMAGE"
+    ],
+    [
+      437,
+      164,
+      0,
+      203,
+      0,
+      "AUDIO"
+    ],
+    [
+      438,
+      193,
+      1,
+      203,
+      1,
+      "STRING"
+    ],
+    [
+      439,
+      203,
+      3,
+      194,
+      2,
+      "STRING"
+    ],
+    [
+      441,
+      193,
+      1,
+      204,
+      1,
+      "STRING"
+    ],
+    [
+      442,
+      203,
+      3,
+      204,
+      2,
+      "STRING"
+    ],
+    [
+      443,
+      204,
+      0,
+      199,
+      16,
+      "AUDIO"
+    ],
+    [
+      444,
+      166,
+      3,
+      206,
+      0,
+      "AUDIO"
+    ],
+    [
+      445,
+      206,
+      0,
+      194,
+      3,
+      "STRING"
+    ],
+    [
+      446,
+      206,
+      0,
+      163,
+      9,
+      "STRING"
+    ],
+    [
+      447,
+      202,
+      0,
+      157,
+      1,
+      "IMAGE"
+    ],
+    [
+      448,
+      166,
+      3,
+      207,
+      0,
+      "AUDIO"
+    ],
+    [
+      449,
+      166,
+      1,
+      207,
+      1,
+      "AUDIO"
+    ],
+    [
+      450,
+      166,
+      0,
+      207,
+      2,
+      "AUDIO"
+    ],
+    [
+      451,
+      166,
+      2,
+      207,
+      3,
+      "AUDIO"
+    ],
+    [
+      452,
+      207,
+      0,
+      204,
+      0,
+      "AUDIO"
+    ],
+    [
+      453,
+      203,
+      3,
+      163,
+      10,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "LOAD MODELS",
+      "bounding": [
+        -1900,
+        4400,
+        560,
+        710
+      ],
+      "color": "#3a5fa8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "SOL ATTENTION / SPEED PATCHES",
+      "bounding": [
+        -1190,
+        4400,
+        840,
+        460
+      ],
+      "color": "#c26a1f",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "SAMPLING",
+      "bounding": [
+        -200,
+        4400,
+        450,
+        410
+      ],
+      "color": "#b03a3a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "CHAIN RENDER",
+      "bounding": [
+        400,
+        4400,
+        760,
+        1270
+      ],
+      "color": "#c2337a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "NOTES",
+      "bounding": [
+        -1900,
+        5850,
+        780,
+        840
+      ],
+      "color": "#4a4a4a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "USER INPUTS",
+      "bounding": [
+        -970,
+        5850,
+        1470,
+        990
+      ],
+      "color": "#4f8a3a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "AUDIO ANALYSIS",
+      "bounding": [
+        650,
+        5850,
+        1970,
+        850
+      ],
+      "color": "#1f8f6a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "PROMPT WRITER (LLM)",
+      "bounding": [
+        2770,
+        5850,
+        1230,
+        1800
+      ],
+      "color": "#7a3fa0",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "PROMPT PREVIEW",
+      "bounding": [
+        4150,
+        5850,
+        930,
+        970
+      ],
+      "color": "#5b6b8f",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.2579,
+      "offset": [
+        1960,
+        -4340
+      ]
+    },
+    "frontendVersion": "1.49.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

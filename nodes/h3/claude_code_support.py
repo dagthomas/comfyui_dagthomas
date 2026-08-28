@@ -328,6 +328,30 @@ def _structured_plan(model, local, structured):
     return None, mode.startswith("on")
 
 
+_CHARS_PER_TOKEN = 3.6          # English prose + tags on Qwen / Llama tokenizers
+_IMAGE_TOKENS = 1500            # a downscaled reference picture on a vision model
+
+
+def _warn_prompt_budget(system_prompt, user_prompt, images, local):
+    """
+    Say so BEFORE the call when the prompt is about to eat the context. Ollama
+    does not refuse an oversized turn - it truncates the input and then cuts the
+    reply off wherever the window ends (see llm_router._check_ollama_cutoff).
+    """
+    num_ctx = int((local or {}).get("num_ctx") or 0)
+    if not num_ctx:
+        return
+    est = int((len(system_prompt or "") + len(user_prompt or "")) / _CHARS_PER_TOKEN) + _IMAGE_TOKENS * len(images or [])
+    want = int((local or {}).get("max_tokens") or 8000)
+    if est + min(want, 4000) > num_ctx:
+        bigger = "65536" if est + 6000 <= 65536 else "131072"
+        print(
+            f"\u26a0\ufe0f H3: this prompt is ~{est:,} tokens against num_ctx {num_ctx:,} - the reply "
+            f"has room for ~{max(0, num_ctx - est):,} tokens and a scene chunk needs 3-4k. Raise num_ctx "
+            f"on the H3 LLM Backend node ({bigger}) or shorten the prompt."
+        )
+
+
 def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
                    director, skills, local, structured=None):
     """One H3 turn through the LLM router (Ollama, LM Studio, local, API models)."""
@@ -364,6 +388,7 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
         from .scenes_support import scenes_json_instruction
         user_prompt = (user_prompt or "") + scenes_json_instruction()
 
+    _warn_prompt_budget(system_prompt, user_prompt, images, local)
     started = time.monotonic()
     text, resolved = call_llm(
         model,
@@ -579,16 +604,22 @@ def resolve_draft_model(draft_model, model, local):
 
 _PROJECT_LOOKS = (
     "Golden", "Silver", "Amber", "Noir", "Neon", "Velvet", "Crimson", "Cobalt",
-    "Sepia", "Chrome", "Indigo", "Emerald", "Scarlet", "Midnight", "Pastel",
-    "Tungsten", "Halide", "Matte", "Anamorphic", "Technicolor",
+    "Sepia", "Chrome", "Indigo", "Emerald", "Scarlet", "Midnight", "Pastel", "Tungsten",
+    "Halide", "Matte", "Anamorphic", "Technicolor", "Ivory", "Onyx", "Coral", "Saffron",
+    "Teal", "Mauve", "Ochre", "Umber", "Cyan", "Magenta", "Bronze", "Copper",
+    "Ruby", "Sapphire", "Jade", "Opal", "Smoke", "Kodachrome", "Backlit", "Grainy",
 )
 _PROJECT_MOVES = (
     "Dolly", "Crane", "Zoom", "Orbit", "Boom", "Gimbal", "Rack", "Whip",
-    "Glide", "Pan", "Tilt", "Push", "Steadicam", "Tracking", "Vertigo",
+    "Glide", "Pan", "Tilt", "Push", "Steadicam", "Tracking", "Vertigo", "Truck",
+    "Pedestal", "Arc", "Swish", "Jib", "Handheld", "Drone", "Slider", "Sweep",
+    "Pullback", "Drift", "Roll", "Hover", "Snap", "Float",
 )
 _PROJECT_GEAR = (
     "Slate", "Reel", "Lens", "Shutter", "Bokeh", "Gaffer", "Grip", "Rig",
-    "Flare", "Foley", "Scrim", "Frame", "Take", "Clapper", "Montage",
+    "Flare", "Foley", "Scrim", "Frame", "Take", "Clapper", "Montage", "Tripod",
+    "Monitor", "Diffuser", "Reflector", "Softbox", "Gel", "Sandbag", "Cstand", "Cable",
+    "Marker", "Viewfinder", "Tape", "Cutter", "Barn", "Dailies",
 )
 
 
@@ -608,17 +639,35 @@ def _splitmix64(seed):
         yield z ^ (z >> 31)
 
 
+_TAIL_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
+_TAIL_LEN = 4                                   # 36^4 = 1.68 million tails
+
+
+def _tail(value):
+    """4 base-36 characters from a 64-bit value - the part of a project name
+    that keeps two seeds apart even when they draw the same three words."""
+    n = int(value) % (36 ** _TAIL_LEN)
+    out = ""
+    for _ in range(_TAIL_LEN):
+        out = _TAIL_ALPHABET[n % 36] + out
+        n //= 36
+    return out
+
+
 def generate_project_name(seed=None):
-    """A PascalCase name like 'NeonDollyFoley'. A fixed seed (>= 0) always
-    yields the same name - the same one the front-end shows for that seed -
-    so seeded re-runs keep their project tag; anything else is random."""
+    """A name like 'NeonDollyFoley-7k3q': three words from the pools (40 x 30 x
+    30) plus a 4-character base-36 tail, ~60 billion combinations. A fixed seed
+    (>= 0) always yields the same name - the same one the front-end shows for
+    that seed - so seeded re-runs keep their project tag; anything else is random."""
     import random
     if isinstance(seed, int) and not isinstance(seed, bool) and seed >= 0:
         stream = _splitmix64(seed)
-        return "".join(pool[next(stream) % len(pool)]
-                       for pool in (_PROJECT_LOOKS, _PROJECT_MOVES, _PROJECT_GEAR))
+        words = "".join(pool[next(stream) % len(pool)]
+                        for pool in (_PROJECT_LOOKS, _PROJECT_MOVES, _PROJECT_GEAR))
+        return f"{words}-{_tail(next(stream))}"
     rng = random.Random()
-    return rng.choice(_PROJECT_LOOKS) + rng.choice(_PROJECT_MOVES) + rng.choice(_PROJECT_GEAR)
+    words = rng.choice(_PROJECT_LOOKS) + rng.choice(_PROJECT_MOVES) + rng.choice(_PROJECT_GEAR)
+    return f"{words}-{_tail(rng.getrandbits(64))}"
 
 
 def project_name_input():
@@ -627,7 +676,7 @@ def project_name_input():
             "default": "",
             "tooltip": (
                 "A tag for this run - auto-filled with a random name like "
-                "'NeonDollyFoley' when the node is created; type your own to rename "
+                "'NeonDollyFoley-7k3q' when the node is created; type your own to rename "
                 "the project. Wire the node's `project_name` output into Save Video's "
                 "`filename_prefix` and every clip of the run lands in its own subfolder "
                 "(output/video/<name>/), so the output folder shows at a glance which "

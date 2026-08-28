@@ -165,9 +165,9 @@
     }
   },
   "115": {
-    "class_type": "ResolutionSelector",
+    "class_type": "H3ResolutionSelector",
     "inputs": {
-      "aspect_ratio": "16:9 (Widescreen)",
+      "aspect_ratio": "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
       "megapixels": 0.5,
       "multiple": 32
     }
@@ -219,10 +219,9 @@
       "draft_model": "haiku",
       "parallel_chunks": true,
       "project_name": "",
-      "avoid_previous": 6,
       "handoff_pass": true,
       "interpretation": "Auto (the writer decides)",
-      "transition_style": "Stay (a continuing scene keeps its place)",
+      "transition_style": "Reveal (a camera move discloses a new space around them)",
       "cast_1": [
         "157",
         4

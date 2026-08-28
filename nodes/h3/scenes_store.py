@@ -88,6 +88,98 @@ def _list_saved():
         return []
 
 
+RUN_MODES = [
+    "write (call the LLM)",
+    "reuse last run (newest bundle this node saved - no LLM call)",
+]
+
+
+def run_mode_input():
+    return (RUN_MODES, {
+        "default": RUN_MODES[0],
+        "tooltip": (
+            "Continue from the scenes you already have. Reuse last run: skip the LLM and return "
+            "the newest bundle this node saved to output/apnext_scenes/ (`save_scenes`) - the same "
+            "scenes, lengths, clip starts and project name - so everything downstream renders "
+            "again with other sampler settings, seeds or references. While it is on, edits to the "
+            "direction, lyrics or cast are ignored; set it back to write for a new script. For an "
+            "older run pick the file in APNext H3 Scenes Load."
+        ),
+    })
+
+
+def is_reuse(run_mode):
+    return str(run_mode or "").startswith("reuse")
+
+
+def latest_bundle(source=None):
+    """Path of the newest bundle (written by `source`, when given), or None."""
+    d = scenes_dir()
+    for name in _list_saved():
+        path = os.path.join(d, name)
+        if source is None:
+            return path
+        try:
+            with open(path, encoding="utf-8") as f:
+                head = json.load(f)
+            if head.get("kind") == _KIND and head.get("source") == source:
+                return path
+        except Exception:
+            continue
+    return None
+
+
+def latest_bundle_stamp(source=None):
+    """Cache key for a reuse run: the newest bundle's name and mtime."""
+    path = latest_bundle(source)
+    try:
+        return f"{os.path.basename(path)}:{os.path.getmtime(path)}" if path else "none"
+    except Exception:
+        return "none"
+
+
+def load_bundle(path):
+    """The bundle, its lists normalised the way the writers emit them."""
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+    if data.get("kind") != _KIND:
+        raise ValueError(f"{os.path.basename(path)} is not an APNext H3 scenes bundle.")
+    scenes = [str(s) for s in data.get("scenes", [])]
+    if not scenes:
+        raise ValueError(f"{os.path.basename(path)} contains no scenes.")
+    durations = [float(d) for d in data.get("durations", [])] or [10.0] * len(scenes)
+    lengths = [int(x) for x in data.get("lengths", [])] or [round(d * 24) for d in durations]
+    clip_starts = [float(c) for c in data.get("clip_starts", [])]
+    segments = [tuple(s) for s in data.get("segments", [])]
+    if not segments and clip_starts:
+        segments = [(c, c + d) for c, d in zip(clip_starts, durations)]
+    if not clip_starts and segments:
+        clip_starts = [s for s, _ in segments]
+    data.update(scenes=scenes, durations=durations, lengths=lengths,
+                clip_starts=clip_starts, segments=segments)
+    return data
+
+
+def bundle_audio_segments(audio, data, tag="H3 Scenes Load"):
+    """Re-slice the song into the bundle's pieces ([] without audio or segment times)."""
+    segments, lengths = data.get("segments") or [], data.get("lengths") or []
+    if audio is None or not segments:
+        return []
+    try:
+        wave = audio.get("waveform")
+        have = wave.shape[-1] / int(audio.get("sample_rate", 1)) if wave is not None else 0.0
+        want = float(data.get("song_seconds") or 0.0)
+        if want and abs(have - want) > 0.5:
+            print(
+                f"\u26a0\ufe0f {tag}: the connected audio is {have:.1f}s but the scenes "
+                f"were written for a {want:.1f}s song - the slices may not line up."
+            )
+        return [slice_audio(audio, s, e, fr) for (s, e), fr in zip(segments, lengths)]
+    except Exception as exc:
+        print(f"\u26a0\ufe0f {tag}: could not slice audio: {exc}")
+        return []
+
+
 class H3ScenesLoad:
     @classmethod
     def INPUT_TYPES(cls):
@@ -143,46 +235,15 @@ class H3ScenesLoad:
                 "land in output/apnext_scenes/."
             )
         path = os.path.join(scenes_dir(), os.path.basename(file))
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        if data.get("kind") != _KIND:
-            raise ValueError(f"{file} is not an APNext H3 scenes bundle.")
-
-        scenes = [str(s) for s in data.get("scenes", [])]
-        if not scenes:
-            raise ValueError(f"{file} contains no scenes.")
-        durations = [float(d) for d in data.get("durations", [])] or [10.0] * len(scenes)
-        lengths = [int(x) for x in data.get("lengths", [])] or [round(d * 24) for d in durations]
-        clip_starts = [float(c) for c in data.get("clip_starts", [])]
-        segments = [tuple(s) for s in data.get("segments", [])]
-        if not segments and clip_starts:
-            segments = [(c, c + d) for c, d in zip(clip_starts, durations)]
-        if not clip_starts and segments:
-            clip_starts = [s for s, _ in segments]
-
-        audio_segments = []
+        data = load_bundle(path)
+        scenes = data["scenes"]
         info = f"loaded {file} | {len(scenes)} scene(s) | saved {data.get('created', '?')}"
-        if audio is not None and segments:
-            try:
-                wave = audio.get("waveform")
-                have = wave.shape[-1] / int(audio.get("sample_rate", 1)) if wave is not None else 0.0
-                want = float(data.get("song_seconds") or 0.0)
-                if want and abs(have - want) > 0.5:
-                    print(
-                        f"⚠️ H3 Scenes Load: the connected audio is {have:.1f}s but the scenes "
-                        f"were written for a {want:.1f}s song - the slices may not line up."
-                    )
-                audio_segments = [
-                    slice_audio(audio, s, e, fr) for (s, e), fr in zip(segments, lengths)
-                ]
-            except Exception as exc:
-                print(f"⚠️ H3 Scenes Load: could not slice audio: {exc}")
-
-        print(f"📂 H3 Scenes Load | {info}")
+        audio_segments = bundle_audio_segments(audio, data)
+        print(f"\U0001f4c2 H3 Scenes Load | {info}")
         return (
-            scenes, durations, lengths, audio_segments,
+            scenes, data["durations"], data["lengths"], audio_segments,
             data.get("segment_table", ""), data.get("scenes_text", ""),
             data.get("synopsis", ""), data.get("cast", ""), len(scenes),
-            float(data.get("song_seconds") or 0.0), info, clip_starts,
+            float(data.get("song_seconds") or 0.0), info, data["clip_starts"],
             project_name_prefix(str(data.get("project_name") or "")),
         )

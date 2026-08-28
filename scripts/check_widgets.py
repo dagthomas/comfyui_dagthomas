@@ -62,10 +62,10 @@ def check(fname, node_types):
         print(f"  ok: {fname} node {n['id']} {n['type']} ({len(values)} widgets)")
 
 
-check("h3_music_video.json", {"H3SongAnalysis"})
-check("h3_music_video_masked_audio.json", {"H3SongAnalysis"})
+check("h3_music_video.json", {"H3ClaudeCodeMusicVideoWriter", "H3SampleAndSave"})
+check("h3_music_video_masked_audio.json", {"H3ClaudeCodeMusicVideoWriter", "H3SoundEvents", "H3BeatGrid", "H3CutPlan", "H3VoiceOverMusic", "H3SampleAndSave"})
 check("h3_presentation.json", {"H3ClaudeCodePresentationWriter", "H3Characters", "H3ScenesReview"})
-check("h3_music_video_minimal.json", {"H3MusicVideoMinimal", "H3ScenesReview", "H3SongAnalysis"})
+check("h3_music_video_minimal.json", {"H3MusicVideoMinimal", "H3ScenesReview"})
 check("h3_music_video_masked_audio_briefs.json",
       {"H3ClaudeCodeMusicVideoWriter", "H3SceneBrief", "H3Characters", "H3ScenesReview"})
 check("h3_music_video_dailies_gate.json",

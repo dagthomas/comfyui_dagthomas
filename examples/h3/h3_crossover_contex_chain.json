@@ -13,7 +13,7 @@
       ],
       "size": [
         352,
-        96
+        86
       ],
       "flags": {},
       "order": 5,
@@ -48,7 +48,7 @@
       ],
       "size": [
         352,
-        128
+        112
       ],
       "flags": {},
       "order": 6,
@@ -80,11 +80,11 @@
       "type": "KSamplerSelect",
       "pos": [
         1890,
-        120
+        510
       ],
       "size": [
         288,
-        96
+        62
       ],
       "flags": {},
       "order": 26,
@@ -118,7 +118,7 @@
       ],
       "size": [
         352,
-        96
+        86
       ],
       "flags": {},
       "order": 7,
@@ -152,7 +152,7 @@
       ],
       "size": [
         352,
-        96
+        86
       ],
       "flags": {},
       "order": 8,
@@ -182,11 +182,11 @@
       "type": "MiniMaxH3ChainScenePromptEditor",
       "pos": [
         420,
-        540
+        3270
       ],
       "size": [
-        1120,
-        1056
+        480,
+        672
       ],
       "flags": {},
       "order": 17,
@@ -224,11 +224,11 @@
       "type": "Reroute",
       "pos": [
         510,
-        -520
+        -130
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 18,
@@ -260,11 +260,11 @@
       "type": "Reroute",
       "pos": [
         510,
-        -330
+        90
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 19,
@@ -295,11 +295,11 @@
       "type": "MiniMaxH3ChainLoopStart",
       "pos": [
         -540,
-        -260
+        130
       ],
       "size": [
         352,
-        192
+        160
       ],
       "flags": {},
       "order": 15,
@@ -363,11 +363,11 @@
       "type": "Reroute",
       "pos": [
         1220,
-        -420
+        -30
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 22,
@@ -399,11 +399,11 @@
       "type": "Reroute",
       "pos": [
         2560,
-        -350
+        50
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 31,
@@ -434,11 +434,11 @@
       "type": "MiniMaxH3ChainCurrent",
       "pos": [
         30,
-        -230
+        160
       ],
       "size": [
         480,
-        512
+        346
       ],
       "flags": {},
       "order": 16,
@@ -567,7 +567,7 @@
       ],
       "size": [
         448,
-        256
+        166
       ],
       "flags": {},
       "order": 42,
@@ -612,11 +612,11 @@
       "type": "Reroute",
       "pos": [
         2560,
-        -450
+        -60
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 32,
@@ -647,11 +647,11 @@
       "type": "RandomNoise",
       "pos": [
         1890,
-        -60
+        330
       ],
       "size": [
         288,
-        96
+        82
       ],
       "flags": {},
       "order": 27,
@@ -691,11 +691,11 @@
       "type": "MiniMaxH3ImageToVideo",
       "pos": [
         640,
-        -260
+        200
       ],
       "size": [
-        544,
-        384
+        480,
+        240
       ],
       "flags": {},
       "order": 21,
@@ -792,11 +792,11 @@
       "type": "MiniMaxH3ChainContext",
       "pos": [
         1310,
-        -260
+        130
       ],
       "size": [
         352,
-        288
+        138
       ],
       "flags": {},
       "order": 23,
@@ -877,7 +877,7 @@
       ],
       "size": [
         320,
-        160
+        88
       ],
       "flags": {},
       "order": 13,
@@ -913,11 +913,11 @@
       "type": "Reroute",
       "pos": [
         510,
-        -420
+        -20
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 20,
@@ -948,11 +948,11 @@
       "type": "Reroute",
       "pos": [
         1790,
-        -450
+        -60
       ],
       "size": [
-        75,
-        26
+        210,
+        40
       ],
       "flags": {},
       "order": 25,
@@ -984,11 +984,11 @@
       "type": "BasicGuider",
       "pos": [
         1890,
-        -260
+        130
       ],
       "size": [
         288,
-        96
+        54
       ],
       "flags": {},
       "order": 28,
@@ -1027,11 +1027,11 @@
       "type": "BasicScheduler",
       "pos": [
         1890,
-        290
+        680
       ],
       "size": [
         288,
-        128
+        114
       ],
       "flags": {},
       "order": 29,
@@ -1077,11 +1077,11 @@
       "type": "SamplerCustomAdvanced",
       "pos": [
         2260,
-        -260
+        130
       ],
       "size": [
         320,
-        672
+        114
       ],
       "flags": {},
       "order": 30,
@@ -1143,11 +1143,11 @@
       "type": "VAEDecode",
       "pos": [
         2620,
-        -260
+        130
       ],
       "size": [
         256,
-        96
+        54
       ],
       "flags": {},
       "order": 33,
@@ -1186,11 +1186,11 @@
       "type": "VAEDecodeAudio",
       "pos": [
         2620,
-        -90
+        300
       ],
       "size": [
         256,
-        96
+        54
       ],
       "flags": {},
       "order": 34,
@@ -1229,7 +1229,7 @@
       "type": "MiniMaxH3LoopTrim",
       "pos": [
         2910,
-        -260
+        130
       ],
       "size": [
         384,
@@ -1319,11 +1319,11 @@
       "type": "MiniMaxH3ChainSegmentSave",
       "pos": [
         3340,
-        -260
+        130
       ],
       "size": [
         384,
-        288
+        138
       ],
       "flags": {},
       "order": 36,
@@ -1390,8 +1390,8 @@
         -260
       ],
       "size": [
-        608,
-        480
+        480,
+        166
       ],
       "flags": {},
       "order": 39,
@@ -1440,7 +1440,7 @@
       ],
       "size": [
         288,
-        64
+        62
       ],
       "flags": {},
       "order": 10,
@@ -1480,7 +1480,7 @@
       ],
       "size": [
         288,
-        96
+        112
       ],
       "flags": {},
       "order": 12,
@@ -1517,11 +1517,11 @@
       "type": "MiniMaxH3ChainLoopEnd",
       "pos": [
         4540,
-        -290
+        100
       ],
       "size": [
         352,
-        320
+        138
       ],
       "flags": {},
       "order": 38,
@@ -1593,11 +1593,11 @@
       "type": "MiniMaxH3ChainPlan",
       "pos": [
         -670,
-        540
+        3270
       ],
       "size": [
-        1024,
-        1600
+        480,
+        1736
       ],
       "flags": {},
       "order": 14,
@@ -1687,11 +1687,11 @@
       "type": "MiniMaxH3ChainReview",
       "pos": [
         3760,
-        -260
+        130
       ],
       "size": [
-        736,
-        1376
+        480,
+        1525
       ],
       "flags": {},
       "order": 37,
@@ -1763,7 +1763,7 @@
       ],
       "size": [
         352,
-        224
+        98
       ],
       "flags": {},
       "order": 40,
@@ -1826,7 +1826,7 @@
       ],
       "size": [
         330,
-        130
+        390
       ],
       "flags": {},
       "order": 1,
@@ -1894,11 +1894,11 @@
       "type": "H3Characters",
       "pos": [
         -2320,
-        730
+        990
       ],
       "size": [
         330,
-        130
+        390
       ],
       "flags": {},
       "order": 2,
@@ -1970,7 +1970,7 @@
       ],
       "size": [
         420,
-        700
+        1322
       ],
       "flags": {},
       "order": 9,
@@ -2146,9 +2146,8 @@
         "",
         "Characters only (ignore picture backgrounds)",
         "",
-        0,
         "Auto (the writer decides)",
-        "Stay (a continuing scene keeps its place)"
+        "Reveal (a camera move discloses a new space around them)"
       ],
       "title": "APNext H3 Crossover Writer",
       "color": "#223",
@@ -2163,7 +2162,7 @@
       ],
       "size": [
         420,
-        240
+        204
       ],
       "flags": {},
       "order": 11,
@@ -2223,7 +2222,7 @@
       "type": "MarkdownNote",
       "pos": [
         -2320,
-        1120
+        1742
       ],
       "size": [
         800,
@@ -2797,10 +2796,10 @@
       "id": 1,
       "title": "H3 MODEL STACK",
       "bounding": [
-        -2090,
-        -1050,
-        1430,
-        750
+        -2100,
+        -1070,
+        1450,
+        770
       ],
       "color": "#3f789e",
       "flags": {}
@@ -2809,10 +2808,10 @@
       "id": 3,
       "title": "CORE T2VA + CHECKPOINTED REVIEW",
       "bounding": [
-        -700,
-        -610,
-        5630,
-        2780
+        -580,
+        -240,
+        5520,
+        1940
       ],
       "color": "#744c8c",
       "flags": {}
@@ -2821,10 +2820,10 @@
       "id": 4,
       "title": "FINAL ASSEMBLY",
       "bounding": [
-        5090,
-        -350,
-        670,
-        600
+        5080,
+        -370,
+        560,
+        320
       ],
       "color": "#2f6b3f",
       "flags": {}
@@ -2833,10 +2832,10 @@
       "id": 5,
       "title": "DISABLED RECOVERY PATH",
       "bounding": [
-        5120,
-        330,
-        930,
-        380
+        5110,
+        310,
+        950,
+        320
       ],
       "color": "#8a5a2b",
       "flags": {}
@@ -2845,12 +2844,25 @@
       "id": 6,
       "title": "T2V — PLAN + STANDARD PROMPT EDITOR",
       "bounding": [
-        -700,
-        450,
-        2270,
-        1720
+        -710,
+        3160,
+        1650,
+        1890
       ],
       "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "USER INPUTS + WRITER",
+      "bounding": [
+        -2360,
+        60,
+        1460,
+        2030
+      ],
+      "color": "#4f8a3a",
+      "font_size": 24,
       "flags": {}
     }
   ],

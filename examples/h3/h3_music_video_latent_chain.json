@@ -1,19 +1,19 @@
 {
   "id": "0472ccb3-ce55-4d8a-829b-1debe7f4e776",
   "revision": 0,
-  "last_node_id": 200,
-  "last_link_id": 431,
+  "last_node_id": 202,
+  "last_link_id": 442,
   "nodes": [
     {
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5120
+        -1860,
+        4860
       ],
       "size": [
-        640,
-        70
+        480,
+        62
       ],
       "flags": {},
       "order": 3,
@@ -49,12 +49,12 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5260
+        -1860,
+        5000
       ],
       "size": [
-        650,
-        70
+        480,
+        62
       ],
       "flags": {},
       "order": 4,
@@ -90,12 +90,12 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260,
-        5300
+        -160,
+        4510
       ],
       "size": [
         370,
-        70
+        62
       ],
       "flags": {},
       "order": 18,
@@ -124,12 +124,12 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490,
-        4930
+        -1860,
+        4670
       ],
       "size": [
-        640,
-        120
+        480,
+        112
       ],
       "flags": {},
       "order": 5,
@@ -169,12 +169,12 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490,
-        4770
+        -1860,
+        4510
       ],
       "size": [
-        640,
-        90
+        480,
+        86
       ],
       "flags": {},
       "order": 6,
@@ -212,12 +212,12 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1050,
-        4490
+        -1150,
+        4510
       ],
       "size": [
         270,
-        114
+        112
       ],
       "flags": {},
       "order": 14,
@@ -254,12 +254,12 @@
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -260,
-        5440
+        -160,
+        4650
       ],
       "size": [
         370,
-        130
+        114
       ],
       "flags": {},
       "order": 21,
@@ -298,12 +298,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -740,
-        4490
+        -820,
+        4510
       ],
       "size": [
         425,
-        318
+        302
       ],
       "flags": {},
       "order": 16,
@@ -353,14 +353,14 @@
     },
     {
       "id": 115,
-      "type": "ResolutionSelector",
+      "type": "H3ResolutionSelector",
       "pos": [
-        -1480,
-        6020
+        -930,
+        6170
       ],
       "size": [
         270,
-        170
+        238
       ],
       "flags": {},
       "order": 11,
@@ -381,14 +381,24 @@
           "links": [
             431
           ]
+        },
+        {
+          "name": "megapixels",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
         }
       ],
       "title": "Resolution Selector (Size)",
       "properties": {
-        "Node name for S&R": "ResolutionSelector"
+        "Node name for S&R": "H3ResolutionSelector"
       },
       "widgets_values": [
-        "16:9 (Widescreen)",
+        "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
         0.5,
         32
       ],
@@ -404,8 +414,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -40,
-        5640
+        1930,
+        5960
       ],
       "size": [
         847,
@@ -449,12 +459,12 @@
       "id": 157,
       "type": "H3Characters",
       "pos": [
-        -1490,
-        5820
+        -550,
+        5960
       ],
       "size": [
         330,
-        130
+        390
       ],
       "flags": {},
       "order": 7,
@@ -521,8 +531,8 @@
       "id": 161,
       "type": "MarkdownNote",
       "pos": [
-        -1850,
-        6260
+        -1860,
+        5960
       ],
       "size": [
         700,
@@ -537,7 +547,7 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "# H3 Music Video - masked song, previous scene carried as a LATENT\n\nThe cut-plan music video rendered by **Music Video Chain Render** with `carry` = *previous latent*: at every boundary the Cut Plan lets flow (onset / downbeat / lyric line), the previous scene's **sampled video latent tail** is copied straight into the new scene's latent - no decode, no re-encode, nothing lost at each link - while the song stays masked into the audio latent (the masked-audio path). This is the same carry the Short Film Chain Render uses; the earlier chain example carried decoded frames.\n\n1. Load Audio → **Sound Events** → **Cut Plan** → the writer's `cut_plan` socket. Drops, section starts, stops and your taps stay hard cuts (that is where the sync lives); onsets / downbeats / lyric lines continue the take and the writer marks those pieces `CONTINUES the previous take`. Set `continuity` to *flow everywhere* to continue at every boundary regardless (the writer then still marks only the cut plan's soft cuts).\n2. `context_frames` 39 (~1.6 s; any H3 run 5 / 22 / 39 / 56 ... works on the song path). `save_latents` writes every scene's latent to `output/apnext_latents/` so **Scene Retake** can redo one scene later, continuing from the real tail.\n3. The node's `audio` output is the song over the rendered span, sample-exact - wire it into a Scenes Join's `replace_audio` (or Save Audio) instead of joining the clips' own encoded slices, which click at every cut.\n4. Clips land under `output/video/<project>/`; the `report` lists per scene whether it continued and the trimmed head."
+        "# H3 Music Video - masked song, previous scene carried as a LATENT\n\nThe cut-plan music video rendered by **Music Video Chain Render** with `carry` = *previous latent*: at every boundary the Cut Plan lets flow (onset / downbeat / lyric line), the previous scene's **sampled video latent tail** is copied straight into the new scene's latent - no decode, no re-encode, nothing lost at each link - while the song stays masked into the audio latent (the masked-audio path). This is the same carry the Short Film Chain Render uses; the earlier chain example carried decoded frames.\n\n1. Load Audio → **Sound Events** → **Cut Plan** → the writer's `cut_plan` socket. Drops, section starts, stops and your taps stay hard cuts (that is where the sync lives); onsets / downbeats / lyric lines continue the take and the writer marks those pieces `CONTINUES the previous take`. Set `continuity` to *flow everywhere* to continue at every boundary regardless (the writer then still marks only the cut plan's soft cuts).\n2. `context_frames` 39 (~1.6 s; any H3 run 5 / 22 / 39 / 56 ... works on the song path). `save_latents` writes every scene's latent to `output/apnext_latents/` so **Scene Retake** can redo one scene later, continuing from the real tail.\n3. The node's `audio` output is the song over the rendered span, sample-exact - wire it into a Scenes Join's `replace_audio` (or Save Audio) instead of joining the clips' own encoded slices, which click at every cut.\n4. Clips land under `output/video/<project>/`; the `report` lists per scene whether it continued and the trimmed head.\n\n**What H3 listens to - Voice Over Music.** The audio in H3's latent is not the song itself but a mix made for the model: AudioSeparation's **Vocals** on top at full level, **Drums + Bass + Other** summed **-9 dB** under them and ducked a further **-6 dB** only while the voice sounds. The mouth follows the voice, the picture moves on the real beat, and no word gets buried (the plain song buried consonants; the bare vocal stem had no beat to cut on). `music_db` is the dial: -3 is nearly the full song, -18 a whisper of beat. The original song still goes to the output.\n\n**Beats.** Sound Events (hits, drops, stops) → **Beat Grid** (the tempo and every beat, phase-fitted to the hits) → **Cut Plan** (the scenes, cut on the music, snapped frame-exact onto the beat) → the writer's `cut_plan` and `sound_events`. Every piece's brief then lists its `[beat]` offsets and its `[+start ->+land ->+settle s]` moments, and the scene is staged on them - the hit sentences are written ON TOP of the piece's picture budget, never instead of it."
       ],
       "title": "How this works",
       "color": "#222",
@@ -547,12 +557,12 @@
       "id": 163,
       "type": "H3ClaudeCodeMusicVideoWriter",
       "pos": [
-        -1110,
-        5600
+        1180,
+        5960
       ],
       "size": [
         520,
-        1180
+        1644
       ],
       "flags": {},
       "order": 0,
@@ -609,6 +619,12 @@
           "name": "cut_plan",
           "type": "STRING",
           "link": 413
+        },
+        {
+          "name": "beat_grid",
+          "type": "STRING",
+          "link": 442,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -736,7 +752,9 @@
         {
           "name": "project_name",
           "type": "STRING",
-          "links": null,
+          "links": [
+            432
+          ],
           "slot_index": 22
         }
       ],
@@ -780,11 +798,11 @@
         "haiku",
         true,
         "",
-        6,
         true,
-        6,
         "Auto (the writer decides per song)",
-        "Stay (a continuing scene keeps its place)"
+        "Reveal (a camera move discloses a new space around them)",
+        "write (call the LLM)",
+        "cut plan decides (continue over soft cuts, hard cut on drops / sections / taps)"
       ],
       "title": "H3 Music Video Writer"
     },
@@ -792,12 +810,12 @@
       "id": 164,
       "type": "LoadAudio",
       "pos": [
-        -1490,
-        5400
+        -930,
+        5960
       ],
       "size": [
         315,
-        124
+        136
       ],
       "flags": {},
       "order": 0,
@@ -810,10 +828,10 @@
           "links": [
             319,
             327,
-            401,
             409,
             411,
-            428
+            428,
+            439
           ]
         }
       ],
@@ -831,12 +849,12 @@
       "id": 166,
       "type": "AudioSeparation",
       "pos": [
-        -1490,
-        5600
+        530,
+        5960
       ],
       "size": [
         315,
-        150
+        198
       ],
       "flags": {},
       "order": 0,
@@ -852,26 +870,34 @@
         {
           "name": "Bass",
           "type": "AUDIO",
-          "links": null
+          "links": [
+            436
+          ]
         },
         {
           "name": "Drums",
           "type": "AUDIO",
-          "links": null
+          "links": [
+            435
+          ]
         },
         {
           "name": "Other",
           "type": "AUDIO",
-          "links": null
+          "links": [
+            437
+          ]
         },
         {
           "name": "Vocals",
           "type": "AUDIO",
-          "links": null,
+          "links": [
+            434
+          ],
           "slot_index": 3
         }
       ],
-      "title": "Vocal stem (better lip-sync)",
+      "title": "Vocal stem - what H3 lip-syncs to",
       "properties": {
         "Node name for S&R": "AudioSeparation"
       },
@@ -882,69 +908,15 @@
       ]
     },
     {
-      "id": 191,
-      "type": "H3SongAnalysis",
-      "pos": [
-        -1140,
-        5400
-      ],
-      "size": [
-        340,
-        160
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 401
-        }
-      ],
-      "outputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "links": null
-        },
-        {
-          "name": "profile",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "bpm",
-          "type": "FLOAT",
-          "links": null
-        },
-        {
-          "name": "intensity",
-          "type": "INT",
-          "links": null
-        },
-        {
-          "name": "label",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "title": "Song Analysis — BPM / intensity",
-      "properties": {
-        "Node name for S&R": "H3SongAnalysis",
-        "cnr_id": "comfyui_dagthomas"
-      }
-    },
-    {
       "id": 193,
       "type": "H3SoundEvents",
       "pos": [
-        -1490,
-        5700
+        530,
+        6460
       ],
       "size": [
         340,
-        180
+        696
       ],
       "flags": {},
       "order": 1,
@@ -967,7 +939,8 @@
           "type": "STRING",
           "links": [
             410,
-            412
+            412,
+            440
           ]
         },
         {
@@ -993,7 +966,7 @@
       "widgets_values": [
         1.0,
         0.18,
-        120,
+        600,
         0.0,
         true,
         true,
@@ -1004,7 +977,15 @@
         "",
         1.0,
         "",
-        0
+        0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
       ],
       "color": "#323",
       "bgcolor": "#535"
@@ -1013,12 +994,12 @@
       "id": 194,
       "type": "H3CutPlan",
       "pos": [
-        -1490,
-        5980
+        -550,
+        6420
       ],
       "size": [
         340,
-        380
+        376
       ],
       "flags": {},
       "order": 0,
@@ -1033,6 +1014,12 @@
           "name": "sound_events",
           "type": "STRING",
           "link": 412
+        },
+        {
+          "name": "beat_grid",
+          "type": "STRING",
+          "link": 441,
+          "shape": 7
         }
       ],
       "outputs": [
@@ -1070,7 +1057,8 @@
         5.2,
         "",
         "",
-        "Auto (nearest onset; drops open the new scene)"
+        "Auto (nearest onset; drops open the new scene)",
+        "nearest beat (frame-exact - Chain Render)"
       ],
       "title": "Cut Plan - the scenes, decided by the music",
       "color": "#323",
@@ -1080,8 +1068,8 @@
       "id": 197,
       "type": "MarkdownNote",
       "pos": [
-        -1490,
-        6400
+        -40,
+        5960
       ],
       "size": [
         340,
@@ -1107,12 +1095,12 @@
       "id": 199,
       "type": "H3MusicVideoChainRender",
       "pos": [
-        160,
-        4720
+        440,
+        4510
       ],
       "size": [
-        430,
-        560
+        541,
+        622
       ],
       "flags": {},
       "order": 0,
@@ -1199,6 +1187,12 @@
           "link": null
         },
         {
+          "name": "conditioning_audio",
+          "type": "AUDIO",
+          "shape": 7,
+          "link": 438
+        },
+        {
           "name": "width",
           "type": "INT",
           "link": 430,
@@ -1212,6 +1206,14 @@
           "link": 431,
           "widget": {
             "name": "height"
+          }
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": 432,
+          "widget": {
+            "name": "filename_prefix"
           }
         }
       ],
@@ -1256,8 +1258,8 @@
       "id": 200,
       "type": "MarkdownNote",
       "pos": [
-        620,
-        4720
+        440,
+        5210
       ],
       "size": [
         400,
@@ -1275,6 +1277,143 @@
       "widgets_values": [
         "# Chain Render\n\nOne node replaces Ref2VA → masked song audio → guider → sampler → Save Clip. It renders the scenes **in order** and carries the last **22 frames** of each clip into the next one wherever the Cut Plan placed a *soft* cut (onset / downbeat / lyric line). Cuts on a **drop, section start, stop or your tap stay hard cuts** - that is where the sync lives.\n\n- `continuity`: *cut plan decides* (default) / *flow everywhere* / *cut everywhere*.\n- `context_frames`: 5 / 22 / 39 … (22 ≈ 0.9 s of motion; 39 also aligns the audio clock).\n- Wire the performer pictures into `ref_image_1..4` - they are the `<Picture N>` references for every scene.\n- `master_audio` = the song: each scene gets its piece masked into the latent; a continuing scene's pinned head carries the previous piece's tail audio.\n- The writer gets the same `cut_plan`, marks continuing pieces `CONTINUES the previous take` and writes them as one shot opening on the previous last frame.\n\nNeeds ComfyUI-H3-Motion-Context-MultiRef for the masked prefix (installed here); without it the core AddGuide path carries the frames and audio is generated.\n\nClips land in `output/video/` as `MiniMax_H3_sNN_*.mp4`; the node shows a per-scene report."
       ]
+    },
+    {
+      "id": 201,
+      "type": "H3VoiceOverMusic",
+      "pos": [
+        905,
+        5960
+      ],
+      "size": [
+        475,
+        210
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "voice",
+          "type": "AUDIO",
+          "link": 434
+        },
+        {
+          "name": "music_1",
+          "type": "AUDIO",
+          "link": 435,
+          "shape": 7
+        },
+        {
+          "name": "music_2",
+          "type": "AUDIO",
+          "link": 436,
+          "shape": 7
+        },
+        {
+          "name": "music_3",
+          "type": "AUDIO",
+          "link": 437,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            438
+          ]
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3VoiceOverMusic"
+      },
+      "widgets_values": [
+        -9.0,
+        -6.0,
+        0.0,
+        true
+      ],
+      "title": "Voice Over Music - what H3 listens to (voice on top, drums+bass+other under it)"
+    },
+    {
+      "id": 202,
+      "type": "H3BeatGrid",
+      "pos": [
+        530,
+        7196
+      ],
+      "size": [
+        340,
+        230
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 439
+        },
+        {
+          "name": "events",
+          "type": "STRING",
+          "link": 440,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "bpm",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "beat_times",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "grid_json",
+          "type": "STRING",
+          "links": [
+            441,
+            442
+          ]
+        },
+        {
+          "name": "summary",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "count",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "H3BeatGrid"
+      },
+      "widgets_values": [
+        0.0,
+        4,
+        0,
+        "beats"
+      ],
+      "title": "Beat Grid - BPM, every beat, downbeats"
     }
   ],
   "links": [
@@ -1331,14 +1470,6 @@
       164,
       0,
       166,
-      0,
-      "AUDIO"
-    ],
-    [
-      401,
-      164,
-      0,
-      191,
       0,
       "AUDIO"
     ],
@@ -1483,7 +1614,7 @@
       115,
       0,
       199,
-      16,
+      17,
       "INT"
     ],
     [
@@ -1491,79 +1622,216 @@
       115,
       1,
       199,
-      17,
+      18,
       "INT"
+    ],
+    [
+      432,
+      163,
+      22,
+      199,
+      19,
+      "STRING"
+    ],
+    [
+      434,
+      166,
+      3,
+      201,
+      0,
+      "AUDIO"
+    ],
+    [
+      435,
+      166,
+      1,
+      201,
+      1,
+      "AUDIO"
+    ],
+    [
+      436,
+      166,
+      0,
+      201,
+      2,
+      "AUDIO"
+    ],
+    [
+      437,
+      166,
+      2,
+      201,
+      3,
+      "AUDIO"
+    ],
+    [
+      438,
+      201,
+      0,
+      199,
+      16,
+      "AUDIO"
+    ],
+    [
+      439,
+      164,
+      0,
+      202,
+      0,
+      "AUDIO"
+    ],
+    [
+      440,
+      193,
+      1,
+      202,
+      1,
+      "STRING"
+    ],
+    [
+      441,
+      202,
+      3,
+      194,
+      2,
+      "STRING"
+    ],
+    [
+      442,
+      202,
+      3,
+      163,
+      9,
+      "STRING"
     ]
   ],
   "groups": [
     {
       "id": 1,
-      "title": "Models",
+      "title": "LOAD MODELS",
       "bounding": [
-        -1520,
-        4680,
-        750,
-        910
+        -1900,
+        4400,
+        560,
+        710
       ],
-      "color": "#3f789e",
+      "color": "#3a5fa8",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 2,
-      "title": "Sampling",
+      "title": "SOL ATTENTION / SPEED PATCHES",
       "bounding": [
-        -300,
-        4630,
-        720,
-        970
+        -1190,
+        4400,
+        840,
+        460
       ],
-      "color": "#3f789e",
+      "color": "#c26a1f",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 3,
-      "title": "Conditioning",
+      "title": "SAMPLING",
       "bounding": [
-        -780,
-        4850,
-        470,
-        480
+        -200,
+        4400,
+        450,
+        410
       ],
-      "color": "#3f789e",
+      "color": "#b03a3a",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 4,
-      "title": "Decoding and create video",
+      "title": "CHAIN RENDER",
       "bounding": [
-        450,
-        4830,
-        630,
-        380
+        400,
+        4400,
+        910,
+        1270
       ],
-      "color": "#3f789e",
+      "color": "#c2337a",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 5,
-      "title": "User Inputs",
+      "title": "NOTES",
       "bounding": [
-        -1880,
-        5510,
-        2720,
-        1300
+        -1900,
+        5850,
+        780,
+        410
       ],
-      "color": "#3f789e",
+      "color": "#4a4a4a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "USER INPUTS",
+      "bounding": [
+        -970,
+        5850,
+        1310,
+        990
+      ],
+      "color": "#4f8a3a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "AUDIO ANALYSIS",
+      "bounding": [
+        490,
+        5850,
+        500,
+        1350
+      ],
+      "color": "#1f8f6a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "PROMPT WRITER (LLM)",
+      "bounding": [
+        1140,
+        5850,
+        600,
+        1800
+      ],
+      "color": "#7a3fa0",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "PROMPT PREVIEW",
+      "bounding": [
+        1890,
+        5850,
+        930,
+        970
+      ],
+      "color": "#5b6b8f",
+      "font_size": 24,
       "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5986674567928358,
+      "scale": 0.3814,
       "offset": [
-        2312.7617207097105,
-        -4100.956019764087
+        1960,
+        -4340
       ]
     },
     "frontendVersion": "1.49.6",

@@ -235,7 +235,8 @@ def wardrobe_directive(wardrobe=""):
 # Wardrobe verification
 # ----------------------------------------------------------------------
 
-_SYNOPSIS_HEADERS = ("title:", "logline:", "cast:", "wardrobe:", "locations:", "location:")
+_SYNOPSIS_HEADERS = ("title:", "logline:", "lyric map:", "cast:", "concept:", "motifs:",
+                     "wardrobe:", "locations:", "location:")
 _SHOT_SPLIT_RE = re.compile(r"(\[Shot\s*\d+\])", re.IGNORECASE)
 _OFFSCREEN_RE = re.compile(
     r"[^.\n]*\b(?:not in frame|out of frame|off[- ]screen|not visible|not yet in frame|"
@@ -497,7 +498,10 @@ def length_directive(seconds=None):
         "past that the model stops reading and the picture gets vaguer, not richer. Spend "
         "the words on what the camera sees that is NEW in this scene - never on repeating "
         "an outfit a label already carries, re-listing a room an earlier shot fixed, or "
-        "restating anything the scene has established."
+        "restating anything the scene has established. The budget is for the PICTURE - "
+        "place, framing, who does what; the timed sync sentences a piece asks for (the "
+        "`at 1.8 s ... lands on 2.1 s ... still settling` clauses for its beats, hits, "
+        "drops) are written ON TOP of it and are never a reason to shorten the picture."
     )
 
 
@@ -544,19 +548,36 @@ def shots_directive(seconds=None):
     return base
 
 
+_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+_TIMING_SENTENCE_RE = re.compile(r"\b\d+(?:\.\d+)?\s*s\b")      # "at 1.8 s", "lands on 2.1 s"
+
+
+def picture_words(body):
+    """
+    Words of picture in a description: the sentences that carry a beat / hit
+    timing (`... at 1.8 s ... still settling at 2.45 s`) are additions the
+    sound events asked for, on top of the scene's budget, so they are not
+    counted against it.
+    """
+    kept = [s for s in _SENTENCE_SPLIT_RE.split(body or "") if s and not _TIMING_SENTENCE_RE.search(s)]
+    return len(" ".join(kept).split())
+
+
 def description_lengths(scenes, field="integrated_multimodal_description",
                         all_fields=_SCENE_FIELDS):
     """
-    [(scene_no, words), ...] - the word count of each scene's description.
+    [(scene_no, words), ...] - the PICTURE word count of each scene's description.
 
-    Counts only the description. The other three sections are a line or two by
-    construction, so a scene that blew its budget blew it here.
+    Counts only the description, and inside it only the picture: the timed
+    sync sentences are excluded (see picture_words). The other three sections
+    are a line or two by construction, so a scene that blew its budget blew it
+    here.
     """
     from .common import extract_section
     out = []
     for scene_no, prompt in enumerate(scenes, 1):
         body = extract_section(prompt or "", field, all_fields)
-        out.append((scene_no, len(body.split())))
+        out.append((scene_no, picture_words(body)))
     return out
 
 
@@ -1057,6 +1078,7 @@ TRANSITION_STYLES = [
     "Stay (a continuing scene keeps its place)",
     "Walk-through (the actor carries the take into a new place)",
     "Reveal (a camera move discloses a new space around them)",
+    "New place (every continuing scene moves somewhere new - walk-through or reveal)",
 ]
 
 _TRANSITION_TEXT = {
@@ -1096,6 +1118,18 @@ _TRANSITION_TEXT = {
         "about the actor jumping, and establish the new place's anchors and light as they come "
         "into frame. A scene whose plan stays put stays put."
     ),
+    "New": (
+        "TRANSITIONS - NEW PLACE EVERY SCENE: every scene is its own place - no two consecutive "
+        "scenes share a location, continuing ones included. The plan gives each scene a new, "
+        "specific place that serves the story, and a continuing scene gets there INSIDE the take: "
+        "by WALK-THROUGH (the actor carries it through a door, a corridor, a corner, out of one "
+        "light into another, the camera following without cutting) or by REVEAL (the actor holds, "
+        "the camera moves, and a new space is disclosed around them), alternating rather than "
+        "repeating. The opening is still the previous scene's last frame - the same pose, "
+        "direction and speed, nothing about the actor jumps - and the new place's anchors and "
+        "light are named as they come into frame, in the first seconds. Returning looks (a "
+        "chorus signature) may come back, but never in the scene right after they were left."
+    ),
 }
 
 
@@ -1110,7 +1144,7 @@ def transition_directive(key):
 
 def transition_input():
     return (TRANSITION_STYLES, {
-        "default": TRANSITION_STYLES[1],          # Stay - the behaviour before the dropdown existed
+        "default": TRANSITION_STYLES[3],          # Reveal
         "tooltip": (
             "What a CONTINUING scene may do with its place. The chain carry keeps the actor "
             "exactly - pose, direction, speed - but not the previous place, so a change of place "
@@ -1118,7 +1152,9 @@ def transition_input():
             "scene where the plan moves. Stay: same place, always. Walk-through: the actor carries "
             "the take through a door / corridor / corner into the new place, camera following. "
             "Reveal: the actor holds, the camera moves, and a new space is disclosed around them. "
-            "Hard cuts are unaffected."
+            "New place: every scene gets its own place - continuing scenes move there inside the "
+            "take (walk-through or reveal, alternating), so no two consecutive scenes share a "
+            "location. Hard cuts are unaffected."
         ),
     })
 
@@ -1189,6 +1225,43 @@ def _strip_envelope_lines(prompt):
     return "\n".join(kept).strip()
 
 
+_SCENE_ITEM_RE = re.compile(r'\{\s*"scene"\s*:\s*(\d+)')
+_PROMPT_KEY_RE = re.compile(r'"prompt"\s*:\s*')
+_DURATION_KEY_RE = re.compile(r'"duration"\s*:\s*([0-9.]+)')
+
+
+def _salvage_truncated_scenes(raw):
+    """
+    A JSON scene envelope that stops mid-string (the model ran out of tokens)
+    is not JSON - but every scene whose prompt string closed is intact. Pull
+    those out so the caller gets the real scenes it did receive and can say
+    how many are missing, instead of one bogus scene made of raw JSON.
+    """
+    if '"scenes"' not in raw or not raw.lstrip().startswith(("{", "[", "`")):
+        return None
+    decoder = json.JSONDecoder()
+    items = []
+    for m in _SCENE_ITEM_RE.finditer(raw):
+        pk = _PROMPT_KEY_RE.search(raw, m.end())
+        if not pk or raw[pk.end():pk.end() + 1] != '"':
+            continue
+        try:
+            prompt, _end = decoder.raw_decode(raw, pk.end())
+        except ValueError:
+            continue                    # this is the cut-off one
+        if not isinstance(prompt, str) or not prompt.strip():
+            continue
+        item = {"scene": int(m.group(1)), "prompt": prompt}
+        dk = _DURATION_KEY_RE.search(raw, m.end(), pk.start())
+        if dk:
+            item["duration"] = float(dk.group(1))
+        items.append(item)
+    if not items:
+        return None
+    print(f"\u26a0\ufe0f H3: the JSON reply was cut off - salvaged {len(items)} complete scene(s) from it.")
+    return {"scenes": items}
+
+
 def parse_scenes_json(text, fallback_duration):
     """(synopsis, [(number, duration, prompt), ...]) from a JSON reply, or None if it is not one."""
     raw = (text or "").strip()
@@ -1209,7 +1282,9 @@ def parse_scenes_json(text, fallback_duration):
         except ValueError:
             continue
     if data is None:
-        return None
+        data = _salvage_truncated_scenes(raw)
+        if data is None:
+            return None
     synopsis = ""
     items = data
     if isinstance(data, dict):

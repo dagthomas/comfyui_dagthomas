@@ -24,6 +24,9 @@ from ...utils.apnext_context import (
     context_summary,
     with_context,
 )
+import json
+import os
+
 from ...utils.constants import CUSTOM_CATEGORY
 from .claude_code_support import (
     release_local_llm,
@@ -46,10 +49,19 @@ from .claude_code_crossover_writer import (
     CAST_SOCKETS, cast_wardrobe, log_cast, log_wardrobe_locks, merge_wardrobe, parse_cast,
 )
 from .lyrics_transcribe import transcribe_song_lyrics
-from .scenes_store import save_scene_bundle
-from .sound_events import parse_events, segment_event_lines
-from .chain_render import flow_flags_from_cut_plan
+from .scenes_store import (
+    bundle_audio_segments,
+    is_reuse,
+    latest_bundle,
+    latest_bundle_stamp,
+    load_bundle,
+    run_mode_input,
+    save_scene_bundle,
+)
+from .sound_events import event_slots_for, parse_events, segment_event_lines
+from .chain_render import CONTINUITY_MODES, decide_flow
 from .song_structure import (
+    beats_in_span,
     downbeats_in_span,
     section_for_span,
     song_structure,
@@ -85,6 +97,8 @@ from .music_support import (
     energy_labels,
     normalise_cut_plan,
     parse_cut_plan,
+    cut_plan_is_beat_exact,
+    exact_frames,
     fmt_time,
     frames_for_seconds,
     lyrics_for_segment,
@@ -148,10 +162,16 @@ LYRIC_INTERPRETATIONS = [
 
 _INTERPRETATION_DIRECTIVES = {
     "Literal": (
-        "INTERPRETATION - LITERAL: the pictures show what the words say. When a line names "
-        "a thing, a place or an action, that thing is on screen as the line is sung; someone "
-        "watching without sound could follow the words. Imagination goes into HOW it is "
-        "shown - framing, light, the detail chosen - never into replacing it."
+        "INTERPRETATION - LITERAL: the pictures show what the words say, line by line, to the "
+        "letter. Every scene stages ITS lyric lines in the order they are sung: when a line "
+        "names a thing, a person, a place, an action or a feeling, that exact thing is on "
+        "screen while the line is sung - someone watching without sound could read the lyric "
+        "off the picture. Each SCENE PLAN row quotes the line(s) it stages. No metaphor, no "
+        "substitute image, no scene that ignores its lines. All the imagination goes into HOW "
+        "it is shown - the world it happens in, the scale, the framing, the light, the one "
+        "detail nobody expected - never into replacing it: a line about rain is rain, but it "
+        "may be rain in a greenhouse, on a windscreen from the inside, on one hand held out "
+        "of a train."
     ),
     "Loose": (
         "INTERPRETATION - LOOSE: the words are a starting point, not a shot list. Stage the "
@@ -287,6 +307,40 @@ def _scene_gist(prompt, limit=240):
     return text
 
 
+def _apply_beat_grid(structure, beat_grid):
+    """
+    The Beat Grid node's grid (phase-fitted to the hits, BPM override honoured)
+    replaces the writer's own beat / downbeat / tempo measurement, so the
+    `[beat]` lines in every piece's brief are the same beats the Cut Plan and
+    Beat Emphasis work from. Sections and everything else stay measured.
+    """
+    text = (beat_grid or "").strip()
+    if not text:
+        return structure
+    try:
+        grid = json.loads(text)
+    except ValueError as exc:
+        print(f"⚠️ H3 Music Video Writer: beat_grid is not JSON ({exc}) - using the measured beats.")
+        return structure
+    beats = [float(t) for t in (grid.get("beats") or [])]
+    if not beats:
+        print("⚠️ H3 Music Video Writer: beat_grid carries no beats - using the measured beats.")
+        return structure
+    out = dict(structure or {})
+    out["beats"] = beats
+    bars = [float(t) for t in (grid.get("bars") or [])]
+    if bars:
+        out["downbeats"] = bars
+    if grid.get("bpm"):
+        out["bpm"] = float(grid["bpm"])
+    print(
+        f"🎵 H3 Music Video Writer | beat grid: {len(beats)} beats"
+        + (f" / {len(bars)} bars" if bars else "") + (f" at {float(grid['bpm']):g} BPM" if grid.get("bpm") else "")
+        + " from the Beat Grid node - every piece's [beat] line follows this grid."
+    )
+    return out
+
+
 def _measure_structure(audio):
     """song_structure(), but a failure never stops a run - it just costs the form."""
     try:
@@ -319,7 +373,8 @@ class H3ClaudeCodeMusicVideoWriter:
                     "Lyrics, one line per line. Timestamps make the sync exact: `[0:15] line`, "
                     "`0:15 line` or LRC `[00:15.20] line`; section tags like [Chorus] are kept. "
                     "Untimed lines are spread evenly over the song (approximate). Empty = "
-                    "instrumental video."
+                    "take the `lyrics_in` socket, else transcribe the song (transcribe_lyrics), "
+                    "else an instrumental video. Typed text always wins over the socket."
                 ),
             }),
             "performance_mode": (PERFORMANCE_MODES, {"default": PERFORMANCE_MODES[0]}),
@@ -480,17 +535,6 @@ class H3ClaudeCodeMusicVideoWriter:
         })
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
-        optional["avoid_previous"] = ("INT", {
-            "default": 0, "min": 0, "max": 20,
-            "tooltip": (
-                "NO LONGER USED - every run is a clean slate. This once fed the synopses "
-                "of previous saved runs back to the model as concepts that were USED UP, "
-                "but quoting an old logline under a 'do not reuse' header primes the idea "
-                "far more reliably than it forbids it: the run reproduced what it was told "
-                "to avoid, got saved, and fed itself back. The slot stays so saved "
-                "workflows keep their widget positions; the value is ignored."
-            ),
-        })
         optional["transcribe_lyrics"] = ("BOOLEAN", {
             "default": True,
             "tooltip": (
@@ -522,12 +566,23 @@ class H3ClaudeCodeMusicVideoWriter:
                 "are written from the song's energy profile alone, as before."
             ),
         })
-        optional["events_per_scene"] = ("INT", {
-            "default": 6, "min": 1, "max": 20,
+        optional["beat_grid"] = ("STRING", {
+            "forceInput": True,
             "tooltip": (
-                "How many hits at most to list per piece. A dense bar can hold twenty, and "
-                "listing them all buries the rest of the brief; the strongest are kept, and "
-                "drops/stops/builds always survive the cut."
+                "The `grid_json` output of an APNext H3 Beat Grid node: its tempo, every beat and "
+                "the downbeats (phase-fitted to the Sound Events hits, with your BPM override). "
+                "Every piece's brief then lists ITS beats from this grid - `[beat] every 0.469 s at "
+                "+0.00 +0.47 ...` - instead of the writer's own rougher measurement. Leave it "
+                "unconnected and the beats come from the song structure the writer measures itself."
+            ),
+        })
+        optional["lyrics_in"] = ("STRING", {
+            "forceInput": True,
+            "tooltip": (
+                "Lyrics from another node - the `lyrics` output of an APNext H3 Lyrics "
+                "Transcribe node, or any STRING. Used only while the `lyrics` box above is "
+                "empty: anything typed there wins, so Whisper's words can be corrected by "
+                "hand without unplugging the socket."
             ),
         })
         optional["vocals"] = ("AUDIO", {
@@ -538,7 +593,7 @@ class H3ClaudeCodeMusicVideoWriter:
             ),
         })
         optional["lyric_interpretation"] = (LYRIC_INTERPRETATIONS, {
-            "default": LYRIC_INTERPRETATIONS[0],
+            "default": LYRIC_INTERPRETATIONS[0],          # Auto - the writer picks a reading per song
             "tooltip": (
                 "How far the pictures may stray from the words. The lyric is always audible and "
                 "sung as performance_mode says; this decides what the PICTURE does with it. "
@@ -553,6 +608,18 @@ class H3ClaudeCodeMusicVideoWriter:
 
         # appended last so saved workflows keep their widget positions
         optional["transition_style"] = transition_input()
+        optional["run_mode"] = run_mode_input()
+        optional["continuity"] = (CONTINUITY_MODES, {
+            "default": CONTINUITY_MODES[0],
+            "tooltip": (
+                "Which pieces are written as the SAME take carrying on and which open on a hard "
+                "cut. Cut plan decides: soft cuts (onset / downbeat / lyric line) continue, drops, "
+                "section starts, stops and taps cut. Flow everywhere: one continuous take. Cut "
+                "everywhere: every scene is its own clip - a fresh setup at every cut, nothing "
+                "carried over. Set H3 Chain Render's `continuity` to the same value so the render "
+                "matches what was written."
+            ),
+        })
 
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
@@ -592,8 +659,34 @@ class H3ClaudeCodeMusicVideoWriter:
         "H3 Scenes Join (replace_audio = the song)."
     )
 
+    _BUNDLE_SOURCE = "H3ClaudeCodeMusicVideoWriter"
+
+    def _reuse_last_run(self, audio, passthrough, project_name):
+        """The writer's outputs rebuilt from the newest bundle this node saved."""
+        path = latest_bundle(self._BUNDLE_SOURCE)
+        if not path:
+            raise ValueError(
+                "H3 Music Video Writer: run_mode is 'reuse last run' but this node has not saved a "
+                "run yet - set it back to write (with save_scenes on) for the first run."
+            )
+        data = load_bundle(path)
+        scenes = data["scenes"]
+        audio_segments = bundle_audio_segments(audio, data, tag="H3 Music Video Writer")
+        name = str(data.get("project_name") or "") or project_name
+        info = (f"reused {os.path.basename(path)} | {len(scenes)} scene(s) | saved "
+                f"{data.get('created', '?')} | no LLM call")
+        print(f"\u267b\ufe0f H3 Music Video Writer | {info} | project: {name}")
+        return (
+            scenes, data["durations"], data["lengths"], audio_segments, data.get("segment_table", ""),
+            data.get("scenes_text", ""), data.get("synopsis", ""), data.get("cast", ""), len(scenes),
+            float(data.get("song_seconds") or 0.0), "", info,
+        ) + passthrough + (data["clip_starts"], project_name_prefix(name))
+
     @classmethod
-    def IS_CHANGED(cls, seed=-1, **kwargs):
+    def IS_CHANGED(cls, seed=-1, run_mode=None, **kwargs):
+        if is_reuse(run_mode):
+            # a reuse run is a cheap reload: re-run only when a newer bundle appears
+            return "reuse:" + latest_bundle_stamp(cls._BUNDLE_SOURCE)
         return float("nan") if seed == -1 else seed
 
     @classmethod
@@ -641,9 +734,12 @@ class H3ClaudeCodeMusicVideoWriter:
                 if include_ref_guide else ""
             )
             + envelope_contract(_SCENE_FIELDS) + "\n"
-            "- The synopsis block also carries `Cast:` (one line per performer/character), "
-            "`Concept:` (the visual idea in two or three sentences) and `Motifs:` (recurring "
-            "images, colours, props and the chorus look, so every scene can reuse them).\n"
+            "- The synopsis block also carries `Lyric map:` (the whole lyric read section by "
+            "section BEFORE anything is staged - see READ THE WHOLE LYRIC), `Cast:` (one line "
+            "per performer/character), `Concept:` (the visual idea in two or three sentences, "
+            "grown out of the lyric map) and `Motifs:` (recurring images, colours, props and "
+            "the chorus look, so every scene can reuse them). Order: Synopsis, Lyric map, Cast, "
+            "Concept, Motifs, then the wardrobe and location locks.\n"
             "- Each scene envelope's `duration:` is the exact length of its song piece, given "
             "to you; copy it.\n"
             + (
@@ -719,7 +815,6 @@ class H3ClaudeCodeMusicVideoWriter:
         image_labels=(),
         blind_refs=False,
         beats=(),
-        beats_per_scene=6,
         image_notes="",
         first=1,
         last=None,
@@ -770,7 +865,7 @@ class H3ClaudeCodeMusicVideoWriter:
             lo_w, hi_w = description_budget(e - s)
             lines.append(
                 f"PIECE {i:02d}: {fmt_time(s)}-{fmt_time(e)} | duration {e - s:.2f} | energy {label}"
-                + (f" | section {'/'.join(tags)}" if tags else "") + f" | {lo_w}-{hi_w} words"
+                + (f" | section {'/'.join(tags)}" if tags else "") + f" | {lo_w}-{hi_w} picture words (+ the hit sentences)"
                 + continues + marker
             )
             if sung:
@@ -781,7 +876,22 @@ class H3ClaudeCodeMusicVideoWriter:
             downbeats = downbeats_in_span(structure, s, e)
             if downbeats:
                 lines.append("    [bars] downbeats at " + " ".join(f"+{t - s:.2f}" for t in downbeats) + " s")
-            lines.extend(segment_event_lines(beats, s, e, beats_per_scene))
+            # The beat grid inside this piece, from the piece's own first frame -
+            # the timings the picture has to hit. When the cut plan is beat-exact
+            # the first beat sits at +0.00 and the scene must OPEN on it: the
+            # action starts on frame 1, no wind-up before the beat.
+            beat_times = beats_in_span(structure, s, e)
+            if beat_times and structure and structure.get("bpm"):
+                period = 60.0 / float(structure["bpm"])
+                opens_on = abs(beat_times[0] - s) <= 0.025
+                shown = " ".join(f"+{t - s:.2f}" for t in beat_times[:8]) + (" ..." if len(beat_times) > 8 else "")
+                lines.append(
+                    f"    [beat] every {period:.3f} s at {shown} s"
+                    + (" - the scene OPENS on the beat: its first frame is the beat, start the action there"
+                       if opens_on else f" - the first beat is {beat_times[0] - s:.2f} s in")
+                )
+            # the hit budget follows the scene's length: 6 for a 9 s clip, 3 for 4.5 s
+            lines.extend(segment_event_lines(beats, s, e, event_slots_for(e - s)))
         lines.append("")
         if plan_text:
             lines.append(
@@ -845,6 +955,14 @@ class H3ClaudeCodeMusicVideoWriter:
                 "treat the in-clip timings as the best effort they are."
             )
             lines.append(
+                "- THE HIT SENTENCES ARE ADDITIONS: a piece's word budget is for its PICTURE - "
+                "the place, the framing, who does what, what is new. Write that at its budget "
+                "first, then add one three-clause timing sentence per listed moment ON TOP. "
+                "Never shorten or thin the picture to make room for the timings, and never let "
+                "the timings become the scene: a clip that is only `at 0.4 s ... lands ... "
+                "settling` with no place and no action renders as nothing."
+            )
+            lines.append(
                 "- Never invent moments that are not listed, never move one to a rounder "
                 "second, and never describe the sound as sound - H3 is given the real "
                 "song, so what you write is what the picture DOES."
@@ -853,7 +971,7 @@ class H3ClaudeCodeMusicVideoWriter:
             lines.append(
                 "- Write ONLY the planning document for the whole video - no scene "
                 "envelopes. First the synopsis block exactly as the contract defines it "
-                "(Synopsis, Cast, Concept, Motifs, and the wardrobe and location locks), "
+                "(Synopsis, Lyric map, Cast, Concept, Motifs, and the wardrobe and location locks), "
                 f"then a section `SCENE PLAN:` with one line per piece, all {n} of them: "
                 "`NN: setting | what happens | how it advances the story`. The scenes are "
                 "written later from this plan, several at a time by different writers who "
@@ -1050,9 +1168,62 @@ class H3ClaudeCodeMusicVideoWriter:
                 "changes. Pieces without the mark open on a hard cut, as usual - that is where the "
                 "big visual switches belong."
             )
-            if getattr(self, "_transition", None):
+            if getattr(self, "_transition", None) == "New":
+                lines.append("- " + transition_directive("New") + " Hard-cut pieces change place AT the "
+                             "cut; pieces marked `CONTINUES the previous take` change it inside the take.")
+            elif getattr(self, "_transition", None):
                 lines.append("- " + transition_directive(self._transition) + " This applies to the pieces "
                              "marked `CONTINUES the previous take` only; hard-cut pieces switch place freely.")
+        elif getattr(self, "_transition", None) == "New":
+            # no continuing pieces: the rule is still a plan rule - a new place at every cut
+            lines.append("- " + transition_directive("New") + " Every piece here opens on a hard cut, so "
+                         "the place simply changes at each cut - name the new one in the first sentence.")
+        elif str(getattr(self, "_continuity", "")).startswith("cut everywhere"):
+            lines.append(
+                "- INDEPENDENT PIECES: every piece is its own clip and opens on a HARD CUT - nothing "
+                "from the previous piece is on screen. Each scene is a fresh setup: its own framing, "
+                "its own opening image, and it may change place, time of day and staging freely at "
+                "the cut. Never open a scene on the last frame of the previous one, never write "
+                "`continues`, `still` or `the same shot`; only the locks (cast, wardrobe, style, "
+                "the chorus signature look) carry over."
+            )
+        lines.append(
+            "- READ THE WHOLE LYRIC FIRST: before any staging, split the complete lyric into its "
+            "sections (verse, pre-chorus, chorus, bridge, outro - by the timestamps) and write "
+            "the `Lyric map:` in the synopsis block, one line per section: `Verse 1 (0:00-0:18): "
+            "what it literally says | what it is really about | the strongest image it hands "
+            "you | how it feels`. Read the song as a whole - who is speaking, to whom, what "
+            "changes between the first verse and the last chorus, where the turn is - and let "
+            "the Concept and the SCENE PLAN grow out of that map, so every piece stages ITS "
+            "lines' meaning and the video moves the way the lyric moves."
+        )
+        if interpretation == "Literal":
+            lines.append(
+                "- LYRICS TO THE LETTER, IMAGINATIVELY: under the Literal reading the `Lyric map:` "
+                "image column is the PICTURE OF THE WORDS themselves (a line about a wet coat gets "
+                "a wet coat on screen) and the moment-to-moment content of every scene is its "
+                "lines - but the Concept still decides the WORLD those words happen in (the era, "
+                "the place, the people, the scale, the palette) and that world is where the "
+                "invention goes. Every scene stages its lines as one specific, striking image "
+                "nobody has seen in a music video before: the sung noun is in frame, in a place, "
+                "at a scale and in a light the lyric did not hand you. Banned unless the lyric "
+                "literally says so: a singer standing in a room, walking down a street, sitting "
+                "on a bed, rain on a window, a car at night, staring into the middle distance. "
+                "Vary the scale (macro detail, close-up, wide) and the element (water, glass, "
+                "dust, fire, fabric, machines, crowds, weather, scale tricks) across the plan; "
+                "no two scenes share their image. Variety comes from the lyric moving on AND "
+                "from where each line is set - never from leaving the words."
+            )
+        else:
+            lines.append(
+                "- BE IMAGINATIVE: every scene gets one specific, striking image nobody has seen "
+                "in a music video before - built from THIS lyric, not from the stock of music-video "
+                "staging. Banned unless the lyric literally says so: a singer standing in a room, "
+                "walking down a street, sitting on a bed, rain on a window, a car at night, staring "
+                "into the middle distance. Vary the scale (macro detail, close-up, wide) and the "
+                "element (water, glass, dust, fire, fabric, machines, crowds, weather, scale "
+                "tricks) across the plan; no two scenes share their image."
+            )
         lines.append(
             "- FIND A PLOT: invent a concrete story told in images, with a visible setup, an "
             "escalation, and a payoff in the final scene - the story this specific song, "
@@ -1176,20 +1347,27 @@ class H3ClaudeCodeMusicVideoWriter:
         draft_model="haiku",
         parallel_chunks=True,
         project_name="",
-        avoid_previous=0,
+        avoid_previous=None,  # removed widget; accepted so old API-format prompts still run
         transcribe_lyrics=True,
+        lyrics_in="",
+        beat_grid="",
         vocals=None,
         sound_events="",
-        events_per_scene=6,
+        events_per_scene=None,  # removed widget - the budget now follows each scene's length
         cut_plan="",
         wildness=None,  # removed dial; accepted so old API-format prompts still run
         lyric_interpretation=None,
         transition_style=None,
+        run_mode=None,
+        continuity=None,
         **cast_slots,
     ):
         project_name = resolve_project_name(project_name, seed)
         print(f"🎬 H3 Music Video Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
+        if is_reuse(run_mode):
+            # continue from the scenes already written: no LLM, no transcription
+            return self._reuse_last_run(audio, passthrough, project_name)
         references = collect_reference_images(passthrough, tensor2pil)
         # REF binds pictures via guide_ref_en.md; FL writes from scratch against
         # guide_base_en.md; Auto follows whether pictures are connected. Empty /
@@ -1224,6 +1402,14 @@ class H3ClaudeCodeMusicVideoWriter:
         wardrobe = merge_wardrobe(wardrobe, cast_wardrobe(*cast_blocks))
         log_wardrobe_locks("H3 Music Video Writer", wardrobe)
 
+        if not (lyrics or "").strip() and (lyrics_in or "").strip():
+            lyrics = lyrics_in
+            print(
+                f"🎤 H3 Music Video Writer: lyrics from the `lyrics_in` socket - "
+                f"{len([l for l in lyrics.splitlines() if l.strip()])} line(s)."
+            )
+        elif (lyrics or "").strip() and (lyrics_in or "").strip():
+            print("🎤 H3 Music Video Writer: lyrics typed in the box win over the `lyrics_in` socket.")
         if not (lyrics or "").strip() and transcribe_lyrics:
             source = vocals if vocals is not None else audio
             lyrics = transcribe_song_lyrics(source)
@@ -1259,16 +1445,14 @@ class H3ClaudeCodeMusicVideoWriter:
         timed = [t for t, _ in parsed_lyrics if t is not None]
         lyrics_driven = bool(scenes_from_lyrics)
         structure = _measure_structure(audio)
+        structure = _apply_beat_grid(structure, beat_grid)
         planned = parse_cut_plan(cut_plan) if (cut_plan or "").strip() else []
-        flow_flags = ()
         if planned:
             feats = analyse(audio)
             segments = normalise_cut_plan(planned, feats["duration"])
-            flow_flags = tuple(flow_flags_from_cut_plan(cut_plan, len(segments)))
             print(
                 f"✂️ H3 Music Video Writer: {len(segments)} scene(s) from the connected cut plan - "
-                "segment_mode, max_segment_seconds and min_segment_seconds are ignored"
-                + (f"; {sum(flow_flags)} piece(s) continue the previous take." if any(flow_flags) else ".")
+                "segment_mode, max_segment_seconds and min_segment_seconds are ignored."
             )
         elif lyrics_driven and timed:
             segments, feats = segment_by_lyrics(
@@ -1287,14 +1471,44 @@ class H3ClaudeCodeMusicVideoWriter:
                 structure=structure, events=beats,
             )
         total_seconds = feats["duration"]
+        # Which pieces carry on the previous take: the `continuity` switch, read the
+        # same way H3 Chain Render reads its own (cut plan decides / flow / cut).
+        self._continuity = str(continuity or CONTINUITY_MODES[0])
+        flow_flags = tuple(decide_flow(self._continuity, cut_plan if planned else "", len(segments)))
+        print(
+            f"🎞️ H3 Music Video Writer | continuity: {self._continuity.split(' (')[0]} - "
+            + (f"{sum(flow_flags)} of {len(segments)} piece(s) continue the previous take."
+               if any(flow_flags) else "every piece opens on a hard cut (independent clips).")
+        )
         placed = place_untimed_lyrics(parsed_lyrics, total_seconds)
         labels = energy_labels(feats, segments)
-        frames = [
-            frames_for_seconds(e - s, round_up=(i == len(segments) - 1))
-            for i, (s, e) in enumerate(segments)
-        ]
+        # A beat-exact cut plan (Cut Plan's beat_snap) carries frame-exact scene
+        # lengths so every scene opens ON the beat; snapping them back to the
+        # 17-frame grid would undo that and drop song material at each seam.
+        # Chain Render renders the next grid length up and trims the pad.
+        beat_exact = bool(planned) and cut_plan_is_beat_exact(cut_plan)
+        if beat_exact:
+            print("🎵 H3 Music Video Writer: beat-exact cut plan - scene lengths are frame-exact (not on the "
+                  "17-frame grid). Render with H3 Chain Render, which trims the pad; the single-clip path "
+                  "would keep it.")
+        # The clip timeline IS the frame counts. Each scene starts exactly where the
+        # previous scene's frames end (a whole number of 1/24 s), and its length is
+        # chosen from THAT start towards the planned cut - so the audio slices tile the
+        # song with no skip or repeat at the seams, `clip_starts` is the stitched
+        # video's own timeline (the masked latent lines up with the picture), and a
+        # plan whose times were rounded to 10 ms in the cut-plan text cannot drift.
+        frames, starts, t = [], [], 0.0
+        for i, (_s, e) in enumerate(segments):
+            if beat_exact:
+                fr = max(1, int(round(float(e) * FPS)) - int(round(t * FPS)))
+            else:
+                fr = frames_for_seconds(max(0.0, float(e) - t), round_up=(i == len(segments) - 1))
+            starts.append(t)
+            frames.append(fr)
+            t += seconds_for(fr)
+        segments = [(st, st + seconds_for(fr)) for st, fr in zip(starts, frames)]
         durations = [seconds_for(fr) for fr in frames]
-        clip_starts = [float(s) for s, _ in segments]
+        clip_starts = [float(s) for s in starts]
         audio_segments = [slice_audio(audio, s, e, fr) for (s, e), fr in zip(segments, frames)]
         profile = song_profile(feats)
         if structure and structure.get("bpm") and structure.get("bpm_confidence", 0) >= 0.3:
@@ -1355,7 +1569,7 @@ class H3ClaudeCodeMusicVideoWriter:
                     directions_with_research(extra_instructions, research),
                     wardrobe=wardrobe, locations=locations, image_labels=image_labels,
                     blind_refs=not show_pictures,
-                    beats=beats, beats_per_scene=events_per_scene,
+                    beats=beats,
                     image_notes=image_notes, first=lo, last=hi, total_seconds=total_seconds,
                     lyrics_driven=lyrics_driven, characters_only=chars_only,
                     masked_audio=masked_audio, scene_briefs=scene_briefs,

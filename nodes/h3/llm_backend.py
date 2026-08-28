@@ -89,12 +89,13 @@ class H3LLMBackend:
                     ),
                 }),
                 "base_url": ("STRING", {
-                    "default": "",
+                    "default": "http://0.0.0.0:11434",
                     "tooltip": (
-                        "Where to reach a local server, e.g. 'http://192.168.1.10:11434'. Empty "
-                        "uses the default for the prefix: ollama 11434, lmstudio 1234, local 8000 "
-                        "(or OLLAMA_BASE_URL / LMSTUDIO_BASE_URL / LOCAL_LLM_BASE_URL). Ignored by "
-                        "cloud providers."
+                        "Where to reach a local server. The default is Ollama's own port on this "
+                        "machine (0.0.0.0 / a wildcard is read as localhost). A LAN box or another "
+                        "port goes here, e.g. 'http://192.168.1.10:11434'. Empty uses the default for "
+                        "the prefix: ollama 11434, lmstudio 1234, local 8000 (or OLLAMA_BASE_URL / "
+                        "LMSTUDIO_BASE_URL / LOCAL_LLM_BASE_URL). Ignored by cloud providers."
                     ),
                 }),
                 "temperature": ("FLOAT", {
@@ -116,7 +117,7 @@ class H3LLMBackend:
                 }),
                 # appended LAST so saved workflows keep their widget positions
                 "num_ctx": ("INT", {
-                    "default": 32768, "min": 0, "max": 1048576, "step": 1024,
+                    "default": 65536, "min": 0, "max": 1048576, "step": 1024,
                     "tooltip": (
                         "Ollama only: the context window to load the model with. Ollama picks "
                         "its own default from free VRAM - as little as 4k - and an H3 system "

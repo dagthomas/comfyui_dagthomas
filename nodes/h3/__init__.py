@@ -31,10 +31,17 @@ from .cut_plan import H3CutPlan
 from .sync_check import H3SyncCheck
 from .song_analysis import H3SongAnalysis
 from .sound_events import H3SoundEvents
+from .beat_grid import H3BeatEmphasis, H3BeatGrid
+from .voice_mix import H3VoiceOverMusic
+from .sample_and_save import H3SampleAndSave
+from .resolution import H3ResolutionSelector
+from .lyrics_transcribe import H3LyricsTranscribe
 from .scene_brief import H3SceneBrief
 from .scenes_store import H3ScenesLoad
 from .manual_scenes import H3ManualScenes
 from .mouth_guard import H3MouthGuard
+from .masked_song import H3MaskedSongLatent
+from .stitch_clips import H3StitchClips
 from .refine_encode import H3RefineEncode
 from .clip_save import H3SaveClip
 from .derope import H3DeRopeSave
@@ -75,10 +82,18 @@ NODE_CLASS_MAPPINGS = {
     "H3ShortFilmChainRender": H3ShortFilmChainRender,
     "H3SceneRetake": H3SceneRetake,
     "H3SoundEvents": H3SoundEvents,
+    "H3BeatGrid": H3BeatGrid,
+    "H3BeatEmphasis": H3BeatEmphasis,
+    "H3VoiceOverMusic": H3VoiceOverMusic,
+    "H3SampleAndSave": H3SampleAndSave,
+    "H3ResolutionSelector": H3ResolutionSelector,
+    "H3LyricsTranscribe": H3LyricsTranscribe,
     "H3SceneBrief": H3SceneBrief,
     "H3ScenesLoad": H3ScenesLoad,
     "H3ManualScenes": H3ManualScenes,
     "H3MouthGuard": H3MouthGuard,
+    "H3MaskedSongLatent": H3MaskedSongLatent,
+    "H3StitchClips": H3StitchClips,
     "H3RefineEncode": H3RefineEncode,
     "H3SaveClip": H3SaveClip,
     "H3DeRopeSave": H3DeRopeSave,
@@ -113,10 +128,18 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3ShortFilmChainRender": "APNext H3 Short Film Chain Render (carry picture + sound between scenes)",
     "H3SceneRetake": "APNext H3 Scene Retake (render one scene again)",
     "H3SoundEvents": "APNext H3 Sound Events (bass hits / drops / stops)",
+    "H3BeatGrid": "APNext H3 Beat Grid (BPM + every beat)",
+    "H3BeatEmphasis": "APNext H3 Beat Emphasis (conditioning audio)",
+    "H3VoiceOverMusic": "APNext H3 Voice Over Music (conditioning mix)",
+    "H3SampleAndSave": "APNext H3 Sampler + Save Clip (each scene to disk as it finishes)",
+    "H3ResolutionSelector": "APNext H3 Resolution (1344x768 = 1.0 MP)",
+    "H3LyricsTranscribe": "APNext H3 Lyrics Transcribe (timed lyrics from the song)",
     "H3SceneBrief": "APNext H3 Scene Brief (manual scene)",
     "H3ScenesLoad": "APNext H3 Scenes Load (from disk)",
     "H3ManualScenes": "APNext H3 Manual Scenes (script → lists)",
     "H3MouthGuard": "APNext H3 Mouth Guard (protect lips in refine)",
+    "H3MaskedSongLatent": "APNext H3 Masked Song Latent (song frozen in the audio latent)",
+    "H3StitchClips": "APNext H3 Stitch Clips (gapless, from the saved files)",
     "H3RefineEncode": "APNext H3 Refine Encode (v2v AV latent)",
     "H3SaveClip": "APNext H3 Save Clip (decode → disk, low memory)",
     "H3DeRopeSave": "APNext H3 De-Rope + Save Clip (Motion Lab by matlowai)",

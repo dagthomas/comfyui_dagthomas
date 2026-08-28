@@ -588,14 +588,42 @@ def unload_ollama_model(model, base_url=None, timeout=20):
         return False
 
 
+_CONNECT_RETRIES = 2          # a local server can refuse for a moment (restart, reload)
+_CONNECT_RETRY_WAIT = 2.0     # seconds between attempts
+
+
 def _post_json(url, payload, timeout):
-    """POST JSON and return the decoded reply, raising with the server's text."""
+    """
+    POST JSON and return the decoded reply, raising with the server's text.
+    A refused / dropped connection is retried a couple of times before it is
+    reported - and the report names the URL, so "10061 refused" at least says
+    which host and port nobody was listening on.
+    """
     if httpx is not None:
-        response = httpx.post(url, json=payload, timeout=timeout)
+        connect_errors = (httpx.ConnectError, httpx.RemoteProtocolError)
+        post = lambda: httpx.post(url, json=payload, timeout=timeout)
     else:
         import requests
 
-        response = requests.post(url, json=payload, timeout=timeout)
+        connect_errors = (requests.exceptions.ConnectionError,)
+        post = lambda: requests.post(url, json=payload, timeout=timeout)
+
+    last = None
+    for attempt in range(_CONNECT_RETRIES + 1):
+        try:
+            response = post()
+            break
+        except connect_errors as exc:
+            last = exc
+            if attempt < _CONNECT_RETRIES:
+                print(f"⚠️ {url}: {exc} - retrying in {_CONNECT_RETRY_WAIT:.0f} s "
+                      f"({attempt + 1}/{_CONNECT_RETRIES})")
+                time.sleep(_CONNECT_RETRY_WAIT)
+    else:
+        raise RuntimeError(
+            f"could not connect to {url} ({last}) - is the server running, and is the "
+            "base_url / OLLAMA_HOST pointing at it?"
+        ) from last
 
     if response.status_code != 200:
         raise RuntimeError(f"{url} returned HTTP {response.status_code}: {response.text[:400]}")
@@ -668,8 +696,41 @@ def _call_ollama_native(
     if isinstance(data, dict) and data.get("error"):
         raise RuntimeError(f"Ollama returned an error: {data['error']}")
 
+    _check_ollama_cutoff(data, model, options)
     message = (data or {}).get("message") or {}
     return strip_reasoning((message.get("content") or "").strip())
+
+
+def _check_ollama_cutoff(data, model, options):
+    """
+    Ollama stops quietly when the reply runs out of room - `done_reason` says
+    "length" and the text just ends mid-sentence (mid-JSON with a schema). A
+    cut-off scene list is worse than no scene list, so this raises with the
+    numbers that explain it: how much of the context the prompt took, and
+    whether it was num_ctx or num_predict that ran out.
+    """
+    if not isinstance(data, dict) or data.get("done_reason") != "length":
+        return
+    prompt_tokens = int(data.get("prompt_eval_count") or 0)
+    reply_tokens = int(data.get("eval_count") or 0)
+    num_ctx = int(options.get("num_ctx") or 0)
+    num_predict = int(options.get("num_predict") or 0)
+    if num_predict and reply_tokens >= num_predict - 8:
+        why = (f"the reply hit max_tokens ({num_predict}). Raise max_tokens on the H3 LLM Backend "
+               f"node, or ask for fewer scenes per call.")
+    elif num_ctx:
+        room = max(0, num_ctx - prompt_tokens)
+        suggest = 65536 if prompt_tokens + 6000 <= 65536 else 131072
+        why = (f"the prompt alone took {prompt_tokens:,} of the {num_ctx:,}-token context (num_ctx), "
+               f"leaving room for only ~{room:,} reply tokens. Raise num_ctx on the H3 LLM Backend node "
+               f"to {suggest:,} (or shorten the prompt: fewer scenes, no inline skill references, "
+               f"smaller cast / lyrics).")
+    else:
+        why = (f"the prompt took {prompt_tokens:,} tokens and the server's default context ran out. "
+               f"Set num_ctx on the H3 LLM Backend node (65536 for a long music video).")
+    raise RuntimeError(
+        f"Ollama cut '{model}' off after {reply_tokens:,} reply tokens (done_reason=length): {why}"
+    )
 
 
 def _call_openai_compatible(

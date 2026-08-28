@@ -521,6 +521,13 @@ def section_for_span(structure, start, end):
     return best["numbered"] if best and best_overlap > 0 else None
 
 
+def beats_in_span(structure, start, end):
+    """Every beat inside [start, end), absolute seconds."""
+    if not structure:
+        return []
+    return [t for t in structure.get("beats", []) if start - 1e-3 <= t < end - 0.05]
+
+
 def downbeats_in_span(structure, start, end):
     if not structure:
         return []

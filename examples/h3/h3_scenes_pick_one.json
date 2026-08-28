@@ -8,12 +8,12 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5140
+        -1860,
+        4860
       ],
       "size": [
-        640,
-        70
+        480,
+        62
       ],
       "flags": {},
       "order": 3,
@@ -50,12 +50,12 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5280
+        -1860,
+        5000
       ],
       "size": [
-        650,
-        70
+        480,
+        62
       ],
       "flags": {},
       "order": 4,
@@ -92,12 +92,12 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260.0,
-        5200.0
+        480,
+        4800
       ],
       "size": [
         370,
-        70
+        62
       ],
       "flags": {},
       "order": 17,
@@ -126,12 +126,12 @@
       "id": 126,
       "type": "BasicGuider",
       "pos": [
-        -260.0,
-        5070.0
+        480,
+        4670
       ],
       "size": [
         360,
-        60
+        54
       ],
       "flags": {},
       "order": 18,
@@ -165,12 +165,12 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490,
-        4950
+        -1860,
+        4670
       ],
       "size": [
-        640,
-        120
+        480,
+        112
       ],
       "flags": {},
       "order": 5,
@@ -210,12 +210,12 @@
       "id": 129,
       "type": "RandomNoise",
       "pos": [
-        -260.0,
-        4910.0
+        480,
+        4510
       ],
       "size": [
         360,
-        90
+        82
       ],
       "flags": {},
       "order": 19,
@@ -246,8 +246,8 @@
       "id": 131,
       "type": "ComfyMathExpression",
       "pos": [
-        -1760,
-        5940
+        -930,
+        5710
       ],
       "size": [
         225,
@@ -306,12 +306,12 @@
       "id": 136,
       "type": "MiniMaxH3ReferenceToVideo",
       "pos": [
-        -750.0,
-        4940.0
+        -160,
+        4510
       ],
       "size": [
         410,
-        354
+        346
       ],
       "flags": {},
       "order": 14,
@@ -438,12 +438,12 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490,
-        4790
+        -1860,
+        4510
       ],
       "size": [
-        640,
-        90
+        480,
+        86
       ],
       "flags": {},
       "order": 6,
@@ -481,12 +481,12 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1050,
-        4490
+        -1150,
+        4510
       ],
       "size": [
         270,
-        114
+        112
       ],
       "flags": {},
       "order": 11,
@@ -523,12 +523,12 @@
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -260.0,
-        5340.0
+        480,
+        4940
       ],
       "size": [
         370,
-        130
+        114
       ],
       "flags": {},
       "order": 20,
@@ -567,12 +567,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -730,
-        4490
+        -820,
+        4510
       ],
       "size": [
         425,
-        318
+        302
       ],
       "flags": {},
       "order": 15,
@@ -624,12 +624,12 @@
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        1490,
-        4920
+        2560,
+        4510
       ],
       "size": [
-        1458,
-        979
+        480,
+        122
       ],
       "flags": {},
       "order": 25,
@@ -674,12 +674,12 @@
       "id": 146,
       "type": "CreateVideo",
       "pos": [
-        1150,
-        4920
+        2060,
+        4510
       ],
       "size": [
         270,
-        110
+        134
       ],
       "flags": {},
       "order": 24,
@@ -722,12 +722,12 @@
       "id": 125,
       "type": "SamplerCustomAdvanced",
       "pos": [
-        160,
-        5100
+        910,
+        4510
       ],
       "size": [
         230,
-        140
+        114
       ],
       "flags": {},
       "order": 21,
@@ -782,12 +782,12 @@
       "id": 121,
       "type": "VAEDecodeAudio",
       "pos": [
-        820,
-        5110
+        1390,
+        4640
       ],
       "size": [
         230,
-        60
+        54
       ],
       "flags": {
         "collapsed": false
@@ -823,12 +823,12 @@
       "id": 122,
       "type": "VAEDecode",
       "pos": [
-        480,
-        4920
+        1390,
+        4510
       ],
       "size": [
         230,
-        60
+        54
       ],
       "flags": {
         "collapsed": false
@@ -862,14 +862,14 @@
     },
     {
       "id": 115,
-      "type": "ResolutionSelector",
+      "type": "H3ResolutionSelector",
       "pos": [
-        -1860,
-        5610
+        -930,
+        5400
       ],
       "size": [
         270,
-        170
+        238
       ],
       "flags": {},
       "order": 9,
@@ -890,14 +890,24 @@
           "links": [
             277
           ]
+        },
+        {
+          "name": "megapixels",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
         }
       ],
       "title": "Resolution Selector (Size)",
       "properties": {
-        "Node name for S&R": "ResolutionSelector"
+        "Node name for S&R": "H3ResolutionSelector"
       },
       "widgets_values": [
-        "16:9 (Widescreen)",
+        "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
         0.5,
         32
       ],
@@ -913,8 +923,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -20,
-        5620
+        660,
+        5400
       ],
       "size": [
         847,
@@ -958,12 +968,12 @@
       "id": 157,
       "type": "H3ClaudeCodeScenesWriter",
       "pos": [
-        -1560,
-        5630
+        10,
+        5400
       ],
       "size": [
         420,
-        760
+        1258
       ],
       "flags": {},
       "order": 7,
@@ -1135,7 +1145,7 @@
         "",
         "",
         "Auto (the writer decides)",
-        "Stay (a continuing scene keeps its place)"
+        "Reveal (a camera move discloses a new space around them)"
       ],
       "title": "APNext H3 Claude Code Scenes Writer",
       "color": "#223",
@@ -1145,12 +1155,12 @@
       "id": 158,
       "type": "H3ScenePick",
       "pos": [
-        -1030,
-        5580
+        -400,
+        5560
       ],
       "size": [
         300,
-        110
+        146
       ],
       "flags": {},
       "order": 12,
@@ -1222,12 +1232,12 @@
       "id": 159,
       "type": "PrimitiveInt",
       "pos": [
-        -1040,
-        5420
+        -400,
+        5400
       ],
       "size": [
         300,
-        90
+        82
       ],
       "flags": {},
       "order": 13,
@@ -1257,8 +1267,8 @@
       "id": 160,
       "type": "MarkdownNote",
       "pos": [
-        -1490,
-        6460
+        -1860,
+        5400
       ],
       "size": [
         700,
@@ -1283,8 +1293,8 @@
       "id": 161,
       "type": "H3PromptPreview",
       "pos": [
-        -580,
-        5680
+        1570,
+        5400
       ],
       "size": [
         520,
@@ -1324,12 +1334,12 @@
       "id": 163,
       "type": "ImageScale",
       "pos": [
-        450,
-        4720
+        1680,
+        4510
       ],
       "size": [
         315,
-        130
+        140
       ],
       "flags": {},
       "order": 0,
@@ -1366,12 +1376,12 @@
       "id": 164,
       "type": "RTXVideoSuperResolution",
       "pos": [
-        800,
+        1680,
         4720
       ],
       "size": [
         315,
-        120
+        138
       ],
       "flags": {},
       "order": 0,
@@ -1407,8 +1417,8 @@
       "id": 165,
       "type": "H3SceneCounter",
       "pos": [
-        -670,
-        5410
+        -400,
+        5780
       ],
       "size": [
         250,
@@ -1732,72 +1742,142 @@
   "groups": [
     {
       "id": 1,
-      "title": "Models",
+      "title": "LOAD MODELS",
       "bounding": [
-        -1520,
-        4700,
-        820,
-        1020
+        -1900,
+        4400,
+        560,
+        710
       ],
-      "color": "#3f789e",
+      "color": "#3a5fa8",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 2,
-      "title": "Sampling",
+      "title": "SOL ATTENTION / SPEED PATCHES",
       "bounding": [
-        -290,
-        4820,
-        710,
-        680
+        -1190,
+        4400,
+        840,
+        460
       ],
-      "color": "#3f789e",
+      "color": "#c26a1f",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 3,
-      "title": "Conditioning",
+      "title": "CONDITIONING",
       "bounding": [
-        -780,
-        4850,
-        470,
-        480
+        -200,
+        4400,
+        490,
+        500
       ],
-      "color": "#3f789e",
+      "color": "#b59a1f",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 4,
-      "title": "Decoding and create video",
+      "title": "SAMPLING",
       "bounding": [
-        450,
-        4830,
-        630,
-        370
+        440,
+        4400,
+        760,
+        700
       ],
-      "color": "#3f789e",
+      "color": "#b03a3a",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 5,
-      "title": "User Inputs",
+      "title": "DECODE & VIDEO",
       "bounding": [
-        -1890,
-        5490,
-        2750,
-        980
+        1350,
+        4400,
+        1020,
+        500
       ],
-      "color": "#3f789e",
+      "color": "#2aa3b8",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "SAVE / OUTPUT",
+      "bounding": [
+        2520,
+        4400,
+        560,
+        280
+      ],
+      "color": "#2a6e4a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "NOTES",
+      "bounding": [
+        -1900,
+        5290,
+        780,
+        350
+      ],
+      "color": "#4a4a4a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "USER INPUTS",
+      "bounding": [
+        -970,
+        5290,
+        380,
+        460
+      ],
+      "color": "#4f8a3a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 9,
+      "title": "PROMPT WRITER (LLM)",
+      "bounding": [
+        -440,
+        5290,
+        910,
+        1410
+      ],
+      "color": "#7a3fa0",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 10,
+      "title": "PROMPT PREVIEW",
+      "bounding": [
+        620,
+        5290,
+        1510,
+        970
+      ],
+      "color": "#5b6b8f",
+      "font_size": 24,
       "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5986674567928358,
+      "scale": 0.3614,
       "offset": [
-        2312.7617207097105,
-        -4100.956019764087
+        1960,
+        -4340
       ]
     },
     "frontendVersion": "1.49.6",

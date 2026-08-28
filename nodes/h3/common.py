@@ -169,11 +169,32 @@ def _dataset_visual_styles():
     return [str(item.get("style", "")).strip() for item in items if str(item.get("style", "")).strip()]
 
 
+# A visual style is a LOOK - medium, film stock, grading, hues, lens, camera,
+# era - never a place. The dataset openers and the aesthetics list carry
+# scene-specific settings ("mint-green kitchen", "Beach Day"); those belong in
+# `direction` / the location locks, so entries that name a place are dropped.
+_PLACE_WORDS_RE = re.compile(
+    r"\b(?:street|streets|city|skyline|room|kitchen|bedroom|bathroom|hallway|corridor|beach|"
+    r"forest|rooftop|rooftops|desert|ocean|cliff|mountain|mountains|alley|club|church|garden|"
+    r"park|apartment|house|office|train|subway|highway|road|bridge|harbou?r|market|lake|river|"
+    r"island|cabin|warehouse|hotel|motel|diner|cafe|nightclub|backyard|suburban|suburb|urban|"
+    r"countryside|jungle|cave|castle|temple|cathedral|coast|shore|dock|pier|station|airport|"
+    r"arena|stadium|school|library|hospital|prison|factory|farm|village|town|interior|"
+    r"interiors|galleon|playground|pool|parking|garage|basement|attic|balcony|porch|lobby|"
+    r"tunnel|underwater|space station|planet)\b",
+    re.IGNORECASE,
+)
+
+
+def _looks_only(items):
+    return [s for s in items if not _PLACE_WORDS_RE.search(s)]
+
+
 def _build_visual_styles():
     styles = [AUTO, VISUAL_STYLE_CUSTOM]
     seen = {s.lower() for s in styles}
-    for source in [_dataset_visual_styles(), _CINEMATIC_LOOKS, _GUIDE_VISUAL_STYLES] + [
-        _apnext_cinematic_items(name) for name in _APNEXT_VISUAL_STYLE_FILES
+    for source in [_looks_only(_dataset_visual_styles()), _CINEMATIC_LOOKS, _GUIDE_VISUAL_STYLES] + [
+        _looks_only(_apnext_cinematic_items(name)) for name in _APNEXT_VISUAL_STYLE_FILES
     ]:
         for item in source:
             if item.lower() not in seen:

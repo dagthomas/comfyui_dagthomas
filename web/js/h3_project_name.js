@@ -28,16 +28,22 @@ const NODE_TYPES = new Set([
 
 const LOOKS = [
   "Golden", "Silver", "Amber", "Noir", "Neon", "Velvet", "Crimson", "Cobalt",
-  "Sepia", "Chrome", "Indigo", "Emerald", "Scarlet", "Midnight", "Pastel",
-  "Tungsten", "Halide", "Matte", "Anamorphic", "Technicolor",
+  "Sepia", "Chrome", "Indigo", "Emerald", "Scarlet", "Midnight", "Pastel", "Tungsten",
+  "Halide", "Matte", "Anamorphic", "Technicolor", "Ivory", "Onyx", "Coral", "Saffron",
+  "Teal", "Mauve", "Ochre", "Umber", "Cyan", "Magenta", "Bronze", "Copper",
+  "Ruby", "Sapphire", "Jade", "Opal", "Smoke", "Kodachrome", "Backlit", "Grainy",
 ];
 const MOVES = [
   "Dolly", "Crane", "Zoom", "Orbit", "Boom", "Gimbal", "Rack", "Whip",
-  "Glide", "Pan", "Tilt", "Push", "Steadicam", "Tracking", "Vertigo",
+  "Glide", "Pan", "Tilt", "Push", "Steadicam", "Tracking", "Vertigo", "Truck",
+  "Pedestal", "Arc", "Swish", "Jib", "Handheld", "Drone", "Slider", "Sweep",
+  "Pullback", "Drift", "Roll", "Hover", "Snap", "Float",
 ];
 const GEAR = [
   "Slate", "Reel", "Lens", "Shutter", "Bokeh", "Gaffer", "Grip", "Rig",
-  "Flare", "Foley", "Scrim", "Frame", "Take", "Clapper", "Montage",
+  "Flare", "Foley", "Scrim", "Frame", "Take", "Clapper", "Montage", "Tripod",
+  "Monitor", "Diffuser", "Reflector", "Softbox", "Gel", "Sandbag", "Cstand", "Cable",
+  "Marker", "Viewfinder", "Tape", "Cutter", "Barn", "Dailies",
 ];
 const POOLS = [LOOKS, MOVES, GEAR];
 
@@ -64,17 +70,25 @@ function seedOf(node) {
 
 const pickRandom = (pool) => pool[Math.floor(Math.random() * pool.length)];
 
+// 4 base-36 characters from a 64-bit value: the part of the name that keeps
+// two seeds apart even when they draw the same three words (36^4 tails).
+const TAIL_SPACE = 36n ** 4n;
+const tail = (value) => Number(BigInt.asUintN(64, value) % TAIL_SPACE).toString(36).padStart(4, "0");
+
 function generate(seed) {
   if (typeof seed === "number" && seed >= 0) {
     const stream = splitmix64(BigInt(seed));
-    return POOLS.map((pool) => pool[Number(stream.next().value % BigInt(pool.length))]).join("");
+    const words = POOLS.map((pool) => pool[Number(stream.next().value % BigInt(pool.length))]).join("");
+    return `${words}-${tail(stream.next().value)}`;
   }
-  return POOLS.map(pickRandom).join("");
+  const rnd = BigInt(Math.floor(Math.random() * 2 ** 32)) * 2n ** 32n + BigInt(Math.floor(Math.random() * 2 ** 32));
+  return `${POOLS.map(pickRandom).join("")}-${tail(rnd)}`;
 }
 
 // True for names this extension (or the Python fallback) could have produced,
-// i.e. LOOK+MOVE+GEAR from the pools. Anything else was typed by the user.
-const AUTO_NAME = new RegExp(`^(${LOOKS.join("|")})(${MOVES.join("|")})(${GEAR.join("|")})$`);
+// i.e. LOOK+MOVE+GEAR from the pools, with or without the tail (older runs had
+// none). Anything else was typed by the user.
+const AUTO_NAME = new RegExp(`^(${LOOKS.join("|")})(${MOVES.join("|")})(${GEAR.join("|")})(-[0-9a-z]{4})?$`);
 const isAutoName = (v) => AUTO_NAME.test(String(v ?? "").trim());
 
 function projectWidget(node) {

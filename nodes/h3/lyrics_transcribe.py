@@ -21,6 +21,8 @@
 import hashlib
 import re
 
+from ...utils.constants import CUSTOM_CATEGORY
+
 _MODEL_ID = "openai/whisper-large-v3-turbo"
 _CACHE = {}
 
@@ -194,3 +196,51 @@ def transcribe_song_lyrics(audio, model_id=_MODEL_ID):
         except UnicodeEncodeError:       # cp1252 console
             print(f"WARNING: {msg}")
         return ""
+
+
+class H3LyricsTranscribe:
+    """Timed `[m:ss] line` lyrics from the song (or its vocal stem), as a node.
+
+    The Music Video Writer can transcribe on its own, but it runs LAST - after
+    the Cut Plan has already placed the cuts. Put this node first and wire its
+    `lyrics` into BOTH the Cut Plan's and the writer's `lyrics_in` socket
+    (`Lyric lines` mode cuts right before the lines) and the whole chain
+    follows the same words. Their `lyrics` boxes stay editable: anything typed
+    there wins over the socket, so Whisper's words can be corrected by hand.
+    """
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "audio": ("AUDIO", {
+                    "tooltip": (
+                        "The song - or better, its vocal stem (AudioSeparation's vocals): Whisper "
+                        "transcribes a stem noticeably cleaner than the full mix."
+                    ),
+                }),
+            },
+        }
+
+    RETURN_TYPES = ("STRING", "INT", "STRING")
+    RETURN_NAMES = ("lyrics", "count", "info")
+    OUTPUT_TOOLTIPS = (
+        "Timed lyrics, one `[m:ss] line` per row - wire into the Cut Plan's and the writer's `lyrics_in` socket.",
+        "How many lines were heard.",
+        "What happened.",
+    )
+    FUNCTION = "transcribe"
+    CATEGORY = f"{CUSTOM_CATEGORY}/H3"
+    DESCRIPTION = (
+        "Whisper (large-v3-turbo, downloaded on first use) turns the song into timed lyrics "
+        "so the Cut Plan can cut before the lines and the writer stages the exact words. "
+        "Cached per waveform, so re-queues are free; the model is released after each run."
+    )
+
+    def transcribe(self, audio):
+        lyrics = transcribe_song_lyrics(audio) or ""
+        lines = [ln for ln in lyrics.splitlines() if ln.strip()]
+        info = (f"{len(lines)} timed line(s)" if lines
+                else "no lyrics heard (instrumental, or Whisper failed - see the console)")
+        print(f"\U0001f3a4 H3 Lyrics Transcribe | {info}")
+        return (lyrics, len(lines), info)

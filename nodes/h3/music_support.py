@@ -300,6 +300,9 @@ def _peak_near(values, times, t, radius, side=None):
 # Lyrics
 
 _TS_RE = re.compile(r"^\s*[\[(]?(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?[\])]?\s*[-–>:]?\s*(.*)$")
+# a range `0:02 - 0:04 line` / `[0:02-0:04] line` / `0:02 --> 0:04 line`: the second
+# time is the line's END - keep the start, drop the end so it never lands in the text
+_TS_END_RE = re.compile(r"^(?:[-–—>→]*\s*)?\d{1,2}:\d{2}(?:[.:]\d{1,3})?[\])]?\s*[-–>:]?\s+(.*)$")
 
 
 def parse_lyrics(text):
@@ -320,6 +323,9 @@ def parse_lyrics(text):
             if frac:
                 start += int(frac) / (10 ** len(frac))
             body = m.group(4).strip()
+            m_end = _TS_END_RE.match(body)
+            if m_end:
+                body = m_end.group(1).strip()
             if body:
                 out.append((float(start), body))
             else:
@@ -547,12 +553,13 @@ def _clock(text):
 
 
 def format_cut_plan(segments, total, min_seconds, max_seconds, *, structure=None, events=None,
-                    lyric_times=(), labels=None, forced=(), placement=None):
+                    lyric_times=(), labels=None, forced=(), placement=None, beat_offsets=None, beat_unit="beat"):
     """
     The scene list as text - one line per scene, `NN  m:ss.ss - m:ss.ss  dur  energy  section  cut: why`.
     Human-readable, hand-editable, and parse_cut_plan() reads it back. Only the
     number and the two clock times matter to the parser; everything after is
-    commentary.
+    commentary. `beat_offsets` (from snap_segments_to_beats) marks the plan
+    beat-exact in the header and says per scene how far its end moved.
     """
     try:
         from .song_structure import section_for_span
@@ -562,11 +569,16 @@ def format_cut_plan(segments, total, min_seconds, max_seconds, *, structure=None
     head = f"{CUT_PLAN_HEADER}: {len(segments)} scenes | {min_seconds:g}-{max_seconds:g} s per scene | {fmt_time(total)} total"
     if side:
         head += " | cuts " + ("before" if side == "before" else "after") + " the beat"
+    if beat_offsets is not None:
+        head += f" | {BEAT_EXACT_MARK}: every scene opens on the {beat_unit}, frame-exact lengths (render with Chain Render - it trims the pad)"
     lines = [head]
     for i, (s, e) in enumerate(segments, 1):
         section = section_for_span(structure, s, e) if structure else None
         energy = labels[i - 1] if labels and i - 1 < len(labels) else ""
         why = "end of song" if i == len(segments) else cut_reason(e, structure, events, lyric_times, forced, placement)
+        if beat_offsets is not None and i < len(segments):
+            moved = beat_offsets[i - 1] if i - 1 < len(beat_offsets) else None
+            why += f" -> on the {beat_unit} ({moved * 1000:+.0f} ms)" if moved is not None else f" (no {beat_unit} in reach - left on the grid)"
         lines.append(
             f"{i:02d}  {fmt_time(s)} - {fmt_time(e)}  {e - s:5.2f}s  {energy:<6} {(section or ''):<12} cut: {why}"
         )
@@ -623,6 +635,82 @@ def _merge_short_tail(segments, total, longest, shortest):
             mid = s0 + seconds_for_frames(frames_for_seconds((total - s0) / 2))
             segments[-2:] = [(s0, mid), (mid, total)]
     return segments
+
+
+# ----------------------------------------------------------------------
+# Beat-exact cuts
+# ----------------------------------------------------------------------
+# The frame grid moves a cut in 0.71 s steps, so a scene boundary is never
+# exactly on a beat - the cutter can only get within a third of a second.
+# But the grid is a RENDER constraint, not a delivery one: Chain Render
+# renders the next grid length up and trims the pad, so a scene may be any
+# whole number of frames. This pass takes the cutter's grid-placed ends and
+# moves each one onto the nearest beat (or downbeat), rounded to the frame,
+# so every scene opens on the pulse to within half a frame (21 ms). The plan
+# is marked `beat-exact` in its header and the writer then keeps the frame
+# counts exact instead of snapping them back to the grid.
+
+BEAT_SNAP_MODES = [
+    "off (frame grid)",
+    "nearest beat (frame-exact - Chain Render)",
+    "nearest downbeat (frame-exact - Chain Render)",
+]
+BEAT_EXACT_MARK = "beat-exact"
+
+
+def snap_segments_to_beats(segments, beats, total, min_seconds, max_seconds, reach=None):
+    """
+    [(start, end)] with every end (but the last) moved onto the nearest of
+    `beats` (s) within `reach`, rounded to the frame; each scene starts where
+    the previous one ends. A snap that would push a scene outside
+    [min_seconds, max_seconds] is skipped. Returns (segments, offsets) where
+    offsets[i] is how far scene i's end moved in seconds (None = not snapped).
+    """
+    beats = sorted(float(b) for b in beats or [])
+    if not beats or len(segments) < 2:
+        return list(segments), [None] * len(segments)
+    if reach is None:
+        gaps = [b - a for a, b in zip(beats, beats[1:]) if b - a > 0.05]
+        reach = (min(gaps) / 2.0) if gaps else 0.4
+    out, offsets = [], []
+    start = float(segments[0][0])
+    for i, (_s, e) in enumerate(segments):
+        if i == len(segments) - 1:
+            out.append((start, float(total)))
+            offsets.append(None)
+            break
+        e = float(e)
+        # the cutter may itself have left this scene a little outside the range
+        # (a merged tail, a forced cut); a snap must not make that worse, but it
+        # is allowed to stay as far out as the scene already was
+        orig_len = e - start
+        lo = min(min_seconds, orig_len) - 0.05
+        hi = max(max_seconds, orig_len) + 0.05
+        moved = None
+        for nearest in sorted(beats, key=lambda b: abs(b - e))[:2]:     # nearest, then the other side
+            if abs(nearest - e) > reach + 1e-6:
+                break
+            snapped = round(nearest * FPS) / FPS
+            length = snapped - start
+            if lo <= length <= hi and total - snapped >= 1.0:
+                moved = snapped - e
+                e = snapped
+                break
+        out.append((start, e))
+        offsets.append(moved)
+        start = e
+    return out, offsets
+
+
+def cut_plan_is_beat_exact(text):
+    """Does this cut plan carry frame-exact (beat-snapped) scene lengths?"""
+    head = (text or "").strip().splitlines()[:1]
+    return bool(head) and head[0].startswith(CUT_PLAN_HEADER) and BEAT_EXACT_MARK in head[0]
+
+
+def exact_frames(seconds):
+    """A scene length as a whole number of frames, no grid - for beat-exact plans."""
+    return max(1, int(round(float(seconds) * FPS)))
 
 
 def segment_by_lyrics(audio, max_seconds=15.0, min_seconds=5.2, lyric_times=(), structure=None, events=None, forced=(), placement=None):

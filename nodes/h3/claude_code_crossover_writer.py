@@ -303,17 +303,6 @@ class H3ClaudeCodeCrossoverWriter:
         })
         # appended LAST so saved workflows keep their widget positions
         optional.update(project_name_input())
-        optional["avoid_previous"] = ("INT", {
-            "default": 0, "min": 0, "max": 20,
-            "tooltip": (
-                "NO LONGER USED - every run is a clean slate. This once fed the synopses "
-                "of previous saved runs back to the model as concepts that were USED UP, "
-                "but quoting an old logline under a 'do not reuse' header primes the idea "
-                "far more reliably than it forbids it: the run reproduced what it was told "
-                "to avoid, got saved, and fed itself back. The slot stays so saved "
-                "workflows keep their widget positions; the value is ignored."
-            ),
-        })
 
         # appended last so saved workflows keep their widget positions
         optional["interpretation"] = interpretation_input('the direction')
@@ -591,7 +580,7 @@ class H3ClaudeCodeCrossoverWriter:
         reference_image_use=None,
         scene_briefs="",
         project_name="",
-        avoid_previous=0,
+        avoid_previous=None,  # removed widget; accepted so old API-format prompts still run
         interpretation=None,
         transition_style=None,
         **cast_slots,

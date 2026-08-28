@@ -89,7 +89,7 @@
   "127": {
     "class_type": "UNETLoader",
     "inputs": {
-      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
       "weight_dtype": "default"
     }
   },
@@ -160,9 +160,9 @@
     }
   },
   "115": {
-    "class_type": "ResolutionSelector",
+    "class_type": "H3ResolutionSelector",
     "inputs": {
-      "aspect_ratio": "16:9 (Widescreen)",
+      "aspect_ratio": "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
       "megapixels": 0.5,
       "multiple": 32
     }

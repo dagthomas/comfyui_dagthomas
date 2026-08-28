@@ -16,10 +16,11 @@
 # into a continuing take. Or force it either way with `continuity`.
 #
 # Mechanisms, in order of preference:
-#   1. MiniMaxH3SongMaskedAVContext (ComfyUI-H3-Motion-Context-MultiRef): masked
-#      AV prefix - previous frames encoded into the head of the target latent,
-#      protected by a nested denoise mask, with the song audio masked in at the
-#      matching offset. Same node the masked-audio workflow already uses.
+#   1. H3MaskedSongLatent (this pack; MiniMaxH3SongMaskedAVContext from
+#      ComfyUI-H3-Motion-Context-MultiRef is the fallback when ours is missing):
+#      masked AV prefix - previous frames encoded into the head of the target
+#      latent, protected by a nested denoise mask, with the song audio masked
+#      in at the matching offset. Same node the masked-audio workflow uses.
 #   2. MiniMaxH3AddGuide (core): the previous tail anchored as a guide clip at
 #      frame 0. Works without any third-party pack; audio is then generated.
 #
@@ -215,6 +216,14 @@ class H3MusicVideoChainRender:
                         "Previous frames: the decoded tail encoded again (the original path)."
                     ),
                 }),
+                "conditioning_audio": ("AUDIO", {
+                    "tooltip": (
+                        "What H3 LISTENS to instead of master_audio - e.g. Beat Emphasis' mix (spiked hits, ducked "
+                        "gaps, a click / thump on every beat) or a drum stem - masked into the latent at the same "
+                        "song offsets. The `audio` output and the clips' own audio still carry the original song "
+                        "pieces. Leave empty to condition on master_audio itself."
+                    ),
+                }),
             },
         }
 
@@ -232,7 +241,7 @@ class H3MusicVideoChainRender:
 
     def render(self, model, clip, vae, audio_vae, scenes, lengths, audio_segments, clip_starts,
                width, height, sampler, sigmas, seed, context_frames, continuity, filename_prefix, fps,
-               master_audio=None, cut_plan=None, save_latents=True, carry=None, **refs):
+               master_audio=None, cut_plan=None, save_latents=True, carry=None, conditioning_audio=None, **refs):
         import torch
         import comfy.model_management as mm
 
@@ -245,6 +254,14 @@ class H3MusicVideoChainRender:
         continuity = str(_first(continuity, CONTINUITY_MODES[0]))
         ctx = snap_run(int(_first(context_frames, 22)))
         master = _first(master_audio)
+        # what gets masked into the latent: the emphasised / stem mix when one is wired, else the song
+        cond_master = _first(conditioning_audio) if conditioning_audio is not None else None
+        if cond_master is None:
+            cond_master = master
+        elif master is None:
+            print("⚠️ H3 Chain Render: conditioning_audio is connected but master_audio is not - the masked-song "
+                  "path needs master_audio for the timing; conditioning_audio is ignored.")
+            cond_master = None
         plan_text = str(_first(cut_plan, "") or "")
         keep_latents = bool(_first(save_latents, True))
         carry_latent = str(_first(carry, CARRY_MODES[0]) or CARRY_MODES[0]).startswith("previous latent")
@@ -265,11 +282,12 @@ class H3MusicVideoChainRender:
         guider_cls, noise_cls = _node("BasicGuider"), _node("RandomNoise")
         sampler_cls, decode_cls = _node("SamplerCustomAdvanced"), _node("VAEDecode")
         import nodes as comfy_nodes
-        masked_cls = comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3SongMaskedAVContext")
+        masked_cls = (comfy_nodes.NODE_CLASS_MAPPINGS.get("H3MaskedSongLatent")
+                      or comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3SongMaskedAVContext"))
         guide_cls = comfy_nodes.NODE_CLASS_MAPPINGS.get("MiniMaxH3AddGuide")
         if master is not None and masked_cls is None:
-            print("⚠️ H3 Chain Render: master_audio is connected but ComfyUI-H3-Motion-Context-MultiRef is not "
-                  "installed - audio will be generated and continuity uses the core guide.")
+            print("⚠️ H3 Chain Render: master_audio is connected but neither H3 Masked Song Latent nor "
+                  "ComfyUI-H3-Motion-Context-MultiRef is available - audio will be generated and continuity uses the core guide.")
         mechanism = ("masked AV prefix (latent carry)" if carry_latent else "masked AV prefix (frames carry)") \
             if (master is not None and masked_cls) else ("core guide clip" if guide_cls else "none")
 
@@ -299,20 +317,20 @@ class H3MusicVideoChainRender:
             if master is not None and masked_cls is not None:
                 if flow and carry_latent and prev_latent is not None:
                     latent, trim, _clip_audio = _call(
-                        masked_cls, latent=latent, audio_vae=audio_vae, master_audio=master,
+                        masked_cls, latent=latent, audio_vae=audio_vae, master_audio=cond_master,
                         clip_start_seconds=start, context_length=ctx, source_fps=fps_v, crop="disabled",
                         source_latent=prev_latent,
                     )[:3]
                     trim = int(trim)
                 elif flow:
                     latent, trim, _clip_audio = _call(
-                        masked_cls, latent=latent, audio_vae=audio_vae, master_audio=master,
+                        masked_cls, latent=latent, audio_vae=audio_vae, master_audio=cond_master,
                         clip_start_seconds=start, context_length=ctx, source_fps=fps_v, crop="disabled",
                         vae=vae, source_frames=prev_tail,
                     )[:3]
                     trim = int(trim)
                 else:
-                    latent = _call(masked_cls, latent=latent, audio_vae=audio_vae, master_audio=master,
+                    latent = _call(masked_cls, latent=latent, audio_vae=audio_vae, master_audio=cond_master,
                                    clip_start_seconds=start, context_length=0, source_fps=fps_v, crop="disabled")[0]
             elif flow and guide_cls is not None:
                 cond = _call(guide_cls, positive=cond, latent=latent, frame_idx=0, vae=vae, image=prev_tail)[0]

@@ -191,9 +191,105 @@ def event_window(event):
 # Spectral front end
 # ----------------------------------------------------------------------
 
-def _frames(audio):
+# ----------------------------------------------------------------------
+# Signal shaping: what the detectors get to listen to
+# ----------------------------------------------------------------------
+# Every detector scores a peak against the audio around it, so on a loud,
+# compressed master a kick and a hi-hat can clear the floor by the same
+# margin and the list fills with the wrong hits. Shaping the signal FIRST -
+# tilting the mix toward the kick, pulling the hats down, bending the
+# dynamics so the big hits stand proud of the rest - makes the beats you
+# want the loudest thing the detectors see. The chain is gain -> EQ -> curve,
+# like pedals in a row, and the editor draws the shaped signal under the
+# events (and can monitor it) so what you see and hear is what is scored.
+
+# The five EQ bands: (kwarg, RBJ biquad kind, centre Hz, Q). The editor's
+# Web Audio monitor builds the same five BiquadFilterNodes with the same
+# numbers; Web Audio and this file share the RBJ cookbook, so the magnitude
+# response matches. Here the response is applied in the frequency domain
+# (zero phase, no group delay) so hits keep their exact timing.
+EQ_BANDS = (
+    ("eq_sub_db", "lowshelf", 60.0, 0.707),
+    ("eq_bass_db", "peaking", 150.0, 0.9),
+    ("eq_low_db", "peaking", 400.0, 0.9),
+    ("eq_mid_db", "peaking", 1500.0, 0.9),
+    ("eq_high_db", "highshelf", 5000.0, 0.707),
+)
+SHAPING_KEYS = ("gain_db", "dynamics_curve") + tuple(k for k, *_ in EQ_BANDS)
+
+
+def _biquad_response(kind, f0, q, gain_db, freqs, sr):
+    """|H(f)| of an RBJ cookbook biquad, evaluated on `freqs` (Hz)."""
+    amp = 10.0 ** (gain_db / 40.0)
+    w0 = 2.0 * math.pi * f0 / sr
+    cos_w0, sin_w0 = math.cos(w0), math.sin(w0)
+    alpha = sin_w0 / (2.0 * q)
+    root = 2.0 * math.sqrt(amp) * alpha
+    if kind == "peaking":
+        b = (1.0 + alpha * amp, -2.0 * cos_w0, 1.0 - alpha * amp)
+        a = (1.0 + alpha / amp, -2.0 * cos_w0, 1.0 - alpha / amp)
+    elif kind == "lowshelf":
+        b = (amp * ((amp + 1) - (amp - 1) * cos_w0 + root),
+             2 * amp * ((amp - 1) - (amp + 1) * cos_w0),
+             amp * ((amp + 1) - (amp - 1) * cos_w0 - root))
+        a = ((amp + 1) + (amp - 1) * cos_w0 + root,
+             -2 * ((amp - 1) + (amp + 1) * cos_w0),
+             (amp + 1) + (amp - 1) * cos_w0 - root)
+    elif kind == "highshelf":
+        b = (amp * ((amp + 1) + (amp - 1) * cos_w0 + root),
+             -2 * amp * ((amp - 1) + (amp + 1) * cos_w0),
+             amp * ((amp + 1) + (amp - 1) * cos_w0 - root))
+        a = ((amp + 1) - (amp - 1) * cos_w0 + root,
+             2 * ((amp - 1) - (amp + 1) * cos_w0),
+             (amp + 1) - (amp - 1) * cos_w0 - root)
+    else:
+        raise ValueError(f"unknown biquad kind {kind!r}")
+    w = 2.0 * math.pi * freqs / sr
+    z1 = torch.exp(-1j * w)
+    z2 = z1 * z1
+    num = b[0] + b[1] * z1 + b[2] * z2
+    den = a[0] + a[1] * z1 + a[2] * z2
+    return (num / den).abs().float()
+
+
+def shape_signal(wave, sr, shaping=None):
+    """
+    gain -> EQ -> dynamics curve on a mono float waveform.
+
+    `shaping` is {gain_db, dynamics_curve, eq_sub_db, eq_bass_db, eq_low_db,
+    eq_mid_db, eq_high_db}; anything missing is neutral. The curve raises
+    |x| to a power relative to full scale (1.0): above 1 it expands, quiet
+    material sinks and the big hits stand proud; below 1 it compresses, the
+    soft hits come up. Gain sits in front of it for that reason - a track
+    peaking at 0.5 needs lifting before a 2.0 curve can do anything but crush.
+    """
+    s = shaping or {}
+    gain_db = float(s.get("gain_db") or 0.0)
+    curve = float(s.get("dynamics_curve") or 1.0)
+    eq = [(kind, f0, q, float(s.get(key) or 0.0)) for key, kind, f0, q in EQ_BANDS]
+    eq = [b for b in eq if abs(b[3]) >= 0.05]
+    if abs(gain_db) < 0.05 and not eq and abs(curve - 1.0) < 1e-3:
+        return wave
+    out = wave
+    if abs(gain_db) >= 0.05:
+        out = out * (10.0 ** (gain_db / 20.0))
+    if eq:
+        n = out.numel()
+        spec = torch.fft.rfft(out)
+        freqs = torch.fft.rfftfreq(n, 1.0 / sr)
+        mag = torch.ones_like(freqs)
+        for kind, f0, q, db in eq:
+            mag = mag * _biquad_response(kind, f0, q, db, freqs, sr)
+        out = torch.fft.irfft(spec * mag, n=n)
+    if abs(curve - 1.0) >= 1e-3:
+        out = torch.sign(out) * out.abs().clamp(min=0.0).pow(curve)
+    return out.float()
+
+
+def _frames(audio, shaping=None):
     """Magnitude spectrogram, bin frequencies, hop length and the waveform."""
     wave, sr = _mono(audio)
+    wave = shape_signal(wave, sr, shaping)
     hop = max(1, int(round(sr * HOP_SECONDS)))
     n_fft = 2048 if sr >= 32000 else 1024
     if wave.numel() < n_fft:
@@ -288,10 +384,13 @@ def _pick_peaks(strength, floor, hop, min_gap, ratio, rearm=0.5):
             continue
         if v < float(strength[i - 1]) or v < float(strength[i + 1]):
             continue
-        candidates.append((v / max(float(threshold[i]), 1e-6), i, v))
+        candidates.append((v, i, v))
 
-    # Greedy by prominence so that when two peaks fall inside one refractory
-    # gap the LOUDER one survives - a trailing snare must never mask the kick.
+    # Greedy by height so that when two peaks fall inside one refractory gap
+    # the LOUDER one survives - a trailing snare (or the blip before a kick)
+    # must never mask the kick. Height, not height-over-threshold: the floor
+    # drifts inside a gap and would otherwise let a small early blip outrank
+    # the big hit 60 ms behind it.
     candidates.sort(reverse=True)
     kept = []
     for _score, i, v in candidates:
@@ -399,8 +498,8 @@ def _resolve_hits(bass, impacts, low_tilt, top_tilt, window=0.07, bias=1.5):
 # over a much longer span - gets a wider one; stops, sections and builds are
 # windows in their own right and are left alone.
 _SNAP_WINDOW = {
-    "BASS HIT": (0.010, 0.080),
-    "IMPACT": (0.010, 0.080),
+    "BASS HIT": (0.040, 0.080),
+    "IMPACT": (0.040, 0.080),
     "ACCENT": (0.005, 0.050),
     "DROP": (0.050, 0.150),
 }
@@ -480,12 +579,29 @@ def _normalise(values):
 # Detectors
 # ----------------------------------------------------------------------
 
-def _bass_hits(flux, floor, hop, sensitivity, min_gap):
-    """Kicks and low hits: 20-250 Hz spectral flux over an adaptive median."""
+_LOUDNESS_SHARE = 0.6     # of a hit's strength: how loud the low band IS at the hit
+
+
+def _bass_hits(flux, floor, hop, sensitivity, min_gap, level=None):
+    """
+    Kicks and low hits: 20-250 Hz spectral flux over an adaptive median.
+
+    The flux finds WHERE a kick is; it is a poor measure of how big one is.
+    Flux is the low band's RISE, so a soft kick after a rest scores high and a
+    heavy kick inside a dense bar - already loud, rising less - scores low.
+    Sorted by flux alone, a cap or a strength floor keeps the wrong hits and
+    the labels read backwards against the waveform. So the strength is a blend:
+    the rise, and the low band's actual level at the hit (`level`, per frame).
+    """
     # The AudioEngine's k=3 median factor, divided by sensitivity exactly as its
     # `sens.beat` does: 2 = hair-trigger, 0.5 = strict.
     peaks = _pick_peaks(flux, floor, hop, min_gap, 3.0 / max(0.25, sensitivity))
-    strengths = _normalise([v for _, v in peaks])
+    rise = _normalise([v for _, v in peaks])
+    if level is None or not peaks:
+        return [(i, i * hop, "BASS HIT", s) for (i, _), s in zip(peaks, rise)]
+    n = level.numel()
+    loud = _normalise([float(level[max(0, i - 1):min(n, i + 6)].max()) for i, _ in peaks])
+    strengths = [(1.0 - _LOUDNESS_SHARE) * r + _LOUDNESS_SHARE * l for r, l in zip(rise, loud)]
     return [(i, i * hop, "BASS HIT", s) for (i, _), s in zip(peaks, strengths)]
 
 
@@ -543,21 +659,116 @@ def _novelty(loud_db, hop, window):
     hi = torch.clamp(idx + half, max=n)
     before = (cum[idx] - cum[lo]) / torch.clamp((idx - lo).float(), min=1)
     after = (cum[hi] - cum[idx]) / torch.clamp((hi - idx).float(), min=1)
-    return after - before
+    # At the very edges one side has (almost) no frames and reads as 0 dB
+    # against a real level of -30 dB - a huge fake step. No window, no change.
+    valid = ((idx - lo) >= half // 2) & ((hi - idx) >= half // 2)
+    return (after - before) * valid.float()
+
+
+def _slow_median(x, half_seconds, hop):
+    """
+    Rolling median over a window far longer than the hop (tens of seconds),
+    computed on a decimated copy so the unfolded windows stay small, then
+    stretched back to every frame. Coarse by design: it is the track's
+    "usual" level, not a per-frame measurement.
+    """
+    n = x.numel()
+    half_frames = max(1, int(round(half_seconds / hop)))
+    stride = max(1, half_frames // 200)
+    coarse = x[::stride]
+    med = _rolling_median(coarse, max(1, half_frames // stride))
+    return med.repeat_interleave(stride)[:n]
+
+
+# The intense / calm state machine from scheb/sound-to-light-osc, offline.
+# Entering a state takes a bigger margin than staying in it (hysteresis), and
+# the condition has to HOLD before the state flips (debounce), so a fill, a
+# crash or a two-bar dip cannot toggle it. Margins in dB against the track's
+# usual level; scheb's x1.3 / x0.7 enter and x1.1 / x0.9 leave ratios are
+# +2.3 / -3.1 and +0.8 / -0.9 dB.
+_STATE_ENTER_INTENSE = 2.5
+_STATE_LEAVE_INTENSE = 0.8
+_STATE_ENTER_CALM = -3.0
+_STATE_LEAVE_CALM = -0.9
+_STATE_HOLD = 0.5   # s the new condition must hold before the state changes
+
+
+def _energy_state(loud_db, hop):
+    """
+    Per frame: +1 intense, 0 neither, -1 calm.
+
+    The level judged is the 1 s median of the loudness (a centred window, so
+    the edge sits where the change is) against the 30 s median around it -
+    the track's usual level - so a quiet intro in a loud song and a loud
+    chorus in a quiet one both read correctly.
+    """
+    level = _rolling_median(loud_db, max(1, int(round(0.5 / hop))))
+    usual = _slow_median(loud_db, 15.0, hop)
+    rel = (level - usual).tolist()
+    hold = max(1, int(round(_STATE_HOLD / hop)))
+    if not rel:
+        return []
+    # start IN whatever state the opening frames are in - a quiet intro is
+    # calm from its first frame, not "neutral until the hold has elapsed"
+    # (which would make the opening read as a fall into calm, i.e. a STOP)
+    state = 1 if rel[0] >= _STATE_ENTER_INTENSE else (-1 if rel[0] <= _STATE_ENTER_CALM else 0)
+    pending = None       # (candidate state, frames it has held)
+    out = [0] * len(rel)
+    for i, r in enumerate(rel):
+        if state == 1:
+            want = 1 if r >= _STATE_LEAVE_INTENSE else (-1 if r <= _STATE_ENTER_CALM else 0)
+        elif state == -1:
+            want = -1 if r <= _STATE_LEAVE_CALM else (1 if r >= _STATE_ENTER_INTENSE else 0)
+        else:
+            want = 1 if r >= _STATE_ENTER_INTENSE else (-1 if r <= _STATE_ENTER_CALM else 0)
+        if want == state:
+            pending = None
+        elif pending is not None and pending[0] == want:
+            pending = (want, pending[1] + 1)
+            if pending[1] >= hold:
+                state, pending = want, None
+        else:
+            pending = (want, 1)
+        out[i] = state
+    return out
 
 
 def _drops_and_stops(loud_db, hop, sensitivity):
-    """Energy arriving (DROP) or leaving (STOP), from the signed 1.5 s novelty."""
+    """
+    Energy arriving (DROP) or leaving (STOP), from the signed 1.5 s novelty -
+    confirmed against the energy state machine.
+
+    The novelty peak gives the instant (it is sharp, and it gets snapped onto
+    the transient later); the state machine says whether anything actually
+    CHANGED there. A DROP has to be a state rise - calm to neutral, neutral to
+    intense, calm to intense - somewhere between shortly before the peak and
+    a couple of seconds after it (the 1 s level median and the hold delay the
+    flip); a STOP has to be a state fall. A loud fill that is over in two
+    bars, or a dip and return, moves the novelty but never flips the state,
+    and used to read as DROP, STOP, DROP - flicker the writer then staged.
+    """
     delta = _novelty(loud_db, hop, 1.5)
     # 6 dB is an obvious step to a listener; sensitivity scales it.
     threshold = 6.0 / max(0.25, sensitivity)
-    gap = max(1, int(round(2.0 / hop)))  # one per 2 s at most - these are structure
+    states = _energy_state(loud_db, hop)
+    n = len(states)
+    before = max(1, int(round(0.75 / hop)))
+    after = max(1, int(round(2.5 / hop)))
+
+    def confirmed(i, direction):
+        lo = max(0, i - before)
+        hi = min(n - 1, i + after)
+        s_before = states[lo]
+        window = states[lo:hi + 1]
+        # the state has to go the right way, and end up there
+        return any((s - s_before) * direction > 0 for s in window) and (window[-1] - s_before) * direction > 0
 
     events = []
     for sign, name in ((1.0, "DROP"), (-1.0, "STOP")):
         signal = delta * sign
         floor = torch.full_like(signal, threshold)
         peaks = _pick_peaks(signal, floor, hop, 2.0, 1.0)
+        peaks = [(i, v) for i, v in peaks if confirmed(i, sign)]
         values = [v for _, v in peaks]
         strengths = _normalise(values)
         events += [(i * hop, name, s) for (i, _), s in zip(peaks, strengths)]
@@ -619,6 +830,68 @@ def _accents(flux, floor, hop, sensitivity, min_gap):
 
 
 # ----------------------------------------------------------------------
+# The beat grid
+# ----------------------------------------------------------------------
+# A hit that sits on the pulse is the one a cut can land on; a hit between
+# beats is often a ghost note, a fill or a detector misfire. The grid is the
+# track's tempo (music_support.estimate_bpm) with its phase fitted to the
+# hits themselves - brute force over 64 phases, the way scheb/sound-to-light-osc
+# fits its BPM grid by quantisation error. The editor draws the same grid.
+
+GRID_TOLERANCE = 0.045   # s - within this of a grid line counts as ON the beat
+_HIT_KINDS = ("BASS HIT", "IMPACT", "ACCENT")
+
+
+def beat_grid(events, bpm):
+    """
+    {"bpm", "period", "phase", "on", "of"} for the hits in `events`
+    ([(t, kind, s)] or [{"t", "type", ...}]). bpm 0 = no grid.
+    """
+    hits = [float(e[0] if isinstance(e, (tuple, list)) else e["t"]) for e in events
+            if (e[1] if isinstance(e, (tuple, list)) else e["type"]) in _HIT_KINDS]
+    if not bpm or bpm <= 0:
+        return {"bpm": 0.0, "period": 0.0, "phase": 0.0, "on": 0, "of": len(hits)}
+    period = 60.0 / float(bpm)
+    best_phase, best_on = 0.0, -1
+    for k in range(64):
+        phase = period * k / 64.0
+        on = sum(1 for t in hits if _grid_distance(t, phase, period) <= GRID_TOLERANCE)
+        if on > best_on:
+            best_phase, best_on = phase, on
+    return {"bpm": round(float(bpm), 2), "period": period, "phase": round(best_phase, 4), "on": best_on, "of": len(hits)}
+
+
+def _grid_distance(t, phase, period):
+    """Seconds from `t` to the nearest grid line."""
+    r = (t - phase) / period
+    return abs(r - round(r)) * period
+
+
+def weight_on_beat(events, grid, weight):
+    """
+    Scale each HIT's strength by how far it sits from the grid: on the line
+    (within GRID_TOLERANCE) it keeps its strength; a quarter of a beat away
+    or more it is scaled by (1 - weight). weight 1 zeroes the off-beat hits,
+    so the strength band or max_events drop them; 0.5 halves them so they
+    survive only where nothing on the beat competes. Structural events are
+    never touched, and neither is the timing.
+    """
+    w = max(0.0, min(1.0, float(weight or 0.0)))
+    if w <= 0 or not grid or not grid.get("bpm"):
+        return events
+    period, phase = grid["period"], grid["phase"]
+    ramp = max(1e-3, period / 4.0 - GRID_TOLERANCE)
+    out = []
+    for t, kind, s in events:
+        if kind in _HIT_KINDS:
+            d = _grid_distance(float(t), phase, period)
+            off = min(1.0, max(0.0, d - GRID_TOLERANCE) / ramp)
+            s = float(s) * (1.0 - w * off)
+        out.append((t, kind, s))
+    return out
+
+
+# ----------------------------------------------------------------------
 # The public detector
 # ----------------------------------------------------------------------
 
@@ -627,7 +900,7 @@ def detect_events(
     sensitivity=1.0,
     min_gap_seconds=0.18,
     min_strength=0.0,
-    max_events=200,
+    max_events=600,
     bass_hits=True,
     max_strength=1.0,
     impacts=True,
@@ -636,6 +909,15 @@ def detect_events(
     sections=True,
     accents=False,
     time_offset_ms=0,
+    gain_db=0.0,
+    dynamics_curve=1.0,
+    eq_sub_db=0.0,
+    eq_bass_db=0.0,
+    eq_low_db=0.0,
+    eq_mid_db=0.0,
+    eq_high_db=0.0,
+    on_beat_weight=0.0,
+    grid_out=None,
 ):
     """
     Every labelled moment in the song, as
@@ -647,7 +929,11 @@ def detect_events(
     sections, builds) are kept whole and the hit stream is thinned to the
     strongest - losing a kick costs a cut, losing the drop costs the video.
     """
-    spec, freqs, wave, hop, sr = _frames(audio)
+    shaping = dict(
+        gain_db=gain_db, dynamics_curve=dynamics_curve, eq_sub_db=eq_sub_db,
+        eq_bass_db=eq_bass_db, eq_low_db=eq_low_db, eq_mid_db=eq_mid_db, eq_high_db=eq_high_db,
+    )
+    spec, freqs, wave, hop, sr = _frames(audio, shaping)
     duration = wave.numel() / sr
     loud_db = _loudness(spec, hop)
 
@@ -658,7 +944,8 @@ def detect_events(
     top_floor = _rolling_median(top_flux, half)
 
     found = []
-    hits = _bass_hits(low_flux, low_floor, hop, sensitivity, min_gap_seconds) if bass_hits else []
+    low_level = _band_level(spec, freqs, 20.0, 250.0)
+    hits = _bass_hits(low_flux, low_floor, hop, sensitivity, min_gap_seconds, level=low_level) if bass_hits else []
     slams = _impacts(wave, sr, hop, sensitivity, min_gap_seconds) if impacts else []
     if hits or slams:
         low_tilt, top_tilt = _band_tilt(
@@ -687,6 +974,19 @@ def detect_events(
     if time_offset_ms:
         shift = float(time_offset_ms) / 1000.0
         found = [(max(0.0, t + shift), kind, s) for t, kind, s in found]
+
+    # The beat grid: fitted to the hits as detected, then (optionally) used to
+    # lean the strengths toward the hits that sit on the pulse. `grid_out`
+    # lets a caller (the editor's preview) read the fit back.
+    if on_beat_weight or grid_out is not None:
+        try:
+            bpm = float(estimate_bpm(analyse(audio)))
+        except Exception:
+            bpm = 0.0
+        grid = beat_grid(found, bpm)
+        if grid_out is not None:
+            grid_out.update(grid)
+        found = weight_on_beat(found, grid, on_beat_weight)
 
     # The hit stream is kept inside a strength BAND. A floor alone thins a
     # busy track; a ceiling as well lets a run target one layer of the mix -
@@ -723,12 +1023,26 @@ def detect_events(
 
     cap = max(1, int(max_events))
     if len(events) > cap:
+        # Thin EVENLY: the strongest hits of every few seconds survive, not the
+        # strongest of the whole song - a global cut keeps every hit of the
+        # loudest chorus and leaves the verses with none to stage.
         keep = [e for e in events if e["type"] in _STRUCTURAL]
-        rest = sorted(
-            (e for e in events if e["type"] not in _STRUCTURAL),
-            key=lambda e: e["strength"], reverse=True,
-        )
-        events = keep + rest[: max(0, cap - len(keep))]
+        hits_only = [e for e in events if e["type"] not in _STRUCTURAL]
+        room = max(0, cap - len(keep))
+        window = 4.0
+        buckets = {}
+        for e in hits_only:
+            buckets.setdefault(int(e["t"] // window), []).append(e)
+        quota = max(1, room // max(1, len(buckets)))
+        chosen, leftovers = [], []
+        for _k, bucket in sorted(buckets.items()):
+            bucket.sort(key=lambda e: e["strength"], reverse=True)
+            chosen += bucket[:quota]
+            leftovers += bucket[quota:]
+        chosen = chosen[:room]
+        leftovers.sort(key=lambda e: e["strength"], reverse=True)
+        chosen += leftovers[: max(0, room - len(chosen))]
+        events = keep + chosen
 
     events.sort(key=lambda e: (e["t"], EVENT_TYPES.index(e["type"])))
     return events
@@ -900,6 +1214,18 @@ def events_for_segment(events, start, end, limit=8):
     return out
 
 
+# The hit budget of one brief follows the clip's length. Calibrated with the
+# Sound Events preview panel: 6 slots per ~9 s piece (one every 1.5 s) fills a
+# piece with its 2-4 real hits and still leaves room; drops / stops / builds
+# take their slots first, so the cap only ever thins the plain hit stream.
+EVENT_SLOTS_PER_SECOND = 6 / 9
+
+
+def event_slots_for(seconds):
+    """How many hits a brief for a clip of `seconds` may list - never below 1."""
+    return max(1, math.ceil(float(seconds) * EVENT_SLOTS_PER_SECOND - 1e-9))
+
+
 def segment_event_lines(events, start, end, limit=8):
     """
     `events_for_segment` as the indented window lines the writer's brief uses.
@@ -1054,11 +1380,14 @@ class H3SoundEvents:
                     ),
                 }),
                 "max_events": ("INT", {
-                    "default": 120, "min": 4, "max": 2000, "step": 4,
+                    "default": 600, "min": 4, "max": 2000, "step": 4,
                     "tooltip": (
-                        "Cap on the whole list, so a 4-minute track cannot bury the prompt. "
-                        "Drops, stops, sections and builds are always kept; only the hit "
-                        "stream is thinned, strongest first."
+                        "Cap on the whole list. A song has a kick on every beat - 300-400 in "
+                        "three minutes - and the writer already limits how many hits each "
+                        "scene's brief lists, so the cap only needs to catch runaway tracks; "
+                        "120 threw two thirds of a normal song's kicks away. Drops, stops, "
+                        "sections and builds are always kept; only the hit stream is thinned, "
+                        "strongest (loudest) first."
                     ),
                 }),
             },
@@ -1134,6 +1463,57 @@ class H3SoundEvents:
                         "(check with the playhead), or to pre-empt a render that lands its moves late."
                     ),
                 }),
+                # Signal shaping, gain -> EQ -> curve, in front of every detector.
+                # Appended after everything else so saved workflows keep their widget positions.
+                "gain_db": ("FLOAT", {
+                    "default": 0.0, "min": -24.0, "max": 24.0, "step": 0.5,
+                    "tooltip": (
+                        "Input gain in dB, first in the chain. Mostly matters with a dynamics_curve "
+                        "above 1: the curve bends relative to full scale, so a quiet master needs "
+                        "lifting first or the curve crushes everything. Also decides how much of the "
+                        "quiet spectrum the hit detectors still notice."
+                    ),
+                }),
+                "dynamics_curve": ("FLOAT", {
+                    "default": 1.0, "min": 0.25, "max": 4.0, "step": 0.05,
+                    "tooltip": (
+                        "Bends the waveform's dynamics: |x| raised to this power (relative to full "
+                        "scale). 1.0 = untouched. Above 1 EXPANDS - the soft material sinks and the big "
+                        "hits stand proud, so a dense track gives fewer, cleaner beats. Below 1 "
+                        "COMPRESSES - the soft hits come up, for a sparse or quiet track."
+                    ),
+                }),
+                "eq_sub_db": ("FLOAT", {
+                    "default": 0.0, "min": -24.0, "max": 24.0, "step": 0.5,
+                    "tooltip": "EQ: low shelf at 60 Hz, dB. Sub-bass and 808 tails. Cut it if the sub drone keeps the bass floor high.",
+                }),
+                "eq_bass_db": ("FLOAT", {
+                    "default": 0.0, "min": -24.0, "max": 24.0, "step": 0.5,
+                    "tooltip": "EQ: bell at 150 Hz, dB. The kick's body. Boost to make the kick the loudest thing the detectors see.",
+                }),
+                "eq_low_db": ("FLOAT", {
+                    "default": 0.0, "min": -24.0, "max": 24.0, "step": 0.5,
+                    "tooltip": "EQ: bell at 400 Hz, dB. Low mids - toms, bass guitar, the snare's body.",
+                }),
+                "eq_mid_db": ("FLOAT", {
+                    "default": 0.0, "min": -24.0, "max": 24.0, "step": 0.5,
+                    "tooltip": "EQ: bell at 1.5 kHz, dB. Vocals, guitars, the snare's crack. Cut to stop a busy midrange triggering impacts.",
+                }),
+                "eq_high_db": ("FLOAT", {
+                    "default": 0.0, "min": -24.0, "max": 24.0, "step": 0.5,
+                    "tooltip": "EQ: high shelf at 5 kHz, dB. Hats, cymbals, air. Cut to keep hats out of the impact and accent detectors.",
+                }),
+                "on_beat_weight": ("FLOAT", {
+                    "default": 0.0, "min": 0.0, "max": 1.0, "step": 0.05,
+                    "tooltip": (
+                        "Prefer hits that sit on the beat. The track's tempo is measured and a "
+                        "beat grid is phase-fitted to the hits; a hit within 45 ms of a grid line "
+                        "keeps its strength, one a quarter-beat or more away is scaled by (1 - this). "
+                        "0 = off. 0.5 halves the off-beat hits so they only survive where nothing on "
+                        "the beat competes; 1.0 removes them (given any min_strength). Structural "
+                        "events and timing are never touched. The editor draws the same grid."
+                    ),
+                }),
             },
         }
 
@@ -1165,7 +1545,9 @@ class H3SoundEvents:
     def detect(self, audio, sensitivity, min_gap_seconds, max_events,
                min_strength=0.0, bass_hits=True, impacts=True, drops_and_stops=True,
                builds=True, sections=True, accents=False, rejected="", max_strength=1.0, edits="",
-               time_offset_ms=0):
+               time_offset_ms=0, gain_db=0.0, dynamics_curve=1.0, eq_sub_db=0.0, eq_bass_db=0.0,
+               eq_low_db=0.0, eq_mid_db=0.0, eq_high_db=0.0, on_beat_weight=0.0):
+        grid = {}
         events = detect_events(
             audio,
             sensitivity=sensitivity,
@@ -1180,7 +1562,20 @@ class H3SoundEvents:
             sections=sections,
             accents=accents,
             time_offset_ms=int(time_offset_ms or 0),
+            gain_db=gain_db, dynamics_curve=dynamics_curve, eq_sub_db=eq_sub_db,
+            eq_bass_db=eq_bass_db, eq_low_db=eq_low_db, eq_mid_db=eq_mid_db, eq_high_db=eq_high_db,
+            on_beat_weight=on_beat_weight, grid_out=grid if on_beat_weight else None,
         )
+        if on_beat_weight and grid.get("bpm"):
+            print(f"\U0001F3B5 H3 Sound Events | beat grid {grid['bpm']:.1f} BPM, {grid['on']}/{grid['of']} hits on it; "
+                  f"off-beat hits weighted x{1 - float(on_beat_weight):.2f}")
+        elif on_beat_weight:
+            print("\U0001F3B5 H3 Sound Events | on_beat_weight set but no steady pulse found - hits left unweighted")
+        shaped = [f"{k}={float(v):g}" for k, v in (("gain", gain_db), ("curve", dynamics_curve), ("sub", eq_sub_db),
+                  ("bass", eq_bass_db), ("low", eq_low_db), ("mid", eq_mid_db), ("high", eq_high_db))
+                  if abs(float(v) - (1.0 if k == "curve" else 0.0)) >= 0.05]
+        if shaped:
+            print(f"\U0001F39B H3 Sound Events | signal shaped before detection: {', '.join(shaped)}")
         struck = parse_rejected(rejected)
         if struck:
             before = len(events)

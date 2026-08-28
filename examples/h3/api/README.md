@@ -60,5 +60,7 @@ Analysis readout and node errors all arrive on `/ws`.
 Regenerate the exports after changing the canvas examples with
 [`scripts/make_api_exports.py`](../../../scripts/make_api_exports.py) — it maps
 widgets to named inputs using the live node definitions
-(`scripts/make_workflows.py` regenerates the canvas examples themselves, and
-`scripts/check_widgets.py` validates widget layouts against the nodes).
+(`scripts/make_workflows.py` regenerates the canvas examples themselves,
+`scripts/regroup_workflows.py` re-lays them out into colour-coded function
+groups, and `scripts/check_widgets.py` validates widget layouts against the
+nodes).

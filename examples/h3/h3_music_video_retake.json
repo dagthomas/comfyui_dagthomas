@@ -8,12 +8,12 @@
       "id": 119,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5120
+        -1860,
+        4860
       ],
       "size": [
-        640,
-        70
+        480,
+        62
       ],
       "flags": {},
       "order": 3,
@@ -49,12 +49,12 @@
       "id": 120,
       "type": "VAELoader",
       "pos": [
-        -1490,
-        5260
+        -1860,
+        5000
       ],
       "size": [
-        650,
-        70
+        480,
+        62
       ],
       "flags": {},
       "order": 4,
@@ -90,12 +90,12 @@
       "id": 123,
       "type": "KSamplerSelect",
       "pos": [
-        -260,
-        5300
+        -160,
+        4510
       ],
       "size": [
         370,
-        70
+        62
       ],
       "flags": {},
       "order": 18,
@@ -124,12 +124,12 @@
       "id": 128,
       "type": "CLIPLoader",
       "pos": [
-        -1490,
-        4930
+        -1860,
+        4670
       ],
       "size": [
-        640,
-        120
+        480,
+        112
       ],
       "flags": {},
       "order": 5,
@@ -169,12 +169,12 @@
       "id": 127,
       "type": "UNETLoader",
       "pos": [
-        -1490,
-        4770
+        -1860,
+        4510
       ],
       "size": [
-        640,
-        90
+        480,
+        86
       ],
       "flags": {},
       "order": 6,
@@ -212,12 +212,12 @@
       "id": 143,
       "type": "PathchSageAttentionKJ",
       "pos": [
-        -1050,
-        4490
+        -1150,
+        4510
       ],
       "size": [
         270,
-        114
+        112
       ],
       "flags": {},
       "order": 14,
@@ -254,12 +254,12 @@
       "id": 124,
       "type": "BasicScheduler",
       "pos": [
-        -260,
-        5440
+        -160,
+        4650
       ],
       "size": [
         370,
-        130
+        114
       ],
       "flags": {},
       "order": 21,
@@ -298,12 +298,12 @@
       "id": 141,
       "type": "MiniMaxH3MemoryEfficientSolAttentionPatch",
       "pos": [
-        -740,
-        4490
+        -820,
+        4510
       ],
       "size": [
         425,
-        318
+        302
       ],
       "flags": {},
       "order": 16,
@@ -353,14 +353,14 @@
     },
     {
       "id": 115,
-      "type": "ResolutionSelector",
+      "type": "H3ResolutionSelector",
       "pos": [
-        -1480,
-        6020
+        -930,
+        5700
       ],
       "size": [
         270,
-        170
+        238
       ],
       "flags": {},
       "order": 11,
@@ -381,14 +381,24 @@
           "links": [
             709
           ]
+        },
+        {
+          "name": "megapixels",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "info",
+          "type": "STRING",
+          "links": null
         }
       ],
       "title": "Resolution Selector (Size)",
       "properties": {
-        "Node name for S&R": "ResolutionSelector"
+        "Node name for S&R": "H3ResolutionSelector"
       },
       "widgets_values": [
-        "16:9 (Widescreen)",
+        "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
         0.5,
         32
       ],
@@ -404,8 +414,8 @@
       "id": 153,
       "type": "H3PromptPreview",
       "pos": [
-        -40,
-        5640
+        -380,
+        5490
       ],
       "size": [
         847,
@@ -450,8 +460,8 @@
       "id": 161,
       "type": "MarkdownNote",
       "pos": [
-        -1850,
-        6260
+        -1860,
+        5490
       ],
       "size": [
         700,
@@ -476,12 +486,12 @@
       "id": 164,
       "type": "LoadAudio",
       "pos": [
-        -1490,
-        5400
+        -930,
+        5490
       ],
       "size": [
         315,
-        124
+        136
       ],
       "flags": {},
       "order": 0,
@@ -510,12 +520,12 @@
       "id": 220,
       "type": "H3SceneRetake",
       "pos": [
-        160,
-        4720
+        440,
+        4510
       ],
       "size": [
-        520,
-        540
+        566,
+        646
       ],
       "flags": {},
       "order": 0,
@@ -745,72 +755,103 @@
   "groups": [
     {
       "id": 1,
-      "title": "Models",
+      "title": "LOAD MODELS",
       "bounding": [
-        -1520,
-        4680,
-        750,
-        910
+        -1900,
+        4400,
+        560,
+        710
       ],
-      "color": "#3f789e",
+      "color": "#3a5fa8",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 2,
-      "title": "Sampling + Scene Retake",
+      "title": "SOL ATTENTION / SPEED PATCHES",
       "bounding": [
-        -300,
-        4630,
-        720,
-        970
+        -1190,
+        4400,
+        840,
+        460
       ],
-      "color": "#3f789e",
+      "color": "#c26a1f",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 3,
-      "title": "Conditioning",
+      "title": "SAMPLING",
       "bounding": [
-        -780,
-        4850,
-        470,
-        480
+        -200,
+        4400,
+        450,
+        410
       ],
-      "color": "#3f789e",
+      "color": "#b03a3a",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 4,
-      "title": "Decoding and create video",
+      "title": "CHAIN RENDER",
       "bounding": [
-        450,
-        4830,
-        630,
-        380
+        400,
+        4400,
+        940,
+        800
       ],
-      "color": "#3f789e",
+      "color": "#c2337a",
+      "font_size": 24,
       "flags": {}
     },
     {
       "id": 5,
-      "title": "User Inputs",
+      "title": "NOTES",
       "bounding": [
-        -1880,
-        5510,
-        2720,
-        1300
+        -1900,
+        5380,
+        780,
+        410
       ],
-      "color": "#3f789e",
+      "color": "#4a4a4a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "USER INPUTS",
+      "bounding": [
+        -970,
+        5380,
+        400,
+        600
+      ],
+      "color": "#4f8a3a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "PROMPT PREVIEW",
+      "bounding": [
+        -420,
+        5380,
+        930,
+        970
+      ],
+      "color": "#5b6b8f",
+      "font_size": 24,
       "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5986674567928358,
+      "scale": 0.5556,
       "offset": [
-        2312.7617207097105,
-        -4100.956019764087
+        1960,
+        -4340
       ]
     },
     "frontendVersion": "1.49.6",

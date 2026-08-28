@@ -547,6 +547,43 @@ except Exception:
     pass
 
 try:
+    from .nodes.h3.beat_grid import H3BeatEmphasis, H3BeatGrid
+    NEW_MAPPINGS["H3BeatGrid"] = H3BeatGrid
+    NEW_DISPLAY_MAPPINGS["H3BeatGrid"] = "APNext H3 Beat Grid (BPM + every beat)"
+    NEW_MAPPINGS["H3BeatEmphasis"] = H3BeatEmphasis
+    NEW_DISPLAY_MAPPINGS["H3BeatEmphasis"] = "APNext H3 Beat Emphasis (conditioning audio)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Beat Grid / Beat Emphasis not loaded: {type(exc).__name__}: {exc}")
+
+try:
+    from .nodes.h3.voice_mix import H3VoiceOverMusic
+    NEW_MAPPINGS["H3VoiceOverMusic"] = H3VoiceOverMusic
+    NEW_DISPLAY_MAPPINGS["H3VoiceOverMusic"] = "APNext H3 Voice Over Music (conditioning mix)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Voice Over Music not loaded: {type(exc).__name__}: {exc}")
+
+try:
+    from .nodes.h3.sample_and_save import H3SampleAndSave
+    NEW_MAPPINGS["H3SampleAndSave"] = H3SampleAndSave
+    NEW_DISPLAY_MAPPINGS["H3SampleAndSave"] = "APNext H3 Sampler + Save Clip (each scene to disk as it finishes)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Sampler + Save Clip not loaded: {type(exc).__name__}: {exc}")
+
+try:
+    from .nodes.h3.resolution import H3ResolutionSelector
+    NEW_MAPPINGS["H3ResolutionSelector"] = H3ResolutionSelector
+    NEW_DISPLAY_MAPPINGS["H3ResolutionSelector"] = "APNext H3 Resolution (1344x768 = 1.0 MP)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Resolution not loaded: {type(exc).__name__}: {exc}")
+
+try:
+    from .nodes.h3.lyrics_transcribe import H3LyricsTranscribe
+    NEW_MAPPINGS["H3LyricsTranscribe"] = H3LyricsTranscribe
+    NEW_DISPLAY_MAPPINGS["H3LyricsTranscribe"] = "APNext H3 Lyrics Transcribe (timed lyrics from the song)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Lyrics Transcribe not loaded: {type(exc).__name__}: {exc}")
+
+try:
     from .nodes.h3.cut_plan import H3CutPlan
     NEW_MAPPINGS["H3CutPlan"] = H3CutPlan
     NEW_DISPLAY_MAPPINGS["H3CutPlan"] = "APNext H3 Cut Plan (scenes from the music)"
@@ -612,8 +649,22 @@ try:
     from .nodes.h3.mouth_guard import H3MouthGuard
     NEW_MAPPINGS["H3MouthGuard"] = H3MouthGuard
     NEW_DISPLAY_MAPPINGS["H3MouthGuard"] = "APNext H3 Mouth Guard (protect lips in refine)"
-except Exception:
-    pass
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Mouth Guard not loaded: {type(exc).__name__}: {exc}")
+
+try:
+    from .nodes.h3.masked_song import H3MaskedSongLatent
+    NEW_MAPPINGS["H3MaskedSongLatent"] = H3MaskedSongLatent
+    NEW_DISPLAY_MAPPINGS["H3MaskedSongLatent"] = "APNext H3 Masked Song Latent (song frozen in the audio latent)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Masked Song Latent not loaded: {type(exc).__name__}: {exc}")
+
+try:
+    from .nodes.h3.stitch_clips import H3StitchClips
+    NEW_MAPPINGS["H3StitchClips"] = H3StitchClips
+    NEW_DISPLAY_MAPPINGS["H3StitchClips"] = "APNext H3 Stitch Clips (gapless, from the saved files)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Stitch Clips not loaded: {type(exc).__name__}: {exc}")
 
 try:
     from .nodes.h3.refine_encode import H3RefineEncode

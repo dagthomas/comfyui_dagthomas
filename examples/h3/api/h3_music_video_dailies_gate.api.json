@@ -156,9 +156,9 @@
     }
   },
   "115": {
-    "class_type": "ResolutionSelector",
+    "class_type": "H3ResolutionSelector",
     "inputs": {
-      "aspect_ratio": "16:9 (Widescreen)",
+      "aspect_ratio": "16:9 widescreen - what H3 is trained on (1344x768 at 1.0)",
       "megapixels": 0.5,
       "multiple": 32
     }
@@ -210,11 +210,9 @@
       "draft_model": "haiku",
       "parallel_chunks": true,
       "project_name": "",
-      "avoid_previous": 6,
       "transcribe_lyrics": true,
-      "events_per_scene": 6,
       "lyric_interpretation": "Auto (the writer decides per song)",
-      "transition_style": "Stay (a continuing scene keeps its place)",
+      "transition_style": "Reveal (a camera move discloses a new space around them)",
       "audio": [
         "164",
         0
