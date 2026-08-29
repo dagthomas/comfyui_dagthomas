@@ -446,9 +446,98 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
 
     if session:
         system_prompt = session.get("system") or None
-        history = list(session.get("messages") or [])
+        full_history = list(session.get("messages") or [])
+        history = full_history
+        # Local sessions replay the whole conversation every turn, so a long
+        # serial run grows linearly until num_ctx bursts. A writer that carries
+        # its own recap (the Music Video Writer's story-so-far gists) sets
+        # local["history_window"] = N: the FIRST exchange (the brief and its
+        # synopsis reply) is always replayed, then as many of the most recent
+        # exchanges as the context budget affords - never fewer than N - so a
+        # short song still sees everything verbatim and a long one degrades to
+        # the recap only for its oldest chunks. The full transcript is still
+        # saved to disk either way.
+        window = int(local.get("history_window") or 0)
+        if window > 0 and len(full_history) > 2:
+            def est(text):
+                return len(text or "") // 3 + 1   # ~3 chars/token, deliberately conservative
+
+            num_ctx = int(local.get("num_ctx") or 0)
+            if num_ctx > 0:
+                # the 3500 tail: reply headroom slack plus room for the running recap pair
+                budget = num_ctx - est(system_prompt) - est(user_prompt) - int(local.get("max_tokens", 8000)) - 3500
+            else:
+                budget = 32_000                    # no declared window: assume a roomy model
+            pairs = [full_history[i:i + 2] for i in range(2, len(full_history), 2)]
+            used = est(full_history[0].get("content")) + est(full_history[1].get("content"))
+            keep = []
+            for pair in reversed(pairs):           # newest first; the tail must stay contiguous
+                cost = sum(est(m.get("content")) for m in pair)
+                if len(keep) < window or used + cost <= budget:
+                    keep.append(pair)
+                    used += cost
+                else:
+                    break
+            if len(keep) < len(pairs):
+                # Chunks that fall out of the window are not just dropped: they
+                # are folded into a running RECAP by one small summarisation
+                # call (dense continuity facts - who, where, wardrobe, how each
+                # scene ended), stored in the session and updated incrementally.
+                tail_start = 2 + 2 * (len(pairs) - len(keep))
+                summary = str(session.get("rolled_summary") or "")
+                upto = max(2, int(session.get("summary_upto") or 2))
+                if upto < tail_start:
+                    dropped = full_history[upto:tail_start]
+                    body = "\n\n".join(
+                        m.get("content") or "" for m in dropped if m.get("role") == "assistant"
+                    )
+                    try:
+                        summary, _model = call_llm(
+                            model,
+                            (
+                                "Update the running recap of a music video's written scenes.\n\n"
+                                f"RECAP SO FAR:\n{summary or '(none yet)'}\n\n"
+                                f"NEW SCENES TO FOLD IN:\n{body}\n\n"
+                                "Rewrite the recap to cover everything so far. One dense line per "
+                                "scene: scene number, location, who is on screen with their (Sx) "
+                                "ids, wardrobe and prop state, the key action, and the exact state "
+                                "the scene ends on. Keep every continuity-relevant fact; drop "
+                                "camera moves and style prose. Output only the recap."
+                            ),
+                            temperature=0.2,
+                            max_tokens=1200,
+                            base_url=local.get("base_url") or None,
+                            num_ctx=local.get("num_ctx", 0),
+                            think=local.get("think"),
+                            api_key=local.get("api_key") or None,
+                        )
+                        summary = (summary or "").strip()
+                        upto = tail_start
+                        print(
+                            f"📝 H3 local session: {len(dropped) // 2} older turn(s) folded into "
+                            f"the running recap ({len(summary)} chars)."
+                        )
+                    except Exception as exc:
+                        print(
+                            f"⚠️ H3 local session: recap update failed ({exc}) - those turns "
+                            "reach the writer only as the story-so-far gists."
+                        )
+                session["rolled_summary"], session["summary_upto"] = summary, upto
+                bridge = []
+                if summary:
+                    bridge = [
+                        {"role": "user", "content": "Recap the scenes you have written since the synopsis, before we continue."},
+                        {"role": "assistant", "content": summary},
+                    ]
+                history = full_history[:2] + bridge + [m for pair in reversed(keep) for m in pair]
+                print(
+                    f"✂️ H3 local session: replaying first + last {len(keep)} of {len(pairs) + 1} "
+                    f"turns (~{used:,} est. tokens fit the context budget)"
+                    + (" + the running recap of the rest" if summary else "")
+                    + "; the full transcript stays in the session file."
+                )
     else:
-        history = []
+        full_history = history = []
         if director and system_prompt:
             system_prompt = system_prompt + director_block_inline(
                 skills, include_references=local.get("inline_references", False)
@@ -478,17 +567,20 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
     duration = time.monotonic() - started
 
     session_id = resume_session_id or f"{_SESSION_PREFIX}{uuid.uuid4().hex[:16]}"
-    history.append({"role": "user", "content": user_prompt})
-    history.append({"role": "assistant", "content": text})
+    full_history.append({"role": "user", "content": user_prompt})
+    full_history.append({"role": "assistant", "content": text})
     save_local_session(session_id, {
         "model": resolved,
         "system": system_prompt,
-        "messages": history,
+        "messages": full_history,
         "updated": time.time(),
+        # the incrementally-updated recap of turns that no longer fit the window
+        **({"rolled_summary": session["rolled_summary"], "summary_upto": session["summary_upto"]}
+           if session and session.get("rolled_summary") is not None else {}),
     })
 
     info = (
-        f"model={resolved} | {duration:.1f}s | turns={len(history) // 2} | "
+        f"model={resolved} | {duration:.1f}s | turns={len(full_history) // 2} | "
         f"session={session_id}"
     )
     print(f"✅ H3 via {resolved} | {info}")

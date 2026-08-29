@@ -374,9 +374,13 @@ class H3ClaudeCodeMusicVideoWriter:
                 "tooltip": (
                     "Lyrics, one line per line. Timestamps make the sync exact: `[0:15] line`, "
                     "`0:15 line` or LRC `[00:15.20] line`; section tags like [Chorus] are kept. "
-                    "Untimed lines are spread evenly over the song (approximate). Empty = "
-                    "take the `lyrics_in` socket, else transcribe the song (transcribe_lyrics), "
-                    "else an instrumental video. Typed text always wins over the socket."
+                    "Untimed lines are timed automatically from a Whisper pass when "
+                    "transcribe_lyrics is on (1:1 when the line counts match, else spread over "
+                    "the sung span); with transcription off they are spread evenly over the "
+                    "WHOLE song and can land in instrumental passages - a singer mouthing "
+                    "words nobody sings. Empty = take the `lyrics_in` socket, else transcribe "
+                    "the song (transcribe_lyrics), else an instrumental video. Typed text "
+                    "always wins over the socket."
                 ),
             }),
             "performance_mode": (PERFORMANCE_MODES, {"default": PERFORMANCE_MODES[0]}),
@@ -623,6 +627,25 @@ class H3ClaudeCodeMusicVideoWriter:
             ),
         })
 
+        # appended last so saved workflows keep their widget positions
+        optional["session_history"] = ([
+            "Windowed (brief + previous chunk - fits long serial runs)",
+            "Full (replay every chunk verbatim)",
+        ], {
+            "default": "Windowed (brief + previous chunk - fits long serial runs)",
+            "tooltip": (
+                "Serial runs on a LOCAL model (ollama:/lmstudio:/local:) replay the whole "
+                "session on every chunk, so context grows with every scene until num_ctx "
+                "bursts. Windowed always replays the first exchange (the brief and its "
+                "synopsis reply) plus AS MANY recent chunks verbatim as num_ctx affords - a "
+                "short song still sees everything; on a long one the chunks that no longer "
+                "fit are folded into a running recap (one small extra LLM call) that rides "
+                "along, on top of the one-line story-so-far gists every chunk gets. Full is "
+                "the old replay-everything behaviour; fine for short songs or big num_ctx. "
+                "Claude Code / API models ignore this."
+            ),
+        })
+
         return {"required": required, "optional": optional, "hidden": context_hidden_inputs()}
 
     _IMAGE_OUTPUT_TYPES, _IMAGE_OUTPUT_NAMES = reference_image_outputs()
@@ -692,10 +715,11 @@ class H3ClaudeCodeMusicVideoWriter:
         return float("nan") if seed == -1 else seed
 
     @classmethod
-    def VALIDATE_INPUTS(cls, prompt_mode=None, draft_model=None):
+    def VALIDATE_INPUTS(cls, prompt_mode=None, draft_model=None, session_history=None):
         # Workflows saved before these widgets existed restore them as '' -
         # accept anything here; write_video coerces empty/unknown prompt_mode
-        # values to Auto and resolve_draft_model falls back to haiku.
+        # values to Auto, resolve_draft_model falls back to haiku, and an
+        # empty session_history resolves to Windowed.
         return True
 
     # ------------------------------------------------------------------
@@ -771,7 +795,12 @@ class H3ClaudeCodeMusicVideoWriter:
             "interrupted by a cut. In "
             f"Narrative mode nobody sings on camera - the lyric is audible from {audio_ref} and "
             f"the picture answers it (`as {audio_ref} reaches <d>[Language] line</d>, ...`). "
-            "Mixed mode alternates. Instrumental pieces get pure visuals cut to the beat.\n"
+            "Mixed mode alternates. A piece whose lyric list shows [instrumental] has NO "
+            "sung line: write no <d> block and no lip-sync sentence there, and state that "
+            "every on-screen mouth stays closed - breathing, moving and reacting on the "
+            "beat carry the performance - because visible mouth movement with no vocal in "
+            "the song reads as a dubbing error. Instrumental pieces get pure visuals cut "
+            "to the beat.\n"
             "- ENERGY: quiet pieces get long, slow, intimate shots; loud and peak pieces get "
             "more cuts, bigger moves, bolder light, the chorus look. The whole video keeps "
             "one style, one palette, one performer identity, the wardrobe and location locks.\n"
@@ -1362,6 +1391,7 @@ class H3ClaudeCodeMusicVideoWriter:
         transition_style=None,
         run_mode=None,
         continuity=None,
+        session_history=None,
         **cast_slots,
     ):
         # peeked (not popped) here: build_context() consumes the hidden inputs
@@ -1448,6 +1478,47 @@ class H3ClaudeCodeMusicVideoWriter:
 
         parsed_lyrics = parse_lyrics(lyrics)
         timed = [t for t, _ in parsed_lyrics if t is not None]
+        # Typed lyrics with no timestamps would be spread evenly from 0:00 and
+        # can land in an instrumental intro - a singer then mouths words nobody
+        # sings. Borrow the timing from a Whisper pass: 1:1 when the line
+        # counts match, else bound the spread to the actually-sung span.
+        lyric_lead_in, lyric_end = 0.0, None
+        body_idx = [i for i, (t, l) in enumerate(parsed_lyrics) if t is None and l and not l.startswith("#")]
+        if body_idx and not timed:
+            heard_times = []
+            if transcribe_lyrics:
+                source = vocals if vocals is not None else audio
+                heard = parse_lyrics(transcribe_song_lyrics(source) or "")
+                heard_times = sorted(
+                    t for t, l in heard if t is not None and l and not l.startswith("#")
+                )
+            if heard_times and len(heard_times) == len(body_idx):
+                for i, t in zip(body_idx, heard_times):
+                    parsed_lyrics[i] = (t, parsed_lyrics[i][1])
+                timed = heard_times
+                print(
+                    f"🎤 H3 Music Video Writer: your {len(body_idx)} lyric line(s) carry no "
+                    "timestamps - timed them 1:1 from a Whisper pass, so each line lands "
+                    "where it is actually sung."
+                )
+            elif heard_times:
+                lyric_lead_in = heard_times[0]
+                lyric_end = heard_times[-1] + 6.0
+                print(
+                    f"🎤 H3 Music Video Writer: your {len(body_idx)} lyric line(s) carry no "
+                    f"timestamps and Whisper heard {len(heard_times)} - spreading your lines "
+                    f"over the sung span ({fmt_time(heard_times[0])}-{fmt_time(heard_times[-1])}) "
+                    "so none land in the instrumental intro/outro. Add `[m:ss] line` "
+                    "timestamps for exact sync."
+                )
+            else:
+                print(
+                    "⚠️ H3 Music Video Writer: the lyrics carry no timestamps, so lines are "
+                    "spread evenly over the WHOLE song and can land in instrumental passages "
+                    "(a singer mouthing words nobody sings). Add `[m:ss] line` timestamps, "
+                    "or turn transcribe_lyrics on (a vocal stem on `vocals` works best) to "
+                    "time them automatically."
+                )
         lyrics_driven = bool(scenes_from_lyrics)
         structure = _measure_structure(audio)
         structure = _apply_beat_grid(structure, beat_grid)
@@ -1485,7 +1556,7 @@ class H3ClaudeCodeMusicVideoWriter:
             + (f"{sum(flow_flags)} of {len(segments)} piece(s) continue the previous take."
                if any(flow_flags) else "every piece opens on a hard cut (independent clips).")
         )
-        placed = place_untimed_lyrics(parsed_lyrics, total_seconds)
+        placed = place_untimed_lyrics(parsed_lyrics, total_seconds, lead_in=lyric_lead_in, end=lyric_end)
         labels = energy_labels(feats, segments)
         # A beat-exact cut plan (Cut Plan's beat_snap) carries frame-exact scene
         # lengths so every scene opens ON the beat; snapping them back to the
@@ -1677,6 +1748,12 @@ class H3ClaudeCodeMusicVideoWriter:
                 # writes the first chunk (with the synopsis), chunk_model the rest
                 first = 1
                 story_so_far = []  # [(scene_no, one-line gist)] for the chunk 2+ recap
+                if not str(session_history or "").startswith("Full"):
+                    # Windowed: a local session replays only the first exchange
+                    # (brief + synopsis) and the previous chunk; the story_so_far
+                    # recap covers the middle. Keeps context flat on long songs.
+                    local = dict(local or {})
+                    local["history_window"] = 1
 
                 def ask(lo, hi):
                     user_prompt = build_prompt(lo, hi, prior=tuple(story_so_far))

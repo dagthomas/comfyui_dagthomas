@@ -338,18 +338,20 @@ def parse_lyrics(text):
     return out
 
 
-def place_untimed_lyrics(lyrics, duration, lead_in=0.0):
+def place_untimed_lyrics(lyrics, duration, lead_in=0.0, end=None):
     """
     Spread untimed lines evenly over the song (after an optional lead-in) so
     each segment still gets the lines that roughly belong to it. Already-timed
     lines keep their time; untimed lines between two timed ones are spread
-    between them.
+    between them. `lead_in` / `end` bound the spread to the actually-sung span
+    (e.g. from a Whisper pass) so no line lands in an instrumental intro/outro.
     """
     if not lyrics:
         return []
     placed = []
+    tail = min(duration, end) if end else duration
     # anchors: (index, time) for timed lines, plus virtual start/end
-    anchors = [(-1, lead_in)] + [(i, t) for i, (t, _) in enumerate(lyrics) if t is not None] + [(len(lyrics), duration)]
+    anchors = [(-1, lead_in)] + [(i, t) for i, (t, _) in enumerate(lyrics) if t is not None] + [(len(lyrics), tail)]
     for (i0, t0), (i1, t1) in zip(anchors, anchors[1:]):
         gap = [k for k in range(i0 + 1, i1) if lyrics[k][0] is None and not lyrics[k][1].startswith("#")]
         if i0 >= 0:

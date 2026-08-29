@@ -32,6 +32,7 @@ from .sync_check import H3SyncCheck
 from .song_analysis import H3SongAnalysis
 from .sound_events import H3SoundEvents
 from .beat_grid import H3BeatEmphasis, H3BeatGrid
+from .stem_split import H3StemSplit
 from .voice_mix import H3VoiceOverMusic
 from .sample_and_save import H3SampleAndSave
 from .resolution import H3ResolutionSelector
@@ -84,6 +85,7 @@ NODE_CLASS_MAPPINGS = {
     "H3SoundEvents": H3SoundEvents,
     "H3BeatGrid": H3BeatGrid,
     "H3BeatEmphasis": H3BeatEmphasis,
+    "H3StemSplit": H3StemSplit,
     "H3VoiceOverMusic": H3VoiceOverMusic,
     "H3SampleAndSave": H3SampleAndSave,
     "H3ResolutionSelector": H3ResolutionSelector,
@@ -130,6 +132,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "H3SoundEvents": "APNext H3 Sound Events (bass hits / drops / stops)",
     "H3BeatGrid": "APNext H3 Beat Grid (BPM + every beat)",
     "H3BeatEmphasis": "APNext H3 Beat Emphasis (conditioning audio)",
+    "H3StemSplit": "APNext H3 Stem Split (Demucs stems for beats)",
     "H3VoiceOverMusic": "APNext H3 Voice Over Music (conditioning mix)",
     "H3SampleAndSave": "APNext H3 Sampler + Save Clip (each scene to disk as it finishes)",
     "H3ResolutionSelector": "APNext H3 Resolution (1344x768 = 1.0 MP)",

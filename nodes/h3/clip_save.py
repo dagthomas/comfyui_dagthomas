@@ -25,6 +25,44 @@ _FORMATS = ["mp4", "mkv", "webm"]
 _CODEC_FOR = {"mp4": "h264", "mkv": "h264", "webm": "av1"}
 
 
+def write_wav(path, wave_ct, sample_rate):
+    """
+    Write a [C, T] float tensor as 16-bit PCM WAV with the stdlib `wave`
+    module. torchaudio.save is NOT used on purpose: on current torch it
+    delegates to torchcodec, whose ffmpeg DLLs are not present in every
+    ComfyUI install - the stdlib writer has no dependency to break.
+    """
+    import wave as wave_module
+
+    import torch
+    pcm = (wave_ct.detach().to("cpu").float().clamp(-1.0, 1.0) * 32767.0).round().to(torch.int16)
+    with wave_module.open(path, "wb") as fh:
+        fh.setnchannels(int(pcm.shape[0]))
+        fh.setsampwidth(2)
+        fh.setframerate(int(sample_rate))
+        fh.writeframes(pcm.transpose(0, 1).contiguous().numpy().tobytes())
+    return path
+
+
+def save_clip_wav(audio, video_path):
+    """
+    The clip's exact audio as a WAV next to its video file; returns the path
+    or None. The mp4's AAC stream carries ~23 ms of encoder priming and tail
+    padding that only players trim, so butt-joining the FILES in an editor
+    leaves a 2-14 ms hole in the sound at every seam. The WAVs are the
+    sample-exact slices: lay them under the mp4s and manual assembly is
+    gapless - contiguous slices concatenate back into the original song.
+    """
+    if audio is None or audio.get("waveform") is None:
+        return None
+    try:
+        path = os.path.splitext(video_path)[0] + ".wav"
+        return write_wav(path, audio["waveform"][0], int(audio["sample_rate"]))
+    except Exception as exc:
+        print(f"⚠️ H3: could not write the clip's wav sidecar: {exc}")
+        return None
+
+
 def save_frames(images, audio, filename_prefix, fps, format):
     """Mux one clip's frames (+ optional AUDIO) and write it under the output
     directory; returns the file path. Shared by H3SaveClip and H3DeRopeSave."""
@@ -91,6 +129,17 @@ class H3SaveClip:
                         "silent clips."
                     ),
                 }),
+                # appended last so saved workflows keep their widget positions
+                "wav_sidecar": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": (
+                        "Also write the clip's audio as a WAV next to the video file (same "
+                        "name). For MANUAL assembly in an editor: AAC in mp4 leaves a 2-14 ms "
+                        "hole at every butt-join (encoder priming/padding), while the WAVs are "
+                        "sample-exact - lay them under the clips and the joins are gapless. "
+                        "H3 Stitch Clips does not need them."
+                    ),
+                }),
             },
         }
 
@@ -106,7 +155,8 @@ class H3SaveClip:
         "instead of all of them - and clips already saved survive a mid-run OOM."
     )
 
-    def save(self, filename_prefix, fps, format, samples=None, vae=None, audio=None, images=None):
+    def save(self, filename_prefix, fps, format, samples=None, vae=None, audio=None, images=None,
+             wav_sidecar=True):
         if images is None:
             if samples is None or vae is None:
                 raise ValueError(
@@ -121,5 +171,7 @@ class H3SaveClip:
                 images = images.reshape(-1, images.shape[-3], images.shape[-2], images.shape[-1])
 
         path = save_frames(images, audio, filename_prefix, fps, format)
+        if wav_sidecar and audio is not None:
+            save_clip_wav(audio, path)
         del images  # free this clip's frames before the next list item decodes
         return (path,)

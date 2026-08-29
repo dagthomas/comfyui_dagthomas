@@ -556,6 +556,13 @@ except Exception as exc:
     print(f"⚠️ APNext: H3 Beat Grid / Beat Emphasis not loaded: {type(exc).__name__}: {exc}")
 
 try:
+    from .nodes.h3.stem_split import H3StemSplit
+    NEW_MAPPINGS["H3StemSplit"] = H3StemSplit
+    NEW_DISPLAY_MAPPINGS["H3StemSplit"] = "APNext H3 Stem Split (Demucs stems for beats)"
+except Exception as exc:
+    print(f"⚠️ APNext: H3 Stem Split not loaded: {type(exc).__name__}: {exc}")
+
+try:
     from .nodes.h3.voice_mix import H3VoiceOverMusic
     NEW_MAPPINGS["H3VoiceOverMusic"] = H3VoiceOverMusic
     NEW_DISPLAY_MAPPINGS["H3VoiceOverMusic"] = "APNext H3 Voice Over Music (conditioning mix)"

@@ -34,7 +34,7 @@ import math
 import re
 
 from ...utils.constants import CUSTOM_CATEGORY
-from .clip_save import save_frames
+from .clip_save import save_clip_wav, save_frames
 from .latent_store import project_key, save_scene_latent
 from .music_support import FPS, FRAME_STEP, MAX_FRAMES
 
@@ -224,6 +224,17 @@ class H3MusicVideoChainRender:
                         "pieces. Leave empty to condition on master_audio itself."
                     ),
                 }),
+                "wav_sidecars": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": (
+                        "Also write each clip's exact song slice as a WAV next to its mp4 (same name). "
+                        "For MANUAL assembly in an editor: the mp4s' AAC audio leaves a 2-14 ms hole at "
+                        "every butt-join (encoder priming/padding only players trim), while the WAVs are "
+                        "sample-exact contiguous slices - lay them under the clips and the joins are "
+                        "gapless, concatenating back into the original song. H3 Stitch Clips does not "
+                        "need them (it re-cuts the audio itself)."
+                    ),
+                }),
             },
         }
 
@@ -241,7 +252,8 @@ class H3MusicVideoChainRender:
 
     def render(self, model, clip, vae, audio_vae, scenes, lengths, audio_segments, clip_starts,
                width, height, sampler, sigmas, seed, context_frames, continuity, filename_prefix, fps,
-               master_audio=None, cut_plan=None, save_latents=True, carry=None, conditioning_audio=None, **refs):
+               master_audio=None, cut_plan=None, save_latents=True, carry=None, conditioning_audio=None,
+               wav_sidecars=True, **refs):
         import torch
         import comfy.model_management as mm
 
@@ -348,9 +360,11 @@ class H3MusicVideoChainRender:
             if delivered.shape[0] < length:
                 print(f"⚠️ H3 Chain Render: scene {i + 1:02d} decoded {total} frames, delivering {delivered.shape[0]} of {length}.")
             path = save_frames(delivered, pieces[i], f"{prefix}_s{i + 1:02d}", fps_v, "mp4")
+            wav = save_clip_wav(pieces[i], path) if wav_sidecars else None
             paths.append(path)
             lines.append(f"{i + 1:02d}  {'continues' if flow else 'cut      '}  {delivered.shape[0]} frames  "
-                         f"{'head ' + str(head_cut) + ' trimmed' if flow else ''}  -> {path}")
+                         f"{'head ' + str(head_cut) + ' trimmed' if flow else ''}  -> {path}"
+                         + (" + .wav" if wav else ""))
             keep = min(ctx, int(delivered.shape[0]))
             prev_tail = delivered[-keep:].detach().clone()
             prev_latent = {"samples": sampled["samples"]}

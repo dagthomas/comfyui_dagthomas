@@ -214,24 +214,39 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const r2 = (v) => Math.round(v * 100) / 100;
 
 // Walk the `audio` input back to a Load Audio node and read its file name.
+// An H3StemSplit on the way is remembered: the node then hears a Demucs stem
+// mix, not the file, and the preview detects on the same mix (`stems`).
+const STEM_SLOT_NAMES = ["beats_mix", "vocals", "drums", "bass", "other"];
 function upstreamAudio(node) {
   const graph = node.graph ?? app.graph;
   const via = [];
+  let stems = null;
   let cur = node;
   for (let hops = 0; cur && hops < 8; hops++) {
     const input = cur.inputs?.find((i) => i.name === "audio") ?? cur.inputs?.find((i) => i.type === "AUDIO");
-    if (input?.link == null) return { file: null, via, reason: hops === 0 ? "the `audio` input is not connected" : `${cur.type} has no audio source` };
+    if (input?.link == null) return { file: null, via, stems, reason: hops === 0 ? "the `audio` input is not connected" : `${cur.type} has no audio source` };
     const link = graph.links?.[input.link];
     const src = link && graph.getNodeById(link.origin_id);
-    if (!src) return { file: null, via, reason: "broken link" };
+    if (!src) return { file: null, via, stems, reason: "broken link" };
     if (src.type === "LoadAudio" || src.widgets?.some((w) => w.name === "audio" && typeof w.value === "string")) {
       const w = src.widgets?.find((w) => w.name === "audio");
-      return { file: w?.value || null, via, reason: w?.value ? "" : "Load Audio has no file selected" };
+      return { file: w?.value || null, via, stems, reason: w?.value ? "" : "Load Audio has no file selected" };
+    }
+    if (src.type === "H3StemSplit" && !stems) {
+      stems = { node: src, output: STEM_SLOT_NAMES[link.origin_slot] || "beats_mix", model: String(widgetValue(src, "model", "htdemucs")) };
     }
     via.push(src.type);
     cur = src;
   }
-  return { file: null, via, reason: "no Load Audio node found upstream" };
+  return { file: null, via, stems, reason: "no Load Audio node found upstream" };
+}
+
+// The stem list a Stem Split feeds this node right now (live widget values).
+function stemSources(stems) {
+  if (!stems) return null;
+  if (stems.output !== "beats_mix") return [stems.output];
+  const picked = ["drums", "bass", "vocals", "other"].filter((s) => Boolean(widgetValue(stems.node, `include_${s}`, s === "drums" || s === "bass")));
+  return picked.length ? picked : ["drums", "bass"];
 }
 
 // "song.mp3 [input]" -> /view?filename=song.mp3&type=input
@@ -421,7 +436,34 @@ async function openModal(node) {
 
   // side panel
   aside.append(el("h3", { textContent: "Detection" }));
-  if (source.via.length) aside.append(el("p", { textContent: `Preview runs on the Load Audio file; on the canvas the audio passes through ${source.via.join(" → ")} first, so counts can differ slightly.` }));
+  if (source.stems) {
+    aside.append(el("h3", { textContent: "Stems (Demucs)" }));
+    if (source.stems.output === "beats_mix") {
+      aside.append(el("p", {
+        textContent: "A Stem Split feeds this node, so detection listens to the same stem mix - toggle what goes in (writes straight to the Stem Split node) and Recompute runs on it. The waveform shows each stem; playback is still the full song.",
+        style: "font-size:11.5px;color:#9a9590",
+      }));
+      const stemRow = el("div", { className: "row" });
+      for (const s of ["drums", "bass", "vocals", "other"]) {
+        const box = el("input", { type: "checkbox", checked: Boolean(widgetValue(source.stems.node, `include_${s}`, s === "drums" || s === "bass")) });
+        box.addEventListener("change", () => {
+          const w = widget(source.stems.node, `include_${s}`);
+          if (w) { w.value = box.checked; w.callback?.(box.checked, app.canvas, source.stems.node); }
+          source.stems.node.setDirtyCanvas?.(true, true);
+          compute();
+        });
+        stemRow.append(el("label", { className: "ctl" }, box, ` ${s} `));
+      }
+      aside.append(stemRow);
+    } else {
+      aside.append(el("p", {
+        textContent: `A Stem Split feeds this node its ${source.stems.output} stem - detection listens to that stem, not the full song. Playback is still the full song.`,
+        style: "font-size:11.5px;color:#9a9590",
+      }));
+    }
+  } else if (source.via.length) {
+    aside.append(el("p", { textContent: `Preview runs on the Load Audio file; on the canvas the audio passes through ${source.via.join(" → ")} first, so counts can differ slightly.` }));
+  }
   const sens = el("input", { type: "number", step: "0.05", min: "0.25", max: "4", value: state.sensitivity });
   const gap = el("input", { type: "number", step: "0.01", min: "0.05", max: "2", value: state.minGap });
   const recompute = el("button", { className: "pill", textContent: "Recompute" });
@@ -612,6 +654,22 @@ async function openModal(node) {
     }
   }
 
+  // A stem's server-side envelope (max-abs at env_rate points/second), drawn
+  // symmetric about its row's centre line.
+  function paintEnv(ctx, env, rate, width, height, color, yTop) {
+    const spc = rate / pps();
+    ctx.fillStyle = color;
+    for (let x = 0; x < width; x++) {
+      const a = Math.floor(x * spc), b = Math.max(a + 1, Math.floor((x + 1) * spc));
+      let hi = 0;
+      for (let i = a; i < b && i < env.length; i++) if (env[i] > hi) hi = env[i];
+      const h = Math.max(1, hi * (height - 4));
+      ctx.fillRect(x, yTop + (height - h) / 2, 1, h);
+    }
+  }
+
+  const STEM_COLORS = { drums: "#c9a26e", bass: "#84b3a6", vocals: "#d4a574", other: "#a08cc0" };
+
   function drawWave() {
     const width = Math.min(MAX_CANVAS, Math.ceil(duration * pps()));
     const height = WAVE_H;
@@ -619,6 +677,23 @@ async function openModal(node) {
     wave.style.width = `${width}px`;
     const ctx = wave.getContext("2d");
     ctx.fillStyle = "#0f0e0b"; ctx.fillRect(0, 0, width, height);
+    const st = payload?.stems;
+    if (st?.env) {
+      // one row per stem: included stems in colour, excluded ones dimmed
+      const order = ["drums", "bass", "vocals", "other"].filter((s) => st.env[s]);
+      const rowH = height / order.length;
+      order.forEach((s, i) => {
+        const yTop = i * rowH;
+        const on = st.sources.includes(s);
+        if (i) { ctx.fillStyle = "#2c2820"; ctx.fillRect(0, Math.round(yTop), width, 1); }
+        ctx.fillStyle = "#463f33"; ctx.fillRect(0, Math.round(yTop + rowH / 2), width, 1);
+        paintEnv(ctx, st.env[s], st.env_rate || 25, width, rowH, on ? STEM_COLORS[s] : "rgba(120,114,104,.28)", yTop);
+        ctx.fillStyle = on ? "#e8e2d8" : "#9a9590";
+        ctx.font = "600 10px sans-serif";
+        ctx.fillText(s + (on ? "" : " (not in mix)"), 8, yTop + 13);
+      });
+      return;
+    }
     ctx.fillStyle = "#463f33"; ctx.fillRect(0, height / 2, width, 1);
     if (!peaks) { ctx.fillStyle = "#9a9590"; ctx.fillText("decoding audio…", 12, 20); return; }
     paintPeaks(ctx, peaks, width, height, "#c9a26e");
@@ -633,6 +708,12 @@ async function openModal(node) {
     const ctx = laneWave.getContext("2d");
     ctx.clearRect(0, 0, width, LANE_H);
     ctx.fillStyle = "rgba(132,179,166,.22)"; ctx.fillRect(0, LANE_H / 2, width, 1);
+    // with a Stem Split upstream the detectors hear the server's stem mix,
+    // not the (client-shaped) file - draw that mix behind the events
+    if (payload?.stems?.mix_env) {
+      paintEnv(ctx, payload.stems.mix_env, payload.stems.env_rate || 25, width, LANE_H, "rgba(132,179,166,.34)", 0);
+      return;
+    }
     const data = shapedPeaks || peaks;
     if (!data) return;
     paintPeaks(ctx, data, width, LANE_H, isNeutral(state.shaping) ? "rgba(132,179,166,.30)" : "rgba(132,179,166,.42)");
@@ -1073,12 +1154,19 @@ async function openModal(node) {
     state.sensitivity = Number(sens.value) || 1.0;
     state.minGap = Number(gap.value) || 0.18;
     banner.className = "banner ok";
-    banner.textContent = "Detecting… (a 3-minute track takes a few seconds)";
+    const sources = stemSources(source.stems);
+    banner.textContent = sources
+      ? `Detecting on ${sources.join(" + ")}… (the first run separates the song with Demucs - up to a minute; after that it is cached)`
+      : "Detecting… (a 3-minute track takes a few seconds)";
     recompute.disabled = true;
     try {
       const res = await api.fetchApi("/apnext/h3/sound_events_preview", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audio: source.file, sensitivity: state.sensitivity, min_gap_seconds: state.minGap, on_beat_weight: state.onBeat, ...state.shaping }),
+        body: JSON.stringify({
+          audio: source.file, sensitivity: state.sensitivity, min_gap_seconds: state.minGap,
+          on_beat_weight: state.onBeat, ...state.shaping,
+          ...(sources ? { stems: { model: source.stems.model, sources } } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);

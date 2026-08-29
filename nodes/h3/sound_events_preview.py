@@ -34,11 +34,62 @@ except Exception:  # pragma: no cover - imported outside ComfyUI
     PromptServer = None
 
 from .sound_events import EVENT_TYPES, SHAPING_KEYS, detect_events
+from .stem_split import MODELS as STEM_MODELS, STEM_NAMES, separate_stems
 
 _CACHE = {}
 _CACHE_LIMIT = 6
 _SHAPING_DEFAULT = {k: (1.0 if k == "dynamics_curve" else 0.0) for k in SHAPING_KEYS}
 _SHAPING_RANGE = {k: ((0.25, 4.0) if k == "dynamics_curve" else (-24.0, 24.0)) for k in SHAPING_KEYS}
+
+# Demucs output is expensive (tens of seconds per song), so the separated mono
+# stems are cached per (file, mtime, model) - toggling which stems feed the
+# detectors then re-runs only detection. Two songs of mono stems ~ 150 MB RAM.
+_STEMS_CACHE = {}
+_STEMS_CACHE_LIMIT = 2
+_STEM_MODEL_NAMES = tuple(m.split(" ")[0] for m in STEM_MODELS)
+_ENV_RATE = 25  # envelope samples per second sent to the modal
+
+
+def _stems_from(body):
+    """The validated stems request: {'model': name, 'sources': [...]} or None."""
+    raw = body.get("stems")
+    if not isinstance(raw, dict):
+        return None
+    model = str(raw.get("model") or "htdemucs").split(" ")[0]
+    if model not in _STEM_MODEL_NAMES:
+        model = "htdemucs"
+    sources = [s for s in (raw.get("sources") or []) if s in STEM_NAMES]
+    if not sources:
+        sources = ["drums", "bass"]
+    return {"model": model, "sources": sorted(set(sources))}
+
+
+def _mono_stems(path, name, audio, model):
+    """The song's mono stems, separated once per (file, mtime, model)."""
+    key = (name, os.path.getmtime(path), model)
+    cached = _STEMS_CACHE.get(key)
+    if cached is not None:
+        return cached
+    stems, _model, device, seconds = separate_stems(audio, model)
+    mono = {k: v.mean(0).contiguous() for k, v in stems.items()}
+    if len(_STEMS_CACHE) >= _STEMS_CACHE_LIMIT:
+        _STEMS_CACHE.pop(next(iter(_STEMS_CACHE)))
+    _STEMS_CACHE[key] = mono
+    return mono
+
+
+def _envelope(mono, sample_rate):
+    """Max-abs per window at _ENV_RATE points/second - the lane the modal draws."""
+    import torch
+    hop = max(1, int(round(sample_rate / _ENV_RATE)))
+    n = mono.shape[-1] // hop * hop
+    if n == 0:
+        return []
+    env = mono[:n].abs().reshape(-1, hop).amax(dim=1)
+    peak = float(env.max())
+    if peak > 0:
+        env = env / peak
+    return [round(float(v), 3) for v in env]
 
 
 def _shaping_from(body):
@@ -73,8 +124,29 @@ def _slim(events):
     ]
 
 
-def _compute(name, sensitivity, min_gap, shaping, on_beat_weight):
+def _compute(name, sensitivity, min_gap, shaping, on_beat_weight, stems=None):
     path, audio = _load_audio(name)
+    sample_rate = int(audio["sample_rate"])
+    duration = audio["waveform"].shape[-1] / sample_rate
+
+    # With a Stem Split upstream the node hears the stem mix, not the file -
+    # detect on the same mix so the preview matches the run, and hand every
+    # stem's envelope back so the modal can draw the lanes.
+    stems_payload = None
+    if stems:
+        mono = _mono_stems(path, name, audio, stems["model"])
+        mix = None
+        for source in stems["sources"]:
+            mix = mono[source].clone() if mix is None else mix + mono[source]
+        audio = {"waveform": mix[None, None], "sample_rate": sample_rate}
+        stems_payload = {
+            "model": stems["model"],
+            "sources": stems["sources"],
+            "env_rate": _ENV_RATE,
+            "env": {k: _envelope(v, sample_rate) for k, v in mono.items()},
+            "mix_env": _envelope(mix, sample_rate),
+        }
+
     common = dict(
         sensitivity=sensitivity, min_gap_seconds=min_gap, min_strength=0.0,
         max_events=1_000_000, bass_hits=True, drops_and_stops=True, builds=True,
@@ -85,7 +157,6 @@ def _compute(name, sensitivity, min_gap, shaping, on_beat_weight):
     grid = {}
     with_impacts = detect_events(audio, impacts=True, grid_out=grid, **common)
     without_impacts = detect_events(audio, impacts=False, **common)
-    duration = audio["waveform"].shape[-1] / audio["sample_rate"]
     return {
         "file": name,
         "bpm": grid.get("bpm", 0.0),
@@ -97,6 +168,7 @@ def _compute(name, sensitivity, min_gap, shaping, on_beat_weight):
         "min_gap_seconds": min_gap,
         "shaping": dict(shaping),
         "kinds": list(EVENT_TYPES),
+        "stems": stems_payload,
         "events": _slim(with_impacts),
         "events_no_impacts": _slim(without_impacts),
     }
@@ -117,8 +189,10 @@ async def _preview(request):
         on_beat_weight = round(min(1.0, max(0.0, float(body.get("on_beat_weight") or 0.0))), 3)
     except (TypeError, ValueError):
         return web.json_response({"error": "sensitivity / min_gap_seconds / gain / curve / EQ must be numbers."}, status=400)
+    stems = _stems_from(body)
 
-    key = (name, round(sensitivity, 4), round(min_gap, 4), on_beat_weight) + tuple(shaping[k] for k in SHAPING_KEYS)
+    stems_key = (stems["model"], tuple(stems["sources"])) if stems else None
+    key = (name, round(sensitivity, 4), round(min_gap, 4), on_beat_weight, stems_key) + tuple(shaping[k] for k in SHAPING_KEYS)
     cached = _CACHE.get(key)
     if cached is not None:
         try:
@@ -131,7 +205,7 @@ async def _preview(request):
 
     loop = asyncio.get_running_loop()
     try:
-        payload = await loop.run_in_executor(None, _compute, name, sensitivity, min_gap, shaping, on_beat_weight)
+        payload = await loop.run_in_executor(None, _compute, name, sensitivity, min_gap, shaping, on_beat_weight, stems)
     except FileNotFoundError as exc:
         return web.json_response({"error": str(exc)}, status=404)
     except Exception as exc:  # decoding / torch errors - show them, do not 500 blindly

@@ -125,12 +125,13 @@ def seam_join(track, piece, head_samples, xfade_samples, sr, declick_ms=5.0):
 def save_track(track, sr, first_clip_path, prefix):
     """Write the continuous track as a wav next to the clips; returns the path or None."""
     try:
-        import torchaudio
+        from .clip_save import write_wav
         folder = os.path.dirname(first_clip_path)
         name = os.path.basename(prefix.replace("\\", "/").rstrip("/")) or "H3"
         path = os.path.join(folder, f"{name}_audio.wav")
-        torchaudio.save(path, track[0].detach().to("cpu").float(), int(sr))
-        return path
+        # stdlib writer - torchaudio.save needs torchcodec's ffmpeg DLLs,
+        # which not every ComfyUI install has
+        return write_wav(path, track[0], int(sr))
     except Exception as exc:
         print(f"⚠️ H3: could not write the continuous audio track: {exc}")
         return None

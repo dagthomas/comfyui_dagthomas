@@ -15,7 +15,7 @@ import torch
 
 from ...utils.constants import CUSTOM_CATEGORY
 from .chain_render import _call, _node
-from .clip_save import _FORMATS, save_frames
+from .clip_save import _FORMATS, save_clip_wav, save_frames
 
 
 class H3SampleAndSave:
@@ -51,6 +51,17 @@ class H3SampleAndSave:
                         "with its own slice of the song. Empty = silent clips."
                     ),
                 }),
+                # appended last so saved workflows keep their widget positions
+                "wav_sidecar": ("BOOLEAN", {
+                    "default": True,
+                    "tooltip": (
+                        "Also write each clip's audio as a WAV next to its video file (same name). "
+                        "For MANUAL assembly in an editor: AAC in mp4 leaves a 2-14 ms hole at every "
+                        "butt-join (encoder priming/padding), while the WAVs are sample-exact - lay "
+                        "them under the clips and the joins are gapless. H3 Stitch Clips does not "
+                        "need them."
+                    ),
+                }),
             },
         }
 
@@ -72,7 +83,8 @@ class H3SampleAndSave:
         "sampler used to feed."
     )
 
-    def render(self, noise, guider, sampler, sigmas, latent_image, vae, filename_prefix, fps, format, audio=None):
+    def render(self, noise, guider, sampler, sigmas, latent_image, vae, filename_prefix, fps, format, audio=None,
+               wav_sidecar=True):
         sampled = _call(_node("SamplerCustomAdvanced"), noise=noise, guider=guider, sampler=sampler,
                         sigmas=sigmas, latent_image=latent_image)[0]
         latent = sampled["samples"]
@@ -82,6 +94,8 @@ class H3SampleAndSave:
         if len(images.shape) == 5:                   # combine video batches, as core VAE Decode does
             images = images.reshape(-1, images.shape[-3], images.shape[-2], images.shape[-1])
         path = save_frames(images, audio, filename_prefix, fps, format)
+        if wav_sidecar and audio is not None:
+            save_clip_wav(audio, path)
         frames = int(images.shape[0])
         del images, latent
         if torch.cuda.is_available():
