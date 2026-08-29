@@ -1261,7 +1261,9 @@ Ollama and the other OpenAI-compatible servers are selectable directly in the H3
 
 ## 📝 License
 
-MIT License
+MIT License — see [LICENSE](LICENSE).
+
+**Third-party data:** the MIT grant covers the code in this repository. `data/h3/guide_base_en.md` and `data/h3/guide_ref_en.md` are MiniMax's official H3 prompt-writing guides, shipped verbatim from [MiniMaxAI/MiniMax-H3](https://huggingface.co/MiniMaxAI/MiniMax-H3/tree/main/docs), and `data/h3/dataset_visual_styles.json` is derived from the [ostris/minimax_h3_1k](https://huggingface.co/datasets/ostris/minimax_h3_1k) dataset — those files keep whatever terms their sources carry.
 
 ---
 

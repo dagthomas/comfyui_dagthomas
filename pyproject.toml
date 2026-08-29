@@ -2,7 +2,7 @@
 name = "comfyui_dagthomas"
 description = "Easy prompting for generation of endless random art pieces and photographs!"
 version = "1.0.0"
-license = "LICENSE"
+license = { file = "LICENSE" }
 
 [project.urls]
 Repository = "https://github.com/dagthomas/comfyui_dagthomas"
