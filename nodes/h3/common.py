@@ -97,14 +97,14 @@ _CINEMATIC_LOOKS = [
     "Live-action, 35mm cinematic film aesthetic",
     "Live-action, modern large-format digital cinema: Alexa 65 clarity, creamy shallow depth of field, natural HDR skin tones, smooth floating gimbal moves, neutral filmic grade",
     "Live-action, 65mm epic scale: IMAX-format deep-focus vistas, slow deliberate crane and dolly moves, natural available light, cool desaturated grade with warm protected skin tones",
-    "Live-action, Wes Anderson style: perfectly symmetrical planimetric framing, deadpan centered portraits and 90-degree whip pans, pastel candy-box palette, meticulous dollhouse production design, flat 40mm perspective",
+    "Live-action, Wes Anderson style: perfectly symmetrical planimetric framing, deadpan centered portraits and sudden fast 90-degree pans, pastel candy-box palette, meticulous dollhouse production design, flat 40mm perspective",
     "Live-action, David Fincher style: locked-down surgically precise camera, low-key tungsten and sodium-vapour practicals, cold teal-green shadow grade, crisp clinical digital sharpness",
     "Live-action, Roger Deakins naturalism: motivated single-source lighting, silhouettes against windows and fire, clean geometric widescreen compositions, gentle drifting camera, restrained filmic grade",
     "Live-action, Denis Villeneuve scale: monolithic minimalist compositions, tiny figures in vast spaces, atmospheric dust and haze diffusion, slow creeping push-ins, muted near-monochrome grade",
     "Live-action, Stanley Kubrick style: one-point-perspective symmetry, slow menacing zooms, ultra-wide 18mm interiors, cold practical-lit spaces, immaculate composed stillness",
     "Live-action, Terrence Malick golden hour: wide-angle handheld lyricism, backlit magic-hour sun flare, natural bounce light only, wandering steadicam through grass and doorways",
     "Live-action, Wong Kar-wai style: step-printed motion smear, saturated neon greens and reds, handheld intimacy in cramped interiors, rain-streaked glass and mirrors, romantic halation glow",
-    "Live-action, Quentin Tarantino grindhouse: punchy 35mm Kodak saturation, crash zooms and low trunk-shot angles, long unbroken dialogue two-shots, warm 70s amber cast",
+    "Live-action, Quentin Tarantino grindhouse: punchy 35mm Kodak saturation, sudden fast zoom-ins and low trunk-shot angles, long unbroken dialogue two-shots, warm 70s amber cast",
     "Live-action, 1970s paranoid thriller: 2.39 anamorphic Panavision, zoom-heavy long-lens surveillance framing, grimy urban browns and greens, grainy push-processed stock",
     "Live-action, A24 indie realism: 35mm grain, soft natural window light, muted pastel grade with lifted blacks, static tableaux broken by intimate handheld close-ups",
     "Live-action, neon noir: rain-slick night streets, cyan and magenta neon reflections, volumetric smoke and searchlights, anamorphic blue-streak flares, deep crushed blacks",
@@ -112,7 +112,7 @@ _CINEMATIC_LOOKS = [
     "Live-action, golden-age Technicolor: three-strip saturated primaries, glamour key lighting with crisp eye-lights, stately dolly moves, painted-backdrop soundstage depth",
     "Live-action, 16mm vérité documentary: handheld reportage framing, visible film grain and gate weave, available light only, quick reactive zooms and refocuses",
     "Live-action, Super 8 home movie: heavy grain and light leaks, warm faded Kodachrome colours, jittery handheld framing, soft vignetted frame edges",
-    "Live-action, late-80s VHS camcorder: smeared lo-fi video texture, auto-exposure pumping, bleeding oversaturated colour, abrupt handheld pans and snap zooms",
+    "Live-action, late-80s VHS camcorder: smeared lo-fi video texture, auto-exposure pumping, bleeding oversaturated colour, abrupt handheld pans and fast zoom-ins",
     "Live-action, BBC nature documentary: long-lens telephoto compression, patient locked-off observation, golden dawn haze, pristine 8K clarity, sweeping aerial establishing shots",
     "Live-action, glossy blockbuster: sweeping 360-degree arc shots circling the hero at chest height, teal-and-orange grade, horizontal lens flares, low-angle wide shots, crisp high-shutter action",
     "Live-action, high-fashion editorial: glossy beauty lighting, bold saturated gel colours, slow-motion hair and fabric, macro texture inserts, high-contrast punchy grade",
@@ -308,6 +308,30 @@ CUT_STYLES = [
 ]
 
 
+# Camera language is a CLOSED vocabulary (guide 4.3) - and it matters
+# empirically: fixing exactly four off-vocabulary phrases in a default prompt
+# ("tracks left", "medium amplitude and moderate speed", "whip pan", a
+# misplaced speaker intro) turned a same-seed render from "looks and sounds
+# wrong" to "fantastic". Every writer gets this rule with the camera line.
+CAMERA_VOCABULARY_RULE = (
+    "Camera language is a CLOSED vocabulary - the only motion types are Zoom "
+    "In/Out, Push In, Pull Out, Pan Left/Right, Truck Left/Right, Tilt Up/Down, "
+    "Pedestal Up/Down, Arc Shot, Tracking Shot, Static Shot, Shake "
+    "Slightly/Strongly, POV and Roll Clockwise/Counterclockwise; the only "
+    "amplitudes `with small amplitude` / `with large amplitude`; the only "
+    "speeds `at slow speed` / `at fast speed`. Medium and normal are OMITTED, "
+    "never written - `medium amplitude`, `moderate speed` and `normal speed` "
+    "do not exist. Never write `whip pan`, `crash zoom`, `snap zoom`, or "
+    "`tracks left/right` (which conflates Truck Left with Tracking Shot); "
+    "re-express such moves inside the vocabulary (`a fast Pan Right with large "
+    "amplitude`, `a fast Zoom In`). One primary camera change per beat - two "
+    "simultaneous changes collapse into whichever is easier to render. A "
+    "camera move lands more reliably when its visible consequences are written "
+    "into the scene (what shifts against what, where the light moves) than as "
+    "a bare asserted sentence."
+)
+
+
 # The video model takes every word at face value: `the camera orbits her`
 # can render outer space, not an arc shot. Every writer appends this so the
 # scene text spells out what is physically meant.
@@ -335,7 +359,7 @@ def camera_directive(motion, amplitude, speed):
             "Camera motion: choose motion types that suit the action, and write them as "
             "natural English inside the shot (motion type, plus amplitude and speed only "
             "when meaningful). Do not stack them as labels at the end of a sentence. "
-            + LITERAL_CAMERA_DIRECTIVE
+            + CAMERA_VOCABULARY_RULE + " " + LITERAL_CAMERA_DIRECTIVE
         )
 
     parts = [motion]
@@ -345,11 +369,20 @@ def camera_directive(motion, amplitude, speed):
         parts.append(speed)
 
     phrase = " ".join(parts)
+    # H3 reframes on its own by default: a bare "static shot" is not enough to
+    # actually hold a composition - the moves that do NOT happen must be named.
+    hold = (
+        "H3 reframes by default, so to truly hold the composition state that the "
+        "camera does not pan, zoom, push or drift in addition to naming the "
+        "static shot. "
+        if motion == "Static Shot"
+        else ""
+    )
     return (
         f"Camera motion: the primary camera movement is `{phrase}`. Express it as natural "
         "English action inside the shot rather than as a trailing label. Additional shots "
-        "may use other motion types when the action calls for it. "
-        + LITERAL_CAMERA_DIRECTIVE
+        f"may use other motion types when the action calls for it. {hold}"
+        + CAMERA_VOCABULARY_RULE + " " + LITERAL_CAMERA_DIRECTIVE
     )
 
 
@@ -357,10 +390,27 @@ def shot_directive(shot_plan, duration_seconds):
     """Instruction covering shot count and cut-time formatting."""
     duration = f"{duration_seconds:.2f}"
 
+    # The render snaps frame counts UP onto the 17n+5 grid, so an off-grid
+    # duration means the prompt narrates a shorter video than gets made.
+    # 192 frames = 8.000s is the only common integer duration on the grid.
+    frames24 = round(duration_seconds * 24)
+    if (frames24 - 5) % 17:
+        lo = 17 * max(1, (frames24 - 5) // 17) + 5
+        hi = lo + 17
+        print(
+            f"ℹ️  H3 duration {duration_seconds:.2f}s ({frames24}f) is off the 17n+5 frame grid "
+            f"the render snaps up to - the video will run longer than the prompt narrates. "
+            f"Nearest grid durations: {lo / 24:.3f}s ({lo}f) and {hi / 24:.3f}s ({hi}f); "
+            f"8.00s (192f) is the only common integer duration that lands exactly."
+        )
+
     if shot_plan == AUTO:
         count_rule = (
             "Choose the shot count that fits the action. Prefer a single shot unless a cut "
-            "genuinely introduces new information about the subject, space, state, viewpoint or time."
+            "genuinely introduces new information about the subject, space, state, viewpoint "
+            "or time, and avoid packing three or more distinct setups (different locations "
+            "or crowded wide compositions) into one clip - detail demanded per scene is what "
+            "degrades renders, especially with few sampling steps."
         )
     else:
         count = _SHOT_COUNTS[shot_plan]
@@ -405,8 +455,19 @@ def toggle_directives(
             )
 
         lines.append(
-            f"{spoken} Give each vocal source a stable (S1)/(S2) ID, and keep the identifying "
-            "phrase, action and delivery outside the <d> block and in English."
+            f"{spoken} Give each vocal source a stable (S1)/(S2) ID - always, even for a single "
+            "unambiguous speaker - with the identity described where the speaker first APPEARS "
+            "on screen, not where they first speak. Keep the identifying phrase, action and "
+            "delivery outside the <d> block and in English. At the end of each spoken line "
+            "close the mouth: describe the lips closing or the jaw coming to rest, or the "
+            "mouth keeps moving past the audio. Every silent on-screen character gets an "
+            "explicit statement that they produce no vocal sound, or the model may voice "
+            "them. A voiceover uses the exact phrase `says in an off-screen voiceover`, "
+            "immediately followed by a statement that the speaker's lips remain closed. "
+            "Keep a speaking or singing character on screen across any cut their vocal "
+            "continues through - H3 readily hands a continuing vocal to whoever appears "
+            "after a cut. As a rule of thumb, budget spoken words to about 2.5 x (shot "
+            "seconds - 1) per shot so every line fits its timeline."
         )
     else:
         lines.append(
@@ -417,7 +478,9 @@ def toggle_directives(
     if include_on_screen_text:
         lines.append(
             'On-screen text: signs, banners, labels or subtitles that are actually visible go in '
-            'English double quotation marks, verbatim and untranslated.'
+            'English double quotation marks, verbatim and untranslated. Name the typography and '
+            'where in the frame each string sits - a visible text element left unspecified '
+            'renders as letter-shaped noise.'
         )
     else:
         lines.append("On-screen text: keep the frame free of readable signs, banners, labels or subtitles.")
@@ -425,8 +488,9 @@ def toggle_directives(
     if include_soundscape:
         lines.append(
             "overall_soundscape: 1-4 English sentences in one paragraph covering ambience, "
-            "physical action sounds and non-verbal human sounds. Do not repeat dialogue or "
-            "singing here."
+            "physical action sounds and non-verbal human sounds. Dialogue, singing, diegetic "
+            "music and any description of voices are out of scope here - do not even mention "
+            "that people are speaking."
         )
     else:
         lines.append("overall_soundscape: output exactly `N/A`.")
@@ -846,6 +910,12 @@ def scale_reference_image(tensor):
         print(
             f"⚠️ H3 reference image {w}x{h} is outside the 1:4..4:1 aspect range "
             "the reference pipeline accepts - expect degraded identity transfer."
+        )
+    if min(h, w) < 256:
+        print(
+            f"⚠️ H3 reference image {w}x{h} is tiny (short edge under 256px). Upscaling "
+            "adds tokens, not detail - identity signal will be weak; use a larger source "
+            "crop if one exists."
         )
     s = REFERENCE_SHORT_EDGE / float(min(h, w))
     nw = max(REFERENCE_MULTIPLE, round(w * s / REFERENCE_MULTIPLE) * REFERENCE_MULTIPLE)

@@ -92,8 +92,13 @@ class H3BasePromptWriter:
                     "tooltip": "Which H3 task the prompt targets. Anything other than T2VA emits the matching reference-alignment instruction line.",
                 }),
                 "duration_seconds": ("FLOAT", {
-                    "default": 6.0, "min": 1.0, "max": 60.0, "step": 0.5,
-                    "tooltip": "Effective video duration. Drives the cut times and the S.SS value in the alignment instruction.",
+                    "default": 8.0, "min": 1.0, "max": 60.0, "step": 0.5,
+                    "tooltip": (
+                        "Effective video duration. Drives the cut times and the S.SS value in the "
+                        "alignment instruction. The render snaps frames UP to the 17n+5 grid, so "
+                        "prefer grid durations - 8.00s (192f) is the only common integer one; "
+                        "the trained ceiling is 15.083s (362f)."
+                    ),
                 }),
                 "shot_plan": (SHOT_PLANS, {"default": AUTO}),
                 "visual_style": (VISUAL_STYLES, {
@@ -253,7 +258,9 @@ class H3BasePromptWriter:
             "Replace N with the index of the actual final shot. Follow it with one blank "
             "line, then the core fields. <Picture 1> is the final frame and belongs to the "
             "last shot, not Shot 1: infer a plausible earlier state and converge onto the "
-            "image (preceding state -> transition path -> gradual convergence -> landing)."
+            "image (preceding state -> transition path -> gradual convergence -> landing). "
+            "If the final frame shows a closed mouth, finish all dialogue early enough for "
+            "the mouth to return to that closed position by the end."
         )
 
     def _reference_rule(self, image_count, references):

@@ -66,8 +66,12 @@ class H3ClaudeCodeBaseWriter(H3BasePromptWriter):
                 "tooltip": "Which H3 task the prompt targets. Anything other than T2VA emits the matching reference-alignment instruction line.",
             }),
             "duration_seconds": ("FLOAT", {
-                "default": 6.0, "min": 1.0, "max": 60.0, "step": 0.5,
-                "tooltip": "Effective video duration. Drives the cut times and the S.SS value in the alignment instruction.",
+                "default": 8.0, "min": 1.0, "max": 60.0, "step": 0.5,
+                "tooltip": (
+                    "Effective video duration. Drives the cut times and the S.SS value in the "
+                    "alignment instruction. The render snaps frames UP to the 17n+5 grid, so "
+                    "prefer grid durations - 8.00s (192f) is the only common integer one."
+                ),
             }),
             "shot_plan": (SHOT_PLANS, {"default": AUTO}),
             "visual_style": (VISUAL_STYLES, {

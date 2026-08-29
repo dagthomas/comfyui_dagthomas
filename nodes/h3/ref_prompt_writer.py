@@ -344,6 +344,21 @@ class H3RefPromptWriter:
             "distributing detail across the shots by information load. Fitting a complete "
             "spoken timeline matters more than hitting the number exactly."
         )
+        # Measured authority hierarchy: a wrong word in subject_definitions
+        # overrides the reference image itself (a brunette described as blonde
+        # renders blonde despite fully_preserved), and only a specific
+        # detailed_description can override the definition. Silence downstream
+        # leaves the definition in charge.
+        directives.append(
+            "Authority: subject_definitions is binding - a wrong or invented attribute "
+            "there overrides the reference image itself, and retention_analysis cannot "
+            "correct it - so define ONLY what a reference actually shows, never a generic "
+            "template line. Silence is not neutral: whatever detailed_description leaves "
+            "unsaid is filled from the definitions, so re-describe the environment, "
+            "palette and lighting in detailed_description even when a reference image "
+            "already supplies them, and relight referenced subjects into the scene's own "
+            "light rather than leaving their source lighting unstated."
+        )
         directives.extend(
             toggle_directives(
                 include_dialogue,

@@ -130,8 +130,11 @@ class H3ClaudeCodeContinueWriter(H3BasePromptWriter):
                 ),
             }),
             "duration_seconds": ("FLOAT", {
-                "default": 6.0, "min": 1.0, "max": 60.0, "step": 0.5,
-                "tooltip": "Length of the NEW clip.",
+                "default": 8.0, "min": 1.0, "max": 60.0, "step": 0.5,
+                "tooltip": (
+                    "Length of the NEW clip. The render snaps frames UP to the 17n+5 grid, so "
+                    "prefer grid durations - 8.00s (192f) is the only common integer one."
+                ),
             }),
             "shot_plan": (SHOT_PLANS, {"default": AUTO}),
             "visual_style": (VISUAL_STYLES, {
