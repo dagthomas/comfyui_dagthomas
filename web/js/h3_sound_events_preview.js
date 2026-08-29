@@ -386,6 +386,7 @@ async function openModal(node) {
   let duration = 0;
   let items = [];
   let gridFit = { bpm: 0, phase: 0, on: 0, of: 0 };   // the beat grid, phase-fitted to the kept hits
+  let waveH = WAVE_H, laneH = LANE_H;                 // sized to the stage in layout()
 
   // ---- layout
   const main = el("main");
@@ -451,16 +452,27 @@ async function openModal(node) {
           if (w) { w.value = box.checked; w.callback?.(box.checked, app.canvas, source.stems.node); }
           source.stems.node.setDirtyCanvas?.(true, true);
           compute();
+          if (state.stemListen) setListenStems(true);   // the 🎧 mix follows the selection
         });
         stemRow.append(el("label", { className: "ctl" }, box, ` ${s} `));
       }
       aside.append(stemRow);
     } else {
       aside.append(el("p", {
-        textContent: `A Stem Split feeds this node its ${source.stems.output} stem - detection listens to that stem, not the full song. Playback is still the full song.`,
+        textContent: `A Stem Split feeds this node its ${source.stems.output} stem - detection listens to that stem, not the full song.`,
         style: "font-size:11.5px;color:#9a9590",
       }));
     }
+    state.stemListen = false;
+    const listenBox = el("input", { type: "checkbox" });
+    listenBox.addEventListener("change", () => {
+      state.stemListen = listenBox.checked;
+      setListenStems(listenBox.checked);
+    });
+    aside.append(el("div", { className: "row" }, el("label", {
+      className: "ctl",
+      title: "Play the selected stems only - the exact mix the detectors listen to - instead of the full song. The playhead keeps its place when switching.",
+    }, listenBox, " 🎧 listen to selected stems only")));
   } else if (source.via.length) {
     aside.append(el("p", { textContent: `Preview runs on the Load Audio file; on the canvas the audio passes through ${source.via.join(" → ")} first, so counts can differ slightly.` }));
   }
@@ -672,7 +684,7 @@ async function openModal(node) {
 
   function drawWave() {
     const width = Math.min(MAX_CANVAS, Math.ceil(duration * pps()));
-    const height = WAVE_H;
+    const height = waveH;
     wave.width = width; wave.height = height;
     wave.style.width = `${width}px`;
     const ctx = wave.getContext("2d");
@@ -688,9 +700,21 @@ async function openModal(node) {
         if (i) { ctx.fillStyle = "#2c2820"; ctx.fillRect(0, Math.round(yTop), width, 1); }
         ctx.fillStyle = "#463f33"; ctx.fillRect(0, Math.round(yTop + rowH / 2), width, 1);
         paintEnv(ctx, st.env[s], st.env_rate || 25, width, rowH, on ? STEM_COLORS[s] : "rgba(120,114,104,.28)", yTop);
+      });
+      // the detected signals ON the stems: a tick at every event's land time,
+      // in the event's kind colour, across all rows
+      const evs = (state.toggles.impacts ? payload.events : payload.events_no_impacts) || [];
+      ctx.globalAlpha = 0.55;
+      for (const e of evs) {
+        ctx.fillStyle = KIND_COLOR[e.type] || "#9a9590";
+        ctx.fillRect(Math.round(e.t * pps()), 0, 1, height);
+      }
+      ctx.globalAlpha = 1;
+      order.forEach((s, i) => {
+        const on = st.sources.includes(s);
         ctx.fillStyle = on ? "#e8e2d8" : "#9a9590";
         ctx.font = "600 10px sans-serif";
-        ctx.fillText(s + (on ? "" : " (not in mix)"), 8, yTop + 13);
+        ctx.fillText(s + (on ? "" : " (not in mix)"), 8, i * rowH + 13);
       });
       return;
     }
@@ -703,20 +727,20 @@ async function openModal(node) {
   // behind the events. With everything flat it is the file itself.
   function drawLaneWave() {
     const width = Math.min(MAX_CANVAS, Math.ceil(duration * pps()));
-    laneWave.width = width; laneWave.height = LANE_H;
+    laneWave.width = width; laneWave.height = laneH;
     laneWave.style.width = `${width}px`;
     const ctx = laneWave.getContext("2d");
-    ctx.clearRect(0, 0, width, LANE_H);
-    ctx.fillStyle = "rgba(132,179,166,.22)"; ctx.fillRect(0, LANE_H / 2, width, 1);
+    ctx.clearRect(0, 0, width, laneH);
+    ctx.fillStyle = "rgba(132,179,166,.22)"; ctx.fillRect(0, laneH / 2, width, 1);
     // with a Stem Split upstream the detectors hear the server's stem mix,
     // not the (client-shaped) file - draw that mix behind the events
     if (payload?.stems?.mix_env) {
-      paintEnv(ctx, payload.stems.mix_env, payload.stems.env_rate || 25, width, LANE_H, "rgba(132,179,166,.34)", 0);
+      paintEnv(ctx, payload.stems.mix_env, payload.stems.env_rate || 25, width, laneH, "rgba(132,179,166,.34)", 0);
       return;
     }
     const data = shapedPeaks || peaks;
     if (!data) return;
-    paintPeaks(ctx, data, width, LANE_H, isNeutral(state.shaping) ? "rgba(132,179,166,.30)" : "rgba(132,179,166,.42)");
+    paintPeaks(ctx, data, width, laneH, isNeutral(state.shaping) ? "rgba(132,179,166,.30)" : "rgba(132,179,166,.42)");
   }
 
   // One line per beat at the measured BPM, phase-fitted to the kept hits (see
@@ -727,15 +751,15 @@ async function openModal(node) {
     const key = `${width}|${state.grid}|${gridFit.bpm}|${gridFit.phase.toFixed(3)}`;
     if (!force && key === gridKey) return;
     gridKey = key;
-    gridCanvas.width = width; gridCanvas.height = LANE_H;
+    gridCanvas.width = width; gridCanvas.height = laneH;
     gridCanvas.style.width = `${width}px`;
     const ctx = gridCanvas.getContext("2d");
-    ctx.clearRect(0, 0, width, LANE_H);
+    ctx.clearRect(0, 0, width, laneH);
     if (!state.grid || !gridFit.bpm) return;
     const period = 60 / gridFit.bpm;
     if (period * pps() < 5) return;
     ctx.fillStyle = "rgba(232,180,184,.16)";
-    for (let t = gridFit.phase; t <= duration; t += period) ctx.fillRect(Math.round(t * pps()), 0, 1, LANE_H);
+    for (let t = gridFit.phase; t <= duration; t += period) ctx.fillRect(Math.round(t * pps()), 0, 1, laneH);
   }
 
   // Which phase of the beat period lines up with the most kept hits? Brute
@@ -775,6 +799,17 @@ async function openModal(node) {
   }
 
   function layout() {
+    // Size the waveform + event lane to FILL the stage: whatever height the
+    // scroll area has is split between them (the CSS 250/220px values are
+    // only the floor for tiny windows).
+    const availH = scroll.clientHeight;
+    if (availH > 320) {
+      waveH = Math.max(WAVE_H, Math.floor((availH - 22 - 14) * 0.53));
+      laneH = Math.max(LANE_H, availH - 22 - 14 - waveH);
+      wave.style.height = `${waveH}px`;
+      lane.style.top = `${22 + waveH + 14}px`;
+      lane.style.height = `${laneH}px`;
+    }
     const width = Math.ceil(duration * pps());
     track.style.width = `${width}px`;
     lane.style.width = `${width}px`;
@@ -799,8 +834,8 @@ async function openModal(node) {
       // Structural events span the lane; a hit's height is its strength, so
       // the heavy ones read as heavy from across the room.
       const structural = STRUCTURAL.has(it.type);
-      const h = structural ? LANE_H - 12 : Math.round(34 + clamp(it.strength, 0, 1) * (LANE_H - 64));
-      const top = Math.round((LANE_H - h) / 2);
+      const h = structural ? laneH - 12 : Math.round(34 + clamp(it.strength, 0, 1) * (laneH - 64));
+      const top = Math.round((laneH - h) / 2);
       const box = el("div", {
         className: "ev" + (structural ? " struct" : "") + (keep ? "" : " cut") + (struck ? " struck" : "")
           + (it.edited ? " edited" : "") + (it.added ? " added" : "") + (state.selected === it.id ? " sel" : ""),
@@ -1002,6 +1037,29 @@ async function openModal(node) {
   }
 
   // ---- audio: playback + decoded waveform
+  // 🎧 stems: swap the <audio> between the full song and a server-mixed WAV of
+  // the currently selected stems (the exact mix the detectors hear), keeping
+  // the playhead position and play state across the swap.
+  function setListenStems(on) {
+    const t = audio.currentTime || 0, playing = !audio.paused;
+    if (on && source.stems) {
+      const srcs = (stemSources(source.stems) || []).join(",");
+      audio.src = api.apiURL(
+        `/apnext/h3/sound_events_stem_audio?audio=${encodeURIComponent(source.file)}` +
+        `&model=${encodeURIComponent(source.stems.model)}&sources=${encodeURIComponent(srcs)}`
+      );
+    } else {
+      audio.src = audioUrl(source.file);
+    }
+    const once = () => {
+      audio.removeEventListener("loadedmetadata", once);
+      try { audio.currentTime = t; } catch (_) { /* not seekable yet */ }
+      if (playing) audio.play();
+    };
+    audio.addEventListener("loadedmetadata", once);
+    audio.load();
+  }
+
   audio.src = audioUrl(source.file);
   const updateClock = () => { clock.textContent = `${fmtTime(audio.currentTime || 0)} / ${fmtTime(duration)}`; playhead.style.left = `${(audio.currentTime || 0) * pps()}px`; };
   audio.addEventListener("loadedmetadata", () => { if (!duration) { duration = audio.duration || 0; layout(); } updateClock(); });

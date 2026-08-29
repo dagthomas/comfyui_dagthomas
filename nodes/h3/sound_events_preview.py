@@ -217,5 +217,52 @@ async def _preview(request):
     return web.json_response(payload)
 
 
+async def _stem_audio(request):
+    """
+    GET /apnext/h3/sound_events_stem_audio?audio=<file>&model=<m>&sources=a,b
+    -> WAV of the selected stems summed (mono, 16-bit), from the same stems
+    cache the preview uses - so the modal's 🎧 can play exactly the mix the
+    detectors hear.
+    """
+    name = str(request.query.get("audio") or "").strip()
+    if not name:
+        return web.json_response({"error": "no audio file"}, status=400)
+    model = str(request.query.get("model") or "htdemucs").split(" ")[0]
+    if model not in _STEM_MODEL_NAMES:
+        model = "htdemucs"
+    sources = [s for s in str(request.query.get("sources") or "").split(",") if s in STEM_NAMES]
+    sources = sorted(set(sources)) or ["bass", "drums"]
+
+    def build():
+        import io
+        import wave as wave_module
+
+        import torch
+        path, audio = _load_audio(name)
+        sr = int(audio["sample_rate"])
+        mono = _mono_stems(path, name, audio, model)
+        mix = None
+        for s in sources:
+            mix = mono[s].clone() if mix is None else mix + mono[s]
+        pcm = (mix.clamp(-1.0, 1.0) * 32767.0).round().to(torch.int16)
+        buf = io.BytesIO()
+        with wave_module.open(buf, "wb") as fh:
+            fh.setnchannels(1)
+            fh.setsampwidth(2)
+            fh.setframerate(sr)
+            fh.writeframes(pcm.numpy().tobytes())
+        return buf.getvalue()
+
+    loop = asyncio.get_running_loop()
+    try:
+        body = await loop.run_in_executor(None, build)
+    except FileNotFoundError as exc:
+        return web.json_response({"error": str(exc)}, status=404)
+    except Exception as exc:
+        return web.json_response({"error": f"{type(exc).__name__}: {exc}"}, status=500)
+    return web.Response(body=body, content_type="audio/wav")
+
+
 if PromptServer is not None and web is not None and getattr(PromptServer, "instance", None) is not None:
     PromptServer.instance.routes.post("/apnext/h3/sound_events_preview")(_preview)
+    PromptServer.instance.routes.get("/apnext/h3/sound_events_stem_audio")(_stem_audio)

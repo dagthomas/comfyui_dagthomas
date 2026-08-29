@@ -124,14 +124,17 @@ class H3LLMBackend:
                 }),
                 # appended LAST so saved workflows keep their widget positions
                 "num_ctx": ("INT", {
-                    "default": 65536, "min": 0, "max": 1048576, "step": 1024,
+                    "default": 131072, "min": 0, "max": 1048576, "step": 1024,
                     "tooltip": (
                         "Ollama only: the context window to load the model with. Ollama picks "
                         "its own default from free VRAM - as little as 4k - and an H3 system "
                         "prompt is 9-15k tokens on its own, so on a small default the writing "
                         "rules are silently cut off and the scenes come back unusable. 32k is "
                         "enough for a text-only run, 40k+ with reference images or "
-                        "inline_skill_references. 0 = leave the server's default alone. "
+                        "inline_skill_references; 131072 measured fully GPU-resident for "
+                        "qwen3.8:27b (hybrid attention, light KV) on a 32 GB card - a dense "
+                        "KV-heavy model may need less to stay on the GPU (watch `ollama ps`: "
+                        "size_vram should equal size). 0 = leave the server's default alone. "
                         "Ignored by every other provider (LM Studio, vLLM and the cloud APIs "
                         "set their context elsewhere)."
                     ),

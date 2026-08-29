@@ -548,6 +548,19 @@ def _run_h3_router(system_prompt, user_prompt, images, model, resume_session_id,
         from .scenes_support import scenes_json_instruction
         user_prompt = (user_prompt or "") + scenes_json_instruction()
 
+    # The mirror of the backend's unload-after-writing: at a big num_ctx the
+    # local model only stays fully GPU-resident if ComfyUI's render models
+    # from the PREVIOUS queue are let go first - measured on a 32 GB card,
+    # qwen3.8:27b at 131k splits to CPU (much slower) with render residue
+    # held. A no-op when nothing is loaded, and the render reloads as normal.
+    if int(local.get("num_ctx") or 0) >= 65536 and str(model).startswith(("ollama:", "lmstudio:", "local:")):
+        try:
+            import comfy.model_management as mm
+            mm.unload_all_models()
+            mm.soft_empty_cache()
+        except Exception:
+            pass
+
     _warn_prompt_budget(system_prompt, user_prompt, images, local)
     started = time.monotonic()
     text, resolved = call_llm(

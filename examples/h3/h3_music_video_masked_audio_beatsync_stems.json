@@ -1280,7 +1280,7 @@
     0.9,
     8000,
     false,
-    65536,
+    131072,
     "off (faster - recommended)",
     true,
     "auto (JSON with a schema on Ollama, text envelopes elsewhere)",
