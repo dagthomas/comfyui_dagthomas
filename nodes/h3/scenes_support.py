@@ -157,16 +157,17 @@ _CAST_ONLY = (
     "shopkeeper, a neighbour, a passer-by, a friend in the background - gets NO "
     "`Wardrobe:` line and no anchor set. Describe them once, briefly, where they "
     "appear, in whatever detail that frame actually shows, and let them go. A "
-    "locked outfit is a promise to restate it in full every time that person is on "
-    "screen; spending that on someone standing at the back of one shot is a large "
-    "part of the scene's word budget bought for nothing."
+    "locked outfit is a promise to carry it in full in the subject_definitions of "
+    "every scene that person appears in; spending that on someone standing at the "
+    "back of one shot is a large part of the scene's word budget bought for nothing."
 )
 
 _LABEL_CARRIES = (
-    "In the REST of that scene use the bare label (`<Subject 1>` or the character's "
-    "name) and never repeat the outfit: the label already carries it. Describe only "
-    "what changes - what they are doing, where they are in frame, what the light is "
-    "doing to them - plus any anchor the action puts in close-up."
+    "In the description itself use the bare label (`<Subject 1> Sheldon (S1)` or the "
+    "character's name) and NEVER repeat the outfit: the `<Subject N>` line already "
+    "carries it into this scene's render. Describe only what changes - what they are "
+    "doing, where they are in frame, what the light is doing to them - plus any anchor "
+    "the action puts in close-up."
 )
 
 _ANCHOR_RULES = (
@@ -186,15 +187,18 @@ _ANCHOR_RULES = (
 
 def wardrobe_directive(wardrobe=""):
     """
-    Wardrobe drifts between scenes unless each outfit is fixed once and restated
-    where H3 actually binds it: the character's FIRST appearance in the scene.
+    Wardrobe drifts between scenes unless each outfit is fixed once and carried
+    where H3 actually binds it: the character's `<Subject N>` line in each
+    scene's subject_definitions. Each scene renders as its own clip, so the
+    definitions are the one place the outfit MUST live in every scene.
 
-    It used to be restated in every shot, which is what the official guide tells
-    you not to do - "continue using the same label in later shots without
-    redefining what the label represents". H3 binds the description to the
-    `<Subject N>` label at its first clear appearance and carries it through the
-    clip, so the repeats bought no fidelity and cost 150-250 words a scene out
-    of a description the guide budgets at 350-500.
+    It used to be restated in the description body too (first every shot, then
+    the first shot of each scene), which is what the official guide tells you
+    not to do - "continue using the same label in later shots without
+    redefining what the label represents" - and per the guide's own gold
+    examples clothing belongs in subject_definitions. The body repeats bought
+    no fidelity and cost 30-60 words a scene out of a description the guide
+    budgets at 350-500.
 
     With user text: that text is the lock. Without: Claude writes the lock into
     the synopsis first, then reuses it.
@@ -204,10 +208,10 @@ def wardrobe_directive(wardrobe=""):
         lines = [line.strip() for line in wardrobe.splitlines() if line.strip()]
         return (
             "Wardrobe lock (from the user) - copy these anchors word-for-word as the "
-            "synopsis `Wardrobe:` lines, into that character's `<Subject N>` line in "
-            "subject_definitions, and into the FIRST shot of each scene in which the "
-            "character is on screen, right after the first mention of them in that shot "
-            "(`... <Subject 1> Sheldon (S1), wearing <anchors>, ...`). " + _LABEL_CARRIES
+            "synopsis `Wardrobe:` lines and into that character's `<Subject N>` line in "
+            "EVERY scene's subject_definitions (`<Subject 1> is Sheldon, ..., wearing "
+            "<anchors>`): each scene renders as its own clip, and a scene whose "
+            "subject_definitions lack the outfit renders a different one. " + _LABEL_CARRIES
             + " " + _CAST_ONLY + " " + _ANCHOR_RULES +
             "\n" + "\n".join(f"    {line}" for line in lines)
         )
@@ -224,9 +228,9 @@ def wardrobe_directive(wardrobe=""):
         "    Sheldon Cooper: dark-brown corduroy jacket, forest-green cotton T-shirt, "
         "khaki chino trousers, short side-parted brown hair\n"
         "Then copy that character's anchors word-for-word into their `<Subject N>` line "
-        "in subject_definitions and into the FIRST shot of each scene in which the "
-        "character is on screen, right after the first mention of them in that shot "
-        "(`... <Subject 1> Sheldon Cooper (S1), wearing <anchors>, ...`). " + _LABEL_CARRIES
+        "in EVERY scene's subject_definitions (`<Subject 1> is Sheldon Cooper, ..., "
+        "wearing <anchors>`): each scene renders as its own clip, and a scene whose "
+        "subject_definitions lack the outfit renders a different one. " + _LABEL_CARRIES
         + " " + _CAST_ONLY + " " + _ANCHOR_RULES
     )
 
@@ -237,7 +241,6 @@ def wardrobe_directive(wardrobe=""):
 
 _SYNOPSIS_HEADERS = ("title:", "logline:", "lyric map:", "cast:", "concept:", "motifs:",
                      "wardrobe:", "locations:", "location:")
-_SHOT_SPLIT_RE = re.compile(r"(\[Shot\s*\d+\])", re.IGNORECASE)
 _OFFSCREEN_RE = re.compile(
     r"[^.\n]*\b(?:not in frame|out of frame|off[- ]screen|not visible|not yet in frame|"
     r"has not entered|remains? outside|is heard)\b[^.\n]*[.\n]?",
@@ -350,62 +353,54 @@ def _name_patterns(name):
 
 def wardrobe_violations(scenes, locks):
     """
-    [(scene_no, shot_no, name, anchor), ...] for the shot in which a locked
-    character FIRST appears in a scene without an anchor stated verbatim
-    (case-insensitive).
+    [(scene_no, name, anchor), ...] for every scene in which a locked character
+    appears without an anchor stated verbatim (case-insensitive) ANYWHERE in
+    the scene text - subject_definitions included, which is where the anchors
+    now live (the description body keeps the bare label).
 
-    Once per scene, not once per shot. That is where H3 binds the outfit to the
-    `<Subject N>` label; later shots reuse the label, and demanding the full
-    parenthetical again in each of them is what pushed these descriptions past
-    the guide's 350-500 word budget. Checking the first appearance still catches
-    the failure that matters - a character arriving with no outfit fixed at all.
-
-    Sentences that say the character is NOT in frame do not count as presence.
+    Once per scene: each scene renders as its own clip, so the failure that
+    matters is a clip whose text fixes no outfit at all for a character who is
+    on screen. Sentences that say the character is NOT in frame do not count
+    as presence.
     """
     found = []
     if not locks:
         return found
     patterns = {name: _name_patterns(name) for name in locks}
     for scene_no, prompt in enumerate(scenes, 1):
-        parts = _SHOT_SPLIT_RE.split(prompt)
-        # parts: [pre, "[Shot 1]", body1, "[Shot 2]", body2, ...]
-        pending = dict(locks)
-        shot_no = 0
-        for k in range(1, len(parts), 2):
-            shot_no += 1
-            if not pending:
-                break
-            body = parts[k + 1] if k + 1 < len(parts) else ""
-            visible = _OFFSCREEN_RE.sub(" ", body)
-            low = body.lower()
-            for name in [n for n in pending if any(p.search(visible) for p in patterns[n])]:
-                for anchor in pending.pop(name):
-                    if anchor.lower() not in low:
-                        found.append((scene_no, shot_no, name, anchor))
+        visible = _OFFSCREEN_RE.sub(" ", prompt)
+        low = prompt.lower()
+        for name, anchors in locks.items():
+            if not any(p.search(visible) for p in patterns[name]):
+                continue
+            for anchor in anchors:
+                if anchor.lower() not in low:
+                    found.append((scene_no, name, anchor))
     return found
 
 
 def wardrobe_repair_prompt(locks, violations, scene_count):
     """The one follow-up turn that asks for the full output again, anchors restored."""
     lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in locks.items())
-    by_shot = {}
-    for scene_no, shot_no, name, anchor in violations:
-        by_shot.setdefault((scene_no, shot_no, name), []).append(anchor)
+    by_scene = {}
+    for scene_no, name, anchor in violations:
+        by_scene.setdefault((scene_no, name), []).append(anchor)
     issue_lines = "\n".join(
-        f"    Scene {s:02d} [Shot {sh}]: {n} is on screen but missing: "
+        f"    Scene {s:02d}: {n} is on screen but missing: "
         + ", ".join(f"`{a}`" for a in anchors)
-        for (s, sh, n), anchors in sorted(by_shot.items())
+        for (s, n), anchors in sorted(by_scene.items())
     )
     return (
         "WARDROBE CHECK FAILED. The locked wardrobe from your synopsis is:\n"
         f"{lock_lines}\n"
-        "These are the shots where the character FIRST appears in their scene "
-        "without every anchor stated verbatim:\n"
+        "These scenes have the character on screen without every anchor stated "
+        "verbatim anywhere in the scene:\n"
         f"{issue_lines}\n"
-        "Fix them: at each character's FIRST appearance in a scene, state ALL of that "
-        "character's anchors character-for-character (same words, same colours, same "
-        "side), right after the first mention of them in that shot. Leave the later "
-        "shots alone - they use the bare label and must NOT repeat the outfit. Do not "
+        "Fix them: in each listed scene, state ALL of that character's anchors "
+        "character-for-character (same words, same colours, same side) in their "
+        "`<Subject N>` line in subject_definitions (`<Subject 1> is <name>, ..., "
+        "wearing <anchors>`). The description body keeps the bare label and must "
+        "NOT repeat the outfit. Do not "
         "change the story, dialogue, timecodes, durations, shot count or anything else. "
         f"Return the COMPLETE output again in the exact same contract: the synopsis block "
         f"and all {scene_count} scene envelopes."
@@ -645,24 +640,25 @@ def _repair_issue_parts(wardrobe_locks, wardrobe_misses, location_locks, locatio
     parts = []
     if wardrobe_misses:
         lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in wardrobe_locks.items())
-        by_shot = {}
-        for scene_no, shot_no, name, anchor in wardrobe_misses:
-            by_shot.setdefault((scene_no, shot_no, name), []).append(anchor)
+        by_scene = {}
+        for scene_no, name, anchor in wardrobe_misses:
+            by_scene.setdefault((scene_no, name), []).append(anchor)
         issue_lines = "\n".join(
-            f"    Scene {s:02d} [Shot {sh}]: {n} is on screen but missing: "
+            f"    Scene {s:02d}: {n} is on screen but missing: "
             + ", ".join(f"`{a}`" for a in anchors)
-            for (s, sh, n), anchors in sorted(by_shot.items())
+            for (s, n), anchors in sorted(by_scene.items())
         )
         parts.append(
             "WARDROBE CHECK FAILED. The locked wardrobe from your synopsis is:\n"
             f"{lock_lines}\n"
-            "These are the shots where the character FIRST appears in their scene "
-            "without every anchor stated verbatim:\n"
+            "These scenes have the character on screen without every anchor stated "
+            "verbatim anywhere in the scene:\n"
             f"{issue_lines}\n"
-            "Fix them: at each character's FIRST appearance in a scene, state ALL of that "
-            "character's anchors character-for-character (same words, same colours, same "
-            "side), right after the first mention of them in that shot. Leave the later "
-            "shots alone - they use the bare label and must NOT repeat the outfit."
+            "Fix them: in each listed scene, state ALL of that character's anchors "
+            "character-for-character (same words, same colours, same side) in their "
+            "`<Subject N>` line in subject_definitions (`<Subject 1> is <name>, ..., "
+            "wearing <anchors>`). The description body keeps the bare label and must "
+            "NOT repeat the outfit."
         )
     if location_misses:
         lock_lines = "\n".join(f"    {n}: {', '.join(a)}" for n, a in location_locks.items())
@@ -747,8 +743,8 @@ def enforce_continuity(enabled, synopsis, parsed, scene_count, scene_duration,
         f"👔 continuity: {len(w_miss)} wardrobe miss(es) in {len(w_locks)} character(s), "
         f"{len(l_miss)} location miss(es) in {len(l_locks)} place(s) - asking for one repair pass"
     )
-    for scene_no, shot_no, name, anchor in w_miss[:10]:
-        print(f"   ↳ scene {scene_no:02d} [Shot {shot_no}] {name}: missing `{anchor}`")
+    for scene_no, name, anchor in w_miss[:10]:
+        print(f"   ↳ scene {scene_no:02d} {name}: missing `{anchor}`")
     for scene_no, name, anchor in l_miss[:10]:
         print(f"   ↳ scene {scene_no:02d} {name}: missing `{anchor}`")
     try:
@@ -806,8 +802,8 @@ def enforce_continuity_chunked(enabled, synopsis, parsed, session_id, info, repa
         f"👔 continuity: {len(w_miss)} wardrobe miss(es), {len(l_miss)} location miss(es) - "
         f"asking for one repair pass on scene(s) {', '.join(f'{no:02d}' for no, _ in items)}"
     )
-    for scene_no, shot_no, name, anchor in w_miss[:10]:
-        print(f"   ↳ scene {scene_no:02d} [Shot {shot_no}] {name}: missing `{anchor}`")
+    for scene_no, name, anchor in w_miss[:10]:
+        print(f"   ↳ scene {scene_no:02d} {name}: missing `{anchor}`")
     for scene_no, name, anchor in l_miss[:10]:
         print(f"   ↳ scene {scene_no:02d} {name}: missing `{anchor}`")
     try:

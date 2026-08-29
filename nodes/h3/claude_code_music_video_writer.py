@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ...utils.claude_code import is_interrupt
 from ...utils.image_utils import tensor2pil
 from ...utils.apnext_context import (
+    HIDDEN_NODE_ID,
     build_context,
     context_hidden_inputs,
     context_inputs,
@@ -41,6 +42,7 @@ from .claude_code_support import (
     directions_with_research,
     project_name_input,
     project_name_prefix,
+    report_node_error,
     resolve_draft_model,
     resolve_project_name,
     run_h3_claude_code,
@@ -1115,8 +1117,8 @@ class H3ClaudeCodeMusicVideoWriter:
             "person's face, hair, build and wardrobe anchors in every appearance. Never "
             "merge features of two cast members or two pictures into one person, never "
             "give one performer's wardrobe or hair to another, and never let an identity "
-            "drift between scenes - restate each performer's own anchors in every scene "
-            "they appear in."
+            "drift between scenes - carry each performer's own anchors in the "
+            "subject_definitions of every scene they appear in."
         )
         lines.append(
             "- WHO SINGS WHAT: when the lyrics carry voice or singer tags ([Voice 1], "
@@ -1362,6 +1364,9 @@ class H3ClaudeCodeMusicVideoWriter:
         continuity=None,
         **cast_slots,
     ):
+        # peeked (not popped) here: build_context() consumes the hidden inputs
+        # from cast_slots further down, and the error banner needs the id
+        node_id = cast_slots.get(HIDDEN_NODE_ID)
         project_name = resolve_project_name(project_name, seed)
         print(f"🎬 H3 Music Video Writer | project: {project_name}")
         passthrough = scale_reference_passthrough(cast_slots, self._IMAGE_OUTPUT_NAMES)
@@ -1781,6 +1786,7 @@ class H3ClaudeCodeMusicVideoWriter:
             print(f"❌ H3 Music Video Writer error: {exc}")
             import traceback
             print(traceback.format_exc())
+            report_node_error(node_id, str(exc))
             # A failed run is an ERROR, not a scene list: returning the message as
             # the scenes let a dead backend (Ollama down, CLI missing, timeout) go
             # on to a full render of the error text - 31 minutes on 27 Aug. Raising

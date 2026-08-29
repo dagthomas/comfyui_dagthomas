@@ -22,7 +22,7 @@ from ...utils.llm_router import (
     list_local_models,
     list_openrouter_models,
 )
-from .claude_code_support import LLM_SOCKET_TYPE, list_codex_models
+from .claude_code_support import LLM_SOCKET_TYPE, list_codex_models, reference_mode
 
 _CUSTOM = "custom (use model_name below)"
 
@@ -35,6 +35,11 @@ _STRUCTURED = [
     "off (text envelopes)",
 ]
 _THINKING = ["off (faster - recommended)", "on", "model default"]
+_REFERENCES = [
+    "off (skill rules only)",
+    "essentials (grammar + gold examples, ~15-20k tokens)",
+    "full library (everything, ~45k tokens)",
+]
 # vendors whose `vendor/model` ids mean "this is an OpenRouter id" when typed bare
 _OPENROUTER_VENDORS = {
     "anthropic", "openai", "google", "x-ai", "deepseek", "qwen", "moonshotai", "z-ai", "meta-llama",
@@ -105,14 +110,16 @@ class H3LLMBackend:
                     "default": 8000, "min": 256, "max": 128000, "step": 256,
                     "tooltip": "Answer length cap. Multi-scene crossover / scenes runs need room.",
                 }),
-                "inline_skill_references": ("BOOLEAN", {
-                    "default": False,
+                "inline_skill_references": (_REFERENCES, {
+                    "default": _REFERENCES[0],
                     "tooltip": (
-                        "With the H3 node's director on: paste the skills' full reference library "
-                        "(gold examples, grammar, style anchors) into the system prompt, not just "
-                        "the skill rules. Noticeably better prompts, but tens of thousands of tokens "
-                        "- the model needs a big context window. Ollama: raise num_ctx "
-                        "(OLLAMA_CONTEXT_LENGTH or a Modelfile), the official guide alone is ~12k tokens."
+                        "With the H3 node's director on: how much of the skills' reference library "
+                        "is pasted into the system prompt (a local model cannot Read files). "
+                        "essentials keeps what teaches the format - the prompt grammar, the gold "
+                        "examples and the style anchors - and is the best quality per token. "
+                        "full library adds the style-picker catalogues and mode docs too; the "
+                        "system prompt then passes 60k tokens and Ollama needs num_ctx 131072. "
+                        "Workflows saved with the old on/off switch load as essentials/off."
                     ),
                 }),
                 # appended LAST so saved workflows keep their widget positions
@@ -176,6 +183,13 @@ class H3LLMBackend:
             },
         }
 
+    @classmethod
+    def VALIDATE_INPUTS(cls, inline_skill_references=None):
+        # inline_skill_references used to be a BOOLEAN widget: workflows saved
+        # back then restore true/false, which the combo would reject here.
+        # build() maps any legacy value onto off/essentials via reference_mode.
+        return True
+
     RETURN_TYPES = (LLM_SOCKET_TYPE, "STRING")
     RETURN_NAMES = ("llm", "model_used")
     FUNCTION = "build"
@@ -205,7 +219,7 @@ class H3LLMBackend:
             "base_url": (base_url or "").strip(),
             "temperature": float(temperature),
             "max_tokens": int(max_tokens),
-            "inline_references": bool(inline_skill_references),
+            "inline_references": reference_mode(inline_skill_references),
             "num_ctx": int(num_ctx or 0),
             # None = say nothing and let the model do whatever it does by default
             "think": None if mode.startswith("model default") else mode.startswith("on"),

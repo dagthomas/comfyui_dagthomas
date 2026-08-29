@@ -601,11 +601,13 @@ def _post_json(url, payload, timeout):
     """
     if httpx is not None:
         connect_errors = (httpx.ConnectError, httpx.RemoteProtocolError)
+        timeout_errors = (httpx.TimeoutException,)
         post = lambda: httpx.post(url, json=payload, timeout=timeout)
     else:
         import requests
 
         connect_errors = (requests.exceptions.ConnectionError,)
+        timeout_errors = (requests.exceptions.Timeout,)
         post = lambda: requests.post(url, json=payload, timeout=timeout)
 
     last = None
@@ -613,12 +615,25 @@ def _post_json(url, payload, timeout):
         try:
             response = post()
             break
+        # connect_errors first: a connect timeout is a connection problem and
+        # gets the retry loop, not the "still generating" report below
         except connect_errors as exc:
             last = exc
             if attempt < _CONNECT_RETRIES:
                 print(f"⚠️ {url}: {exc} - retrying in {_CONNECT_RETRY_WAIT:.0f} s "
                       f"({attempt + 1}/{_CONNECT_RETRIES})")
                 time.sleep(_CONNECT_RETRY_WAIT)
+        except timeout_errors as exc:
+            # No retry: the server is (still) generating the previous request,
+            # so posting again only queues a second copy behind it. The phrase
+            # "did not finish within" is what the H3 writer's halve-the-chunk
+            # retry keys on - keep it if this message is ever rewritten.
+            raise RuntimeError(
+                f"{url} did not finish within {timeout:.0f}s - the model was likely still "
+                f"generating. Ask for less per call (lower scenes_per_call), speed the model "
+                f"up (smaller prompt / num_ctx that fits in VRAM), or raise the cap with "
+                f"APNEXT_LOCAL_LLM_REQUEST_TIMEOUT (seconds)."
+            ) from exc
     else:
         raise RuntimeError(
             f"could not connect to {url} ({last}) - is the server running, and is the "
@@ -682,6 +697,10 @@ def _call_ollama_native(
         if think is not None and "think" in str(exc).lower():
             payload.pop("think", None)
             data = _post_json(url, payload, _LOCAL_REQUEST_TIMEOUT)
+        elif "did not finish within" in str(exc):
+            # a timeout report is already complete and actionable; the
+            # server-running / model-pulled hints below would only mislead
+            raise
         else:
             vision_hint = (
                 " The model also has to be vision-capable to accept the attached image(s)."
@@ -723,8 +742,8 @@ def _check_ollama_cutoff(data, model, options):
         suggest = 65536 if prompt_tokens + 6000 <= 65536 else 131072
         why = (f"the prompt alone took {prompt_tokens:,} of the {num_ctx:,}-token context (num_ctx), "
                f"leaving room for only ~{room:,} reply tokens. Raise num_ctx on the H3 LLM Backend node "
-               f"to {suggest:,} (or shorten the prompt: fewer scenes, no inline skill references, "
-               f"smaller cast / lyrics).")
+               f"to {suggest:,} (or shorten the prompt: inline_skill_references 'essentials' or 'off', "
+               f"fewer scenes, smaller cast / lyrics).")
     else:
         why = (f"the prompt took {prompt_tokens:,} tokens and the server's default context ran out. "
                f"Set num_ctx on the H3 LLM Backend node (65536 for a long music video).")

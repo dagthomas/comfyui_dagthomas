@@ -119,33 +119,85 @@ def _skill_references(name):
     return out
 
 
+# What a file-tool-less backend actually needs pasted in, per skill: the prompt
+# grammar, the gold examples that teach the format, and the style anchors. The
+# rest of each library is catalogue material - style pickers (the node has
+# already picked the style), mode/ComfyUI docs, a clean copy of the official
+# guide that is already in the system prompt - dead weight at write time that
+# costs ~30k extra tokens per run, and on Ollama gets re-prefilled every turn.
+_ESSENTIAL_REFERENCES = {
+    "h3-prompt-director": ("03_H3_PROMPT_GRAMMAR.md",),
+    "h3-base-format": ("11_T2VA_GOLD_EXAMPLES.md",),
+    "h3-ref2va": ("13_REF2VA_GOLD_EXAMPLES.md",),
+    "h3-style-craft": ("09_H3_STYLE_REFERENCE_ANCHORS.md",),
+    "h3-crossover": ("17_CROSSOVER_GOLD_EXAMPLES.md",),
+}
+
+
+def reference_mode(value):
+    """
+    'off' | 'essential' | 'full' from the H3 LLM Backend widget - or from the
+    legacy BOOLEAN it used to be (workflows saved before the combo existed
+    restore true/false): False stays off, True now means essentials.
+    """
+    v = str(value or "").strip().lower()
+    if v.startswith("full"):
+        return "full"
+    if v in ("true", "1", "on") or v.startswith("essent"):
+        return "essential"
+    return "off"
+
+
 def director_block_inline(skills, include_references=False):
     """
     The director skills for a backend with no file tools (Ollama, LM Studio, an
-    API model): SKILL.md bodies are pasted in, and with `include_references` the
-    reference library is pasted in too instead of being read on demand. The
-    reference set is large (tens of thousands of tokens), so it is opt-in.
+    API model): SKILL.md bodies are pasted in, and reference files follow
+    `include_references` (any reference_mode() value) - 'off' none,
+    'essential' each skill's grammar / gold examples / style anchors
+    (~15-20k tokens), 'full' the whole library (~45k tokens).
     """
+    mode = reference_mode(include_references)
     loaded = [(name, load_skill(name)) for name in skills]
     loaded = [(name, text) for name, text in loaded if text]
     if not loaded:
         return ""
     parts = []
+    included = []
     for name, text in loaded:
         parts.append(f"=== BEGIN SKILL {name} ===\n{text}\n=== END SKILL {name} ===")
-        if include_references:
-            for file_name, body in _skill_references(name):
-                parts.append(
-                    f"=== BEGIN REFERENCE {name}/{file_name} ===\n{body}\n"
-                    f"=== END REFERENCE {name}/{file_name} ==="
-                )
-    note = (
-        "The reference files the skills mention are included above in full; use them "
-        "as the gold standard for grammar, examples and style."
-        if include_references
-        else "You have no file tools here: the reference files the skills mention are NOT "
-        "available, so rely on the official guide and the skill rules above."
-    )
+        if mode == "off":
+            continue
+        keep = _ESSENTIAL_REFERENCES.get(name) if mode == "essential" else None
+        for file_name, body in _skill_references(name):
+            if keep is not None and file_name not in keep:
+                continue
+            parts.append(
+                f"=== BEGIN REFERENCE {name}/{file_name} ===\n{body}\n"
+                f"=== END REFERENCE {name}/{file_name} ==="
+            )
+            included.append(f"{name}/{file_name}")
+    if mode == "full":
+        note = (
+            "The reference files the skills mention are included above in full; use them "
+            "as the gold standard for grammar, examples and style."
+        )
+    elif included:
+        note = (
+            "The core of each skill's reference library is included above (prompt grammar, "
+            "gold examples, style anchors); any other file a skill mentions is NOT available "
+            "here - rely on the official guide and the skill rules instead."
+        )
+    else:
+        note = (
+            "You have no file tools here: the reference files the skills mention are NOT "
+            "available, so rely on the official guide and the skill rules above."
+        )
+    if mode != "off":
+        est = int(sum(len(p) for p in parts) / _CHARS_PER_TOKEN)
+        print(
+            f"📚 H3 director: {len(loaded)} skill(s) + {len(included)} reference file(s) "
+            f"inlined ({mode}) ~{est:,} tokens"
+        )
     return (
         "\n\n" + "\n\n".join(parts) + "\n\n"
         "The official guide above is authoritative for field names and format; the skills "
@@ -221,7 +273,7 @@ def local_llm_options(llm=None):
         "model_override": (llm.get("model") or "").strip(),
         "base_url": (llm.get("base_url") or "").strip(),
         "temperature": float(llm.get("temperature", 1.0) or 0.0),
-        "inline_references": bool(llm.get("inline_references", False)),
+        "inline_references": reference_mode(llm.get("inline_references", False)),
         "max_tokens": int(llm.get("max_tokens", 8000) or 8000),
         "num_ctx": int(llm.get("num_ctx", 0) or 0),
         "think": llm.get("think"),
@@ -307,6 +359,25 @@ def release_local_llm(local):
     if ok:
         print(f"\U0001F9F9 H3: '{model}' unloaded from Ollama - VRAM handed back to the render.")
     return ok
+
+
+def report_node_error(node_id, message):
+    """
+    Put a failed run's reason ON the node: web/js/h3_node_error.js listens for
+    this event and draws the text as a red banner under the node, so the user
+    reads WHY (context overflow, dead backend, timeout) without digging through
+    the console. Display only - the caller still raises to stop the graph.
+    Safe with node_id None (headless / API runs) and without a PromptServer.
+    """
+    if not node_id or not str(message or "").strip():
+        return
+    try:
+        from server import PromptServer
+        PromptServer.instance.send_sync(
+            "apnext.h3.node_error", {"node": str(node_id), "text": str(message)}
+        )
+    except Exception:
+        pass
 
 
 def _structured_plan(model, local, structured):
