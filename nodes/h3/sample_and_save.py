@@ -10,12 +10,56 @@
 # plus Save Clip's, and every list item is sampled, decoded, muxed with its
 # audio slice and saved before the next one starts. Watch the output folder
 # fill up while the run is still going.
+#
+# Where the clip's sound comes from, in order:
+#   * `audio` connected      - that soundtrack (the writer's `audio_segments`:
+#                              the clip's slice of the original song);
+#   * else `audio_vae`       - the audio half of the SAMPLED latent, decoded -
+#                              what H3 itself produced in this pass (with a
+#                              partly-frozen Masked Song Latent, the song as H3
+#                              re-synthesised it). This is the setting for the
+#                              Comfy H3 Sync Sound challenge: "the audio has to
+#                              come out of the same H3 pass as the video";
+#   * else                   - silent clips.
 
 import torch
 
 from ...utils.constants import CUSTOM_CATEGORY
 from .chain_render import _call, _node
 from .clip_save import _FORMATS, save_clip_wav, save_frames
+
+
+def decode_sampled_audio(sampled, audio_vae):
+    """
+    The audio half of a sampled H3 AV latent, decoded with the audio VAE, as an
+    AUDIO dict - the sound H3 generated in this pass. Goes through core's
+    VAE Decode Audio when it is available (same loudness handling as the node
+    in the graph), else decodes directly. Returns None for a latent with no
+    audio stream.
+    """
+    latent = sampled["samples"]
+    if not getattr(latent, "is_nested", False) or len(latent.unbind()) < 2:
+        print("⚠️ H3 Sampler + Save Clip: audio_vae is connected but the sampled latent has no audio stream - silent clip")
+        return None
+    try:
+        out = _call(_node("VAEDecodeAudio"), vae=audio_vae, samples=sampled)[0]
+    except Exception:
+        wave = audio_vae.decode(latent.unbind()[-1]).movedim(-1, 1)
+        std = torch.std(wave, dim=[1, 2], keepdim=True) * 5.0
+        std[std < 1.0] = 1.0
+        wave = wave / std
+        out = {"waveform": wave,
+               "sample_rate": int(getattr(audio_vae, "audio_sample_rate_output",
+                                          getattr(audio_vae, "audio_sample_rate", 32000)))}
+    wave = out["waveform"]
+    if wave.ndim == 2:
+        wave = wave.unsqueeze(0)
+    wave = wave[:1].detach().to("cpu").float()
+    if wave.shape[1] == 1:
+        wave = wave.repeat(1, 2, 1)
+    seconds = wave.shape[-1] / float(out["sample_rate"])
+    print(f"🔊 H3 Sampler + Save Clip | audio decoded from the sampled latent: {seconds:.2f}s at {int(out['sample_rate'])} Hz")
+    return {"waveform": wave.contiguous(), "sample_rate": int(out["sample_rate"])}
 
 
 class H3SampleAndSave:
@@ -48,7 +92,16 @@ class H3SampleAndSave:
                 "audio": ("AUDIO", {
                     "tooltip": (
                         "This clip's soundtrack - the writer's `audio_segments` list, so each scene is muxed "
-                        "with its own slice of the song. Empty = silent clips."
+                        "with its own slice of the song. Empty = the sampled latent's own audio if `audio_vae` "
+                        "is connected, otherwise silent clips."
+                    ),
+                }),
+                "audio_vae": ("VAE", {
+                    "tooltip": (
+                        "The MiniMax H3 audio VAE. With `audio` unplugged, the audio half of the SAMPLED latent "
+                        "is decoded here and muxed into the clip - the sound H3 generated in this pass (the "
+                        "Sync Sound challenge rule: audio from the same H3 pass as the video, nothing muxed "
+                        "on afterwards). Ignored when `audio` is connected."
                     ),
                 }),
                 # appended last so saved workflows keep their widget positions
@@ -80,16 +133,19 @@ class H3SampleAndSave:
         "audio slice and written to disk BEFORE the next scene starts sampling - the clips appear one by "
         "one while the run is still going, and a crash late in the run keeps everything already saved. "
         "Drop it in where SamplerCustomAdvanced -> H3 Save Clip was; `output` still feeds whatever the "
-        "sampler used to feed."
+        "sampler used to feed. With `audio` unplugged and `audio_vae` connected, the clip gets the audio "
+        "H3 generated (decoded from the sampled latent) - the Sync Sound challenge setting."
     )
 
     def render(self, noise, guider, sampler, sigmas, latent_image, vae, filename_prefix, fps, format, audio=None,
-               wav_sidecar=True):
+               wav_sidecar=True, audio_vae=None):
         sampled = _call(_node("SamplerCustomAdvanced"), noise=noise, guider=guider, sampler=sampler,
                         sigmas=sigmas, latent_image=latent_image)[0]
         latent = sampled["samples"]
         if getattr(latent, "is_nested", False):      # H3 AV latent: the video stream first, as core VAE Decode does
             latent = latent.unbind()[0]
+        if audio is None and audio_vae is not None:
+            audio = decode_sampled_audio(sampled, audio_vae)
         images = vae.decode(latent)
         if len(images.shape) == 5:                   # combine video batches, as core VAE Decode does
             images = images.reshape(-1, images.shape[-3], images.shape[-2], images.shape[-1])
